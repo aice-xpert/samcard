@@ -1,5 +1,6 @@
-import { Testimonial } from "@/constant";
+import { Testimonial } from "../constant";
 import { Star } from "lucide-react";
+import Image from "next/image";
 
 interface TestimonialCardProps {
   testimonial: Testimonial;
@@ -17,13 +18,17 @@ export default function TestimonialsCard({
         ))}
       </div>
 
-      <p className="text-gray-300 leading-relaxed mb-6">"{testimonial.text}"</p>
+      <p className="text-gray-300 leading-relaxed mb-6">
+        &ldquo;{testimonial.text}&rdquo;
+      </p>
 
       <div className="flex items-center gap-3">
-        <img
+        <Image
           src={testimonial.avatar}
           alt={testimonial.name}
           className="w-12 h-12 rounded-full object-cover"
+          width={48}
+          height={48}
         />
         <div>
           <div className="font-semibold text-white">{testimonial.name}</div>

@@ -1,5 +1,5 @@
 import { FAQ_ITEMS } from "@/constant";
-import { AccordionItem } from "./FAQAccordion";
+import { AccordionItem } from "../components/FAQAccordion";
 
 export default function FAQ() {
   return (

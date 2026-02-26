@@ -6,6 +6,7 @@ import {
   Instagram,
   Facebook,
 } from "lucide-react";
+import Image from "next/image";
 
 export default function Footer() {
   return (
@@ -16,7 +17,13 @@ export default function Footer() {
           {/* DigiCard */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <img className="w-10 h-10 rounded-lg" src={"Digicard.png"} />
+              <Image
+                className="w-10 h-10 rounded-lg"
+                src="/Digicard.png"
+                alt="DigiCard logo"
+                width={40}
+                height={40}
+              />
               <h3 className="text-xl font-bold">DigiCard</h3>
             </div>
             <p className="text-[#808080]">

@@ -1,4 +1,4 @@
-import { TESTIMONIAL_STATS, TESTIMONIALS } from "@/constant";
+import { TESTIMONIAL_STATS, TESTIMONIALS } from "../constant";
 import TestimonialsCard from "./TestimonialsCard";
 
 export default function Testimonials() {
