@@ -1,10 +1,9 @@
-import FAQ from "@/components/FAQ";
 import Footer from "@/components/Footer";
-import Image from "next/image";
+import Testimonials from "@/components/Testimonials";
 
 export default function Home() {
   return <>
-    <FAQ/>
+    <Testimonials/>
     <Footer/>
   </>
 }
