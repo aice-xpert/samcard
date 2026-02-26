@@ -25,7 +25,7 @@ export function Navigation() {
         <nav
       className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
         scrolled
-          ? "bg-theme-devil-green border-b border-theme-devil-green/30"
+          ? "bg-gradient-to-b from-theme-devil-green/80 via-theme-devil-green/60 to-transparent backdrop-blur-md border-b border-theme-devil-green/30"
           : "bg-transparent border-b border-transparent"
       }`}
     >  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -40,12 +40,12 @@ export function Navigation() {
           >
             <Image
               src="/logo.png"
-              alt="DigiCard"
+              alt="SamCard"
               width={40}
               height={40}
               className="rounded-lg"
             />
-            <span className="text-xl font-bold text-white">DigiCard</span>
+            <span className="text-xl font-bold text-white">SamCard</span>
           </button>
 
           {/* Desktop Nav */}

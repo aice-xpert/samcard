@@ -14,17 +14,17 @@ export default function Footer() {
       <div className="px-8 m-11">
         {/* Upper  */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
-          {/* DigiCard */}
+          {/* SamCard */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <Image
                 className="w-10 h-10 rounded-lg"
-                src="/Digicard.png"
-                alt="DigiCard logo"
+                src="/SamCard.png"
+                alt="SamCard logo"
                 width={40}
                 height={40}
               />
-              <h3 className="text-xl font-bold">DigiCard</h3>
+              <h3 className="text-xl font-bold">SamCard</h3>
             </div>
             <p className="text-[#808080]">
               The modern way to share your professional identity. Create, share,
@@ -115,9 +115,9 @@ export default function Footer() {
                 <Mail size={20} />
                 <a
                   className="hover:text-[#4FD1C5]"
-                  href="mailto:hello@digicard.com"
+                  href="mailto:hello@SamCard.com"
                 >
-                  hello@digicard.com
+                  hello@SamCard.com
                 </a>
               </li>
               <li className="flex gap-3 ">
@@ -131,7 +131,7 @@ export default function Footer() {
         </div>
         {/* Lower */}
         <div className="pt-8 border-t border-white/5 flex justify-between items-center gap-4 text-[#808080]">
-          <div>© 2026 DigiCard. All rights reserved</div>
+          <div>© 2026 SamCard. All rights reserved</div>
           <div className="flex gap-6">
             <a className="hover:text-[#4FD1C5]" href="#">
               Privacy Policy
