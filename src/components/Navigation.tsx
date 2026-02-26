@@ -1,12 +1,18 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import Image from "next/image";
 
 export function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+ const [scrolled, setScrolled] = useState(false);
 
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 10);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
   const scrollToSection = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
     setIsMobileMenuOpen(false);
@@ -16,8 +22,13 @@ export function Navigation() {
     "text-gray-300 hover:text-accent transition-colors duration-200 cursor-pointer";
 
   return (
-    <nav className="fixed inset-x-0 top-0 z-50 bg-theme-devil-green shadow-lg border-b border-theme-devil-green/30">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <nav
+      className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
+        scrolled
+          ? "bg-theme-devil-green border-b border-theme-devil-green/30"
+          : "bg-transparent border-b border-transparent"
+      }`}
+    >  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Main Row */}
         <div className="flex items-center justify-between h-20">

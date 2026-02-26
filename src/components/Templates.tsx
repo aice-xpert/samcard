@@ -6,7 +6,6 @@ import { Autoplay, Navigation, Pagination } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
 
 
-
 const templates = [
   {
     name: "Modern Minimalist",
@@ -58,7 +57,6 @@ export function Templates() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        {/* Heading */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -75,9 +73,9 @@ export function Templates() {
           </p>
         </motion.div>
 
-        {/* Carousel */}
+        
         <div className="relative pb-12">
-          {/* Prev Button */}
+         
           <button
             onClick={() => swiperRef.current?.slidePrev()}
             className="absolute left-0 top-1/2 -translate-y-1/2 z-10 -translate-x-15
@@ -92,7 +90,7 @@ export function Templates() {
             </svg>
           </button>
 
-          {/* Next Button */}
+         
           <button
             onClick={() => swiperRef.current?.slideNext()}
             className="absolute right-0 top-1/2 -translate-y-1/2 z-10 translate-x-15
@@ -136,7 +134,7 @@ export function Templates() {
                                   hover:shadow-2xl hover:shadow-theme-digital-green/10
                                   hover:border-theme-digital-green/50 transition-all overflow-hidden">
 
-                    {/* Card Preview */}
+                   
                     <div className={`h-64 bg-gradient-to-br ${template.color} p-8 relative`}>
                       <div className="space-y-4">
                         <div className={`w-16 h-16 ${template.accent} rounded-xl`} />
@@ -151,7 +149,7 @@ export function Templates() {
                       </div>
                     </div>
 
-                    {/* Card Info */}
+                   
                     <div className="p-6 space-y-2">
                       <h3 className="text-xl font-semibold text-white group-hover:text-accent transition-colors">
                         {template.name}
@@ -171,7 +169,7 @@ export function Templates() {
           </Swiper>
         </div>
 
-        {/* CTA */}
+        
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
