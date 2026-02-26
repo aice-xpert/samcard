@@ -13,7 +13,7 @@ export default function Testimonials() {
           <h2 className="text-4xl lg:text-5xl font-bold text-white">
             Loved by Professionals Worldwide
           </h2>
-          <p className="text-xl text-[#808080] max-w-2xl mx-auto">
+          <p className="text-xl text-white max-w-2xl mx-auto">
             Join thousands of professionals who have transformed their <br />
             networking with DigiCard.
           </p>

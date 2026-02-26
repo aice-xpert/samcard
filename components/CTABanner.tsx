@@ -5,7 +5,7 @@ import { CTA_TRUST_BADGES } from "@/constant";
 export function CTABanner() {
   return (
     <section
-      id="signup"
+      id="cta"
       className="py-24 bg-gradient-to-b from-[#006312] to-black border-white/5"
     >
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
