@@ -6,7 +6,7 @@ export function CTABanner() {
   return (
     <section
       id="cta"
-      className="py-24 bg-gradient-to-b from-[#006312] to-black border-white/5"
+      className="py-24 bg-gradient-to-b from-[#031103] to-black border-white/5"
     >
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center space-y-8">

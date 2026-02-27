@@ -5,7 +5,7 @@ export default function Testimonials() {
   return (
     <section
       id="testimonails"
-      className="py-24 bg-gradient-to-b from-[#006312] to-black"
+      className="py-24 bg-gradient-to-b from-[#031103] to-black"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
