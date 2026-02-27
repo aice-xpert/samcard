@@ -33,16 +33,16 @@ export default function Footer() {
             </p>
 
             <div className="flex justify-center sm:justify-start gap-4">
-              <a className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center hover:bg-[#4FD1C5] transition-colors">
+              <a className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center hover:bg-[#49B618] transition-colors">
                 <Linkedin size={20} />
               </a>
-              <a className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center hover:bg-[#4FD1C5] transition-colors">
+              <a className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center hover:bg-[#49B618] transition-colors">
                 <Twitter size={20} />
               </a>
-              <a className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center hover:bg-[#4FD1C5] transition-colors">
+              <a className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center hover:bg-[#49B618] transition-colors">
                 <Instagram size={20} />
               </a>
-              <a className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center hover:bg-[#4FD1C5] transition-colors">
+              <a className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center hover:bg-[#49B618] transition-colors">
                 <Facebook size={20} />
               </a>
             </div>
@@ -53,27 +53,27 @@ export default function Footer() {
             <h3 className="text-xl font-bold">Product</h3>
             <ul className="text-[#808080] space-y-4">
               <li>
-                <a className="hover:text-[#4FD1C5]" href="#">
+                <a className="hover:text-[#49B618]" href="#">
                   Features
                 </a>
               </li>
               <li>
-                <a className="hover:text-[#4FD1C5]" href="#">
+                <a className="hover:text-[#49B618]" href="#">
                   Solution
                 </a>
               </li>
               <li>
-                <a className="hover:text-[#4FD1C5]" href="#">
+                <a className="hover:text-[#49B618]" href="#">
                   Pricing
                 </a>
               </li>
               <li>
-                <a className="hover:text-[#4FD1C5]" href="#">
+                <a className="hover:text-[#49B618]" href="#">
                   Integration
                 </a>
               </li>
               <li>
-                <a className="hover:text-[#4FD1C5]" href="#">
+                <a className="hover:text-[#49B618]" href="#">
                   API
                 </a>
               </li>
@@ -85,27 +85,27 @@ export default function Footer() {
             <h3 className="text-xl font-bold">Company</h3>
             <ul className="text-[#808080] space-y-4">
               <li>
-                <a className="hover:text-[#4FD1C5]" href="#">
+                <a className="hover:text-[#49B618]" href="#">
                   About Us
                 </a>
               </li>
               <li>
-                <a className="hover:text-[#4FD1C5]" href="#">
+                <a className="hover:text-[#49B618]" href="#">
                   Careers
                 </a>
               </li>
               <li>
-                <a className="hover:text-[#4FD1C5]" href="#">
+                <a className="hover:text-[#49B618]" href="#">
                   Blog
                 </a>
               </li>
               <li>
-                <a className="hover:text-[#4FD1C5]" href="#">
+                <a className="hover:text-[#49B618]" href="#">
                   Press Kit
                 </a>
               </li>
               <li>
-                <a className="hover:text-[#4FD1C5]" href="#">
+                <a className="hover:text-[#49B618]" href="#">
                   Contact
                 </a>
               </li>
@@ -119,7 +119,7 @@ export default function Footer() {
               <li className="flex justify-center sm:justify-start gap-3">
                 <Mail size={20} />
                 <a
-                  className="hover:text-[#4FD1C5]"
+                  className="hover:text-[#49B618]"
                   href="mailto:hello@SamCard.com"
                 >
                   hello@SamCard.com
@@ -128,7 +128,7 @@ export default function Footer() {
 
               <li className="flex justify-center sm:justify-start gap-3">
                 <Phone size={20} />
-                <a className="hover:text-[#4FD1C5]" href="tel:+1234567890">
+                <a className="hover:text-[#49B618]" href="tel:+1234567890">
                   +1 (234) 567-890
                 </a>
               </li>
@@ -141,13 +141,13 @@ export default function Footer() {
           <div>© 2026 SamCard. All rights reserved</div>
 
           <div className="flex flex-wrap justify-center md:justify-end gap-6">
-            <a className="hover:text-[#4FD1C5]" href="#">
+            <a className="hover:text-[#49B618]" href="#">
               Privacy Policy
             </a>
-            <a className="hover:text-[#4FD1C5]" href="#">
+            <a className="hover:text-[#49B618]" href="#">
               Terms of Service
             </a>
-            <a className="hover:text-[#4FD1C5]" href="#">
+            <a className="hover:text-[#49B618]" href="#">
               Cookie Policy
             </a>
           </div>
