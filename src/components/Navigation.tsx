@@ -18,8 +18,8 @@ export function Navigation() {
     setIsMobileMenuOpen(false);
   };
 
-  const navLink =
-    "text-gray-300 hover:text-accent transition-colors duration-200 cursor-pointer";
+const navLink =
+"font-sans font-medium tracking-wide text-gray-300 hover:text-accent transition-colors duration-200 cursor-pointer";
 
   return (
         <nav
