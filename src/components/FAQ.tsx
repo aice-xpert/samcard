@@ -5,7 +5,7 @@ export default function FAQ() {
   return (
     <section
       id="faq"
-      className="py-24 bg-gradient-to-b from-black to-[#006312]"
+      className="py-24 bg-gradient-to-b from-black via-[#020f02] to-[#031103]"
     >
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}

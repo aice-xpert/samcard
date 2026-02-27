@@ -8,7 +8,7 @@ export function Hero() {
   return (
     <section
       id="hero"
-      className="pt-32 pb-20 bg-gradient-to-b from-theme-devil-green via-black to-black"
+      className="pt-32 pb-20 bg-gradient-to-b from-theme-devil-green via-black to-black overflow-hidden"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
