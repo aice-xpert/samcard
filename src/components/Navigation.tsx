@@ -34,8 +34,8 @@ const navLink =
         <div className="flex items-center justify-between h-20 min-w-0">
 
           {/* Logo */}
-          <button
-            onClick={() => scrollToSection("hero")}
+          <Link
+            href="/"
             className="flex items-center gap-2 cursor-pointer"
           >
             <Image
@@ -46,15 +46,15 @@ const navLink =
               className="rounded-lg"
             />
             <span className="text-xl font-bold text-white">SamCard</span>
-          </button>
+          </Link>
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-8">
             <button onClick={() => scrollToSection("features")} className={navLink}>
               Features
             </button>
-            <Link href="/business-solutions" className={navLink}>
-              Business Profile
+            <Link href="/solutions" className={navLink}>
+              Solutions
             </Link>
             <button onClick={() => scrollToSection("pricing")} className={navLink}>
               Pricing
