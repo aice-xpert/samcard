@@ -19,7 +19,7 @@ export default function Footer() {
             <div className="flex items-center justify-center sm:justify-start gap-2">
               <Image
                 className="w-10 h-10 rounded-lg"
-                src="/SamCard.png"
+                src="/logo.png"
                 alt="SamCard logo"
                 width={40}
                 height={40}
