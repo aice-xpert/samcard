@@ -20,8 +20,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Your Brand Name",
-  description: "Innovative solutions for modern problems.",
+  title: "SamCard",
+  icons: {
+    icon: "/logo.png", 
+  }
 };
 
 export default function RootLayout({
