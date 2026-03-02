@@ -58,7 +58,7 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a className="hover:text-[#49B618]" href="#">
+                <a className="hover:text-[#49B618]" href="/solutions">
                   Solution
                 </a>
               </li>
