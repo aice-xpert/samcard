@@ -1,3 +1,224 @@
+import { LucideIcon } from "lucide-react";
+import {
+  CreditCard,
+  Package,
+  FileText,
+  FileCheck,
+  Heart,
+  Images,
+  AlertCircle,
+  Globe,
+  Ticket,
+  Calendar,
+  Tag,
+  Briefcase,
+  MessageSquare,
+  Share2,
+  FormInput,
+  Facebook,
+  MapPin,
+  User,
+  Smartphone,
+  ImageIcon,
+  Link,
+  DollarSign,
+  UtensilsCrossed,
+  Star,
+  CalendarDays,
+  Video,
+  Link2,
+} from "lucide-react";
+export interface Solution {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+}
+export interface SolutionCategory {
+  category: string;
+  solutions: Solution[];
+}
+
+export const SOLUTION_CATEGORIES: SolutionCategory[] = [
+  {
+    category: "Business Solutions",
+    solutions: [
+      {
+        icon: CreditCard,
+        title: "Digital Business Cards",
+        description:
+          "Share contact info instantly with smart, interactive digital business cards.",
+      },
+      {
+        icon: User,
+        title: "vCard QR Code",
+        description:
+          "Create vCard QR codes that add contacts directly to address books.",
+      },
+      {
+        icon: Briefcase,
+        title: "Business Page QR Code",
+        description:
+          "Build custom landing pages for your business with comprehensive details.",
+      },
+      {
+        icon: Tag,
+        title: "Coupon QR Code",
+        description:
+          "Drive sales with trackable digital coupons and promotional offers.",
+      },
+      {
+        icon: Share2,
+        title: "Social Media QR Code",
+        description:
+          "Connect all your social profiles in one scannable code.",
+      },
+      {
+        icon: Facebook,
+        title: "Facebook QR Code",
+        description:
+          "Direct users to your Facebook page with a single scan.",
+      },
+      {
+        icon: Star,
+        title: "Google Review QR Code",
+        description:
+          "Collect reviews effortlessly by linking directly to your Google review page.",
+      },
+      {
+        icon: Link2,
+        title: "Dynamic URL QR Code",
+        description:
+          "Update destination URLs anytime without reprinting your QR code.",
+      },
+      {
+        icon: Globe,
+        title: "Multi-URL QR Code",
+        description:
+          "Route users to different URLs based on time, location, or device.",
+      },
+      {
+        icon: DollarSign,
+        title: "Payments QR Code",
+        description:
+          "Accept payments seamlessly with QR codes for PayPal, Venmo, and more.",
+      },
+    ],
+  },
+
+  {
+    category: "Customer Engagement",
+    solutions: [
+      {
+        icon: Ticket,
+        title: "Event Ticket QR Code",
+        description:
+          "Streamline event check-ins with scannable digital tickets.",
+      },
+      {
+        icon: Calendar,
+        title: "Event Landing Page",
+        description:
+          "Create beautiful event pages with RSVP and registration forms.",
+      },
+      {
+        icon: CalendarDays,
+        title: "Google Calendar QR Code",
+        description:
+          "Add events to calendars instantly with pre-filled event details.",
+      },
+      {
+        icon: Video,
+        title: "Meeting QR Code",
+        description:
+          "Share Zoom, Teams, or Meet links for instant virtual meeting access.",
+      },
+      {
+        icon: FileText,
+        title: "Form QR Code",
+        description:
+          "Collect data seamlessly with custom forms linked to QR codes.",
+      },
+      {
+        icon: MessageSquare,
+        title: "Feedback QR Code",
+        description:
+          "Gather customer feedback and ratings to improve your services.",
+      },
+      {
+        icon: FormInput,
+        title: "Google Forms QR Code",
+        description:
+          "Link to Google Forms for surveys, registrations, and more.",
+      },
+      {
+        icon: Smartphone,
+        title: "App Download QR Code",
+        description:
+          "Drive app installs by directing to App Store or Google Play.",
+      },
+      {
+        icon: MapPin,
+        title: "Google Maps QR Code",
+        description:
+          "Share precise locations for easy navigation to your business or event.",
+      },
+    ],
+  },
+
+  {
+    category: "Content & Media",
+    solutions: [
+      {
+        icon: Package,
+        title: "Product QR Code",
+        description:
+          "Enhance product packaging with detailed info, manuals, and support.",
+      },
+      {
+        icon: FileCheck,
+        title: "PDF to QR Code",
+        description:
+          "Share PDFs instantly—menus, catalogs, brochures, and more.",
+      },
+      {
+        icon: Images,
+        title: "PDF Gallery",
+        description:
+          "Create galleries of multiple PDFs for catalogs and portfolios.",
+      },
+      {
+        icon: ImageIcon,
+        title: "Image Gallery QR Code",
+        description:
+          "Showcase photo galleries for products, portfolios, or events.",
+      },
+      {
+        icon: UtensilsCrossed,
+        title: "Menu QR Code",
+        description:
+          "Contactless restaurant menus with real-time updates and pricing.",
+      },
+      {
+        icon: Heart,
+        title: "Pet ID Tag",
+        description:
+          "Keep pets safe with QR tags containing owner contact and medical info.",
+      },
+      {
+        icon: AlertCircle,
+        title: "Medical Alert QR Code",
+        description:
+          "Store critical medical information for emergencies and first responders.",
+      },
+      {
+        icon: Link,
+        title: "URL QR Code",
+        description:
+          "Convert any URL into a scannable QR code for easy sharing.",
+      },
+    ],
+  },
+];
 export interface Testimonial {
   name: string;
   role: string;
