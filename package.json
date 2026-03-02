@@ -1,5 +1,5 @@
 {
-  "name": "digicard",
+  "name": "samcard-saad-and-zainab",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,15 +9,15 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "framer-motion": "^12.34.3",
     "lucide-react": "^0.575.0",
-    "motion": "^12.34.3",
     "next": "16.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "framer-motion": "12.34.3",
+    "motion": "^12.34.3",
     "react-slick": "^0.31.0",
     "slick-carousel": "^1.8.1",
-    "swiper": "^12.1.2"
+    "swiper": "12.1.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
