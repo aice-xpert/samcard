@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { motion } from "motion/react";
 import { Mail, Lock, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
@@ -30,7 +29,7 @@ bg-gradient-to-b
 from-theme-devil-green
 via-black
 to-black
-pt-24 pb-24
+pt-24 pb-5
 flex items-center justify-center px-4
 overflow-hidden
 relative
@@ -51,17 +50,7 @@ relative
           transition={{ duration: 0.5 }}
           className="text-center mb-8"
         >
-          <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <Image
-              src="/logo.png"
-              alt="DigiCard"
-              width={48}
-              height={48}
-              className="rounded-lg"
-            />
 
-            <span className="text-2xl font-bold text-white">DigiCard</span>
-          </Link>
 
           <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
 
