@@ -5,6 +5,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion } from "motion/react";
 import { Mail, Lock, ArrowRight, Eye, EyeOff } from "lucide-react";
+import { FcGoogle } from "react-icons/fc";
+import { FaGithub } from "react-icons/fa";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -245,12 +247,14 @@ flex items-center justify-center gap-2 group
           {/* Social */}
 
           <div className="grid grid-cols-2 gap-4">
-            <button className="py-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all">
-              Google
+            <button className="py-3 flex items-center justify-center gap-2 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all">
+              <FcGoogle size={20} />
+              <span>Google</span>
             </button>
 
-            <button className="py-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all">
-              Github
+            <button className="py-3 flex items-center justify-center gap-2 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all">
+              <FaGithub size={20} />
+              <span>GitHub</span>
             </button>
           </div>
 
