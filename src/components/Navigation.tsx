@@ -92,7 +92,7 @@ const navLink =
               <button onClick={() => scrollToSection("features")} className={`${navLink} text-left`}>
                 Features
               </button>
-              <Link href="/business-solutions" className={`${navLink} text-left`} onClick={() => setIsMobileMenuOpen(false)}>
+              <Link href="/solutions" className={`${navLink} text-left`} onClick={() => setIsMobileMenuOpen(false)}>
                 Business Solutions
               </Link>
               <button onClick={() => scrollToSection("pricing")} className={`${navLink} text-left`}>
