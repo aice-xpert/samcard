@@ -30,6 +30,7 @@ bg-gradient-to-b
 from-theme-devil-green
 via-black
 to-black
+pt-24 pb-24
 flex items-center justify-center px-4
 overflow-hidden
 relative
