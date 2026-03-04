@@ -59,9 +59,9 @@ const navLink =
             <button onClick={() => scrollToSection("pricing")} className={navLink}>
               Pricing
             </button>
-            <button onClick={() => scrollToSection("testimonials")} className={navLink}>
+            <Link href="/testimonials" className={navLink}>
               Testimonials
-            </button>
+            </Link>
             <Link href="/login" className={navLink}>
               Login
             </Link>
