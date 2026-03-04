@@ -391,10 +391,6 @@ export const EXTENDED_TESTIMONIALS: FeaturedTestimonial[] = [
   },
 ];
 
-/* =========================================================
-   Case Studies Data
-   ========================================================= */
-
 export interface CaseStudy {
   company: string;
   logo: string;
