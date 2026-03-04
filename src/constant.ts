@@ -350,3 +350,86 @@ export const FAQ_ITEMS: FAQItem[] = [
       "Yes. DigiCard integrates with popular CRMs like HubSpot, Salesforce, and Pipedrive. Leads captured through your card can be synced automatically to your CRM of choice.",
   },
 ];
+
+export interface FeaturedTestimonial extends Testimonial {
+  industry: string;
+  category: string;
+  isFeatured?: boolean;
+}
+
+export const EXTENDED_TESTIMONIALS: FeaturedTestimonial[] = [
+  {
+    ...TESTIMONIALS[0],
+    industry: "SaaS",
+    category: "Marketing",
+    isFeatured: true,
+  },
+  {
+    ...TESTIMONIALS[1],
+    industry: "Startup",
+    category: "Entrepreneurship",
+  },
+  {
+    ...TESTIMONIALS[2],
+    industry: "Enterprise Sales",
+    category: "Sales",
+  },
+  {
+    ...TESTIMONIALS[3],
+    industry: "Creative Agency",
+    category: "Design",
+  },
+  {
+    ...TESTIMONIALS[4],
+    industry: "Real Estate",
+    category: "Property",
+  },
+  {
+    ...TESTIMONIALS[5],
+    industry: "Technology",
+    category: "Executive",
+  },
+];
+
+/* =========================================================
+   Case Studies Data
+   ========================================================= */
+
+export interface CaseStudy {
+  company: string;
+  logo: string;
+  metric: string;
+  metricLabel: string;
+  description: string;
+  color: string; // tailwind gradient classes
+}
+
+export const CASE_STUDIES: CaseStudy[] = [
+  {
+    company: "TechCorp",
+    logo: "TC",
+    metric: "+85%",
+    metricLabel: "Engagement Growth",
+    description:
+      "TechCorp improved networking efficiency and boosted engagement dramatically using DigiCard’s dynamic QR system.",
+    color: "from-[#4FD1C5] to-teal-500",
+  },
+  {
+    company: "StartupHub",
+    logo: "SH",
+    metric: "+60%",
+    metricLabel: "Lead Conversion",
+    description:
+      "StartupHub increased lead-to-client conversions by implementing smart digital business cards at events.",
+    color: "from-blue-500 to-purple-500",
+  },
+  {
+    company: "GlobalSales Co.",
+    logo: "GS",
+    metric: "+40%",
+    metricLabel: "Follow-ups Closed",
+    description:
+      "GlobalSales streamlined its sales pipeline and improved follow-up rates with analytics-powered QR tracking.",
+    color: "from-pink-500 to-orange-500",
+  },
+];
