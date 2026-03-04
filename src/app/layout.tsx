@@ -33,7 +33,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#090c34]`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-theme-black`}>
         {/* Navigation stays at the top of every page */}
         <Navigation />
         

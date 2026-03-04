@@ -21,7 +21,7 @@
 /* Optional: Apply the background and foreground to the body */
 @layer base {
   body {
-    background-color: var(--color-background);
+    background-color: var(--color-theme-blackout);
     color: var(--color-foreground);
   }
 }

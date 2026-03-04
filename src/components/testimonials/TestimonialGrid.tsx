@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Star, Quote } from "lucide-react";
 import { EXTENDED_TESTIMONIALS } from "@/constant";
+import Image from "next/image";
 
 export default function TestimonialGrid() {
   const [activeCategory, setActiveCategory] = useState("All");
@@ -21,7 +22,7 @@ export default function TestimonialGrid() {
         );
 
   return (
-    <section className="py-20 px-4 sm:px-6 lg:px-8">
+    <section className="py-20 px-4 sm:px-6 lg:px-8 bg-black">
       <div className="max-w-7xl mx-auto">
 
         <div className="text-center mb-12">
@@ -77,12 +78,15 @@ export default function TestimonialGrid() {
                 <Quote size={20} className="text-theme-kelly-green mb-3" />
 
                 <p className="text-gray-300 text-sm mb-6">
-                  "{testimonial.text}"
+                  &ldquo;{testimonial.text}&rdquo;
                 </p>
 
                 <div className="flex items-center gap-3 border-t border-white/5 pt-4">
-                  <img
+                  <Image
                     src={testimonial.avatar}
+                    alt={testimonial.name}
+                    width={40}
+                    height={40}
                     className="w-10 h-10 rounded-full object-cover"
                   />
                   <div>
