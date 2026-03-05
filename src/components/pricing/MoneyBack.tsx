@@ -5,7 +5,7 @@ import { Check } from "lucide-react";
 
 export function MoneyBack() {
   return (
-    <section className="py-20 bg-gradient-to-b from-black via-theme-devil-green to-[#031103]">
+    <section className="py-20 bg-gradient-to-b from-black to-[#031103]">
       <div className="max-w-7xl mx-auto px-4">
 
         <motion.div
