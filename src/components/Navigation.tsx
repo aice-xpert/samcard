@@ -56,9 +56,9 @@ const navLink =
             <Link href="/solutions" className={navLink}>
               Solutions
             </Link>
-            <button onClick={() => scrollToSection("pricing")} className={navLink}>
+            <Link href="/pricing" className={navLink}>
               Pricing
-            </button>
+            </Link>
             <Link href="/testimonials" className={navLink}>
               Testimonials
             </Link>
@@ -95,9 +95,9 @@ const navLink =
               <Link href="/business-solutions" className={`${navLink} text-left`} onClick={() => setIsMobileMenuOpen(false)}>
                 Business Solutions
               </Link>
-              <button onClick={() => scrollToSection("pricing")} className={`${navLink} text-left`}>
+              <Link href="/pricing" className={`${navLink} text-left`} onClick={() => setIsMobileMenuOpen(false)}>
                 Pricing
-              </button>
+              </Link>
               <button onClick={() => scrollToSection("testimonials")} className={`${navLink} text-left`}>
                 Testimonials
               </button>
