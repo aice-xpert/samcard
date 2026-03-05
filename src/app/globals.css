@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+@theme {
+  /* This maps your custom colors so you can use bg-theme-devilGreen */
+  --color-theme-african-turquoise: #000000;
+  --color-theme-blackout: #1e1e1e;
+  --color-theme-devil-green: #006312;
+  --color-theme-digital-green: #008001;
+  --color-theme-strong-green: #009200;
+  --color-theme-kelly-green: #49b618;
+
+  /* Semantic Aliases */
+  --color-primary: #008001;
+  --color-secondary: #006312;
+  --color-accent: #49b618;
+  --color-surface: #1e1e1e;
+  --color-background: #000000;
+  --color-foreground: #ededed;
+}
+
+/* Optional: Apply the background and foreground to the body */
+@layer base {
+  body {
+    background-color: var(--color-theme-blackout);
+    color: var(--color-foreground);
+  }
+}
