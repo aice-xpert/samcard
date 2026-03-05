@@ -50,9 +50,9 @@ const navLink =
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-8">
-            <button onClick={() => scrollToSection("features")} className={navLink}>
+            <Link href="/features" className={navLink}>
               Features
-            </button>
+            </Link>
             <Link href="/solutions" className={navLink}>
               Solutions
             </Link>
