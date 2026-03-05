@@ -429,3 +429,103 @@ export const CASE_STUDIES: CaseStudy[] = [
     color: "from-pink-500 to-orange-500",
   },
 ];
+
+import {
+  QrCode,
+  BarChart3,
+  Layout,
+  Shield,
+  Users,
+  Download,
+  TrendingUp,
+  Lock,
+  Palette,
+  Clock,
+} from "lucide-react";
+
+export const mainFeatures = [
+  {
+    icon: QrCode,
+    title: "Custom QR Codes",
+    description:
+      "Generate beautiful, branded QR codes that link directly to your digital business card.",
+    highlights: [
+      "Unlimited QR code generation",
+      "Custom colors and branding",
+      "High-resolution downloads",
+      "Analytics tracking",
+    ],
+  },
+  {
+    icon: Share2,
+    title: "Contactless Sharing",
+    description:
+      "Share your card instantly via NFC, QR code, text, or email.",
+    highlights: [
+      "NFC tap-to-share support",
+      "Direct link sharing",
+      "Email signatures",
+      "Social media integration",
+    ],
+  },
+  {
+    icon: Layout,
+    title: "Professional Templates",
+    description:
+      "Choose from dozens of stunning templates designed by professionals.",
+    highlights: [
+      "50+ premium templates",
+      "Drag-and-drop builder",
+      "Mobile-responsive designs",
+      "Custom CSS support",
+    ],
+  },
+  {
+    icon: BarChart3,
+    title: "Advanced Analytics",
+    description:
+      "Track who views your card and gain insights.",
+    highlights: [
+      "Real-time view tracking",
+      "Geographic insights",
+      "Engagement metrics",
+      "Export reports",
+    ],
+  },
+  {
+    icon: Shield,
+    title: "Enterprise Security",
+    description:
+      "Bank-level encryption and security measures.",
+    highlights: [
+      "256-bit SSL encryption",
+      "GDPR compliant",
+      "Two-factor authentication",
+      "Security audits",
+    ],
+  },
+  {
+    icon: Users,
+    title: "Team Management",
+    description:
+      "Manage multiple team members and permissions.",
+    highlights: [
+      "Unlimited team members",
+      "Role-based access",
+      "Centralized billing",
+      "Brand templates",
+    ],
+  },
+];
+
+export const additionalFeatures = [
+  { icon: Globe, title: "Multi-Language Support", description: "Create cards in multiple languages." },
+  { icon: Smartphone, title: "Mobile App", description: "Native iOS and Android apps." },
+  { icon: FileText, title: "vCard Export", description: "Export contacts as vCard files." },
+  { icon: Download, title: "Offline Access", description: "Access cards without internet." },
+  { icon: TrendingUp, title: "Lead Generation", description: "Capture leads with forms." },
+  { icon: Lock, title: "Privacy Controls", description: "Control who sees your info." },
+  { icon: Palette, title: "Brand Customization", description: "Match brand colors and fonts." },
+  { icon: Link2, title: "Link in Bio", description: "Custom landing page." },
+  { icon: Clock, title: "Auto-Updates", description: "Update once, reflect everywhere." },
+];
