@@ -6,7 +6,7 @@ import Image from "next/image";
 
 export function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
- const [scrolled, setScrolled] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -18,26 +18,23 @@ export function Navigation() {
     setIsMobileMenuOpen(false);
   };
 
-const navLink =
-"font-sans font-medium tracking-wide text-gray-300 hover:text-accent transition-colors duration-200 cursor-pointer";
+  const navLink =
+    "font-sans font-medium tracking-wide text-gray-300 hover:text-accent transition-colors duration-200 cursor-pointer";
 
   return (
-        <nav
-      className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? "bg-gradient-to-b from-theme-devil-green/80 via-theme-devil-green/60 to-transparent backdrop-blur-md border-theme-devil-green/30"
-          : "bg-transparent border-b border-transparent"
-      }`}
-    >  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
+    <nav
+      className={`fixed inset-x-0 top-0 z-50 transition-all duration-300
+    ${
+      scrolled
+        ? "bg-gradient-to-b from-theme-devil-green/80 via-theme-devil-green/60 to-transparent backdrop-blur-md border-theme-devil-green/30"
+        : "bg-gradient-to-b from-theme-devil-green/80 via-theme-devil-green/60 to-transparent backdrop-blur-md md:bg-transparent"
+    }`}
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Main Row */}
         <div className="flex items-center justify-between h-20 min-w-0">
-
           {/* Logo */}
-          <Link
-            href="/"
-            className="flex items-center gap-2 cursor-pointer"
-          >
+          <Link href="/" className="flex items-center gap-2 cursor-pointer">
             <Image
               src="/logo.png"
               alt="SamCard"
@@ -89,19 +86,37 @@ const navLink =
         {isMobileMenuOpen && (
           <div className="md:hidden py-6 border-t border-theme-devil-green/30">
             <div className="flex flex-col gap-4 px-4">
-              <button onClick={() => scrollToSection("features")} className={`${navLink} text-left`}>
+              <button
+                onClick={() => scrollToSection("features")}
+                className={`${navLink} text-left`}
+              >
                 Features
               </button>
-              <Link href="/solutions" className={`${navLink} text-left`} onClick={() => setIsMobileMenuOpen(false)}>
+              <Link
+                href="/solutions"
+                className={`${navLink} text-left`}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
                 Business Solutions
               </Link>
-              <Link href="/pricing" className={`${navLink} text-left`} onClick={() => setIsMobileMenuOpen(false)}>
+              <Link
+                href="/pricing"
+                className={`${navLink} text-left`}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
                 Pricing
               </Link>
-              <button onClick={() => scrollToSection("testimonials")} className={`${navLink} text-left`}>
+              <button
+                onClick={() => scrollToSection("testimonials")}
+                className={`${navLink} text-left`}
+              >
                 Testimonials
               </button>
-              <Link href="/login" className={`${navLink} text-left`} onClick={() => setIsMobileMenuOpen(false)}>
+              <Link
+                href="/login"
+                className={`${navLink} text-left`}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
                 Login
               </Link>
               <Link
@@ -115,7 +130,6 @@ const navLink =
             </div>
           </div>
         )}
-
       </div>
     </nav>
   );
