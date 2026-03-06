@@ -517,6 +517,19 @@ export const mainFeatures = [
     ],
   },
 ];
+
+export const additionalFeatures = [
+  { icon: Globe, title: "Multi-Language Support", description: "Create cards in multiple languages." },
+  { icon: Smartphone, title: "Mobile App", description: "Native iOS and Android apps." },
+  { icon: FileText, title: "vCard Export", description: "Export contacts as vCard files." },
+  { icon: Download, title: "Offline Access", description: "Access cards without internet." },
+  { icon: TrendingUp, title: "Lead Generation", description: "Capture leads with forms." },
+  { icon: Lock, title: "Privacy Controls", description: "Control who sees your info." },
+  { icon: Palette, title: "Brand Customization", description: "Match brand colors and fonts." },
+  { icon: Link2, title: "Link in Bio", description: "Custom landing page." },
+  { icon: Clock, title: "Auto-Updates", description: "Update once, reflect everywhere." },
+];
+
 // constants.ts
 export interface Article {
   id: number;
