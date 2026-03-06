@@ -7,6 +7,7 @@ import {
   Facebook,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Footer() {
   return (
@@ -90,11 +91,12 @@ export default function Footer() {
                   Careers
                 </a>
               </li>
-              <li>
-                <a className="hover:text-[#49B618]" href="#">
+            <li>
+                <a className="hover:text-[#49B618]" href="/blog">
                   Blog
                 </a>
               </li>
+              
               
               <li>
                 <a className="hover:text-[#49B618]" href="#">

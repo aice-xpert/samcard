@@ -6,7 +6,7 @@ import Image from "next/image";
 
 export function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
- const [scrolled, setScrolled] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -15,8 +15,8 @@ export function Navigation() {
   }, []);
  
 
-const navLink =
-"font-sans font-medium tracking-wide text-gray-300 hover:text-accent transition-colors duration-200 cursor-pointer";
+  const navLink =
+    "font-sans font-medium tracking-wide text-gray-300 hover:text-accent transition-colors duration-200 cursor-pointer";
 
   return (
         <nav
@@ -29,12 +29,8 @@ const navLink =
 
         {/* Main Row */}
         <div className="flex items-center justify-between h-20 min-w-0">
-
           {/* Logo */}
-          <Link
-            href="/"
-            className="flex items-center gap-2 cursor-pointer"
-          >
+          <Link href="/" className="flex items-center gap-2 cursor-pointer">
             <Image
               src="/logo.png"
               alt="SamCard"
@@ -92,7 +88,11 @@ const navLink =
               <Link href="/solutions" className={`${navLink} text-left`} onClick={() => setIsMobileMenuOpen(false)}>
                 Solutions
               </Link>
-              <Link href="/pricing" className={`${navLink} text-left`} onClick={() => setIsMobileMenuOpen(false)}>
+              <Link
+                href="/pricing"
+                className={`${navLink} text-left`}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
                 Pricing
               </Link>
               <Link href="/testimonials" className={`${navLink} text-left`} onClick={() => setIsMobileMenuOpen(false)}>
@@ -112,7 +112,6 @@ const navLink =
             </div>
           </div>
         )}
-
       </div>
     </nav>
   );
