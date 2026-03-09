@@ -12,7 +12,7 @@ export function PolicyList({ items }: PolicyListProps) {
         return (
           <li key={i} className="flex items-start gap-2">
             <span
-              className="mt-[7px] flex-shrink-0 w-1.5 h-1.5 rounded-full bg-green-400"
+              className="mt-[7px] flex-shrink-0 w-1.5 h-1.5 rounded-full bg-theme-kelly-green"
             />
             <span className="text-gray-300">
               {isObj ? (

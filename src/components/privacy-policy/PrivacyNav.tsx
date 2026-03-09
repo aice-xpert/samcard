@@ -40,7 +40,7 @@ export function PrivacyNav() {
             <span key={link.href} className="flex items-center gap-2 sm:gap-4">
               <button
                 onClick={() => scrollToSection(link.href)}
-                className="text-gray-400 hover:text-green-400 transition-colors duration-200"
+                className="text-gray-400 hover:text-theme-kelly-green transition-colors duration-200"
               >
                 {link.label}
               </button>
