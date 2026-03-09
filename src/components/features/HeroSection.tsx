@@ -1,11 +1,13 @@
+import { Star } from "lucide-react";
+
 export default function HeroSection() {
   return (
-    <section className="pt-40 pb-24 bg-black text-center">
-      <div className="max-w-5xl mx-auto px-6">
+    <section className="pt-38 pb-20 bg-gradient-to-b from-theme-devil-green via-black to-black overflow-hidden">
+      <div className="max-w-5xl mx-auto px-4 text-center">
 
-        <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white">
+        <h1 className="text-5xl lg:text-6xl font-bold leading-tight">
           Everything You Need to Network{" "}
-          <span className="block mt-2 text-theme-kelly-green">
+          <span className="text-accent">
             Smarter & Faster
           </span>
         </h1>
