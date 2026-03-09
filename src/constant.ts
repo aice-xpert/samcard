@@ -719,3 +719,162 @@ export const articles: Article[] = [
 ];
 
 export const featuredArticle = articles[0];
+
+import { Scale, UserCheck, Ban, Gavel, Trash2, BarChart2, Mail } from "lucide-react";
+
+export const termsSections = [
+  { number: "1", title: "Definitions and Interpretation", icon: FileText },
+  { number: "2", title: "Acceptance of Terms", icon: Scale },
+  { number: "3", title: "User Responsibilities", icon: UserCheck },
+  { number: "4", title: "Subscription and Payment Terms", icon: DollarSign },
+  { number: "5", title: "Intellectual Property", icon: FileText },
+  { number: "6", title: "Privacy Policy", icon: Lock },
+  { number: "7", title: "Account Termination", icon: Trash2 },
+  { number: "8", title: "Prohibited Activities", icon: AlertCircle },
+  { number: "9", title: "Content Guidelines", icon: Heart },
+  { number: "10", title: "Limitation of Liability", icon: Shield },
+  { number: "11", title: "Updates and Modifications", icon: Calendar },
+  { number: "12", title: "Analytics and Usage Data", icon: BarChart2 },
+  { number: "13", title: "Governing Law", icon: Shield },
+];
+
+export const sections = [
+  {
+    id: 1,
+    title: "Definitions and Interpretation",
+    icon: FileText,
+    paragraphs: [
+      "For the purposes of this Agreement, the following terms shall have the meanings set forth below.",
+      '"Service" means the DigiCard platform and any related products.',
+      '"User Content" means any data submitted by users to the Service.'
+    ],
+    checklist: [
+      '"Agreement" refers to these Terms of Service.',
+      '"Platform" refers to the website and mobile application collectively.'
+    ]
+  },
+  {
+    id: 2,
+    title: "Acceptance of Terms",
+    icon: Shield,
+    paragraphs: [
+      "By using the Service, you agree to be bound by these Terms of Service.",
+      "If you do not agree, you must not use the Service."
+    ]
+  },
+  {
+    id: 3,
+    title: "User Responsibilities",
+    icon: UserCheck,
+    paragraphs: [
+      "Users must provide accurate information when registering for the Service.",
+      "Users must not misuse the Service for illegal or unauthorized purposes."
+    ],
+    checklist: [
+      "Keep login credentials secure.",
+      "Report any unauthorized activity to support immediately."
+    ]
+  },
+  {
+    id: 4,
+    title: "Subscription and Payment Terms",
+    icon: DollarSign,
+    paragraphs: [
+      "Certain features of the Service require a paid subscription.",
+      "All fees are billed in advance on a monthly or annual basis."
+    ],
+    bullets: [
+      "Subscription fees are non-refundable.",
+      "Users must maintain up-to-date payment information."
+    ]
+  },
+  {
+    id: 5,
+    title: "Intellectual Property",
+    icon: FileText,
+    paragraphs: [
+      "All content provided by the Service is the property of DigiCard or its licensors.",
+      "Users may not copy, modify, or distribute any content without explicit permission."
+    ]
+  },
+  {
+    id: 6,
+    title: "Privacy Policy",
+    icon: Lock,
+    paragraphs: [
+      "DigiCard collects and processes user data according to the Privacy Policy.",
+      "By using the Service, you consent to the data practices described in the Privacy Policy."
+    ]
+  },
+  {
+    id: 7,
+    title: "Account Termination",
+    icon: Trash2,
+    paragraphs: [
+      "DigiCard may terminate or suspend your account at its sole discretion.",
+      "Users may terminate their account by contacting support."
+    ],
+    checklist: [
+      "Violation of terms may result in immediate termination.",
+      "Termination does not relieve users of payment obligations."
+    ]
+  },
+  {
+    id: 8,
+    title: "Prohibited Activities",
+    icon: AlertCircle,
+    paragraphs: [
+      "Users shall not engage in activities that harm or interfere with the Service or other users.",
+      "Prohibited activities include hacking, spamming, or distributing malware."
+    ],
+    bullets: [
+      "Impersonating other users or staff.",
+      "Reverse engineering or copying the Service."
+    ]
+  },
+  {
+    id: 9,
+    title: "Content Guidelines",
+    icon: Heart,
+    paragraphs: [
+      "Users are responsible for all content they upload or share through the Service.",
+      "Content must comply with applicable laws and regulations."
+    ]
+  },
+  {
+    id: 10,
+    title: "Limitation of Liability",
+    icon: Shield,
+    paragraphs: [
+      "DigiCard is not liable for any indirect, incidental, or consequential damages arising from your use of the Service.",
+      "Users assume all risks associated with using the Service."
+    ]
+  },
+  {
+    id: 11,
+    title: "Updates and Modifications",
+    icon: Calendar,
+    paragraphs: [
+      "DigiCard may modify or update the Terms of Service at any time.",
+      "Users are encouraged to review the Terms regularly to stay informed."
+    ]
+  },
+  {
+    id: 12,
+    title: "Analytics and Usage Data",
+    icon: BarChart2,
+    paragraphs: [
+      "DigiCard may collect anonymized usage data to improve the Service.",
+      "Data is collected in accordance with the Privacy Policy."
+    ]
+  },
+  {
+    id: 13,
+    title: "Governing Law",
+    icon: Shield,
+    paragraphs: [
+      "These Terms shall be governed by and construed in accordance with the laws of the jurisdiction in which DigiCard operates.",
+      "Disputes arising under these Terms shall be subject to the exclusive jurisdiction of the courts in that jurisdiction."
+    ]
+  },
+];
