@@ -529,3 +529,193 @@ export const additionalFeatures = [
   { icon: Link2, title: "Link in Bio", description: "Custom landing page." },
   { icon: Clock, title: "Auto-Updates", description: "Update once, reflect everywhere." },
 ];
+
+// constants.ts
+export interface Article {
+  id: number;
+  title: string;
+  excerpt: string;
+  category: string;
+  author: string;
+  date: string;
+  readTime: string;
+}
+
+export const categories = [
+  "All",
+  "Networking",
+  "Strategy",
+  "Tips & Tricks",
+  "Case Studies",
+  "Industry News",
+];
+
+export const tags = ["Networking", "Branding", "Technology", "Career"];
+
+export const articles: Article[] = [
+  {
+    id: 1,
+    title: "Mastering First Impressions in Digital Networking",
+    excerpt: "Understand the psychology behind impactful digital cards.",
+    category: "Networking",
+    author: "John Chen",
+    date: "Mar 3, 2026",
+    readTime: "5 min",
+  },
+  {
+    id: 2,
+    title: "10 Networking Mistakes Professionals Make",
+    excerpt: "Avoid the most common networking mistakes.",
+    category: "Networking",
+    author: "Emma Davis",
+    date: "Feb 28, 2026",
+    readTime: "7 min",
+  },
+  {
+    id: 3,
+    title: "Building a Powerful Professional Network",
+    excerpt: "Strategies used by top entrepreneurs.",
+    category: "Networking",
+    author: "Ali Hassan",
+    date: "Feb 21, 2026",
+    readTime: "6 min",
+  },
+  {
+    id: 10,
+    title: "Networking Etiquette for Remote Professionals",
+    excerpt: "Tips to maintain professionalism online.",
+    category: "Networking",
+    author: "Nina Roberts",
+    date: "Mar 5, 2026",
+    readTime: "5 min",
+  },
+  {
+    id: 11,
+    title: "How to Leverage LinkedIn Groups Effectively",
+    excerpt: "Grow your network with active group participation.",
+    category: "Networking",
+    author: "Raj Patel",
+    date: "Mar 2, 2026",
+    readTime: "6 min",
+  },
+  {
+    id: 12,
+    title: "Networking for Introverts: Practical Tips",
+    excerpt: "Make meaningful connections without being outgoing.",
+    category: "Networking",
+    author: "Sophia Turner",
+    date: "Feb 26, 2026",
+    readTime: "5 min",
+  },
+
+  {
+    id: 4,
+    title: "NFC vs QR: Which Technology Should You Use?",
+    excerpt: "Compare pros and cons of NFC vs QR.",
+    category: "Strategy",
+    author: "Michael Park",
+    date: "Feb 25, 2026",
+    readTime: "6 min",
+  },
+  {
+    id: 5,
+    title: "Growth Strategies Using Digital Cards",
+    excerpt: "How startups use digital networking.",
+    category: "Strategy",
+    author: "Samantha Lee",
+    date: "Feb 22, 2026",
+    readTime: "8 min",
+  },
+  {
+    id: 6,
+    title: "Scaling Your Professional Reach",
+    excerpt: "How to grow influence with smart networking.",
+    category: "Strategy",
+    author: "Chris Walker",
+    date: "Feb 15, 2026",
+    readTime: "7 min",
+  },
+  {
+    id: 13,
+    title: "Strategic Partnerships for Career Growth",
+    excerpt: "Form alliances that amplify your professional impact.",
+    category: "Strategy",
+    author: "Olivia Martinez",
+    date: "Mar 4, 2026",
+    readTime: "6 min",
+  },
+  {
+    id: 14,
+    title: "Using Analytics to Improve Networking Strategy",
+    excerpt: "Track and optimize your outreach efforts.",
+    category: "Strategy",
+    author: "Ethan Brown",
+    date: "Mar 1, 2026",
+    readTime: "7 min",
+  },
+  {
+    id: 15,
+    title: "Digital Card Campaigns That Deliver Results",
+    excerpt: "Case studies on high-performing networking campaigns.",
+    category: "Strategy",
+    author: "Mia Johnson",
+    date: "Feb 23, 2026",
+    readTime: "8 min",
+  },
+  {
+    id: 7,
+    title: "Perfect LinkedIn Profile for Networking",
+    excerpt: "Tips to optimize your professional presence.",
+    category: "Tips & Tricks",
+    author: "Lisa Wong",
+    date: "Feb 20, 2026",
+    readTime: "6 min",
+  },
+  {
+    id: 8,
+    title: "Top 5 Digital Networking Hacks",
+    excerpt: "Small tricks that produce big results.",
+    category: "Tips & Tricks",
+    author: "David Kim",
+    date: "Feb 18, 2026",
+    readTime: "4 min",
+  },
+  {
+    id: 9,
+    title: "Smart Follow-Up Strategies",
+    excerpt: "How to turn a connection into an opportunity.",
+    category: "Tips & Tricks",
+    author: "Sarah Mitchell",
+    date: "Feb 14, 2026",
+    readTime: "5 min",
+  },
+  {
+    id: 16,
+    title: "Time-Saving Networking Hacks for Busy Professionals",
+    excerpt: "Maximize impact with minimal effort.",
+    category: "Tips & Tricks",
+    author: "Kevin Lee",
+    date: "Mar 6, 2026",
+    readTime: "4 min",
+  },
+  {
+    id: 17,
+    title: "Follow-Up Email Templates That Work",
+    excerpt: "Ready-to-use email strategies for new connections.",
+    category: "Tips & Tricks",
+    author: "Emma Chen",
+    date: "Mar 3, 2026",
+    readTime: "5 min",
+  },
+  {
+    id: 18,
+    title: "Quick Profile Updates to Stand Out Online",
+    excerpt: "Optimize your social presence in minutes.",
+    category: "Tips & Tricks",
+    author: "Liam Scott",
+    date: "Feb 28, 2026",
+    readTime: "4 min",
+  },
+];
+
+export const featuredArticle = articles[0];

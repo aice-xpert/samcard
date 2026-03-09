@@ -7,6 +7,7 @@ import {
   Facebook,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Footer() {
   return (
@@ -53,13 +54,13 @@ export default function Footer() {
             <h3 className="text-xl font-bold">Product</h3>
             <ul className="text-[#808080] space-y-4">
               <li>
-                <a className="hover:text-[#49B618]" href="#">
+                <a className="hover:text-[#49B618]" href="/features">
                   Features
                 </a>
               </li>
               <li>
                 <a className="hover:text-[#49B618]" href="/solutions">
-                  Solution
+                  Solutions
                 </a>
               </li>
               <li>
@@ -68,15 +69,11 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a className="hover:text-[#49B618]" href="#">
-                  Integration
+                <a className="hover:text-[#49B618]" href="/testimonials">
+                  Testimonials
                 </a>
               </li>
-              <li>
-                <a className="hover:text-[#49B618]" href="#">
-                  API
-                </a>
-              </li>
+              
             </ul>
           </div>
 
@@ -85,7 +82,7 @@ export default function Footer() {
             <h3 className="text-xl font-bold">Company</h3>
             <ul className="text-[#808080] space-y-4">
               <li>
-                <a className="hover:text-[#49B618]" href="#">
+                <a className="hover:text-[#49B618]" href="/about-us">
                   About Us
                 </a>
               </li>
@@ -94,16 +91,13 @@ export default function Footer() {
                   Careers
                 </a>
               </li>
-              <li>
-                <a className="hover:text-[#49B618]" href="#">
+            <li>
+                <a className="hover:text-[#49B618]" href="/blog">
                   Blog
                 </a>
               </li>
-              <li>
-                <a className="hover:text-[#49B618]" href="#">
-                  Press Kit
-                </a>
-              </li>
+              
+              
               <li>
                 <a className="hover:text-[#49B618]" href="#">
                   Contact
