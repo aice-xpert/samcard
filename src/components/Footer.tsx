@@ -135,7 +135,7 @@ export default function Footer() {
           <div>© 2026 SamCard. All rights reserved</div>
 
           <div className="flex flex-wrap justify-center md:justify-end gap-6">
-            <a className="hover:text-[#49B618]" href="#">
+            <a className="hover:text-[#49B618]" href="/privacy-policy">
               Privacy Policy
             </a>
             <a className="hover:text-[#49B618]" href="/terms-and-services">
