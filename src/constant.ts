@@ -246,7 +246,7 @@ export const TESTIMONIALS: Testimonial[] = [
     avatar:
       "https://images.unsplash.com/photo-1610387694365-19fafcc86d86?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     rating: 5,
-    text: "DigiCard has completely transformed how we network at conferences. The analytics feature helps us track engagement and follow up with the right people at the right time.",
+    text: "SamCard has completely transformed how we network at conferences. The analytics feature helps us track engagement and follow up with the right people at the right time.",
   },
   {
     name: "Michael Chen",
@@ -255,7 +255,7 @@ export const TESTIMONIALS: Testimonial[] = [
     avatar:
       "https://images.unsplash.com/photo-1561731885-e0591a34659c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     rating: 5,
-    text: "As a startup founder, first impressions matter. DigiCard helps me look professional and tech-savvy. Plus, I never run out of cards anymore!",
+    text: "As a startup founder, first impressions matter. SamCard helps me look professional and tech-savvy. Plus, I never run out of cards anymore!",
   },
   {
     name: "Emily Rodriguez",
@@ -264,7 +264,7 @@ export const TESTIMONIALS: Testimonial[] = [
     avatar:
       "https://images.unsplash.com/photo-1615843423179-bea071facf96?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     rating: 5,
-    text: "The custom QR codes are a game-changer. Our entire sales team uses DigiCard now, and we've seen a 40% increase in follow-up conversions.",
+    text: "The custom QR codes are a game-changer. Our entire sales team uses SamCard now, and we've seen a 40% increase in follow-up conversions.",
   },
   {
     name: "David Park",
@@ -291,7 +291,7 @@ export const TESTIMONIALS: Testimonial[] = [
     avatar:
       "https://images.unsplash.com/photo-1561731885-e0591a34659c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
     rating: 5,
-    text: "DigiCard has helped our company save money on printing costs while being more environmentally friendly. It's a win-win!",
+    text: "SamCard has helped our company save money on printing costs while being more environmentally friendly. It's a win-win!",
   },
 ];
 
@@ -345,9 +345,9 @@ export const FAQ_ITEMS: FAQItem[] = [
       "Yes. All data is encrypted in transit and at rest. We never sell your personal information to third parties, and you have full control over what information is visible on your card.",
   },
   {
-    question: "Can I integrate DigiCard with my CRM?",
+    question: "Can I integrate SamCard with my CRM?",
     answer:
-      "Yes. DigiCard integrates with popular CRMs like HubSpot, Salesforce, and Pipedrive. Leads captured through your card can be synced automatically to your CRM of choice.",
+      "Yes. SamCard integrates with popular CRMs like HubSpot, Salesforce, and Pipedrive. Leads captured through your card can be synced automatically to your CRM of choice.",
   },
 ];
 
@@ -407,7 +407,7 @@ export const CASE_STUDIES: CaseStudy[] = [
     metric: "+85%",
     metricLabel: "Engagement Growth",
     description:
-      "TechCorp improved networking efficiency and boosted engagement dramatically using DigiCard’s dynamic QR system.",
+      "TechCorp improved networking efficiency and boosted engagement dramatically using SamCard’s dynamic QR system.",
     color: "from-[#4FD1C5] to-teal-500",
   },
   {
@@ -745,7 +745,7 @@ export const sections = [
     icon: FileText,
     paragraphs: [
       "For the purposes of this Agreement, the following terms shall have the meanings set forth below.",
-      '"Service" means the DigiCard platform and any related products.',
+      '"Service" means the SamCard platform and any related products.',
       '"User Content" means any data submitted by users to the Service.'
     ],
     checklist: [
@@ -793,7 +793,7 @@ export const sections = [
     title: "Intellectual Property",
     icon: FileText,
     paragraphs: [
-      "All content provided by the Service is the property of DigiCard or its licensors.",
+      "All content provided by the Service is the property of SamCard or its licensors.",
       "Users may not copy, modify, or distribute any content without explicit permission."
     ]
   },
@@ -802,7 +802,7 @@ export const sections = [
     title: "Privacy Policy",
     icon: Lock,
     paragraphs: [
-      "DigiCard collects and processes user data according to the Privacy Policy.",
+      "SamCard collects and processes user data according to the Privacy Policy.",
       "By using the Service, you consent to the data practices described in the Privacy Policy."
     ]
   },
@@ -811,7 +811,7 @@ export const sections = [
     title: "Account Termination",
     icon: Trash2,
     paragraphs: [
-      "DigiCard may terminate or suspend your account at its sole discretion.",
+      "SamCard may terminate or suspend your account at its sole discretion.",
       "Users may terminate their account by contacting support."
     ],
     checklist: [
@@ -846,7 +846,7 @@ export const sections = [
     title: "Limitation of Liability",
     icon: Shield,
     paragraphs: [
-      "DigiCard is not liable for any indirect, incidental, or consequential damages arising from your use of the Service.",
+      "SamCard is not liable for any indirect, incidental, or consequential damages arising from your use of the Service.",
       "Users assume all risks associated with using the Service."
     ]
   },
@@ -855,7 +855,7 @@ export const sections = [
     title: "Updates and Modifications",
     icon: Calendar,
     paragraphs: [
-      "DigiCard may modify or update the Terms of Service at any time.",
+      "SamCard may modify or update the Terms of Service at any time.",
       "Users are encouraged to review the Terms regularly to stay informed."
     ]
   },
@@ -864,7 +864,7 @@ export const sections = [
     title: "Analytics and Usage Data",
     icon: BarChart2,
     paragraphs: [
-      "DigiCard may collect anonymized usage data to improve the Service.",
+      "SamCard may collect anonymized usage data to improve the Service.",
       "Data is collected in accordance with the Privacy Policy."
     ]
   },
@@ -873,7 +873,7 @@ export const sections = [
     title: "Governing Law",
     icon: Shield,
     paragraphs: [
-      "These Terms shall be governed by and construed in accordance with the laws of the jurisdiction in which DigiCard operates.",
+      "These Terms shall be governed by and construed in accordance with the laws of the jurisdiction in which SamCard operates.",
       "Disputes arising under these Terms shall be subject to the exclusive jurisdiction of the courts in that jurisdiction."
     ]
   },
