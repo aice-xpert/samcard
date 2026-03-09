@@ -25,15 +25,7 @@ export function PrivacyNav() {
   };
 
   return (
-    <section
-      className="sticky top-0 z-20 py-4 px-4 sm:px-6 lg:px-8"
-      style={{
-        background: "rgba(0, 0, 0, 0.85)",
-        backdropFilter: "blur(12px)",
-        borderTop: "1px solid rgba(0, 180, 0, 0.15)",
-        borderBottom: "1px solid rgba(0, 180, 0, 0.15)",
-      }}
-    >
+   <section className="py-4 bg-neutral-950 border-y border-white/10">
       <div className="max-w-4xl mx-auto">
         <nav className="flex flex-wrap justify-center gap-2 sm:gap-4 text-sm">
           {links.map((link, i) => (
