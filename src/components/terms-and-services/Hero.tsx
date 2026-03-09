@@ -31,7 +31,7 @@ export default function TermsHero() {
 
               <p className="text-gray-300 leading-relaxed">
                 This Terms of Service Agreement is a legally binding contract
-                between you and DigiCard Inc.
+                between you and SamCard Inc.
               </p>
             </div>
           </div>

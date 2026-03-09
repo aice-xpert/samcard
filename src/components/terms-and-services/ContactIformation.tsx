@@ -34,21 +34,21 @@ export default function ContactInformation() {
                 <span className="w-2 h-2 bg-theme-strong-green rounded-full"></span>
                 Legal Inquiries:
                 <a href="mailto:legal@samcard.com" className="text-theme-kelly-green hover:text-theme-strong-green hover:underline transition-colors">
-                  legal@digicard.com
+                  legal@samcard.com
                 </a>
               </p>
               <p className="flex items-center gap-2">
                 <span className="w-2 h-2 bg-theme-strong-green rounded-full"></span>
                 General Support:
                 <a href="mailto:support@samcard.com" className="text-theme-kelly-green hover:text-theme-strong-green hover:underline transition-colors">
-                  support@digicard.com
+                  support@samcard.com
                 </a>
               </p>
               <p className="flex items-center gap-2">
                 <span className="w-2 h-2 bg-theme-strong-green rounded-full"></span>
                 DMCA Notices:
                 <a href="mailto:dmca@samcard.com" className="text-theme-kelly-green hover:text-theme-strong-green hover:underline transition-colors">
-                  dmca@digicard.com
+                  dmca@samcard.com
                 </a>
               </p>
             </div>
@@ -56,7 +56,7 @@ export default function ContactInformation() {
         </div>
         <div className="mt-8 pt-8 border-t border-theme-digital-green/30">
           <p className="text-gray-500 text-sm leading-relaxed">
-            By using DigiCard, you acknowledge that you have read this Terms of Service Agreement, understand it, and agree to be bound by its terms and conditions.
+            By using SamCard, you acknowledge that you have read this Terms of Service Agreement, understand it, and agree to be bound by its terms and conditions.
           </p>
         </div>
       </div>
