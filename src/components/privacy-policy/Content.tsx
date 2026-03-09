@@ -108,7 +108,7 @@ export default function PrivacyPolicyPage() {
                 To exercise any of these rights, please contact us at{' '}
                 <a
                   href="mailto:privacy@SamCard.com"
-                  className="text-green-400 hover:underline"
+                  className="text-theme-kelly-green hover:underline"
                 >
                   privacy@SamCard.com
                 </a>
@@ -173,7 +173,7 @@ export default function PrivacyPolicyPage() {
           {/* Children */}
           <div className="space-y-4 text-gray-300">
             <h2 className="text-2xl font-bold text-white">
-              Children's Privacy
+              Children&apos;s Privacy
             </h2>
             <p>
               Our services are not intended for children under the age of 16. We do not knowingly
@@ -222,13 +222,13 @@ export default function PrivacyPolicyPage() {
             <PolicyCallout variant="subtle">
               <p>
                 <strong className="text-white">Email:</strong>{' '}
-                <a href="mailto:privacy@SamCard.com" className="text-green-400 hover:underline">
+                <a href="mailto:privacy@SamCard.com" className="text-theme-kelly-green hover:underline">
                   privacy@SamCard.com
                 </a>
               </p>
               <p className="mt-2">
                 <strong className="text-white">Data Protection Officer:</strong>{' '}
-                <a href="mailto:dpo@SamCard.com" className="text-green-400 hover:underline">
+                <a href="mailto:dpo@SamCard.com" className="text-theme-kelly-green hover:underline">
                   dpo@SamCard.com
                 </a>
               </p>

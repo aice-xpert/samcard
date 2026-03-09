@@ -1,4 +1,4 @@
-import { CheckCircle, Mail, Phone, MapPin } from "lucide-react";
+import { CheckCircle, type LucideIcon } from "lucide-react";
 
 type Contact = {
   email: string;
@@ -9,7 +9,7 @@ type Contact = {
 type Section = {
   id: number;
   title: string;
-  icon: React.ComponentType<any>;
+  icon: LucideIcon;
   paragraphs?: string[];
   checklist?: string[];
   bullets?: string[];

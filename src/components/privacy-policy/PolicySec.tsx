@@ -1,8 +1,9 @@
-import { type ReactNode, type ComponentType, type CSSProperties } from 'react';
+import { type ReactNode } from 'react';
+import { type LucideIcon } from 'lucide-react';
 
 type PolicySectionProps = {
   id?: string;
-  icon?: ComponentType<{ className?: string; style?: CSSProperties }>;
+  icon?: LucideIcon;
   title: string;
   children: ReactNode;
 };
@@ -12,14 +13,8 @@ export function PolicySection({ id, icon: Icon, title, children }: PolicySection
     <div id={id} className="space-y-6">
       <div className="flex items-start gap-4">
         {Icon && (
-          <div
-            className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center"
-            style={{
-              background: 'rgba(0, 180, 0, 0.08)',
-              border: '1px solid rgba(0, 180, 0, 0.3)',
-            }}
-          >
-            <Icon className="w-6 h-6 text-green-400" />
+          <div className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-theme-devil-green to-theme-kelly-green">
+            <Icon className="w-6 h-6 text-white" />
           </div>
         )}
         <div className="flex-1">
