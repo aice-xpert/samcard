@@ -41,7 +41,6 @@ export function Navigation() {
             <span className="text-xl font-bold text-white">SamCard</span>
           </Link>
 
-          {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-8">
             <Link href="/features" className={navLink}>
               Features
