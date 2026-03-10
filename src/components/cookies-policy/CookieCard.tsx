@@ -1,6 +1,6 @@
 "use client";
 import { motion } from "motion/react";
-import { ReactNode } from "react";
+import { bodyTextClass, mutedBodyTextClass, subsectionTitleClass } from "./typography";
 
 interface CookieCardProps {
   icon: React.ComponentType<{ className?: string }>;
@@ -24,9 +24,9 @@ function CookieCard({ icon: Icon, index, title, description, purpose, extras, ca
       <div className="flex items-start gap-3">
         <Icon className="w-6 h-6 text-accent flex-shrink-0 mt-0.5" />
         <div className="flex-1 space-y-3">
-          <h3 className="text-xl font-semibold text-white">{title}</h3>
-          <p className="text-gray-300 text-sm leading-relaxed">{description}</p>
-          <div className="text-sm text-gray-400 space-y-2 pt-1">
+          <h3 className={subsectionTitleClass}>{title}</h3>
+          <p className={bodyTextClass}>{description}</p>
+          <div className={`${mutedBodyTextClass} space-y-2 pt-1`}>
             <p className="font-medium text-white">Purpose:</p>
             <ul className="space-y-1 ml-4">
               {purpose.map((p: string) => (

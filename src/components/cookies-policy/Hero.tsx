@@ -2,6 +2,7 @@
 "use client";
 import { motion } from "motion/react";
 import { Cookie } from "lucide-react";
+import { bodyTextClass, metaTextClass } from "./typography";
 
 export function Hero() {
     return (
@@ -17,12 +18,12 @@ export function Hero() {
             <Cookie className="w-8 h-8 text-accent" />
           </div>
           <h1 className="text-5xl font-bold text-white">Cookie Policy</h1>
-          <p className="text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed">
+          <p className={`${bodyTextClass} max-w-2xl mx-auto`}>
             This policy explains how SamCard uses cookies and similar
             technologies to recognize you when you visit our website and use our
             services.
           </p>
-          <p className="text-sm text-gray-400">Last Updated: March 9, 2026</p>
+          <p className={metaTextClass}>Last Updated: March 9, 2026</p>
         </motion.div>
       </div>
     </section>

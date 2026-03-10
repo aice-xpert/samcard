@@ -1,3 +1,5 @@
+import { navTextClass } from "./typography";
+
 export function CookiePolicyNav() {
   const links = [
     { href: "#what-are-cookies", label: "What Are Cookies" },
@@ -9,7 +11,7 @@ export function CookiePolicyNav() {
   return (
      <section className="py-5 bg-neutral-950 border-y border-white/10">
      <div className="max-w-4xl mx-auto">
-        <nav className="flex flex-wrap justify-center gap-4 text-sm">
+        <nav className={`flex flex-wrap justify-center gap-4 ${navTextClass}`}>
           {links.map((link, i) => (
             <span key={link.href} className="flex items-center gap-4">
               {i > 0 && <span className="text-gray-600 hidden sm:inline">•</span>}

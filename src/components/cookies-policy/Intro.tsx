@@ -1,6 +1,7 @@
 "use client";
 import { motion } from "motion/react";
 import { Cookie } from "lucide-react";
+import { bodyTextClass, sectionTitleClass } from "./typography";
 
 export function CookiePolicyIntro() {
   return (
@@ -14,7 +15,7 @@ export function CookiePolicyIntro() {
           transition={{ duration: 0.5 }}
           className="prose prose-invert max-w-none"
         >
-          <p className="text-gray-300 leading-relaxed text-lg">
+          <p className={bodyTextClass}>
             SamCard uses cookies and similar tracking technologies to improve your
             experience on our platform, analyze usage patterns, and deliver
             personalized content. This Cookie Policy explains what cookies are,
@@ -35,9 +36,9 @@ export function CookiePolicyIntro() {
           </div>
 
           <div className="flex-1 space-y-4">
-            <h2 className="text-3xl lg:text-4xl font-bold text-white">What Are Cookies?</h2>
+            <h2 className={sectionTitleClass}>What Are Cookies?</h2>
 
-            <div className="space-y-4 text-gray-300">
+            <div className={`space-y-4 ${bodyTextClass}`}>
               <p>
                 Cookies are small text files placed on your device when you visit
                 a website. They help websites work efficiently and provide
