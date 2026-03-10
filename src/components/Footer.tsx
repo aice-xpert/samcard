@@ -141,7 +141,7 @@ export default function Footer() {
             <a className="hover:text-[#49B618]" href="/terms-and-services">
               Terms of Service
             </a>
-            <a className="hover:text-[#49B618]" href="#">
+            <a className="hover:text-[#49B618]" href="/cookies-policy">
               Cookie Policy
             </a>
           </div>

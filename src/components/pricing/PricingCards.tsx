@@ -55,7 +55,7 @@ export function PricingCards() {
         { name: "Custom QR Designs", included: true },
         { name: "NFC Support", included: true },
         { name: "All Integrations", included: true },
-        { name: "Remove DigiCard Branding", included: true },
+        { name: "Remove SamCard Branding", included: true },
       ],
       buttonText: "Start Free Trial",
       popular: true,

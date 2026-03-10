@@ -10,7 +10,7 @@ const testimonials = [
     role: "Entrepreneur",
     company: "StartupHub",
     rating: 5,
-    text: "As a startup founder, first impressions matter. DigiCard helps me look professional and tech-savvy.",
+    text: "As a startup founder, first impressions matter. SamCard helps me look professional and tech-savvy.",
     category: "Startup",
   },
   {
@@ -18,7 +18,7 @@ const testimonials = [
     role: "Sales Manager",
     company: "GlobalSales Co.",
     rating: 5,
-    text: "The custom QR codes are a game-changer. Our entire sales team uses DigiCard now.",
+    text: "The custom QR codes are a game-changer. Our entire sales team uses SamCard now.",
     category: "Sales",
   },
   {
@@ -26,7 +26,7 @@ const testimonials = [
     role: "CEO",
     company: "Innovation Labs",
     rating: 5,
-    text: "DigiCard helped us eliminate printing costs while improving our brand image.",
+    text: "SamCard helped us eliminate printing costs while improving our brand image.",
     category: "Enterprise",
   },
 ];
