@@ -30,7 +30,7 @@ export function MoneyBack() {
 
           {/* Description */}
           <p className="text-xl text-gray-300 mb-10 leading-relaxed">
-            Try DigiCard risk-free. If you are not completely satisfied within
+            Try SamCard risk-free. If you are not completely satisfied within
             30 days, we will refund you in full — no questions asked.
           </p>
 

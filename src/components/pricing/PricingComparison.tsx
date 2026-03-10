@@ -27,7 +27,7 @@ export function PricingComparison() {
           enterprise: true,
         },
         {
-          name: "Remove DigiCard Logo",
+          name: "Remove SamCard Logo",
           free: false,
           premium: true,
           enterprise: true,

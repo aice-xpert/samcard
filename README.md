@@ -1,4 +1,4 @@
-# DigiCard
+# SamCard
 
 **Your Business Card, Reimagined**
 
@@ -8,7 +8,7 @@ Create stunning digital business cards with custom QR codes. Share your contact 
 
 ## 🚀 Overview
 
-DigiCard is a modern digital business card platform designed to help professionals network smarter. With custom QR codes, contactless sharing, analytics tracking, and beautiful templates, DigiCard transforms how you share your professional identity.
+SamCard is a modern digital business card platform designed to help professionals network smarter. With custom QR codes, contactless sharing, analytics tracking, and beautiful templates, SamCard transforms how you share your professional identity.
 
 ---
 
@@ -68,7 +68,7 @@ All plans include a **14-day free trial**.
 - Custom QR Designs  
 - NFC Support  
 - All Integrations  
-- Remove DigiCard Branding  
+- Remove SamCard Branding  
 
 ---
 
@@ -90,19 +90,19 @@ Contact Sales for pricing.
 
 ## 🛡️ 30-Day Money-Back Guarantee
 
-Try DigiCard risk-free. If you're not completely satisfied within 30 days, you'll receive a full refund — no questions asked.
+Try SamCard risk-free. If you're not completely satisfied within 30 days, you'll receive a full refund — no questions asked.
 
 ---
 
 ## 💬 Testimonials
 
-> "DigiCard has completely transformed how we network at conferences. The analytics feature helps us track engagement and follow up with the right people at the right time."  
+> "SamCard has completely transformed how we network at conferences. The analytics feature helps us track engagement and follow up with the right people at the right time."  
 **— Sarah Johnson, Marketing Director at TechCorp Inc.**
 
-> "As a startup founder, first impressions matter. DigiCard helps me look professional and tech-savvy. Plus, I never run out of cards anymore!"  
+> "As a startup founder, first impressions matter. SamCard helps me look professional and tech-savvy. Plus, I never run out of cards anymore!"  
 **— Michael Chen, Entrepreneur at StartupHub**
 
-> "The custom QR codes are a game-changer. Our entire sales team uses DigiCard now, and we've seen a 40% increase in follow-up conversions."  
+> "The custom QR codes are a game-changer. Our entire sales team uses SamCard now, and we've seen a 40% increase in follow-up conversions."  
 **— Emily Rodriguez, Sales Manager at GlobalSales Co.**
 
 > "The templates are beautiful and highly customizable. I was able to create a card that perfectly matches my brand in minutes."  
@@ -111,7 +111,7 @@ Try DigiCard risk-free. If you're not completely satisfied within 30 days, you'l
 > "Being able to update my contact info in real-time is invaluable. When I changed offices, all my cards were instantly updated!"  
 **— Lisa Thompson, Real Estate Agent at Premium Properties**
 
-> "DigiCard has helped our company save money on printing costs while being more environmentally friendly. It's a win-win!"  
+> "SamCard has helped our company save money on printing costs while being more environmentally friendly. It's a win-win!"  
 **— James Wilson, CEO at Innovation Labs**
 
 ---
@@ -137,7 +137,7 @@ Yes. Premium and Enterprise plans allow unlimited digital cards.
 Updates are reflected instantly across all shared cards.
 
 ### Is my data secure?
-Yes. DigiCard uses advanced security practices to protect your information.
+Yes. SamCard uses advanced security practices to protect your information.
 
 ### Can I integrate with my CRM?
 Yes. Premium and Enterprise plans support integrations and API access.
@@ -146,14 +146,14 @@ Yes. Premium and Enterprise plans support integrations and API access.
 
 ## 📬 Contact
 
-- 📧 hello@digicard.com  
+- 📧 hello@samcard.com  
 - 📞 +1 (234) 567-890  
 
 ---
 
 ## 🏁 Get Started
 
-Join **50,000+ professionals** who are networking smarter with DigiCard.
+Join **50,000+ professionals** who are networking smarter with SamCard.
 
 - Start Free Trial  
 - No credit card required  
@@ -161,7 +161,7 @@ Join **50,000+ professionals** who are networking smarter with DigiCard.
 
 ---
 
-© 2026 DigiCard. All rights reserved.
+© 2026 SamCard. All rights reserved.
 
 - Privacy Policy  
 - Terms of Service  

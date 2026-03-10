@@ -47,7 +47,7 @@ export function CTABanner() {
             </h2>
             <p className="text-xl text-white max-w-2xl mx-auto">
               Join 50,000+ professionals who are already networking smarter with
-              DigiCard. Create your first digital business card in under 2
+              SamCard. Create your first digital business card in under 2
               minutes.
             </p>
           </motion.div>
