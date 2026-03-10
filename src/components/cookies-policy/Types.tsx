@@ -1,6 +1,7 @@
 "use client";
 import { CheckCircle, Settings, BarChart, Globe } from "lucide-react";
 import CookieCard from "./CookieCard";
+import { mutedBodyTextClass, sectionTitleClass } from "./typography";
 
 export function TypesOfCookies() {
   const cookies = [
@@ -79,15 +80,15 @@ export function TypesOfCookies() {
   ];
 
   return (
-   <section className="pt-12 pb-24 bg-black">
+   <section className="pt-12 bg-black">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
 
         <div id="types-of-cookies" className="space-y-6">
-          <h2 className="text-3xl lg:text-4xl font-bold text-white">
+          <h2 className={sectionTitleClass}>
             Types of Cookies We Use
           </h2>
 
-          <p className="text-gray-400 text-lg leading-relaxed max-w-3xl">
+          <p className={`${mutedBodyTextClass} max-w-3xl`}>
             We use different types of cookies to ensure our platform works
             properly, improves performance, and provides a personalized
             experience.
