@@ -41,33 +41,34 @@ const cookieCategories = [
 
 export default function CookieUsage() {
   return (
-    <div className="pt-20 max-w-4xl mx-auto px-6 space-y-10">
-
-      <div className="flex items-start gap-4">
-        <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-theme-kelly-green flex items-center justify-center mt-1">
-          <Eye className="text-black" />
-        </div>
-        <h2 className="text-2xl font-bold text-white">
-          How We Use Cookies
-        </h2>
-      </div>
-
-      <p className="text-gray-300">
-        We use cookies for the following specific purposes:
-      </p>
-
-      <div className="space-y-6 text-gray-300">
-        {cookieCategories.map((category) => (
-          <div key={category.title}>
-            <h3 className="text-xl font-semibold text-white mb-2">{category.title}</h3>
-            <ul className="list-disc list-inside space-y-2">
-              {category.items.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
+    <section className="w-full bg-black pt-20">
+      <div className="max-w-4xl mx-auto px-6 space-y-6">
+        <div className="flex items-center gap-3">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-theme-kelly-green/10 border border-theme-kelly-green/20">
+            <Eye className="text-theme-kelly-green" />
           </div>
-        ))}
+          <h2 className="text-2xl font-bold text-white">
+            How We Use Cookies
+          </h2>
+        </div>
+
+        <p className="text-gray-300">
+          We use cookies for the following specific purposes:
+        </p>
+
+        <div className="space-y-6 text-gray-300">
+          {cookieCategories.map((category) => (
+            <div key={category.title}>
+              <h3 className="text-xl font-semibold text-white mb-2">{category.title}</h3>
+              <ul className="list-disc list-inside space-y-2">
+                {category.items.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
+    </section>
   );
 }

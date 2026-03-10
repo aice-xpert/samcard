@@ -79,7 +79,7 @@ export function TypesOfCookies() {
   ];
 
   return (
-   <section className="pt-12 pb-24 bg-black">
+   <section className="pt-12 bg-black">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
 
         <div id="types-of-cookies" className="space-y-6">
