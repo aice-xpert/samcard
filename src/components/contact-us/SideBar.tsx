@@ -1,5 +1,5 @@
 "use client";
-import { Clock, HelpCircle, Mail, Linkedin, Twitter, Instagram, Facebook } from "lucide-react";
+import { Clock, Mail, Linkedin, Twitter, Instagram, Facebook } from "lucide-react";
 
 function OfficeHours() {
   const hours = [
@@ -28,38 +28,6 @@ function OfficeHours() {
             <span className="text-gray-400">{day}</span>
             <span className="text-white">{time}</span>
           </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function QuickLinks() {
-  const links = ["Help Center", "FAQ", "Documentation", "Video Tutorials"];
-
-  return (
-    <div className="p-6 bg-white/5 border border-white/10 rounded-xl hover:border-theme-kelly-green/30 transition-colors">
-      <div className="flex items-start gap-4 mb-6">
-        <div className="w-12 h-12 rounded-xl bg-theme-kelly-green/10 flex items-center justify-center flex-shrink-0 ring-1 ring-theme-kelly-green/20">
-          <HelpCircle className="w-6 h-6 text-accent" />
-        </div>
-        <div>
-          <h3 className="text-xl font-semibold mb-1 text-white">Need Quick Help?</h3>
-          <p className="text-gray-400 text-sm">Check out these resources for instant answers</p>
-        </div>
-      </div>
-      <div className="space-y-3">
-        {links.map((link) => (
-          <a
-            key={link}
-            href="#"
-            className="block p-3 bg-white/5 rounded-lg hover:bg-theme-kelly-green/10 hover:border-theme-kelly-green/30 border border-transparent transition-all"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-white text-sm">{link}</span>
-              <span className="text-accent text-sm">→</span>
-            </div>
-          </a>
         ))}
       </div>
     </div>
@@ -118,7 +86,6 @@ export function ContactSidebar() {
   return (
     <div className="space-y-8">
       <OfficeHours />
-      <QuickLinks />
       <SocialMedia />
       <EnterpriseContact />
     </div>
