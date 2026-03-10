@@ -83,7 +83,7 @@ export function TypesOfCookies() {
    <section className="pt-12 bg-black">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
 
-        <div id="types-of-cookies" className="space-y-6">
+        <div id="types-of-cookies" className="space-y-6 ">
           <h2 className={sectionTitleClass}>
             Types of Cookies We Use
           </h2>

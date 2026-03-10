@@ -42,7 +42,7 @@ const cookieCategories = [
 
 export default function CookieUsage() {
   return (
-    <section className="w-full bg-black pt-20">
+    <section id="how-we-use" className="w-full bg-black pt-20">
       <div className="max-w-4xl mx-auto px-6 space-y-6">
         <div className="flex items-center gap-3">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-theme-kelly-green/10 border border-theme-kelly-green/20">
