@@ -84,7 +84,7 @@ function EnterpriseContact() {
 
 export function ContactSidebar() {
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 h-full p-6 rounded-xl shadow">
       <OfficeHours />
       <SocialMedia />
       <EnterpriseContact />

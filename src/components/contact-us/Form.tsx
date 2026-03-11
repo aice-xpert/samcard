@@ -47,7 +47,7 @@ export function ContactForm() {
     "w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-600 focus:outline-none focus:border-theme-kelly-green focus:ring-1 focus:ring-theme-kelly-green/30 transition-colors";
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 h-full p-6 rounded-xl shadow">
       <div>
         <h2 className="text-3xl font-bold text-white mb-4">Send Us a Message</h2>
         <p className="text-gray-400">
