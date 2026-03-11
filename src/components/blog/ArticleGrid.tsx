@@ -8,7 +8,7 @@ interface ArticleGridProps {
 
 export default function ArticleGrid({ articles }: ArticleGridProps) {
   return (
-    <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
+    <div className="grid sm:grid-cols-2 md:grid-cols-2 gap-6">
       {articles.map((a) => (
         <ArticleCard key={a.id} article={a} />
       ))}
