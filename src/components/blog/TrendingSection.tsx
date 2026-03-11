@@ -19,7 +19,7 @@ export default function TrendingSection() {
           <TrendingUp size={24} className="text-accent" /> Trending Articles
         </h2>
         <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {articles.slice(0, 3).map((a) => (
+          {articles.slice(1, 4).map((a) => (
             <ArticleCard key={a.id} article={a} />
           ))}
         </div>
