@@ -10,8 +10,11 @@ interface BlogPostHeroProps {
 }
 
 export default function BlogPostHero({ article }: BlogPostHeroProps) {
+
+  const imageSrc = `/blog/${article.slug}.jpg`; 
+
   return (
-    <section className="pt-32 pb-16 bg-gradient-to-b from-theme-devil-green via-black to-black overflow-hidden">
+    <section className="pt-32 pb-8 bg-gradient-to-b from-theme-devil-green via-black to-black overflow-hidden">
       <div className="max-w-4xl mx-auto px-6">
         {/* Back navigation */}
         <motion.div
@@ -28,7 +31,6 @@ export default function BlogPostHero({ article }: BlogPostHeroProps) {
           </Link>
         </motion.div>
 
-        {/* Category + Title + Excerpt */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -44,7 +46,9 @@ export default function BlogPostHero({ article }: BlogPostHeroProps) {
             {article.title}
           </h1>
 
-          <p className="text-xl text-gray-400 leading-relaxed">{article.excerpt}</p>
+          <p className="text-xl text-gray-400 leading-relaxed">
+            {article.excerpt}
+          </p>
 
           {/* Meta row */}
           <div className="flex flex-wrap items-center gap-5 text-sm text-gray-500 border-t border-white/10 pt-6">
@@ -75,9 +79,11 @@ export default function BlogPostHero({ article }: BlogPostHeroProps) {
       >
         <div className="w-full aspect-[16/7] rounded-2xl bg-gradient-to-br from-accent/20 via-theme-digital-green/10 to-black border border-white/10 flex items-center justify-center overflow-hidden relative">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-accent/10 via-transparent to-transparent" />
-          <p className="relative z-10 text-6xl font-black text-white/5 select-none leading-none tracking-tighter uppercase text-center px-8">
-            {article.category}
-          </p>
+          <img
+            src={imageSrc}
+            alt={article.title}
+            className="w-full h-full object-cover rounded-2xl"
+          />
           <div
             className="absolute inset-0 opacity-5"
             style={{
