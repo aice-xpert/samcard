@@ -13,7 +13,7 @@ export default function BlogPostNewsletter() {
             placeholder="Your email address"
             className="px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white placeholder-gray-500 focus:border-accent outline-none text-sm w-64"
           />
-          <button className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-accent to-theme-digital-green text-black font-semibold text-sm hover:opacity-90 transition">
+          <button className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-accent to-theme-digital-green text-black font-semibold text-white hover:opacity-90 transition">
             Subscribe
           </button>
         </div>
