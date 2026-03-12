@@ -1,5 +1,4 @@
 export const content = `
-## How to Keep Up in the AI Age
 
 AI is transforming the world at a far greater pace than previous technological revolutions ever did. From the internet boom of the late 1990s to the massive demand for software engineers in 2010, history has shown time and again how each major revolution has shifted the world. Now it is up to us to decide how to keep up with the biggest shift of the century, second only to the industrial revolution.
 
