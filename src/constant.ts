@@ -530,9 +530,11 @@ export const additionalFeatures = [
   { icon: Clock, title: "Auto-Updates", description: "Update once, reflect everywhere." },
 ];
 
+
 // constants.ts
 export interface Article {
   id: number;
+  slug: string;
   title: string;
   excerpt: string;
   category: string;
@@ -554,6 +556,7 @@ export const tags = ["AI", "Blockchain"];
 export const articles: Article[] = [
   {
     id: 1,
+    slug: "how-to-keep-up-in-the-ai-age",
     title: "How to keep up in the AI age",
     excerpt: "The world is changing faster than ever with AI—here's what you can do to stay ahead.",
     category: "Artificial Intelligence",
@@ -563,6 +566,7 @@ export const articles: Article[] = [
   },
   {
     id: 2,
+    slug: "quantum-computing-transforming-technology",
     title: "Quantum Computing: Transforming technology as we know it",
     excerpt: "Explore how quantum computing is redefining the way we see technology",
     category: "Quantum Computing",
@@ -572,6 +576,7 @@ export const articles: Article[] = [
   },
   {
     id: 3,
+    slug: "avoid-these-7-blockchain-startup-mistakes",
     title: "Avoid These 7 BlockChain Startup Mistakes Now",
     excerpt: "5 years after my startup's bankruptcy, here is the lesson i learnt",
     category: "Blockchain",
@@ -581,6 +586,7 @@ export const articles: Article[] = [
   },
   {
     id: 4,
+    slug: "will-ai-really-replace-human-workers",
     title: "Will AI really replace human workers in the future",
     excerpt: "Tech CEOs are sounding the alarm as they hype AI as the ultimate job stealer.",
     category: "Artificial Intelligence",
@@ -590,6 +596,7 @@ export const articles: Article[] = [
   },
   {
     id: 5,
+    slug: "10-ways-ai-will-reshape-jobs",
     title: "10 Ways AI Will Reshape Jobs and the Future",
     excerpt: "Remember when work felt human? AI is changing that and your next move matters.",
     category: "Artificial Intelligence",
@@ -599,6 +606,7 @@ export const articles: Article[] = [
   },
   {
     id: 6,
+    slug: "how-agentic-ai-transforms-dev-workflow",
     title: "How Agentic AI Transforms Your Dev Workflow Now",
     excerpt: "A year ago i started using agentic AI and there's no turning back now.",
     category: "Artificial Intelligence",
@@ -608,6 +616,7 @@ export const articles: Article[] = [
   },
   {
     id: 7,
+    slug: "how-to-build-profitable-apps-with-generative-ai",
     title: "How to Build Profitable Apps with Generative AI",
     excerpt: "I turned ideas into $100K last year here's how generative AI made it possible.",
     category: "Artificial Intelligence",
@@ -617,6 +626,7 @@ export const articles: Article[] = [
   },
   {
     id: 8,
+    slug: "launch-profitable-blockchain-product-90-days",
     title: "Launch A Profitable BlockChain Product In 90 Days",
     excerpt: "Yesterday, I made a promise to myself to make a profitable product in 3 months.",
     category: "Blockchain",
@@ -626,6 +636,7 @@ export const articles: Article[] = [
   },
   {
     id: 9,
+    slug: "why-blockchain-products-fail",
     title: "Why BlockChain Products Fail (and How to Win)",
     excerpt: "After watching many of my own products fail here's the hard truth I have uncovered.",
     category: "Blockchain",
@@ -635,6 +646,7 @@ export const articles: Article[] = [
   },
   {
     id: 10,
+    slug: "secure-your-transactions-with-blockchain",
     title: "How To Secure Your Transactions With Blockchain",
     excerpt: "In 2025, blockchain hacks stole over $3.4 billion, security is no longer optional.",
     category: "Blockchain",
@@ -644,6 +656,7 @@ export const articles: Article[] = [
   },
   {
     id: 11,
+    slug: "can-quantum-computers-break-sha-256",
     title: "The Hidden Risk: Can Quantum Computers break SHA-256 Security?",
     excerpt: "SHA-256 keep our digital world safe but what would happen if quantum computers break it?",
     category: "Quantum Computing",
@@ -653,6 +666,7 @@ export const articles: Article[] = [
   },
   {
     id: 12,
+    slug: "accelerate-growth-with-quantum-computing",
     title: "Accelerate Growth with the Quantum computing",
     excerpt: "Quantum computing is revolutionizing the medical industry by accelerating drug discovery.",
     category: "Quantum Computing",
@@ -662,6 +676,7 @@ export const articles: Article[] = [
   },
   {
     id: 13,
+    slug: "quantum-computing-roadmap-for-ceos",
     title: "Prepare Now: Quantum computing future Roadmap for CEOs",
     excerpt: "AI changed the game yesterday now quantum computing has came to rewrite tomorrow",
     category: "Quantum Computing",
@@ -671,6 +686,7 @@ export const articles: Article[] = [
   },
   {
     id: 14,
+    slug: "10-networking-mistakes-professionals-make",
     title: "10 Networking Mistakes Professionals Make",
     excerpt: "I once asked a successful founder what truly got him where he is.",
     category: "Networking",
@@ -680,6 +696,7 @@ export const articles: Article[] = [
   },
   {
     id: 15,
+    slug: "networking-hacks-for-busy-executives",
     title: "Networking Hacks Every Busy Executive Needs Now",
     excerpt: "I once read that the best time to network is when you're busiest and it changed everything",
     category: "Networking",
@@ -689,6 +706,7 @@ export const articles: Article[] = [
   },
   {
     id: 16,
+    slug: "design-digital-business-cards-for-networking",
     title: "How to Design Digital Business Cards for Networking",
     excerpt: "After redesigning my digital business cards, I finally uncovered what was holding me back.",
     category: "Networking",
@@ -698,6 +716,7 @@ export const articles: Article[] = [
   },
   {
     id: 17,
+    slug: "networking-101-leverage-nfc-technology",
     title: "Networking 101: How To Leverage NFC Technology In Networking",
     excerpt: "Looking to elevate your networking game? NFC cards can make it effortless.",
     category: "Networking",
