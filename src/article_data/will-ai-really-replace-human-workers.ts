@@ -1,5 +1,4 @@
 export const content = `
-## Will AI Really Replace Human Workers?
 
 The question of AI replacing human workers is quite multi-faced and complex. The major arguments regarding this involve the diluted job market and mass layoffs. However, in reality, there are many reasons causing the mass layoffs and diluted job market, and the main issue was the over-hiring in the era of COVID caused by a sudden shift of consumer behavior to digital services. 
 
