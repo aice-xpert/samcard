@@ -1,45 +1,33 @@
 export const content = `
-Work is being restructured in real time. Here are ten concrete ways AI is reshaping jobs—and what each means for how you should position yourself.
+AI is no longer a fiction or a futuristic concept. Maybe a few years ago people could not believe that we would have an AI that could write emails for us, answer questions and even talk to us but now AI is actively involved in our daily lives from automatic screening of CV’s for interviews to predictive analytics systems. AI has been deeply embedded in our lives and is transforming how we perform work and how organizations operate.
+Rather than simply replacing human workers, AI is changing the dynamics of jobs. By doing the repetitive and boring task it allows the human workers to focus on higher-value activities such as creativity, strategic thinking, and problem-solving. As businesses integrate more and more of AI technologies the collaboration between human workers and AI becomes more important.
 
-## 1. The First Draft Is No Longer Your Job
+## What is AI
+Artificial Intelligence or AI are computer programs that try to mimic human intelligence, problem solving etc to perform tasks that a human could perform. In business it is used in customer churn prediction, inventory management etc.
+Here are 10 ways AI is reshaping jobs.
 
-Writing, coding, and design have a new starting point: AI output. The value has shifted from generation to curation, direction, and refinement. If your entire role was producing first drafts, you need a new core competency.
+## 1. AI driven workforce
+Rather than just taking over jobs AI is taking over only the dry and repetitive tasks such as copying Excel data, writing emails etc. Before AI, marketing experts would have to write blog posts, social media posts etc. They had to research it extensively to write a simple post but with AI they could generate the first draft and then refine, edit and personalize the content depending on their needs. In this way AI is helping employees and employers both by taking the repetitive and dry work and giving time for high value work like problem solving, creative marketing campaigns etc.
 
-## 2. Research Synthesis Moves Faster
+## 2. Increased Productivity
+Use of AI has increased our productivity tenfold. Before we had to manually collect data, analyze it, clean it, draw patterns out of it, get insights which would later be used for the betterment of organizations. But it had a drawback because as data exploded due to social media platforms and the internet it was not feasible to analyze data and draw patterns out of it manually so a huge amount of data was wasted but now with the advent of AI it has enabled us to process large chunks of data in milliseconds. This allows rganizatios to make faster and more informed decisions as not only they are utilizing the data to it’s fullest but also getting the insights instantly.
 
-What took a research analyst two days now takes two hours with the right AI tools. This compresses timelines and raises expectations for depth. The analysts thriving are those who use AI to go deeper, not faster.
-
-## 3. Customer-Facing Roles Are Being Augmented
-
-AI handles tier-1 customer inquiries in most large organizations now. Human agents focus on complex, emotional, and escalated cases—a higher-stakes, higher-skill role than pure volume work.
-
-## 4. Middle Management Is Under Pressure
-
+## 3. New career opportunities
 AI is increasingly capable of the coordination and synthesis work that justified many middle management roles. Organizations are running flatter. This is uncomfortable for incumbents and opportunity for those who develop genuine leadership depth.
 
-## 5. Technical Roles Are Commoditizing at the Bottom
 
-Junior developer positions are the most contested category in tech right now. AI coding assistants have raised the productivity floor so dramatically that "write this function" is no longer a hiring justification. The floor for technical roles has risen.
+## 4. AI powered Screening
+Recruitment was one of the most tiring and dry phase of the interview process. Like human workers had to read hundreds of resumes and then among them select a handful for interviews. This resulted in many of the interview candidate’s CV to not been seen. Many were forgotten. Not only that but people have to craft their resume according to the ATS software they had to add keywords phrases etc that would make ATS select their CV’s and those who did not would never get a chance for an interview but now with AI (AI powered Application Tracking System) all candidates could be given equal chances.
 
-## 6. Creative Direction Becomes a Premium Skill
+## 5. AI in Skill Building
+AI has transformed how employees acquire new skills. Employees have to upskill themselves to match with the changing job market. Traditionally employees had to rely on workshops, training programs and long courses which followed a one-size-fits-all approach, which often failed to address individual learning needs.. AI powered learning and Upskilling changes it by helping employees quickly learn new technologies and frameworks in highly specialized training programs tailored specially for them individually. Moreover AI tools can simulate real world scenarios like for HR training programs, AI can create realistic workplace situations such as handling employee conflicts etc. Employees must solve these problems which help them to get real world experience.
 
-As generative AI floods channels with AI-produced content, the ability to direct AI toward genuinely differentiated creative output is increasingly valuable. Creative direction—knowing what's good, what's memorable, what's on-brand—is a human skill AI amplifies rather than replaces.
+## 6. Importance of Creativity
+As AI is becoming more and more capable of doing routine and repetitive tasks. It is the era where employees' creativity, pattern recognition and problem solving shines more than ever. AI can generate content, analyze data and automate processes but that's the only thing it can do it does not know how to interpret the data. AI does neither possess emotional understanding nor innovative thinking. It is upto employees to use the content generated by AI how they add emotions and creativity to blogs, articles etc generated by AI. Same is the case with interpreting data. As a result modern workspace values employees who can use their creativity to solve the problems for them and use AI along the way to enhance their abilities.
 
-## 7. Legal and Compliance Work Is Being Restructured
+## 7. Automation of business processes
+AI is being used to automate routine business operations. Tasks such as data entry, cleaning data, writing content for blog posts, analyzing trends are being done completely by AI or at least using help of AI. Previously these tasks could take up to days like to write a blog post you have to search the topic, analyze trends and then start writing it and the writing part alone would take hours but now with ai it takes not more than minutes and then employees can change the content or first draft and customize it according to their needs. Same is the case for customer service chatbots which are available 24/7 and thus can guide customers.
 
-Contract review, regulatory research, and due diligence—all of these are faster with AI. Law firms billing by the hour for these tasks are under pricing pressure. The lawyers winning are those who use AI to handle more clients at higher quality.
-
-## 8. Healthcare Is Being Augmented, Carefully
-
-AI diagnostic tools are now FDA-cleared for specific imaging tasks. But physician judgment, patient relationships, and ethical decision-making remain human territory—and likely will for a long time.
-
-## 9. Education Is Personalizing
-
-AI tutoring tools are demonstrating real learning gains in controlled studies. The role of educators is shifting toward facilitator, mentor, and social-emotional support—areas where human presence is irreplaceable.
-
-## 10. The Meta-Skill Is Directing AI Effectively
-
-Across every domain, the professionals thriving share one skill: they know how to use AI as a force multiplier. Prompt design, output evaluation, workflow integration—this is the career investment with the highest near-term return.
-
-Your next move: audit your role for which of these ten shifts apply, and build accordingly.
+## Conclusion
+AI is no longer a distant concept of the future as it is already changing the job market as we know it. For some it could be for the better while for others it may feel challenging. As the jobs no longer include the boring and repetitive tasks allowing employees to focus on more creative, strategic, and value-driven work.
 `;

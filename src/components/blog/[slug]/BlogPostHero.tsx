@@ -14,6 +14,8 @@ export default function BlogPostHero({ article }: BlogPostHeroProps) {
 
   const imageSrc = `/blog/${article.slug}.jpg`; 
 
+  console.log(imageSrc)
+
   return (
     <section className="pt-32 pb-8 bg-gradient-to-b from-theme-devil-green via-black to-black overflow-hidden">
       <div className="max-w-4xl mx-auto px-6">
