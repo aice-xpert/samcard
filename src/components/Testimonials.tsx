@@ -26,7 +26,7 @@ export default function Testimonials() {
           </h2>
           <p className="text-xl text-white max-w-2xl mx-auto">
             Join thousands of professionals who have transformed their <br />
-            networking with DigiCard.
+            networking with SamCard.
           </p>
         </motion.div>
 

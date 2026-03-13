@@ -32,15 +32,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="overflow-x-hidden">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-theme-blackout overflow-x-hidden`}>
-        {/* Navigation stays at the top of every page */}
+    <html lang="en">
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-theme-black`}>
         <Navigation />
         
-        {/* This children prop renders whatever is in your page.tsx files */}
         <main>{children}</main>
         
-        {/* Footer stays at the bottom of every page */}
         <Footer />
       </body>
     </html>

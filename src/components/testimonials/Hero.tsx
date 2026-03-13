@@ -24,7 +24,7 @@ export  function Hero() {
           </h1>
 
           <p className="text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed">
-            Thousands of professionals trust DigiCard to grow their networks,
+            Thousands of professionals trust SamCard to grow their networks,
             close more deals, and make lasting impressions.
           </p>
 

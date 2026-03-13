@@ -7,7 +7,6 @@ import {
   Facebook,
 } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 
 export default function Footer() {
   return (
@@ -99,7 +98,7 @@ export default function Footer() {
               
               
               <li>
-                <a className="hover:text-[#49B618]" href="#">
+                <a className="hover:text-[#49B618]" href="/contact-us">
                   Contact
                 </a>
               </li>
@@ -135,13 +134,13 @@ export default function Footer() {
           <div>© 2026 SamCard. All rights reserved</div>
 
           <div className="flex flex-wrap justify-center md:justify-end gap-6">
-            <a className="hover:text-[#49B618]" href="#">
+            <a className="hover:text-[#49B618]" href="/privacy-policy">
               Privacy Policy
             </a>
-            <a className="hover:text-[#49B618]" href="#">
+            <a className="hover:text-[#49B618]" href="/terms-and-services">
               Terms of Service
             </a>
-            <a className="hover:text-[#49B618]" href="#">
+            <a className="hover:text-[#49B618]" href="/cookies-policy">
               Cookie Policy
             </a>
           </div>

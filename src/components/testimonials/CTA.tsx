@@ -30,7 +30,7 @@ export function CTA() {
           </div>
 
           <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">
-            Join 50,000+ professionals who love DigiCard
+            Join 50,000+ professionals who love SamCard
           </h2>
 
           <p className="text-gray-400 mb-10 text-lg">
