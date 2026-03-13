@@ -37,7 +37,7 @@ const pricingPlans = [
       "Custom QR Designs",
       "NFC Support",
       "All Integrations",
-      "Remove DigiCard Branding",
+      "Remove SamCard Branding",
     ],
     buttonText: "Start Free Trial",
     popular: true,
@@ -172,7 +172,7 @@ export function Pricing() {
             30-Day Money-Back Guarantee
           </h3>
           <p className="text-gray-400">
-            Try DigiCard risk-free. If you are not completely satisfied within 30 days,
+            Try SamCard risk-free. If you are not completely satisfied within 30 days,
             we will refund you in full—no questions asked.
           </p>
         </motion.div>

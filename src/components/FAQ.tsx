@@ -25,7 +25,7 @@ export default function FAQ() {
             Frequently Asked Questions
           </h2>
           <p className="text-xl text-white">
-            Everything you need to know about DigiCard
+            Everything you need to know about SamCard
           </p>
         </motion.div>
 
@@ -56,7 +56,7 @@ export default function FAQ() {
             Still have questions
           </h3>
           <p className="text-white mb-6">
-            Our support team is here to help you get the most out of DigiCard.
+            Our support team is here to help you get the most out of SamCard.
           </p>
           <button className="px-8 py-4 bg-gradient-to-r from-[#49B618] to-[#006312] text-white text-lg font-bold rounded-xl hover:shadow-xl hover:shadow-[#009200]/30 hover:scale-105 transition-all">
             Contact Support

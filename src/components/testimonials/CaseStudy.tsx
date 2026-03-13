@@ -13,7 +13,7 @@ export default function CaseStudies() {
         <div className="text-center mb-16 space-y-4">
           <h2 className="text-4xl font-bold">Case Studies</h2>
           <p className="text-gray-400 max-w-2xl mx-auto">
-            See how teams are using DigiCard to increase conversions,
+            See how teams are using SamCard to increase conversions,
             reduce costs, and modernize their networking.
           </p>
         </div>

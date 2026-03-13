@@ -5,7 +5,7 @@ import { Article } from "@/constant";
 export default function ArticleCard({ article }: { article: Article }) {
   return (
     <Link
-      href={`/blog`}
+      href={`/blog/${article.slug}`}
       className="group flex flex-col border border-white/10 bg-white/5 p-6 rounded-2xl hover:border-accent hover:bg-white/10 transition"
     >
       <p className="text-accent text-xs mb-2 font-bold uppercase tracking-wider">
