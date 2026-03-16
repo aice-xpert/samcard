@@ -1,69 +1,82 @@
 export const content = `
-I once asked a successful founder what truly got him where he is. Not the company, not the product, not the funding-the thing underneath all of it. His answer was immediate: "I network obsessively, and I do it better than most people."
+Networking is one of those skills everyone agrees matters and almost no one thinks they're bad at. Which is part of the problem. Most professionals are making at least a few of the mistakes below without realizing it — not because they're careless, but because a lot of conventional networking advice quietly points you in the wrong direction.
 
-That conversation stopped me cold. Here was someone who had built and sold two companies, raised tens of millions in venture capital, and assembled a team of genuinely talented people-and the root of all of it, in his own telling, was how he built relationships.
+Here's what actually goes wrong, and how to fix it.
 
-I went back and audited my own networking approach. What I found was uncomfortable. I was making almost every mistake in the book. Here are the ten networking mistakes most professionals make-and what to do instead.
+## 1. Only Networking When You Need Something
 
-## Mistake 1: Only Networking When You Need Something
+This is the most common one. You're happy in your job, business is good, your calendar is full — so networking falls off the list. Then something changes. A layoff, a stalled deal, a role you really want. Suddenly you're reaching out to people you haven't spoken to in two years, and it feels exactly as awkward as it is.
 
-The most damaging networking pattern is treating relationships as a resource to extract from rather than invest in. If the only time you reach out is when you're job searching or fundraising, people notice. It feels transactional because it is transactional.
+The professionals with the strongest networks built them during the good stretches. Not obsessively — just consistently. A conversation here, a follow-up there. By the time they needed something, the relationships were already warm.
 
-The professionals with the strongest networks show up consistently-not just in moments of need. They share useful articles. They make introductions without being asked. They check in on people going through hard transitions.
+Treat your network like a savings account. You can't make a withdrawal the same week you open it.
 
-**Fix:** Set a recurring calendar block for relationship maintenance. Reach out to two or three people every week with no ask attached. It takes fifteen minutes and compounds dramatically over time.
+## 2. Collecting Contacts Instead of Building Relationships
 
-## Mistake 2: Attending Events to Collect Business Cards
+LinkedIn connection counts, business cards collected at conferences, email lists — none of it means much if there's no actual relationship behind it. A lot of professionals mistake volume for value.
 
-Leaving a conference with 40 business cards and following up with none of them is worse than going home with two deep conversations. Volume is not the goal. Connection is the goal.
+Five hundred connections who don't know your work are worth considerably less than 30 people who would take your call, vouch for you, or send opportunities your way without being asked. The goal isn't a bigger network. It's a more real one.
 
-The next time you attend a professional event, give yourself permission to leave early if you've had two or three genuinely interesting conversations. You'll get more out of it than the person who worked the entire room.
+If you can't remember where you met someone or what you talked about, that's not really a contact. It's just a name.
 
-## Mistake 3: Failing to Follow Up
+## 3. Making It Too Much About You
 
-The follow-up is where most networking relationships die. You meet someone interesting, intend to reach out, and then a week passes and the moment is gone.
+There's a version of networking that's essentially a pitch in disguise. Every conversation steers back to what you're working on, what you're looking for, what you've achieved. People pick up on this fast, and they remember it.
 
-Within 24 hours of a meaningful conversation, send a specific message that references something you actually discussed. Not "great to meet you"-something real, like "I looked up that book you mentioned and ordered it" or "I've been thinking about what you said about pricing strategy." Specificity is the difference between memorable and forgettable.
+The professionals who are genuinely well-liked in their industries ask good questions and listen to the answers. They're curious about what other people are building, what's frustrating them, what they're trying to figure out. That curiosity is not a tactic — it's just more interesting to be around, and relationships grow from it naturally.
 
-## Mistake 4: Making It About You
+Go into conversations with the intention of learning something, not landing something.
 
-The best networkers are genuinely curious about other people. They ask questions and actually listen to the answers. They make the other person feel interesting-because they find them interesting.
+## 4. Following Up Too Late — Or Not at All
 
-If you walk away from most conversations having talked more than you listened, that's a pattern worth breaking. People remember how you made them feel long after they've forgotten what you said.
+You had a great conversation at a conference. Real connection, genuine mutual interest, a vague agreement to stay in touch. Then you both flew home and got absorbed back into your actual jobs. Nothing happened.
 
-## Mistake 5: Networking Only Within Your Industry
+This is where most networking dies. Not in the meeting — in the week after.
 
-It's comfortable to build relationships with people who do what you do. You share vocabulary, context, and problems. But your most valuable connections are often at the edges of your network-people in adjacent fields who see opportunities and approaches you don't.
+The follow-up doesn't need to be long. A one-line email, a relevant article, an introduction you mentioned — anything that shows you were paying attention and that you meant what you said. Send it within 48 hours. After that, the window closes fast.
 
-Some of the most useful professional relationships I've seen are between people who seem, on the surface, to have nothing in common: a product manager and a documentary filmmaker, a founder and a therapist. Deliberately cultivate cross-industry relationships. They'll surprise you.
+## 5. Being Vague About What You're Looking For
 
-## Mistake 6: Underestimating Weak Ties
+"Let's grab coffee sometime and catch up" sounds friendly. It also creates zero urgency and gives the other person nothing to act on. These conversations get indefinitely postponed because there's no clear reason to prioritize them.
 
-There's a famous sociology finding that most people find their jobs not through close friends but through acquaintances-people they know loosely rather than deeply. The reason is simple: your close friends mostly know the same things you know and move in the same circles. Your acquaintances don't.
+Being specific isn't rude — it's respectful of people's time. "I'm exploring a move into fintech and wanted to hear how you made that transition" gives someone something real to respond to. They know what you're asking, they know if they can help, and they can give you a useful answer.
 
-Weak ties-people you've met a few times, former colleagues you haven't spoken to in years, connections you made at a conference-are often the source of the most unexpected and valuable opportunities. Don't let those relationships go completely cold.
+Vagueness feels safer. It's actually less effective.
 
-## Mistake 7: Not Having a Clear Ask
+## 6. Ignoring the People Already Around You
 
-When you do need something, vagueness makes it nearly impossible for people to help you even when they genuinely want to. "I'm exploring new opportunities" puts all the work on the other person. "I'm looking for an introduction to a growth marketer at a Series B fintech company" gives them something specific to act on.
+Professionals spend a lot of energy trying to meet impressive strangers while underinvesting in the people they already work with — colleagues, former managers, old classmates, past clients. These relationships are already warm. They know your work. They've seen you handle hard situations.
 
-Before you reach out to ask for help, spend ten minutes getting precise about what you actually need. The clearer your ask, the more likely you are to get a useful response.
+Some of the most valuable professional connections you'll ever have are people you already know but haven't stayed properly in touch with. A quick message to someone you worked with five years ago — "I've been thinking about the project we did at X, wanted to see what you're up to" — takes four minutes and almost always leads somewhere.
 
-## Mistake 8: Forgetting to Give
+## 7. Only Networking With People at Your Level or Above
 
-Networking that flows only inward depletes relationships fast. Before any significant interaction, ask yourself: what can I give this person? It doesn't have to be large. A relevant article, an introduction to someone they'd benefit from knowing, a piece of feedback they didn't ask for but would appreciate-small acts of generosity add up and create the kind of goodwill that makes people want to help you when you need it.
+It's human to gravitate toward the most senior people in the room. But professionals who only network up miss a lot. The junior colleague who's going to be a director in four years. The peer at a smaller company who's solving the same problem differently. The person two levels below you who has a better read on what's actually happening on the ground.
 
-## Mistake 9: Neglecting Your Digital Presence
+Strong networks are diverse in seniority, industry, and background. They give you angles you wouldn't get from talking to people who are already where you are.
 
-Whether you like it or not, your LinkedIn profile is often the first place someone goes to understand who you are before reaching out. An outdated headline, a missing photo, or a sparse summary creates unnecessary friction. It won't sink a strong relationship, but it can quietly cost you ones that never got started.
+## 8. Treating Every Interaction as Transactional
 
-Spend an hour updating your profile. Make sure it reflects where you are now, not where you were three years ago.
+Some professionals are pleasant to talk to but exhausting to know, because every interaction has a purpose that isn't quite about you. They're helpful when they need something and quiet when they don't. People notice this over time.
 
-## Mistake 10: Treating Networking as a Separate Activity
+The antidote is simple: give without keeping score. Make introductions because they'd be useful, not because you're banking a favor. Share information without waiting to see what you'll get back. Show up when someone's going through something hard, not just when they're succeeding.
 
-The biggest mistake of all is thinking about networking as something you do-a mode you switch into at events or when you need a job-rather than a natural extension of how you engage with people.
+Generosity is the foundation of a network that actually holds up.
 
-The founders and executives with the strongest networks don't think of them as networks. They have friends in their industry. They're genuinely interested in what the people around them are building and struggling with. They show up for people without keeping score.
+## 9. Skipping the Small Interactions
 
-That kind of relationship isn't built through strategy. It's built through consistent, genuine human interest over time. Start there. The tactics will figure themselves out.
-`;
+Not every networking moment needs to be a scheduled coffee or a formal introduction. A thoughtful comment on someone's post, a two-line email saying you found their talk useful, a quick congratulations when someone gets a promotion — these small gestures keep relationships warm at almost no cost.
+
+A lot of professionals let these moments pass because they feel minor. But they add up. The person you've engaged with six times in small ways is going to respond to your email in a way that the person you messaged out of nowhere simply won't.
+
+## 10. Giving Up After One Unanswered Message
+
+People are busy. Inboxes are full. A message going unanswered is not a rejection — it's usually just timing. One polite follow-up, sent a week or two later, is completely reasonable and often gets the response the first message didn't.
+
+What doesn't work is either giving up immediately or following up five times in two weeks. One message, one follow-up, then let it go. If someone genuinely isn't interested, that's fine. Most of the time though, the reply comes — it just needed a nudge.
+
+## The Common Thread
+
+Most networking mistakes come down to one thing: approaching it as something you do *to* people rather than *with* them. When the orientation shifts — toward curiosity, generosity, and real follow-through — the mechanics take care of themselves.
+
+You don't need more contacts. You need better habits with the ones you have.`;
