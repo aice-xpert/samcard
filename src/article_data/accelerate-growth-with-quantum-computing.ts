@@ -27,3 +27,11 @@ The same quantum simulation capability that accelerates drug discovery applies t
 
 The companies and countries that lead in quantum computing will have a structural advantage in materials innovation—potentially as significant as the advantage computing gave to economies in the late 20th century.
 `;
+
+export const timeline = [
+	"Target high-complexity problems like optimization, simulation, and risk models",
+	"Start with one pilot tied to a measurable business KPI",
+	"Benchmark quantum and classical results on the same dataset",
+	"Partner with cloud quantum providers before building in-house infrastructure",
+	"Scale only use cases that outperform baseline cost or speed",
+];

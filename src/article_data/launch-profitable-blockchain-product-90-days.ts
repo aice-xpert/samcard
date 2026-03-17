@@ -33,3 +33,11 @@ The temptation is to build the grand vision. Resist it. The product that exists 
 
 By day 90, I had 12 paying customers at $99/month: $1,188 MRR. Not life-changing, but proof the thing works.
 `;
+
+export const timeline = [
+	"Validate demand with interviews before writing production code",
+	"Ship a lean MVP with one core use case and clear onboarding",
+	"Secure contracts and wallet flows before public launch",
+	"Collect paid pilot feedback and cut non-essential features quickly",
+	"Optimize for weekly revenue and retention metrics after launch",
+];

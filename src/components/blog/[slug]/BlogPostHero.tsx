@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, Calendar, Clock, Tag } from "lucide-react";
 import type { Article } from "@/constant";
+import BlogKeywords from "./BlogKeywords";
 
 interface BlogPostHeroProps {
   article: Article;
@@ -49,9 +50,7 @@ export default function BlogPostHero({ article }: BlogPostHeroProps) {
             {article.title}
           </h1>
 
-          <p className="text-xl text-gray-400 leading-relaxed">
-            {article.excerpt}
-          </p>
+          <BlogKeywords points={article.keywords} />
 
           {/* Meta row */}
           <div className="flex flex-wrap items-center gap-5 text-sm text-gray-500 border-t border-white/10 pt-6">
@@ -71,6 +70,8 @@ export default function BlogPostHero({ article }: BlogPostHeroProps) {
             </span>
           </div>
         </motion.div>
+
+        
       </div>
 
       {/* Hero visual */}
