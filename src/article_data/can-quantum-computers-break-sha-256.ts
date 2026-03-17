@@ -31,3 +31,11 @@ The Bitcoin community has been discussing quantum-resistant signature schemes fo
 
 The risk isn't imminent. But it's not hypothetical either.
 `;
+
+export const timeline = [
+	"SHA-256 hashing remains difficult to break with near-term quantum hardware",
+	"Public-key signatures like ECDSA are the larger quantum vulnerability",
+	"Prioritize long-lived sensitive data for post-quantum migration planning",
+	"Design systems to swap cryptographic algorithms without major rewrites",
+	"Begin pilot testing NIST post-quantum standards now",
+];

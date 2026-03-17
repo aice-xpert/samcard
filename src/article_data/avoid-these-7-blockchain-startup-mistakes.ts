@@ -87,3 +87,11 @@ The ones that didn't — including mine — mostly knew better. We just thought 
 Later has a way of arriving faster than you expect.
 
 `;
+
+export const timeline = [
+	"Validate the user problem before committing to blockchain architecture",
+	"Treat smart contract audits as a launch requirement, not optional",
+	"Map regulatory exposure by jurisdiction before fundraising",
+	"Design token economics around product utility, not speculation",
+	"Protect runway by prioritizing product delivery over hype",
+];

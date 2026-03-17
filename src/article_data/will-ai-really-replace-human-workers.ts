@@ -57,3 +57,11 @@ Due to these limitations, AI often struggles when it is tasked with thinking out
 
 In my view, the question of AI taking jobs is based more on hype and fear than on facts and reality. Although AI has made huge progress in recent years, its functionalities are still limited. Rather than being scared of AI, one should start working with it, as it can perform routine and dry tasks easily and quickly while human workers take on more creative, high-level tasks.
 `;
+
+export const timeline = [
+	"AI is replacing tasks faster than entire occupations",
+	"Human judgment remains critical for ambiguity and edge cases",
+	"Most roles are shifting toward oversight, validation, and context",
+	"Workers who adopt AI tools gain measurable productivity advantages",
+	"Long-term career resilience comes from continuous learning",
+];

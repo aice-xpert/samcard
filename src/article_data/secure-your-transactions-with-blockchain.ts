@@ -27,3 +27,11 @@ Services like Chainalysis, Forta, and OpenZeppelin Defender provide this infrast
 
 Security isn't a feature. It's the foundation.
 `;
+
+export const timeline = [
+	"Start with a threat model for wallets, contracts, and user flows",
+	"Apply least-privilege access and hardware-backed key storage",
+	"Run automated tests and audits before every contract upgrade",
+	"Monitor live transactions for exploit and anomaly patterns",
+	"Practice incident response with rollback and communication playbooks",
+];

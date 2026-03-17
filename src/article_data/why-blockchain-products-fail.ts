@@ -29,3 +29,11 @@ Stablecoin payments for emerging market SMBs. On-chain credential verification f
 
 Real problems. Real revenue. The blockchain is just the plumbing.
 `;
+
+export const timeline = [
+	"Lead with a measurable user problem, not the technology stack",
+	"Reduce onboarding friction before adding advanced features",
+	"Align incentives around product utility, not token speculation",
+	"Build trust with transparent communication and realistic promises",
+	"Iterate from activation, retention, and revenue signals",
+];

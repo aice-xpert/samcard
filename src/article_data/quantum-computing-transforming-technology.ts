@@ -68,3 +68,11 @@ That's not a small thing. It's a redefinition of what computation can do — and
 The shift is quieter than the headlines suggest. It's also more real.
 
 `;
+
+export const timeline = [
+	"Quantum targets problems classical systems solve too slowly",
+	"Qubits use superposition and entanglement for new compute approaches",
+	"Early use cases include simulation, optimization, and cryptography research",
+	"Current NISQ hardware is promising but still error-prone",
+	"Teams should build capability now to avoid late adoption risk",
+];
