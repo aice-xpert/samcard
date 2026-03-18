@@ -31,3 +31,11 @@ The strategic question for each industry: which of your core value-creating proc
 
 The CEOs asking this question now will have better answers when it matters.
 `;
+
+export const timeline = [
+	"Define which business problems quantum could materially improve",
+	"Plan execution in phases: educate, pilot, validate, then scale",
+	"Allocate budget for partnerships, talent, and experimentation",
+	"Set governance for risk, security, and vendor lock-in",
+	"Reassess roadmap every 6 to 12 months as hardware evolves",
+];

@@ -64,3 +64,11 @@ But at its core, staying connected to smart people who are working on interestin
 
 Start with the people you already know. Be specific about what you're looking for. Follow up. That's most of it.
 `;
+
+export const timeline = [
+	"Block networking time on your calendar as a strategic priority",
+	"Prioritize warm introductions and targeted high-value events",
+	"Send concise value-first follow-ups within 48 hours",
+	"Use templates and automation for scheduling and reminders",
+	"Maintain key relationships with quarterly check-ins",
+];

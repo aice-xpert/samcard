@@ -93,3 +93,11 @@ If your current digital business card is basically a contact sheet with a logo o
 
 Get that right and the rest follows quickly.
 `;
+
+export const timeline = [
+	"Define one clear card goal: meeting booked, call scheduled, or follow-up",
+	"Keep layout scannable with name, role, value line, and one CTA",
+	"Align colors, typography, and photo style with your professional brand",
+	"Add trackable links or QR codes to measure real engagement",
+	"Review analytics monthly and remove low-performing elements",
+];

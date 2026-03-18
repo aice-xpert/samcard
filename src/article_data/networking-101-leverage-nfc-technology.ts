@@ -75,3 +75,11 @@ What it does is remove a small but consistent source of friction from every exch
 
 That's not magic. It's just a better process — and in networking, better processes compound over time.
 `;
+
+export const timeline = [
+	"Use NFC to cut contact exchange from minutes to seconds",
+	"Keep the NFC destination page focused on one next action",
+	"Test tap flow across iOS and Android before events",
+	"Connect NFC taps to CRM so follow-up happens within 24 hours",
+	"Track taps-to-meeting conversion, not just tap counts",
+];

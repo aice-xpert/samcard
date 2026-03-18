@@ -80,3 +80,11 @@ What doesn't work is either giving up immediately or following up five times in 
 Most networking mistakes come down to one thing: approaching it as something you do *to* people rather than *with* them. When the orientation shifts — toward curiosity, generosity, and real follow-through — the mechanics take care of themselves.
 
 You don't need more contacts. You need better habits with the ones you have.`;
+
+export const timeline = [
+	"Talking only about yourself lowers relationship quality",
+	"Inconsistent follow-up causes most missed opportunities",
+	"Personalized outreach consistently outperforms generic messages",
+	"Without a tracking system, valuable contacts are forgotten",
+	"Small habit changes create compounding networking results",
+];
