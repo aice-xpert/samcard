@@ -45,3 +45,11 @@ Many times in history start ups have failed not because they lacked technology o
 GenAI is opening a number of opportunities for developer and non developer alike and how we take advantage of such opportunities depends on us.
 
 `;
+
+export const timeline = [
+	"Choose a narrow pain point users already pay to solve",
+	"Put GenAI in the core value path, not as a novelty feature",
+	"Price around outcomes like time saved, revenue gained, or errors reduced",
+	"Run weekly experiments and keep only what improves retention",
+	"Control inference cost early to protect margins",
+];

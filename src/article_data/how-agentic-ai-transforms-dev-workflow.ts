@@ -29,3 +29,11 @@ These examples are just the tip of the iceberg. As Agentic AI is maturing it con
 ## Conclusion
 To conclude, Agentic AI is redefining the way humans interact with technology. Previously the tasks engineers had to do manually like reading large codebases, extracting workflows, creating SDLC documents, implementing code and testing the code which took days or weeks now can only be completed within hours with the help of Agentic AI which helps humans to focus on high level strategy, innovation, and creative problem-solving instead of repetitive or time-consuming tasks.
 `;
+
+export const timeline = [
+	"Delegate repetitive tasks first: tests, docs, refactors, and boilerplate",
+	"Run agents in parallel workflows, then merge with human code review",
+	"Add guardrails for security changes, dependencies, and deploy approvals",
+	"Track cycle time, bug rate, and review latency to prove impact",
+	"Scale usage with team playbooks and shared standards",
+];

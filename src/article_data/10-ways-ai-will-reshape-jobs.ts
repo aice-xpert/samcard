@@ -31,3 +31,11 @@ AI is being used to automate routine business operations. Tasks such as data ent
 ## Conclusion
 AI is no longer a distant concept of the future as it is already changing the job market as we know it. For some it could be for the better while for others it may feel challenging. As the jobs no longer include the boring and repetitive tasks allowing employees to focus on more creative, strategic, and value-driven work.
 `;
+
+export const timeline = [
+	"Routine documentation, reporting, and data cleanup are being automated first",
+	"Job roles are shifting from execution to supervision and quality review",
+	"Prompt writing, domain expertise, and critical thinking are rising in value",
+	"Teams are redesigning workflows around human-plus-AI collaboration",
+	"Career growth now depends on continuous reskilling, not one-time training",
+];
