@@ -28,12 +28,12 @@ One of the serious limitations to quantum computing is that it is an immature fi
 Although currently the technology behind quantum computers is immature it is growing daily with new inventions made by Microsoft, IBM etc and it would not be long when quantum computers would be used to accelerate growth in medicine, AI, finance and cyber security.
 `;
 
-
 export const timeline = [
-	"What is Quantum Computing?",
-	"Drug Discovery and HealthCare",
-	"Financial Modeling",
-	"Cyber Security",
-    "Artificial Intelligence",
-	"Limitations",
+	"Introduction to Quantum Computing",
+	"Understanding fundamentals: qubits, superposition, and entanglement",
+	"Applications in drug discovery and medicine",
+	"Impact on financial modeling",
+	"Cybersecurity challenges and quantum-resistant solutions",
+	"Role of quantum computing in accelerating artificial intelligence",
+	"Current limitations and future outlook of quantum technology"
 ];
