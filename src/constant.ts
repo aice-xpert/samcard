@@ -541,6 +541,7 @@ export interface Article {
   author: string;
   date: string;
   readTime: string;
+  keywords: string[];
 }
 
 export const categories = [
@@ -563,6 +564,7 @@ export const articles: Article[] = [
     author: "John Chen",
     date: "Mar 3, 2026",
     readTime: "5 min",
+    keywords: ["Artificial Intelligence", "Upskilling", "Future of Work", "Machine Learning", "Productivity", "Technology", "Adaptability"],
   },
   {
     id: 2,
@@ -573,6 +575,7 @@ export const articles: Article[] = [
     author: "Nina Roberts",
     date: "June 5, 2026",
     readTime: "8 min",
+    keywords: ["Quantum Computing", "Qubits", "Superposition", "Innovation", "Disruption", "Computing", "Future Tech"],
   },
   {
     id: 3,
@@ -583,6 +586,7 @@ export const articles: Article[] = [
     author: "Alex Wu",
     date: "Aug 5, 2026",
     readTime: "5 min",
+    keywords: ["Blockchain", "Startup", "Entrepreneurship", "Web3", "Mistakes", "Strategy", "Lessons Learned"],
   },
   {
     id: 4,
@@ -593,6 +597,7 @@ export const articles: Article[] = [
     author: "Sam Jonas",
     date: "Feb 28, 2026",
     readTime: "2 min",
+    keywords: ["AI", "Jobs", "Automation", "Future of Work", "Employment", "Workforce", "Disruption"],
   },
   {
     id: 5,
@@ -603,6 +608,7 @@ export const articles: Article[] = [
     author: "Emma Davis",
     date: "Sep 28, 2026",
     readTime: "7 min",
+    keywords: ["AI", "Jobs", "Career", "Automation", "Upskilling", "Future", "Workforce"],
   },
   {
     id: 6,
@@ -613,6 +619,7 @@ export const articles: Article[] = [
     author: "Ali Hassan",
     date: "Jan 21, 2026",
     readTime: "5 min",
+    keywords: ["Agentic AI", "Developer", "Workflow", "Automation", "Coding", "Productivity", "LLMs"],
   },
   {
     id: 7,
@@ -623,6 +630,7 @@ export const articles: Article[] = [
     author: "Hassan Ahmed",
     date: "Mar 5, 2026",
     readTime: "7 min",
+    keywords: ["Generative AI", "App Development", "Monetization", "SaaS", "Startup", "Revenue", "GPT"],
   },
   {
     id: 8,
@@ -633,6 +641,7 @@ export const articles: Article[] = [
     author: "M.Ali",
     date: "Mar 15, 2026",
     readTime: "5 min",
+    keywords: ["Blockchain", "Product Launch", "90 Days", "Startup", "MVP", "Strategy", "Web3"],
   },
   {
     id: 9,
@@ -643,6 +652,7 @@ export const articles: Article[] = [
     author: "Zulfiqar Ahmed",
     date: "July 2, 2026",
     readTime: "6 min",
+    keywords: ["Blockchain", "Product Failure", "Web3", "Startup", "Lessons", "Strategy", "Market Fit"],
   },
   {
     id: 10,
@@ -653,6 +663,7 @@ export const articles: Article[] = [
     author: "Sofia Renard",
     date: "May 23, 2026",
     readTime: "3 min",
+    keywords: ["Blockchain", "Security", "Transactions", "Crypto", "DeFi", "Hacking", "Safety"],
   },
   {
     id: 11,
@@ -663,6 +674,7 @@ export const articles: Article[] = [
     author: "Sofia Renard",
     date: "Nov 11, 2026",
     readTime: "5 min",
+    keywords: ["Quantum Computing", "SHA-256", "Cryptography", "Security", "Encryption", "Risk", "Post-Quantum"],
   },
   {
     id: 12,
@@ -673,6 +685,7 @@ export const articles: Article[] = [
     author: "Asher Voss",
     date: "Nov 5, 2026",
     readTime: "7 min",
+    keywords: ["Quantum Computing", "Business Growth", "Innovation", "Drug Discovery", "Healthcare", "Technology", "R&D"],
   },
   {
     id: 13,
@@ -683,6 +696,7 @@ export const articles: Article[] = [
     author: "Nina Voss",
     date: "Dec 5, 2026",
     readTime: "4 min",
+    keywords: ["Quantum Computing", "CEO", "Roadmap", "Strategy", "Leadership", "Future Tech", "Competitive Edge"],
   },
   {
     id: 14,
@@ -693,6 +707,7 @@ export const articles: Article[] = [
     author: "Maya Thornton",
     date: "Aug 25, 2026",
     readTime: "7 min",
+    keywords: ["Networking", "Mistakes", "Professional", "Career Growth", "Relationships", "Personal Brand", "Events"],
   },
   {
     id: 15,
@@ -703,6 +718,7 @@ export const articles: Article[] = [
     author: "Maya Roberts",
     date: "Mar 5, 2026",
     readTime: "5 min",
+    keywords: ["Networking", "Executive", "Productivity", "Hacks", "Leadership", "Career", "Time Management"],
   },
   {
     id: 16,
@@ -713,6 +729,7 @@ export const articles: Article[] = [
     author: "Damon Fairchild",
     date: "Aug 15, 2026",
     readTime: "3 min",
+    keywords: ["Digital Business Cards", "Design", "Networking", "Branding", "NFC", "QR Code", "First Impression"],
   },
   {
     id: 17,
@@ -723,6 +740,7 @@ export const articles: Article[] = [
     author: "Nina Damon",
     date: "Jan 15, 2026",
     readTime: "5 min",
+    keywords: ["NFC", "Networking", "Technology", "Digital Cards", "Innovation", "Contactless", "Smart Networking"],
   },
 ];
 

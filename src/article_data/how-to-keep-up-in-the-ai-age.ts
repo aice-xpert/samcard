@@ -44,3 +44,11 @@ Tasks like data entry can be automated. But negotiation, creative design, and re
 
 Fear of AI taking jobs is a narrow view that ignores evolution. Just as the steam engine didn’t end work but shifted it to new domains, AI is not eliminating professional contribution — it’s shifting it from rote execution to strategic oversight.
 `;
+
+export const timeline = [
+	"Use AI on one repetitive task daily (email triage, summaries, research)",
+	"Build a 3-tool workflow instead of relying on a single chatbot",
+	"Fact-check every AI draft before sharing it with clients or teams",
+	"Write prompts with role, context, constraints, and output format",
+	"Spend saved time on strategy, communication, and decision-making",
+];
