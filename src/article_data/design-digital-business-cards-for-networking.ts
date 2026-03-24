@@ -1,57 +1,103 @@
 export const content = `
-I've been in sales for twelve years. I've handed out thousands of business cards-physical ones, digital ones, QR codes on the back of my phone. Last year, I redesigned my digital card from scratch after realizing something uncomfortable: most people I met weren't following up, and the reason wasn't them. It was my card.
+I'd been handing out the same digital business card for almost two years. It had my name, my title, a headshot that was slightly too small, and a QR code that took people to my general website homepage. It worked, technically. People scanned it. Nothing much happened after that.
 
-Within three months of the redesign, my follow-up rate doubled. Here's exactly what I changed and why it worked.
+When I finally sat down to redesign it, I thought the problem was aesthetic — wrong colors, dated layout, maybe the font. It wasn't. The real problem was that my card wasn't doing anything. It was a digital version of a paper card, which is a digital version of nothing.
 
-## The Problem with Most Digital Business Cards
+Here's what I learned, and what actually makes a digital business card work for networking.
 
-Most digital business cards are just physical business cards on a screen. Name, title, company, phone, email. Maybe a logo. The format was designed for a 3.5 × 2 inch piece of cardstock with no room to spare. Digital cards have no such constraint-and most professionals are completely wasting the opportunity.
+## First, Understand What a Digital Business Card Is Actually For
 
-A physical card is a placeholder. It says: here's how to reach me if you remember who I am. A digital card can do something far more valuable. It can tell someone who you are, why you're worth reaching out to, and exactly what to do next-all before they've closed the tab.
+This sounds obvious but it's worth saying clearly: a digital business card is not a contact dump. It's not a place to list every platform you're on, every service you offer, and every credential you've earned. That information exists somewhere — your LinkedIn, your website, your bio. The card's job is different.
 
-The average person you meet at a conference or networking event will interact with your card for less than ten seconds. In that window, your card either gives them a reason to act or it doesn't. Most cards don't.
+Its job is to give someone a fast, frictionless reason to stay connected with you specifically. Not your company. Not your role. You.
 
-## What a Digital Business Card Should Actually Do
+Once I reframed it that way, the redesign became a lot simpler. Everything that didn't serve that purpose came off the card.
 
-A great digital business card does three things: it communicates who you are beyond your job title, it makes taking action completely effortless, and it leaves an impression that survives the end of the conversation.
+## Start With One Clear Purpose
 
-**Communicate beyond your title.** Your title tells people what you do. Your card should tell them why you're worth knowing. A single positioning statement-something like "I help Series A companies build their first outbound sales team" or "I connect consumer brands with retail buyers across the Midwest"-does more work than "Senior Account Executive" ever could. It gives people a concrete reason to follow up, one that has nothing to do with social obligation and everything to do with genuine relevance.
+Before you touch a design tool, answer this question: what do you want someone to do within 30 seconds of receiving your card?
 
-Think about the last ten business cards you received. How many of them told you something useful about the person beyond their employer and job function? Probably none. That's the gap your card should fill.
+For most professionals, the honest answer is one of three things — follow you somewhere, book a call, or save your contact details. Pick one as your primary action. Design everything else around it.
 
-**Make action effortless.** The most important element on your digital card is the single action you want people to take. A meeting booking link, a direct phone number, a LinkedIn profile-pick one primary call to action and make it impossible to miss. This is where most cards quietly fail. They list five ways to get in touch and leave the reader doing mental math about which one to use. Every additional option you add reduces the probability that any option gets chosen. Clarity converts. Optionality paralyzes.
+My old card tried to do all three at once and ended up being good at none. The redesign put one button front and center. Everything else was secondary. Response rate went up noticeably in the first month.
 
-**Leave a memorable impression.** Design matters more than most salespeople want to admit. A card that looks like every other card is a card that gets forgotten. Invest real time in a clean, distinctive design that reflects your personal brand-not just your company's brand guidelines. Use color intentionally. White space is not wasted space. And include a professional photo. People connect to faces faster than they connect to logos, and connection is the entire point of a business card.
+## Design for the Moment of Exchange
 
-## The Elements Worth Including
+Digital business cards get shared in specific situations — at conferences, after a meeting, during a quick hallway conversation. That moment is usually brief and often slightly awkward. Someone has just pulled out their phone. They're going to glance at your card for about ten seconds before the conversation moves on.
 
-Keep it focused. The digital business cards that actually drive follow-up include a handful of carefully chosen elements: your name and a positioning statement that replaces or supplements your generic title, your primary contact method-phone or email, whichever one you genuinely respond to quickly-a one-click meeting booking link like Calendly, your LinkedIn profile, and a professional headshot.
+Design for that ten seconds, not for a leisurely browse.
 
-Some people benefit from adding a short "what I can help with" section-two or three lines that make it easy for someone to recognize exactly when they should reach out to you. Done well, this section does the work of a mini elevator pitch. Done poorly, it becomes another wall of text that nobody reads. Keep it specific and keep it brief.
+That means your name, what you do, and your primary call-to-action need to be immediately readable without scrolling. Clean layout. High contrast. No clutter. If someone has to work to understand what you do, the card has already failed.
 
-That's the complete list. Every element on it earns its place. Everything else is noise competing for attention you can't afford to lose.
+## The Elements That Actually Matter
 
-## What to Leave Out
+After testing a few versions, here's what I found worth keeping:
 
-Company mailing address. Fax number. Every social platform you have a profile on. A secondary email address. Your full professional history. Awards and certifications listed in a block of tiny text. All of it adds visual clutter without adding value to the person on the other side.
+**Your name and a one-line description of what you do.** Not your job title — what you actually do for people. "VP of Marketing at Acme Corp" means something inside your company. "I help SaaS companies reduce churn through better onboarding" means something to the person standing in front of you.
 
-The hardest part of designing a digital business card is resisting the urge to include everything. More information feels safer-like you're being comprehensive and professional. But the person who just met you doesn't need comprehensive. They need clear. They need to know in eight seconds who you are, why you're relevant to them, and what to do next. Anything that doesn't serve those three goals is working against you.
+**A photo that looks like you.** Not your most flattering LinkedIn headshot from four years ago. A recent photo that people will actually recognize when they see you across a conference room.
 
-## The Details That Separate Good Cards from Great Ones
+**One or two contact options, not six.** Phone or email. Pick what you actually respond to. If you want people to reach you on LinkedIn, put LinkedIn. Don't list every channel hoping something sticks.
 
-Once you have the structure right, a few smaller details make a meaningful difference.
+**A single link to your most useful destination.** For most people this is a LinkedIn profile, a booking page, or a simple personal site. If it's your company homepage, reconsider — that's about the company, not you.
 
-Your photo matters more than you think. A professional headshot taken in good light-not a cropped conference photo or a LinkedIn picture from 2016-signals that you take your professional presence seriously. It also makes you easier to remember after a busy event where someone met thirty people in one afternoon.
+**A QR code.** Some people still prefer to scan rather than click, and a QR code on a screen is easy to share both in person and over video calls.
 
-Your booking link removes the single biggest friction point in professional follow-up: the back-and-forth of scheduling. When someone can book fifteen minutes with you in two clicks, the barrier to continuing the conversation drops dramatically. If you don't have a booking link set up, set one up today. It is the highest-ROI change you can make to your follow-up process.
+## What I Cut From My Old Card
 
-Your positioning statement should be updated regularly. If you've shifted industries, changed your focus, or started working with a different type of client, your card should reflect that. A positioning statement that no longer matches your actual work creates confusion at exactly the wrong moment.
+When I went through my old design with fresh eyes, here's what came off:
 
-## The One Question That Fixes Everything
+Every social media icon I wasn't actively using. A tagline that made sense to me and probably no one else. My company's founding year, which nobody has ever asked about. A secondary email address I check once a week. A portfolio link to work that was three years out of date.
 
-Before you finalize your digital card, ask yourself one question: if someone looked at this for eight seconds, would they know who I am, why I'm relevant to them, and what to do next?
+Each of those felt important when I added it. None of them were. They were just noise that made the card harder to read and the action harder to find.
 
-If the answer is yes, your card is ready. If you hesitate, simplify until it is. Remove one more element. Sharpen the positioning statement. Make the call to action bigger.
+## Pick the Right Platform
 
-The digital card that converts is never the most detailed one. It's always the clearest one. Start there and build outward only when you have a specific reason to.
+There are quite a few digital business card tools now — HiHello, Blinq, Popl, Linq, and others. They're not all the same, and the right one depends on how you network.
+
+If you're mostly at in-person events, a platform with strong NFC card integration (like Popl or Linq) is worth it — tap your physical card to someone's phone and your digital card opens instantly. No QR scanning required.
+
+If you're primarily networking online or over video, a platform that generates a clean shareable link matters more than NFC features.
+
+Most platforms have a free tier that's good enough to start. Don't pay for a premium plan until you've tested the free version long enough to know what features you actually use.
+
+## Brand It Like You Mean It
+
+Your digital business card competes with every other card someone receives that week. Visually generic cards — white background, default font, stock colors — don't stick.
+
+This doesn't mean you need a graphic designer. It means being intentional about two or three choices: a color that's consistently yours, a font that matches how you present yourself elsewhere, a layout that feels considered rather than assembled in 20 minutes.
+
+If your card looks like it could belong to anyone, it effectively belongs to no one. Small visual decisions — a consistent accent color, a clean grid, a photo that has real presence — are the difference between a card people remember and one they don't.
+
+## Test It Before You Use It
+
+Send your card to three people you trust and ask them one question: based on this, what do you think I do and what would you do next?
+
+Their answers will tell you more than any design review. If their description of what you do doesn't match yours, the card needs work. If they're not sure what to do next, the call-to-action isn't clear enough.
+
+I skipped this step the first time. The feedback I eventually got informally — "I wasn't sure if I should email you or click the link" — would have taken five minutes to catch before launch.
+
+## Keep It Current
+
+The advantage of digital over paper is that you can update it without reprinting anything. Use that.
+
+When you change roles, update it the same week. When you shift your focus, update the one-line description. When a contact method stops being useful, remove it. A digital business card that's six months out of date is worse than no card — it sends the wrong message to everyone you hand it to.
+
+Set a calendar reminder every three months to review it. Takes 15 minutes. Keeps the card working.
+
+## The Redesign Was Worth It
+
+My old card wasn't embarrassing. It just wasn't working. The redesign didn't require a new platform, a professional designer, or a complete personal rebrand. It required being honest about what the card was actually supposed to do — and cutting everything that got in the way of that.
+
+If your current digital business card is basically a contact sheet with a logo on it, that's the starting point. Not the design, not the colors. The purpose.
+
+Get that right and the rest follows quickly.
 `;
+
+export const timeline = [
+	"Define one clear card goal: meeting booked, call scheduled, or follow-up",
+	"Keep layout scannable with name, role, value line, and one CTA",
+	"Align colors, typography, and photo style with your professional brand",
+	"Add trackable links or QR codes to measure real engagement",
+	"Review analytics monthly and remove low-performing elements",
+];
