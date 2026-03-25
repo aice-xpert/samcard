@@ -10,6 +10,7 @@ import { CreateCard } from '@/components/dashboard/pages/CreateCard';
 import { Orders } from '@/components/dashboard/pages/Orders';
 import { Billing } from '@/components/dashboard/pages/Billing';
 import { Settings } from '@/components/dashboard/pages/Settings';
+import { Analytics } from '@/components/dashboard/pages/Analytics';
 function ComingSoon({ page }: { page: string }) {
   return (
     <div className="flex flex-col items-center justify-center h-96 gap-4">
@@ -58,7 +59,7 @@ export default function Home() {
       case 'dashboard': return <ComprehensiveDashboard />;
       case 'business-profile': return <BusinessProfile />;
       case 'my-cards': return <MyCardsNew />;
-      case 'analytics': return <ComingSoon page="Analytics" />;
+      case 'analytics': return <Analytics />;
       case 'create-card': return <CreateCard />;
 
       case 'orders': return <Orders />;
