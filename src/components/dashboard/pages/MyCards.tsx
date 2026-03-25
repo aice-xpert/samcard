@@ -1,0 +1,571 @@
+"use client";
+
+import { useState, useRef } from 'react';
+import { Card, CardContent, CardHeader } from '@/components/dashboard/ui/card';
+import { Button } from '@/components/dashboard/ui/button';
+import { Badge } from '@/components/dashboard/ui/badge';
+import { Input } from '@/components/dashboard/ui/input';
+import { Switch } from '@/components/dashboard/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/dashboard/ui/select';
+import {
+  Search, Sparkles, Edit, Eye, Share2, BarChart3,
+  Copy, MoreVertical, QrCode, Users, Trash2, Plus, X, Check, SlidersHorizontal,
+} from 'lucide-react';
+import { LineChart, Line, ResponsiveContainer } from 'recharts';
+
+const sparklineData = [
+  { value: 12 }, { value: 19 }, { value: 15 },
+  { value: 25 }, { value: 22 }, { value: 30 }, { value: 28 },
+];
+
+const initialCards = [
+  {
+    id: 1,
+    title: 'Primary Business Card',
+    status: 'active',
+    gradient: 'from-[#006312] to-[#000000]',
+    views: 3421, taps: 2547, saves: 189,
+    trend: sparklineData, completion: 90,
+  },
+  {
+    id: 2,
+    title: 'Personal Card',
+    status: 'active',
+    gradient: 'from-[#1E1E1E] to-[#000000]',
+    views: 1245, taps: 892, saves: 67,
+    trend: sparklineData, completion: 75,
+  },
+  {
+    id: 3,
+    title: 'Event Networking Card',
+    status: 'inactive',
+    gradient: 'from-[#008001] to-[#000000]',
+    views: 456, taps: 324, saves: 23,
+    trend: sparklineData, completion: 60,
+  },
+];
+
+const gradients = [
+  'from-[#006312] to-[#000000]',
+  'from-[#1E1E1E] to-[#000000]',
+  'from-[#008001] to-[#000000]',
+  'from-[#004d00] to-[#000000]',
+];
+
+type CardType = typeof initialCards[0];
+
+export function MyCardsNew() {
+  const [cards, setCards]                   = useState(initialCards);
+  const [search, setSearch]                 = useState('');
+  const [filter, setFilter]                 = useState('all');
+  const [sort, setSort]                     = useState('recent');
+  const [openMenu, setOpenMenu]             = useState<number | null>(null);
+  const [previewCard, setPreviewCard]       = useState<CardType | null>(null);
+  const [shareCard, setShareCard]           = useState<CardType | null>(null);
+  const [statsCard, setStatsCard]           = useState<CardType | null>(null);
+  const [editCard, setEditCard]             = useState<CardType | null>(null);
+  const [editTitle, setEditTitle]           = useState('');
+  const [toast, setToast]                   = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete]   = useState<number | null>(null);
+  const [showCreate, setShowCreate]         = useState(false);
+  const [newTitle, setNewTitle]             = useState('');
+  const [showFilters, setShowFilters]       = useState(false);
+  const nextId = useRef(initialCards.length + 1);
+
+  // ── helpers ──────────────────────────────────────────────────────
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 2500);
+  };
+
+  // ── derived list ─────────────────────────────────────────────────
+  const visible = cards
+    .filter(c => {
+      const matchSearch = c.title.toLowerCase().includes(search.toLowerCase());
+      const matchFilter = filter === 'all' || c.status === filter;
+      return matchSearch && matchFilter;
+    })
+    .sort((a, b) => {
+      if (sort === 'views') return b.views - a.views;
+      if (sort === 'name')  return a.title.localeCompare(b.title);
+      return b.id - a.id;
+    });
+
+  // ── actions ──────────────────────────────────────────────────────
+  const toggleStatus = (id: number) =>
+    setCards(prev => prev.map(c =>
+      c.id === id ? { ...c, status: c.status === 'active' ? 'inactive' : 'active' } : c
+    ));
+
+  const deleteCard = (id: number) => {
+    setCards(prev => prev.filter(c => c.id !== id));
+    setConfirmDelete(null);
+    showToast('Card deleted');
+  };
+
+  const duplicateCard = (card: CardType) => {
+    const newCard = {
+      ...card,
+      id: nextId.current++,
+      title: `${card.title} (Copy)`,
+      status: 'inactive' as const,
+      views: 0, taps: 0, saves: 0,
+      gradient: gradients[card.id % gradients.length],
+    };
+    setCards(prev => [...prev, newCard]);
+    showToast('Card duplicated!');
+    setOpenMenu(null);
+  };
+
+  const saveEdit = () => {
+    if (!editCard || !editTitle.trim()) return;
+    setCards(prev => prev.map(c => c.id === editCard.id ? { ...c, title: editTitle } : c));
+    setEditCard(null);
+    showToast('Card updated!');
+  };
+
+  const createCard = () => {
+    if (!newTitle.trim()) return;
+    const newCard = {
+      id: nextId.current++,
+      title: newTitle,
+      status: 'active' as const,
+      gradient: gradients[nextId.current % gradients.length],
+      views: 0, taps: 0, saves: 0,
+      trend: sparklineData, completion: 10,
+    };
+    setCards(prev => [...prev, newCard]);
+    setShowCreate(false);
+    setNewTitle('');
+    showToast('New card created!');
+  };
+
+  const copyLink = (card: CardType) => {
+    navigator.clipboard.writeText(`https://samcard.app/${card.title.toLowerCase().replace(/ /g, '-')}`);
+    showToast('Link copied to clipboard!');
+    setShareCard(null);
+  };
+
+  // ─────────────────────────────────────────────────────────────────
+  return (
+    <div className="space-y-4 sm:space-y-6 relative" onClick={() => setOpenMenu(null)}>
+
+      {/* Toast */}
+      {toast && (
+        <div className="fixed top-16 sm:top-6 right-4 sm:right-6 z-50 bg-[#008001] text-white px-4 py-3 rounded-xl shadow-xl flex items-center gap-2 animate-in slide-in-from-top-2">
+          <Check className="w-4 h-4 flex-shrink-0" /> {toast}
+        </div>
+      )}
+
+      {/* ── Header ── */}
+      <div className="space-y-3 sm:space-y-0">
+        {/* Row 1: title + create button */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white">My Cards</h1>
+            <p className="text-xs sm:text-sm text-[#A0A0A0] mt-0.5">
+              {visible.length} of {cards.length} cards
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* Mobile filter toggle */}
+            <button
+              onClick={e => { e.stopPropagation(); setShowFilters(f => !f); }}
+              className="sm:hidden p-2 rounded-full border border-[#008001]/30 text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20 transition-colors"
+            >
+              <SlidersHorizontal className="w-4 h-4" />
+            </button>
+
+            <Button
+              onClick={() => setShowCreate(true)}
+              className="bg-gradient-to-r from-[#49B618] to-[#008001] hover:from-[#009200] hover:to-[#006312] text-white rounded-full px-3 sm:px-6 h-9 sm:h-10 shadow-lg shadow-[#49B618]/35 text-sm"
+            >
+              <Sparkles className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Create New Card</span>
+              <span className="sm:hidden sr-only">Create</span>
+            </Button>
+          </div>
+        </div>
+
+        {/* Row 2: Search + filters — always visible on desktop, collapsible on mobile */}
+        <div className={`${showFilters ? 'flex' : 'hidden'} sm:flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3`}>
+          {/* Search */}
+          <div className="relative flex-1 sm:max-w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A0A0A0]" />
+            <Input
+              placeholder="Search cards..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="pl-10 w-full bg-[#000000] border-[#008001]/30 text-white rounded-full h-10"
+            />
+            {search && (
+              <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2">
+                <X className="w-3 h-3 text-[#A0A0A0]" />
+              </button>
+            )}
+          </div>
+
+          {/* Filter + Sort — side by side on mobile */}
+          <div className="flex gap-2">
+            <Select value={filter} onValueChange={setFilter}>
+              <SelectTrigger className="flex-1 sm:w-32 bg-[#008001] text-white border-0 rounded-full h-10 text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-[#000000] border-[#008001]/30">
+                <SelectItem value="all">All Cards</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={sort} onValueChange={setSort}>
+              <SelectTrigger className="flex-1 sm:w-40 bg-[#008001] text-white border-0 rounded-full h-10 text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-[#000000] border-[#008001]/30">
+                <SelectItem value="recent">Sort: Recent</SelectItem>
+                <SelectItem value="views">Sort: Most Views</SelectItem>
+                <SelectItem value="name">Sort: A-Z</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Cards Grid: 1-col mobile, 2-col sm, 3-col lg ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        {visible.map((card) => (
+          <Card
+            key={card.id}
+            className="bg-[#000000] rounded-2xl border border-[#008001]/30 shadow-lg shadow-[#008001]/10 hover:border-[#49B618]/60 hover:shadow-xl hover:shadow-[#008001]/20 hover:-translate-y-1 transition-all duration-300"
+          >
+            <CardHeader className="p-3 sm:p-4">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-sm sm:text-base font-bold text-white truncate">{card.title}</h3>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <Badge className={`rounded-full px-2 sm:px-3 text-xs font-bold ${
+                    card.status === 'active'
+                      ? 'bg-[#49B618]/15 text-[#49B618] hover:bg-[#49B618]/15'
+                      : 'bg-[#A0A0A0]/15 text-[#A0A0A0] hover:bg-[#A0A0A0]/15'
+                  }`}>
+                    {card.status.charAt(0).toUpperCase() + card.status.slice(1)}
+                  </Badge>
+
+                  {/* 3-dot menu */}
+                  <div className="relative" onClick={e => e.stopPropagation()}>
+                    <button
+                      onClick={() => setOpenMenu(openMenu === card.id ? null : card.id)}
+                      className="text-[#A0A0A0] hover:bg-[#1E1E1E] rounded-lg p-1"
+                    >
+                      <MoreVertical className="w-4 h-4" />
+                    </button>
+                    {openMenu === card.id && (
+                      <div className="absolute right-0 top-8 z-30 bg-[#0a0a0a] border border-[#008001]/30 rounded-xl shadow-2xl w-36 py-1">
+                        <button onClick={() => { setEditCard(card); setEditTitle(card.title); setOpenMenu(null); }}
+                          className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#008001]/20 flex items-center gap-2">
+                          <Edit className="w-3 h-3" /> Rename
+                        </button>
+                        <button onClick={() => duplicateCard(card)}
+                          className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#008001]/20 flex items-center gap-2">
+                          <Copy className="w-3 h-3" /> Duplicate
+                        </button>
+                        <button onClick={() => { setConfirmDelete(card.id); setOpenMenu(null); }}
+                          className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2">
+                          <Trash2 className="w-3 h-3" /> Delete
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </CardHeader>
+
+            <CardContent className="p-3 sm:p-4 space-y-3 sm:space-y-4">
+              {/* Card thumbnail */}
+              <div className={`relative rounded-xl overflow-hidden aspect-[16/9] bg-gradient-to-br ${card.gradient}`}>
+                <div className="absolute inset-0 opacity-[0.08]" style={{
+                  backgroundImage: 'radial-gradient(circle, #49B618 1px, transparent 1px)',
+                  backgroundSize: '20px 20px',
+                }} />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
+                  <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-white/20 flex items-center justify-center mx-auto">
+                    <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                  </div>
+                  <p className="mt-1.5 text-xs sm:text-sm font-semibold text-white truncate max-w-[140px]">{card.title}</p>
+                </div>
+                <div className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 px-2 sm:px-3 py-1 rounded-full bg-black/35 backdrop-blur-md flex items-center gap-1">
+                  <Eye className="w-3 h-3 text-white" />
+                  <span className="text-xs text-white font-medium">{card.views.toLocaleString()}</span>
+                </div>
+                <button
+                  onClick={() => copyLink(card)}
+                  className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white/15 backdrop-blur-md hover:bg-white/25 flex items-center justify-center transition-colors"
+                  title="Copy QR link"
+                >
+                  <QrCode className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                </button>
+              </div>
+
+              {/* Stats row */}
+              <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
+                {[
+                  { label: 'Taps',  value: card.taps.toLocaleString() },
+                  { label: 'Views', value: card.views.toLocaleString() },
+                  { label: 'Saves', value: String(card.saves) },
+                ].map(({ label, value }) => (
+                  <div key={label} className="bg-[#1E1E1E] rounded-xl p-2 sm:p-3 text-center">
+                    <p className="text-sm sm:text-lg font-bold text-white">{value}</p>
+                    <p className="text-[10px] sm:text-xs text-[#A0A0A0]">{label}</p>
+                  </div>
+                ))}
+                <div className="bg-[#1E1E1E] rounded-xl p-2 sm:p-3 min-w-0">
+                  <ResponsiveContainer width="100%" height={28} minWidth={0} minHeight={1}>
+                    <LineChart data={card.trend}>
+                      <Line type="monotone" dataKey="value" stroke="#49B618" strokeWidth={2} dot={false} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                  <p className="text-[10px] sm:text-xs text-[#A0A0A0] text-center mt-1">7-day</p>
+                </div>
+              </div>
+
+              {/* Completion bar */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-white">Profile Completion</span>
+                  <span className="text-xs font-bold text-[#49B618]">{card.completion}%</span>
+                </div>
+                <div className="relative h-1.5 bg-[#1E1E1E] rounded-full overflow-hidden">
+                  <div className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#49B618] to-[#008001] rounded-full transition-all"
+                    style={{ width: `${card.completion}%` }} />
+                </div>
+              </div>
+
+              {/* Action buttons: 2×2 grid */}
+              <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
+                {[
+                  { icon: Edit,     label: 'Edit',    onClick: () => { setEditCard(card); setEditTitle(card.title); } },
+                  { icon: Eye,      label: 'Preview', onClick: () => setPreviewCard(card) },
+                  { icon: Share2,   label: 'Share',   onClick: () => setShareCard(card)   },
+                  { icon: BarChart3, label: 'Stats',  onClick: () => setStatsCard(card)   },
+                ].map(({ icon: Icon, label, onClick }) => (
+                  <Button key={label} onClick={onClick}
+                    variant="outline"
+                    className="border-[#008001]/30 text-white hover:bg-[#008001] hover:text-white h-8 sm:h-9 text-xs gap-1">
+                    <Icon className="w-3 h-3" /> {label}
+                  </Button>
+                ))}
+              </div>
+
+              {/* Bottom row */}
+              <div className="flex items-center justify-between pt-2 sm:pt-3 border-t border-[#1E1E1E]">
+                <button onClick={() => duplicateCard(card)}
+                  className="text-xs text-[#A0A0A0] hover:text-[#008001] flex items-center gap-1">
+                  <Copy className="w-3 h-3" /> Duplicate
+                </button>
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <span className="text-xs text-white">{card.status === 'active' ? 'Active' : 'Inactive'}</span>
+                  <Switch checked={card.status === 'active'} onCheckedChange={() => toggleStatus(card.id)}
+                    className="data-[state=checked]:bg-[#49B618] scale-90 sm:scale-100" />
+                </div>
+                <button onClick={() => setConfirmDelete(card.id)}
+                  className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1">
+                  <Trash2 className="w-3 h-3" /> Delete
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+
+        {/* Create new tile */}
+        <Card
+          onClick={() => setShowCreate(true)}
+          className="bg-[#000000] rounded-2xl border-2 border-dashed border-[#008001]/40 hover:border-[#49B618] hover:bg-[#1E1E1E] hover:shadow-lg hover:shadow-[#49B618]/10 transition-all duration-300 cursor-pointer group min-h-[200px] sm:min-h-[300px]"
+        >
+          <CardContent className="p-6 sm:p-8 flex flex-col items-center justify-center h-full">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full border-2 border-dashed border-[#008001] group-hover:border-[#49B618] flex items-center justify-center mb-3 sm:mb-4 transition-colors">
+              <Plus className="w-6 h-6 sm:w-7 sm:h-7 text-[#008001] group-hover:text-[#49B618] transition-colors" />
+            </div>
+            <h3 className="text-sm sm:text-base font-bold text-white mb-1">Create New Card</h3>
+            <p className="text-xs sm:text-sm text-[#A0A0A0] text-center">Design a new digital business card</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* No results */}
+      {visible.length === 0 && (
+        <div className="text-center py-12 sm:py-16">
+          <p className="text-[#A0A0A0] text-base sm:text-lg">No cards match your search.</p>
+          <button
+            onClick={() => { setSearch(''); setFilter('all'); }}
+            className="text-[#49B618] text-sm mt-2 hover:underline"
+          >
+            Clear filters
+          </button>
+        </div>
+      )}
+
+      {/* ── MODALS ────────────────────────────────────────────────── */}
+
+      {previewCard && (
+        <Modal onClose={() => setPreviewCard(null)} title="Card Preview">
+          <div className={`rounded-2xl overflow-hidden aspect-[16/9] bg-gradient-to-br ${previewCard.gradient} mb-4`}>
+            <div className="h-full flex flex-col items-center justify-center gap-2 sm:gap-3">
+              <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-full bg-white/20 flex items-center justify-center">
+                <Users className="w-7 h-7 sm:w-10 sm:h-10 text-white" />
+              </div>
+              <p className="text-white font-bold text-base sm:text-lg">{previewCard.title}</p>
+              <p className="text-white/60 text-xs sm:text-sm">john@company.com</p>
+              <div className="flex gap-2 sm:gap-3 mt-1 sm:mt-2 flex-wrap justify-center px-2">
+                {['LinkedIn','Instagram','Website'].map(l => (
+                  <span key={l} className="text-xs bg-white/10 text-white px-2 sm:px-3 py-1 rounded-full">{l}</span>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 text-center">
+            {[['Views', previewCard.views], ['Taps', previewCard.taps], ['Saves', previewCard.saves]].map(([k, v]) => (
+              <div key={k as string} className="bg-[#1E1E1E] rounded-xl p-2 sm:p-3">
+                <p className="text-white font-bold text-base sm:text-lg">{Number(v).toLocaleString()}</p>
+                <p className="text-[#A0A0A0] text-xs">{k}</p>
+              </div>
+            ))}
+          </div>
+        </Modal>
+      )}
+
+      {shareCard && (
+        <Modal onClose={() => setShareCard(null)} title="Share Card">
+          <p className="text-[#A0A0A0] text-sm mb-3">Share your card link</p>
+          <div className="flex gap-2 mb-4">
+            <Input
+              readOnly
+              value={`https://samcard.app/${shareCard.title.toLowerCase().replace(/ /g, '-')}`}
+              className="bg-[#1E1E1E] border-[#008001]/30 text-white text-xs sm:text-sm"
+            />
+            <Button onClick={() => copyLink(shareCard)}
+              className="bg-[#008001] hover:bg-[#006312] text-white flex-shrink-0">
+              <Copy className="w-4 h-4" />
+            </Button>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {['WhatsApp', 'Email', 'Twitter'].map(platform => (
+              <button key={platform}
+                onClick={() => { showToast(`Shared via ${platform}!`); setShareCard(null); }}
+                className="py-2 px-2 sm:px-3 rounded-lg bg-[#1E1E1E] text-white text-xs sm:text-sm hover:bg-[#008001]/20 transition-colors">
+                {platform}
+              </button>
+            ))}
+          </div>
+        </Modal>
+      )}
+
+      {statsCard && (
+        <Modal onClose={() => setStatsCard(null)} title={`Stats — ${statsCard.title}`}>
+          <div className="space-y-4">
+            {[
+              { label: 'Total Views', value: statsCard.views, pct: 100 },
+              { label: 'NFC Taps',    value: statsCard.taps,  pct: Math.round((statsCard.taps  / Math.max(statsCard.views, 1)) * 100) },
+              { label: 'Saves',       value: statsCard.saves, pct: Math.round((statsCard.saves / Math.max(statsCard.views, 1)) * 100) },
+            ].map(({ label, value, pct }) => (
+              <div key={label}>
+                <div className="flex justify-between mb-1">
+                  <span className="text-white text-sm">{label}</span>
+                  <span className="text-[#49B618] font-bold">{value.toLocaleString()}</span>
+                </div>
+                <div className="h-2 bg-[#1E1E1E] rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-[#49B618] to-[#008001] rounded-full" style={{ width: `${pct}%` }} />
+                </div>
+              </div>
+            ))}
+            <div className="pt-2 border-t border-[#1E1E1E]">
+              <p className="text-[#A0A0A0] text-xs">
+                Profile completion: <span className="text-[#49B618] font-bold">{statsCard.completion}%</span>
+              </p>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {editCard && (
+        <Modal onClose={() => setEditCard(null)} title="Edit Card">
+          <p className="text-[#A0A0A0] text-sm mb-2">Card name</p>
+          <Input
+            value={editTitle}
+            onChange={e => setEditTitle(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && saveEdit()}
+            className="bg-[#1E1E1E] border-[#008001]/30 text-white mb-4"
+            autoFocus
+          />
+          <Button onClick={saveEdit} className="w-full bg-[#008001] hover:bg-[#006312] text-white">
+            Save Changes
+          </Button>
+        </Modal>
+      )}
+
+      {confirmDelete !== null && (
+        <Modal onClose={() => setConfirmDelete(null)} title="Delete Card">
+          <p className="text-[#A0A0A0] mb-6">Are you sure? This cannot be undone.</p>
+          <div className="flex gap-3">
+            <Button onClick={() => setConfirmDelete(null)}
+              variant="outline" className="flex-1 border-[#008001]/30 text-white hover:bg-[#1E1E1E]">
+              Cancel
+            </Button>
+            <Button onClick={() => deleteCard(confirmDelete)}
+              className="flex-1 bg-red-600 hover:bg-red-700 text-white">
+              Delete
+            </Button>
+          </div>
+        </Modal>
+      )}
+
+      {showCreate && (
+        <Modal onClose={() => setShowCreate(false)} title="Create New Card">
+          <p className="text-[#A0A0A0] text-sm mb-2">Card name</p>
+          <Input
+            placeholder="e.g. Conference Card"
+            value={newTitle}
+            onChange={e => setNewTitle(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && createCard()}
+            className="bg-[#1E1E1E] border-[#008001]/30 text-white mb-4"
+            autoFocus
+          />
+          <Button onClick={createCard}
+            className="w-full bg-gradient-to-r from-[#49B618] to-[#008001] hover:from-[#009200] hover:to-[#006312] text-white">
+            <Sparkles className="w-4 h-4 mr-2" /> Create Card
+          </Button>
+        </Modal>
+      )}
+
+    </div>
+  );
+}
+
+// ── Reusable Modal ────────────────────────────────────────────────
+function Modal({
+  onClose, title, children,
+}: {
+  onClose: () => void;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm p-0 sm:p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-[#0a0a0a] border border-[#008001]/30 rounded-t-2xl sm:rounded-2xl p-5 sm:p-6 w-full sm:max-w-md shadow-2xl"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-4 sm:mb-5">
+          <h3 className="text-white font-bold text-base sm:text-lg">{title}</h3>
+          <button onClick={onClose} className="text-[#A0A0A0] hover:text-white p-1">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
