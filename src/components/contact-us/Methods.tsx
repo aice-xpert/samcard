@@ -1,6 +1,6 @@
 "use client";
 import { motion } from "framer-motion";
-import { Mail, Phone, MapPin, Headphones } from "lucide-react";
+import { Mail, Phone, MapPin } from "lucide-react";
 
 const methods = [
   {

@@ -81,7 +81,7 @@ export default function OtherTracking() {
             </p>
             <ul className="list-disc list-inside space-y-2 ml-4">
               <li>
-                Updating the "Last Updated" date at the top of this policy
+                Updating the &quot;Last Updated&quot; date at the top of this policy
               </li>
               <li>Displaying a prominent notice on our website</li>
               <li>Sending you an email notification (for major changes)</li>

@@ -1,5 +1,3 @@
-import { Star } from "lucide-react";
-
 export default function HeroSection() {
   return (
     <section className="pt-38 pb-20 bg-gradient-to-b from-theme-devil-green via-black to-black overflow-hidden">

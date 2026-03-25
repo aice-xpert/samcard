@@ -7,10 +7,11 @@ import {
   Facebook,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Footer() {
   return (
-    <footer className="bg-black border-t border-white/5 py-16">
+    <footer className="bg-black border-t border-white/5 py-16 text-white">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         {/* Upper */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
@@ -33,16 +34,16 @@ export default function Footer() {
             </p>
 
             <div className="flex justify-center sm:justify-start gap-4">
-              <a className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center hover:bg-[#49B618] transition-colors">
+              <a className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center text-white hover:bg-[#49B618] transition-colors">
                 <Linkedin size={20} />
               </a>
-              <a className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center hover:bg-[#49B618] transition-colors">
+              <a className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center text-white hover:bg-[#49B618] transition-colors">
                 <Twitter size={20} />
               </a>
-              <a className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center hover:bg-[#49B618] transition-colors">
+              <a className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center text-white hover:bg-[#49B618] transition-colors">
                 <Instagram size={20} />
               </a>
-              <a className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center hover:bg-[#49B618] transition-colors">
+              <a className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center text-white hover:bg-[#49B618] transition-colors">
                 <Facebook size={20} />
               </a>
             </div>
@@ -91,9 +92,9 @@ export default function Footer() {
                 </a>
               </li>
             <li>
-                <a className="hover:text-[#49B618]" href="/blog">
+                <Link className="hover:text-[#49B618]" href="/blog">
                   Blog
-                </a>
+                </Link>
               </li>
               
               

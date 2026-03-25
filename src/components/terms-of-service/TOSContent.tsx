@@ -13,7 +13,7 @@ export default function TermsOfServicePage() {
         <div className="max-w-3xl mx-auto space-y-12">
 
           <p className="text-gray-300" style={{ lineHeight: 1.8 }}>
-            These Terms of Service ("Terms") govern your use of SamCard's website, mobile applications,
+            These Terms of Service (&quot;Terms&quot;) govern your use of SamCard&apos;s website, mobile applications,
             and services. By accessing or using SamCard, you agree to be bound by these Terms. If you do not
             agree to these Terms, please do not use our services.
           </p>
@@ -122,7 +122,7 @@ export default function TermsOfServicePage() {
           <div className="space-y-4 text-gray-300">
             <h2 className="text-2xl font-bold text-white">Disclaimer of Warranties</h2>
             <p>
-              THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS
+              THE SERVICE IS PROVIDED &quot;AS IS&quot; AND &quot;AS AVAILABLE&quot; WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS
               OR IMPLIED, INCLUDING MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT.
             </p>
             <p>We do not warrant that the Service will be uninterrupted, error-free, or free of viruses or harmful components.</p>
