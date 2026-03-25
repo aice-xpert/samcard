@@ -28,7 +28,7 @@ export default function SignupPage() {
     e.preventDefault();
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/signup", {
+      const response = await fetch("http://localhost:5001/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -45,8 +45,8 @@ export default function SignupPage() {
       }
 
       alert(data.message || "Signup successful!");
-    } catch (err: any) {
-      alert(err.message || "Something went wrong!");
+    } catch  {
+      alert("Something went wrong!");
     }
   };
 
