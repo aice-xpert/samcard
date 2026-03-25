@@ -28,7 +28,7 @@ export const QR_SHAPES = [
     { id: "circle", label: "Circle", path: "M 50,50 m -48,0 a 48,48 0 1,0 96,0 a 48,48 0 1,0 -96,0" },
     { id: "heart", label: "Heart", path: "M 50,82 C 10,58 1,43 1,29 C 1,14 13,4 26,4 C 36,4 45,10 50,19 C 55,10 64,4 74,4 C 87,4 99,14 99,29 C 99,43 90,58 50,82 Z" },
     { id: "hexagon", label: "Hexagon", path: "M 50,2 L 93,26 L 93,74 L 50,98 L 7,74 L 7,26 Z" },
-    { id: "speech", label: "Speech Bubble", path: "M 4,4 H 96 Q 99,4 99,8 V 68 Q 99,72 96,72 H 58 L 50,88 L 42,72 H 4 Q 1,72 1,68 V 8 Q 1,4 4,4 Z" },
+    // { id: "speech", label: "Speech Bubble", path: "M 4,4 H 96 Q 99,4 99,8 V 68 Q 99,72 96,72 H 58 L 50,88 L 42,72 H 4 Q 1,72 1,68 V 8 Q 1,4 4,4 Z" },
     { id: "star", label: "Star", path: "M 50,2 L 61,35 L 97,35 L 68,56 L 79,90 L 50,70 L 21,90 L 32,56 L 3,35 L 39,35 Z" },
     { id: "diamond", label: "Diamond", path: "M 50,2 L 98,50 L 50,98 L 2,50 Z" },
     { id: "teardrop", label: "Teardrop", path: "M 50,4 C 71,4 88,21 88,44 C 88,67 70,87 50,96 C 30,87 12,67 12,44 C 12,21 29,4 50,4 Z" },
@@ -37,7 +37,7 @@ export const QR_SHAPES = [
     { id: "octagon", label: "Octagon", path: "M 34,2 L 66,2 L 98,34 L 98,66 L 66,98 L 34,98 L 2,66 L 2,34 Z" },
     { id: "cloud", label: "Cloud", path: "M 24,66 C 9,66 2,55 2,47 C 2,37 11,29 24,29 C 26,19 34,11 48,11 C 61,11 70,19 73,29 C 81,27 91,33 91,45 C 91,55 83,66 70,66 Z" },
     { id: "arrow", label: "Arrow", path: "M 2,34 H 54 V 13 L 98,50 L 54,87 V 66 H 2 Z" },
-    { id: "badge", label: "Badge", path: "M 50,4 L 57,19 L 75,14 L 70,32 L 87,39 L 75,54 L 80,72 L 63,71 L 57,89 L 43,77 L 27,87 L 28,69 L 10,64 L 22,49 L 11,34 L 29,31 L 25,14 L 43,21 Z" },
+    // { id: "badge", label: "Badge", path: "M 50,4 L 57,19 L 75,14 L 70,32 L 87,39 L 75,54 L 80,72 L 63,71 L 57,89 L 43,77 L 27,87 L 28,69 L 10,64 L 22,49 L 11,34 L 29,31 L 25,14 L 43,21 Z" },
     { id: "cross", label: "Cross", path: "M 34,2 H 66 V 34 H 98 V 66 H 66 V 98 H 34 V 66 H 2 V 34 H 34 Z" },
 ];
 
