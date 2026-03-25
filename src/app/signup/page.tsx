@@ -24,9 +24,30 @@ export default function SignupPage() {
     terms: false,
   });
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Signup:", formData);
+
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+          company: formData.company,
+        }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Signup failed");
+      }
+
+      alert(data.message || "Signup successful!");
+    } catch (err: any) {
+      alert(err.message || "Something went wrong!");
+    }
   };
 
   const updateField = (field: keyof typeof formData, value: string | boolean) => {
@@ -34,9 +55,9 @@ export default function SignupPage() {
   };
 
   return (
-   <div className="min-h-screen bg-gradient-to-b from-theme-devil-green via-black to-black flex justify-center px-4 pt-32 pb-5">   
-   <div className="w-full max-w-md">
-       
+    <div className="min-h-screen bg-gradient-to-b from-theme-devil-green via-black to-black flex justify-center px-4 pt-32 pb-5">
+      <div className="w-full max-w-md">
+
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -53,7 +74,7 @@ export default function SignupPage() {
           </p>
         </motion.div>
 
-       
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -61,7 +82,7 @@ export default function SignupPage() {
           className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10"
         >
           <form onSubmit={handleSubmit} className="space-y-5">
-           
+
             <InputField
               label="Full Name"
               id="name"
@@ -72,7 +93,7 @@ export default function SignupPage() {
               required
             />
 
-           
+
             <InputField
               label="Email Address"
               id="email"
@@ -84,7 +105,7 @@ export default function SignupPage() {
               required
             />
 
-           
+
             <InputField
               label="Company Name (Optional)"
               id="company"
@@ -94,7 +115,7 @@ export default function SignupPage() {
               placeholder="Your Company"
             />
 
-           
+
             <div>
               <label className="block text-sm font-medium text-white mb-2">
                 Password
@@ -122,7 +143,7 @@ export default function SignupPage() {
               </p>
             </div>
 
-           
+
             <label className="flex items-start gap-3 cursor-pointer">
               <input
                 type="checkbox"
@@ -143,7 +164,7 @@ export default function SignupPage() {
               </span>
             </label>
 
-          
+
             <button
               type="submit"
               className="w-full py-3 bg-gradient-to-r from-primary to-theme-strong-green text-white rounded-xl
@@ -158,7 +179,7 @@ export default function SignupPage() {
             </button>
           </form>
 
-         
+
           <p className="mt-6 text-center text-sm text-gray-400">
             Already have an account?{" "}
             <Link href="/login" className="text-accent hover:underline">
