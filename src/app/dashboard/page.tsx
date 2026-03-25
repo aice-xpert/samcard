@@ -141,6 +141,7 @@ export default function Home() {
               subtitle={getPageSubtitle()}
               dateRange={dateRange}
               onDateRangeChange={setDateRange}
+              onNavigate={handleNavigate}
             />
           </div>
         )}
