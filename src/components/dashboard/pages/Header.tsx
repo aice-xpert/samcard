@@ -17,6 +17,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/dashboard/ui/dropdown-menu';
+import { useUser } from '@/contexts/UserContext';
 
 interface EnhancedHeaderProps {
   title: string;
@@ -33,6 +34,8 @@ export function EnhancedHeader({
   dateRange = '7',
   onDateRangeChange
 }: EnhancedHeaderProps) {
+  const { profile } = useUser();
+  const initials = profile.name.split(" ").map(n => n[0]).join("").toUpperCase();
   return (
     <header className="h-16 border-b border-[#008001]/30 bg-[#000000]/95 backdrop-blur-xl px-8 flex items-center justify-between shadow-sm">
       {/* Left side - Search and Breadcrumb */}
@@ -79,11 +82,15 @@ export function EnhancedHeader({
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="gap-3 bg-[#1E1E1E] hover:bg-[#008001]/20 px-3 text-white">
               <Avatar className="w-8 h-8 ring-2 ring-[#008001]/30">
-                <AvatarImage src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop" />
-                <AvatarFallback>JD</AvatarFallback>
+                {profile.avatar ? (
+                  <AvatarImage src={profile.avatar} />
+                ) : (
+                  <AvatarImage src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop" />
+                )}
+                <AvatarFallback>{initials}</AvatarFallback>
               </Avatar>
               <div className="text-left">
-                <p className="text-sm text-white font-medium">John Doe</p>
+                <p className="text-sm text-white font-medium">{profile.name}</p>
                 <p className="text-xs text-[#A0A0A0]">Pro Member</p>
               </div>
               <ChevronDown className="w-4 h-4 text-[#A0A0A0]" />

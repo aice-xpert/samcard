@@ -7,7 +7,9 @@ import { ComprehensiveDashboard } from '@/components/dashboard/pages/Dashboard';
 import BusinessProfile from '@/components/dashboard/pages/BusinessProfile';
 import { MyCardsNew } from '@/components/dashboard/pages/MyCards';
 import { CreateCard } from '@/components/dashboard/pages/CreateCard';
-
+import { Orders } from '@/components/dashboard/pages/Orders';
+import { Billing } from '@/components/dashboard/pages/Billing';
+import { Settings } from '@/components/dashboard/pages/Settings';
 function ComingSoon({ page }: { page: string }) {
   return (
     <div className="flex flex-col items-center justify-center h-96 gap-4">
@@ -58,11 +60,10 @@ export default function Home() {
       case 'my-cards': return <MyCardsNew />;
       case 'analytics': return <ComingSoon page="Analytics" />;
       case 'create-card': return <CreateCard />;
-      // case 'design': return <DesignNew />;
-      // case 'nfc-qr': return <NfcQr />;
-      case 'orders': return <ComingSoon page="Orders" />;
-      case 'billing': return <ComingSoon page="Billing & Subscription" />;
-      case 'settings': return <ComingSoon page="Settings" />;
+
+      case 'orders': return <Orders />;
+      case 'billing': return <Billing />;
+      case 'settings': return <Settings />;
       default: return <ComprehensiveDashboard />;
     }
   };
