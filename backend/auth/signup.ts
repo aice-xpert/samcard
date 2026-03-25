@@ -1,8 +1,26 @@
-import express from "express";
+import express, { Request, Response } from "express";
+import { createClient } from "@supabase/supabase-js";
 
 const router = express.Router();
 
-router.post("/", async (req, res) => {
+// Lazy-load Supabase client
+let supabaseClient: ReturnType<typeof createClient> | null = null;
+
+function getSupabaseClient() {
+    if (supabaseClient) return supabaseClient;
+    
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error("Missing SUPABASE_URL or SUPABASE_ANON_KEY environment variables");
+    }
+    
+    supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+    return supabaseClient;
+}
+
+router.post("/", async (req: Request, res: Response) => {
     const { name, email, password, company } = req.body;
 
     const missingFields = [];
@@ -36,6 +54,7 @@ router.post("/", async (req, res) => {
     }
 
     try {
+        const supabase = getSupabaseClient();
         const { data, error } = await supabase.auth.signUp({
             email: emailTrimmed,
             password: passwordTrimmed,
@@ -59,7 +78,7 @@ router.post("/", async (req, res) => {
                 user: data.user,
                 message: "Check your email to confirm your account!",
             });
-    } catch (err: any) {
+    } catch {
         return res.status(400).json({ error: "Signup failed. Please try again." });
     }
 });
