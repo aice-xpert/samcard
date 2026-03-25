@@ -59,7 +59,7 @@ export function Navigation() {
             </Link>
             <Link
               href="/signup"
-              className="px-6 py-2.5 bg-primary text-white rounded-lg
+              className="px-6 py-2.5 bg-theme-digital-green text-white rounded-lg
                          hover:bg-theme-strong-green hover:shadow-lg hover:shadow-theme-digital-green/30
                          transition-all duration-300"
             >
@@ -102,7 +102,7 @@ export function Navigation() {
               </Link>
               <Link
                 href="/signup"
-                className="mt-2 px-6 py-3 bg-primary text-white rounded-lg
+                className="mt-2 px-6 py-3 bg-theme-digital-green text-white rounded-lg
                            hover:bg-theme-strong-green transition-all text-center"
                 onClick={() => setIsMobileMenuOpen(false)}
               >

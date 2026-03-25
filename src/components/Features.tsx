@@ -29,7 +29,7 @@ export function Features() {
   return (
     <section
       id="features"
-      className="py-24 bg-gradient-to-b from-background via-[#020f02] to-[#031203]"
+      className="py-24 bg-gradient-to-b from-black via-[#020f02] to-[#031203]"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 

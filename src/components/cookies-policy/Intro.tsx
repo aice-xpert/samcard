@@ -73,14 +73,14 @@ export function CookiePolicyIntro() {
                     <span className="text-accent mt-1">›</span>
                     <span>
                       <strong className="text-white">First-party cookies:</strong>{" "}
-                      Set by the website you're visiting
+                      Set by the website you&apos;re visiting
                     </span>
                   </li>
                   <li className="flex gap-2">
                     <span className="text-accent mt-1">›</span>
                     <span>
                       <strong className="text-white">Third-party cookies:</strong>{" "}
-                      Set by a domain other than the one you're visiting
+                      Set by a domain other than the one you&apos;re visiting
                     </span>
                   </li>
                 </ul>

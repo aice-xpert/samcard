@@ -1,13 +1,13 @@
 "use client";
 
 import { motion } from "motion/react";
-import { ArrowRight, Icon, LucideIcon } from "lucide-react";
+import { ArrowRight, LucideIcon } from "lucide-react";
 import { useState } from "react";
 
 interface Props {
   icon: LucideIcon;
-  title: String;
-  description: String;
+  title: string;
+  description: string;
 }
 
 export function SolutionCard({ icon: Icon, title, description }: Props) {

@@ -5,7 +5,7 @@ export default function AdditionalFeatures() {
     <section className="py-20 bg-black">
       <div className="max-w-7xl mx-auto px-6">
         <h2 className="text-4xl font-bold text-white text-center mb-16">
-          And There's More
+          And There&apos;s More
         </h2>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
