@@ -3,11 +3,15 @@
 import { useState } from 'react';
 import { Sidebar } from '@/components/dashboard/pages/Sidebar';
 import { EnhancedHeader } from '@/components/dashboard/pages/Header';
-import { ComprehensiveDashboard } from '@/components/dashboard/pages/Dashboard';
+;
 import BusinessProfile from '@/components/dashboard/pages/BusinessProfile';
 import { MyCardsNew } from '@/components/dashboard/pages/MyCards';
 import { CreateCard } from '@/components/dashboard/pages/CreateCard';
-
+import dynamic from "next/dynamic";
+const ComprehensiveDashboard = dynamic(
+  () => import('@/components/dashboard/pages/Dashboard').then(mod => mod.ComprehensiveDashboard),
+  { ssr: false }
+);
 function ComingSoon({ page }: { page: string }) {
   return (
     <div className="flex flex-col items-center justify-center h-96 gap-4">
