@@ -67,10 +67,12 @@ router.post("/", async (req: Request, res: Response) => {
         });
 
         if (error) {
+            // Return detailed Supabase error
             return res.status(400).json({
-                error: "Signup failed. Please try again.",
+                error: error.message || "Signup failed due to unknown error",
             });
         }
+
 
         return res
             .status(201)
@@ -78,8 +80,9 @@ router.post("/", async (req: Request, res: Response) => {
                 user: data.user,
                 message: "Check your email to confirm your account!",
             });
-    } catch {
-        return res.status(400).json({ error: "Signup failed. Please try again." });
+    } catch(err: any) {
+        console.error("Signup error:", err);
+        return res.status(500).json({ error: err.message || "Internal server error" });
     }
 });
 

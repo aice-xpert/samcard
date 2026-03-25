@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Mail,
   Lock,
@@ -14,6 +15,7 @@ import {
 } from "lucide-react";
 
 export default function SignupPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -28,7 +30,7 @@ export default function SignupPage() {
     e.preventDefault();
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/signup`, {
+      const response = await fetch("http://localhost:5001/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -44,7 +46,7 @@ export default function SignupPage() {
         throw new Error(data.error || "Signup failed");
       }
 
-      alert(data.message || "Signup successful!");
+      router.push(`/check-email?email=${encodeURIComponent(formData.email)}`);
     } catch  {
       alert("Something went wrong!");
     }
