@@ -7,6 +7,8 @@ import { motion } from "motion/react";
 import { Mail, Lock, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import { FaGithub } from "react-icons/fa";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -23,30 +25,26 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/login`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
-        }
-      );
+      // 1. Sign in on the client
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
 
-      const data = await res.json();
+      // 2. Get the ID Token
+      const idToken = await userCredential.user.getIdToken();
 
-      if (!res.ok) {
-        setError(data.error || "Login failed. Please try again.");
-        return;
+      // 3. Send to your Node.js Backend
+      const response = await fetch("http://localhost:5001/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken }),
+      });
+
+      if (response.ok) {
+        router.push("/dashboard"); // or profile
+      } else {
+        throw new Error("Failed to create session");
       }
-
-      // Store session token in localStorage (or use a cookie/context as needed)
-      localStorage.setItem("access_token", data.session.access_token);
-      localStorage.setItem("refresh_token", data.session.refresh_token);
-
-      // Redirect to dashboard (or wherever you want)
-      router.push("/dashboard");
-    } catch {
-      setError("Something went wrong. Please try again.");
+    } catch (err: any) {
+      setError(err.message);
     } finally {
       setLoading(false);
     }
