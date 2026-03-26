@@ -10,7 +10,7 @@ import { CreateCard } from '@/components/dashboard/pages/CreateCard';
 import { Orders } from '@/components/dashboard/pages/Orders';
 import { Billing } from '@/components/dashboard/pages/Billing';
 import { Settings } from '@/components/dashboard/pages/Settings';
-import { Analytics } from '@/components/dashboard/pages/Analytics';
+import Analytics from '@/components/dashboard/pages/Analytics';
 function ComingSoon({ page }: { page: string }) {
   return (
     <div className="flex flex-col items-center justify-center h-96 gap-4">
