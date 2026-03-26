@@ -1,56 +1,35 @@
-import { Router, Request, Response } from "express";
-import { createClient } from "@supabase/supabase-js";
+import express, { Request, Response } from "express";
+import admin from "../config/firebase";
 
-const router = Router();
-
-// Lazy-load Supabase client (same pattern as signup.ts)
-let supabaseClient: ReturnType<typeof createClient> | null = null;
-
-function getSupabaseClient() {
-  if (supabaseClient) return supabaseClient;
-
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error("Missing SUPABASE_URL or SUPABASE_ANON_KEY environment variables");
-  }
-
-  supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
-  return supabaseClient;
-}
-
-interface LoginBody {
-  email: string;
-  password: string;
-}
+const router = express.Router();
 
 router.post("/", async (req: Request, res: Response) => {
-  const { email, password }: LoginBody = req.body;
+  const { idToken } = req.body; // Client sends the Firebase ID Token
 
-  if (!email || !password) {
-    return res.status(400).json({ error: "Email and password are required." });
+  if (!idToken) {
+    return res.status(400).json({ error: "ID Token is required" });
   }
 
+  // Set session expiration (e.g., 5 days)
+  const expiresIn = 60 * 60 * 24 * 5 * 1000;
+
   try {
-    const supabase = getSupabaseClient();
+    // Create the session cookie
+    const sessionCookie = await admin.auth().createSessionCookie(idToken, { expiresIn });
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    // Set cookie options
+    const options = {
+      maxAge: expiresIn,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", // Only send over HTTPS in prod
+      path: "/",
+    };
 
-    if (error) {
-      return res.status(401).json({ error: error.message });
-    }
-
-    return res.status(200).json({
-      message: "Login successful.",
-      user: data.user,
-      session: data.session,
-    });
-  } catch (err) {
-    return res.status(500).json({ error: "Internal server error." });
+    res.cookie("session", sessionCookie, options);
+    return res.status(200).json({ success: true });
+  } catch (error: any) {
+    console.error("Session Login Error:", error);
+    return res.status(401).send("UNAUTHORIZED REQUEST!");
   }
 });
 
