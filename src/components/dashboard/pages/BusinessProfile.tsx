@@ -241,26 +241,26 @@ function openSocialLink(value: string, platform: number) {
 // ─────────────────────────────────────────────────────────────────────────────
 // QR Modal
 // ─────────────────────────────────────────────────────────────────────────────
-function QRModal({ text, onClose }: { text: string; onClose: () => void }) {
-  const encoded = encodeURIComponent(text || 'https://example.com');
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encoded}&bgcolor=000000&color=49B618&margin=20`;
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={onClose}>
-      <div className="relative bg-[#0D0D0D] border border-[#008001]/40 rounded-2xl p-6 sm:p-8 flex flex-col items-center gap-4 shadow-2xl w-full max-w-xs" onClick={e => e.stopPropagation()}>
-        <button onClick={onClose} className="absolute top-3 right-3 text-[#555] hover:text-white"><X className="w-5 h-5" /></button>
-        <h3 className="text-white font-semibold text-lg">Your QR Code</h3>
-        <div className="p-3 rounded-xl bg-[#1a1a1a] border border-[#008001]/30">
-          <img src={qrUrl} alt="QR Code" width={220} height={220} className="rounded-lg" />
-        </div>
-        <p className="text-[#A0A0A0] text-xs text-center max-w-[220px]">Scan to view your digital business card</p>
-        <a href={qrUrl} download="business-card-qr.png"
-          className="flex items-center gap-2 bg-gradient-to-r from-[#008001] to-[#49B618] text-white rounded-xl px-5 py-2 text-sm font-semibold">
-          <Download className="w-4 h-4" /> Download QR
-        </a>
-      </div>
-    </div>
-  );
-}
+// function QRModal({ text, onClose }: { text: string; onClose: () => void }) {
+//   const encoded = encodeURIComponent(text || 'https://example.com');
+//   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encoded}&bgcolor=000000&color=49B618&margin=20`;
+//   return (
+//     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={onClose}>
+//       <div className="relative bg-[#0D0D0D] border border-[#008001]/40 rounded-2xl p-6 sm:p-8 flex flex-col items-center gap-4 shadow-2xl w-full max-w-xs" onClick={e => e.stopPropagation()}>
+//         <button onClick={onClose} className="absolute top-3 right-3 text-[#555] hover:text-white"><X className="w-5 h-5" /></button>
+//         <h3 className="text-white font-semibold text-lg">Your QR Code</h3>
+//         <div className="p-3 rounded-xl bg-[#1a1a1a] border border-[#008001]/30">
+//           <img src={qrUrl} alt="QR Code" width={220} height={220} className="rounded-lg" />
+//         </div>
+//         <p className="text-[#A0A0A0] text-xs text-center max-w-[220px]">Scan to view your digital business card</p>
+//         <a href={qrUrl} download="business-card-qr.png"
+//           className="flex items-center gap-2 bg-gradient-to-r from-[#008001] to-[#49B618] text-white rounded-xl px-5 py-2 text-sm font-semibold">
+//           <Download className="w-4 h-4" /> Download QR
+//         </a>
+//       </div>
+//     </div>
+//   );
+// }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Add a Component dropdown
@@ -660,9 +660,9 @@ export default function BusinessProfile() {
                   {copied ? <Check className="w-3.5 h-3.5 mr-1.5 text-[#49B618]" /> : <Share2 className="w-3.5 h-3.5 mr-1.5" />}
                   {copied ? 'Copied!' : 'Share'}
                 </Button>
-                <Button variant="outline" size="sm" className="border-[#008001]/30 text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20 text-xs h-8" onClick={() => setShowQR(true)}>
+                {/* <Button variant="outline" size="sm" className="border-[#008001]/30 text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20 text-xs h-8" onClick={() => setShowQR(true)}>
                   <Download className="w-3.5 h-3.5 mr-1.5" />QR Code
-                </Button>
+                </Button> */}
               </div>
             </div>
           </div>
@@ -890,7 +890,7 @@ export default function BusinessProfile() {
         onSaveContact={handleSaveContact}
         onShowQR={() => setShowQR(true)}
       />
-      {showQR && <QRModal text={formData.website || window.location.href} onClose={() => setShowQR(false)} />}
+      {/* {showQR && <QRModal text={formData.website || window.location.href} onClose={() => setShowQR(false)} />} */}
 
       <div className="xl:hidden flex rounded-xl overflow-hidden border border-[#008001]/30 mb-4">
         <button onClick={() => setMobileTab('edit')} className={`flex-1 py-2.5 text-sm font-medium flex items-center justify-center gap-2 transition-all ${mobileTab === 'edit' ? 'bg-[#008001] text-white' : 'bg-[#000000] text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20'}`}>
