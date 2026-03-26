@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/dashboard/ui/avatar';
 import { Badge } from '@/components/dashboard/ui/badge';
+import { useUser } from '@/contexts/UserContext';
 
 interface SidebarProps {
   activePage: string;
@@ -56,6 +57,9 @@ function LogoMark() {
 }
 
 export function Sidebar({ activePage, onNavigate, onClose }: SidebarProps) {
+  const { profile } = useUser();
+  const initials = profile.name.split(" ").map(n => n[0]).join("").toUpperCase();
+
   return (
     <div className="h-screen w-60 flex flex-col bg-[#000000] border-r border-[#008001]/30 shadow-2xl">
 
@@ -145,12 +149,16 @@ export function Sidebar({ activePage, onNavigate, onClose }: SidebarProps) {
               transform="rotate(-90 40 40)" />
             <foreignObject x="14" y="14" width="52" height="52">
               <Avatar className="w-full h-full border-2 border-[#008001]/30">
-                <AvatarImage src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop" />
-                <AvatarFallback>JD</AvatarFallback>
+                {profile.avatar ? (
+                  <AvatarImage src={profile.avatar} />
+                ) : (
+                  <AvatarImage src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop" />
+                )}
+                <AvatarFallback>{initials}</AvatarFallback>
               </Avatar>
             </foreignObject>
-            <text x="90" y="30" fill="white" fontSize="14" fontWeight="600">John Doe</text>
-            <text x="90" y="48" fill="#A0A0A0" fontSize="11">john@company.com</text>
+            <text x="90" y="30" fill="white" fontSize="14" fontWeight="600">{profile.name}</text>
+            <text x="90" y="48" fill="#A0A0A0" fontSize="11">{profile.email}</text>
             <text x="90" y="64" fill="#49B618" fontSize="12" fontWeight="600">
               <tspan>90% Complete </tspan>
               <tspan fill="#009200">↑</tspan>

@@ -15,6 +15,7 @@ import {
   AreaChart, Area, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
+import { useUser } from '@/contexts/UserContext';
 
 // ── Static data (unchanged) ───────────────────────────────────────
 const statsData = [
@@ -87,6 +88,9 @@ const funnelSteps = [
 
 // ─────────────────────────────────────────────────────────────────
 export function ComprehensiveDashboard() {
+  const { profile } = useUser();
+  const firstName = profile.name.split(" ")[0];
+
   return (
     <div className="space-y-4 sm:space-y-6">
 
@@ -101,7 +105,7 @@ export function ComprehensiveDashboard() {
               <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-[#49B618] animate-pulse" />
               <span className="text-[#A0A0A0] text-xs sm:text-sm font-medium">The Future of Business Cards</span>
             </div>
-            <h1 className="text-2xl sm:text-4xl font-bold text-white mb-1 sm:mb-2">Welcome back, John!</h1>
+            <h1 className="text-2xl sm:text-4xl font-bold text-white mb-1 sm:mb-2">Welcome back, {firstName}!</h1>
             <p className="text-[#A0A0A0] mb-4 sm:mb-6 text-sm sm:text-lg">Your digital business card is performing great today</p>
 
             <div className="bg-[#000000]/50 backdrop-blur-xl rounded-xl p-4 sm:p-5 border border-[#008001]/30 max-w-md">
