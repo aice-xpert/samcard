@@ -31,8 +31,14 @@ export default function LoginPage() {
       // 2. Get the ID Token
       const idToken = await userCredential.user.getIdToken();
 
+      const apiBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "");
+
+      if (!apiBaseUrl) {
+        throw new Error("Missing NEXT_PUBLIC_BACKEND_URL environment variable");
+      }
+
       // 3. Send to your Node.js Backend
-      const response = await fetch("http://localhost:5001/api/auth/login", {
+      const response = await fetch(`${apiBaseUrl}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idToken }),

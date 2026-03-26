@@ -30,7 +30,13 @@ export default function SignupPage() {
     e.preventDefault();
 
     try {
-      const response = await fetch("http://localhost:5001/api/auth/signup", {
+      const apiBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "");
+
+      if (!apiBaseUrl) {
+        throw new Error("Missing NEXT_PUBLIC_BACKEND_URL environment variable");
+      }
+
+      const response = await fetch(`${apiBaseUrl}/api/auth/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
