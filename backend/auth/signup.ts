@@ -88,7 +88,14 @@ router.post("/", async (req, res) => {
     if (err.code === "auth/weak-password") {
       return res.status(400).json({
         success: false,
-        error: "Password is too weak",
+        error: "Password must be at least 8 characters and include a mix of uppercase, lowercase, numbers, and symbols",
+      });
+    }
+
+    if (err.code === "auth/invalid-display-name") {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid name format",
       });
     }
 

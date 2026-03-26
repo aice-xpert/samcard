@@ -328,6 +328,7 @@ model User {
   goals             Goal[]
   connectedAccounts UserConnectedAccount[]
   paymentMethods    PaymentMethod[]
+  dashboardStats    DashboardStats?
   
   @@index([email])
   @@index([planTier])
@@ -1247,6 +1248,7 @@ model Order {
   updatedAt           DateTime    @updatedAt
   
   user                User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderItems          OrderItem[]
   
   @@index([userId])
   @@index([status])
@@ -1274,8 +1276,10 @@ model OrderItem {
   dimensions          Json?     // { length, width, height }
   
   order               Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product             Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
   
   @@index([orderId])
+  @@index([productId])
 }
 
 model Product {
@@ -1754,6 +1758,8 @@ model DashboardStats {
   updatedAt           DateTime  @default(now())
   
   user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
 }
 
 // =============================================================================

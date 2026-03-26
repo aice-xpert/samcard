@@ -1,5 +1,6 @@
 import express, { Request, Response } from 'express';
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import signupRoute from "./auth/signup";
 import loginRoute from "./auth/login";
 import dotenv from "dotenv";
@@ -17,6 +18,7 @@ const PORT: number | string = process.env.PORT || 5001;
 
 app.use(cors());
 app.use(express.json());
+app.use(cookieParser());
 
 app.get('/', (req: Request, res: Response) => {
   res.send('Backend server is running!');
