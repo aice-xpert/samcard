@@ -3,22 +3,20 @@
 import { useState } from 'react';
 import { Sidebar } from '@/components/dashboard/pages/Sidebar';
 import { EnhancedHeader } from '@/components/dashboard/pages/Header';
-import { ComprehensiveDashboard } from '@/components/dashboard/pages/Dashboard';
+;
 import BusinessProfile from '@/components/dashboard/pages/BusinessProfile';
 import { MyCardsNew } from '@/components/dashboard/pages/MyCards';
 import { CreateCard } from '@/components/dashboard/pages/CreateCard';
+import dynamic from "next/dynamic";
+const ComprehensiveDashboard = dynamic(
+  () => import('@/components/dashboard/pages/Dashboard').then(mod => mod.ComprehensiveDashboard),
+  { ssr: false }
+);
+import { Orders } from '@/components/dashboard/pages/Orders';
+import { Billing } from '@/components/dashboard/pages/Billing';
+import { Settings } from '@/components/dashboard/pages/Settings';
+import Analytics from '@/components/dashboard/pages/Analytics';
 
-function ComingSoon({ page }: { page: string }) {
-  return (
-    <div className="flex flex-col items-center justify-center h-96 gap-4">
-      <div className="w-16 h-16 rounded-2xl bg-[#008001]/20 border border-[#008001]/30 flex items-center justify-center">
-        <span className="text-3xl">🚧</span>
-      </div>
-      <h2 className="text-2xl font-bold text-white">{page}</h2>
-      <p className="text-[#A0A0A0]">This page is coming soon</p>
-    </div>
-  );
-}
 
 export default function Home() {
   const [activePage, setActivePage] = useState('dashboard');
@@ -56,13 +54,12 @@ export default function Home() {
       case 'dashboard': return <ComprehensiveDashboard />;
       case 'business-profile': return <BusinessProfile />;
       case 'my-cards': return <MyCardsNew />;
-      case 'analytics': return <ComingSoon page="Analytics" />;
+      case 'analytics': return <Analytics />;
       case 'create-card': return <CreateCard />;
-      // case 'design': return <DesignNew />;
-      // case 'nfc-qr': return <NfcQr />;
-      case 'orders': return <ComingSoon page="Orders" />;
-      case 'billing': return <ComingSoon page="Billing & Subscription" />;
-      case 'settings': return <ComingSoon page="Settings" />;
+
+      case 'orders': return <Orders />;
+      case 'billing': return <Billing />;
+      case 'settings': return <Settings />;
       default: return <ComprehensiveDashboard />;
     }
   };
@@ -140,6 +137,7 @@ export default function Home() {
               subtitle={getPageSubtitle()}
               dateRange={dateRange}
               onDateRangeChange={setDateRange}
+              onNavigate={handleNavigate}
             />
           </div>
         )}

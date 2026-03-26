@@ -1,0 +1,1884 @@
+// =============================================================================
+// SAMCARD - Digital Business Card Platform
+// Complete Database Schema
+// =============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =============================================================================
+// ENUMS
+// =============================================================================
+
+enum UserRole {
+  ADMIN
+  USER
+  GUEST
+}
+
+enum AccountProvider {
+  GOOGLE
+  GITHUB
+  EMAIL
+  LINKEDIN
+  APPLE
+  TWITTER
+  FACEBOOK
+}
+
+enum Theme {
+  DARK
+  LIGHT
+  SYSTEM
+}
+
+enum CardStatus {
+  ACTIVE
+  INACTIVE
+  DRAFT
+  ARCHIVED
+  SUSPENDED
+}
+
+enum CardType {
+  NFC
+  QR
+  LINK
+  HYBRID
+}
+
+enum LogoPosition {
+  TOP_LEFT
+  TOP_RIGHT
+  BELOW_PHOTO
+  BELOW_NAME
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  SUSPENDED
+  TRIALING
+}
+
+enum PlanTier {
+  FREE
+  STARTER
+  PROFESSIONAL
+  BUSINESS
+  ENTERPRISE
+}
+
+enum LeadSource {
+  NFC
+  QR
+  LINK_CLICK
+  DIRECT
+  SEARCH
+  REFERRAL
+  SOCIAL
+  ORGANIC
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  CONVERTED
+  LOST
+  ARCHIVED
+}
+
+enum NotificationType {
+  LEAD
+  TAP
+  SCAN
+  MESSAGE
+  SYSTEM
+  BILLING
+  PROMO
+  SECURITY
+  CARD
+  ANALYTICS
+}
+
+enum DeviceType {
+  IOS
+  ANDROID
+  WEB
+  NFC_READER
+  QR_SCANNER
+  UNKNOWN
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  EXPORT
+  SHARE
+  VIEW
+}
+
+enum ExtraSectionType {
+  BUTTON
+  VIDEO
+  AUDIO
+  PDF
+  IMAGE_TEXT
+  TEAM
+  CUSTOMER
+  PRODUCTS
+  SERVICES
+  HOURS
+  GALLERY
+  PORTFOLIO
+  TESTIMONIALS
+  AMENITIES
+  EMBED
+  MAP
+}
+
+enum QRShapeType {
+  SQUARE
+  ROUNDED
+  CIRCLE
+  HEXAGON
+  KITE
+  STAR
+  DIAMOND
+  BEVEL
+  LETTER
+}
+
+enum QRDotShape {
+  SQUARE
+  ROUNDED_TAG
+  ROUNDED
+  DOT
+  TINY_DOT
+  DIAMOND
+  STAR
+  CROSS
+  PLUS
+  HEXAGON
+  LEAF
+  BARS_H
+  BARS_V
+  MOSAIC
+  WAVE
+  DNA
+  ARROW_R
+  ARROW_L
+  KITE
+  ROUNDED_SQUARE
+}
+
+enum QREyeFrameStyle {
+  SQUARE
+  ROUNDED
+  CIRCLE
+  DOT_OUTLINE
+  ROUND_OUTER
+  THICK
+  DASHED
+  DOUBLE
+  OCTAGON
+  GAP
+}
+
+enum QREyeBallStyle {
+  CIRCLE
+  SQUARE
+  ROUNDED
+  DIAMOND
+  HEXAGON
+  STAR
+  SQUIRCLE
+  KITE
+  LEAF
+  CROSS
+  RING
+  DOT_SQ
+}
+
+enum WallpaperType {
+  SOLID
+  GRADIENT
+  RADIAL
+}
+
+enum ShadowIntensity {
+  NONE
+  SOFT
+  MEDIUM
+  STRONG
+}
+
+enum FontFamily {
+  INTER
+  SORA
+  DM_SANS
+  POPPINS
+  RALEEWAY
+  PLAYFAIR_DISPLAY
+  FIRA_CODE
+  SYSTEM
+}
+
+enum PaymentCardBrand {
+  VISA
+  MASTERCARD
+  AMEX
+  DISCOVER
+  JCB
+  UNIONPAY
+}
+
+// =============================================================================
+// USER & AUTHENTICATION
+// =============================================================================
+
+model User {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  emailVerified     Boolean   @default(false)
+  passwordHash      String?
+  name              String?
+  phone             String?
+  avatar            String?   // Base64 or URL
+  role              UserRole  @default(USER)
+  
+  // Preferences
+  timezone          String    @default("UTC")
+  language          String    @default("en")
+  theme             Theme     @default(DARK)
+  compactMode       Boolean   @default(false)
+  
+  // Subscription
+  subscriptionId    String?
+  planTier          PlanTier  @default(FREE)
+  subscriptionStatus SubscriptionStatus @default(ACTIVE)
+  subscriptionEndsAt DateTime?
+  
+  // Plan Limits
+  maxCards          Int       @default(1)
+  maxTaps           Int       @default(500)
+  maxStorageMb      Int       @default(256)
+  maxLeads          Int       @default(100)
+  
+  // Statistics (aggregated)
+  totalCards        Int       @default(0)
+  totalTaps         Int       @default(0)
+  totalViews        Int       @default(0)
+  totalLeads        Int       @default(0)
+  totalOrders       Int       @default(0)
+  totalSpent        Float     @default(0)
+  
+  // Privacy Settings
+  profilePublic     Boolean   @default(true)
+  showEmail         Boolean   @default(true)
+  showPhone         Boolean   @default(true)
+  analyticsOptIn    Boolean   @default(true)
+  
+  // Timestamps
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  lastLoginAt       DateTime?
+  emailVerifiedAt   DateTime?
+  deletedAt         DateTime? // Soft delete
+  
+  // Relations
+  accounts          Account[]
+  sessions          Session[]
+  businessProfiles  BusinessProfile[]
+  cards             Card[]
+  orders            Order[]
+  invoices          Invoice[]
+  notifications     Notification[]
+  auditLogs         AuditLog[]
+  leads             Lead[]
+  goals             Goal[]
+  connectedAccounts UserConnectedAccount[]
+  paymentMethods    PaymentMethod[]
+  dashboardStats    DashboardStats?
+  
+  @@index([email])
+  @@index([planTier])
+  @@index([createdAt])
+}
+
+model Account {
+  id                String          @id @default(cuid())
+  userId            String
+  provider          AccountProvider
+  providerAccountId String
+  accessToken       String?
+  refreshToken      String?
+  expiresAt         DateTime?
+  tokenType         String?
+  scope             String?
+  idToken           String?
+  sessionState      String?
+  
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id                String      @id @default(cuid())
+  userId            String
+  token             String      @unique
+  device            String?
+  deviceType        DeviceType  @default(WEB)
+  browser           String?
+  os                String?
+  ipAddress         String?
+  location          String?
+  isCurrent         Boolean     @default(false)
+  userAgent         String?
+  
+  expiresAt         DateTime
+  createdAt         DateTime    @default(now())
+  lastActiveAt      DateTime    @default(now())
+  
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([token])
+  @@index([isCurrent])
+}
+
+// =============================================================================
+// BUSINESS PROFILE
+// =============================================================================
+
+model BusinessProfile {
+  id                String    @id @default(cuid())
+  userId            String
+  
+  // Basic Info
+  name              String
+  slug              String    @unique
+  title             String?   // Job title
+  company           String?
+  tagline           String?   // Short bio
+  
+  // Cover & Media
+  profileImageUrl   String?
+  coverImageUrl     String?
+  brandLogoUrl      String?
+  logoPosition      LogoPosition @default(TOP_LEFT)
+  
+  // Contact Information
+  primaryEmail      String?
+  secondaryEmail    String?
+  primaryPhone      String?
+  secondaryPhone    String?
+  website           String?
+  address           String?
+  city              String?
+  state             String?
+  country           String?
+  postalCode        String?
+  latitude          Float?
+  longitude         Float?
+  
+  // Professional Details
+  industry          String?
+  department        String?
+  jobLevel          String?   // Junior, Mid, Senior, Executive
+  yearFounded       Int?      // For companies
+  companySize       String?   // "1-10", "11-50", etc.
+  
+  // Appointment Booking
+  appointmentEnabled Boolean  @default(false)
+  appointmentUrl     String?
+  appointmentLabel   String?  @default("Book a Call")
+  
+  // Contact Collection
+  collectContactsEnabled Boolean @default(true)
+  collectNotesEnabled    Boolean @default(false)
+  contactFormLabel      String? @default("Add to Contact")
+  
+  // Section Content
+  headingText       String?
+  headingBodyText   String?
+  contactUsHeading  String?
+  contactUsBodyText String?
+  
+  // SEO & Sharing
+  metaTitle         String?
+  metaDescription   String?
+  ogImage           String?
+  shareUrl          String?
+  
+  // Custom CSS/JS
+  customCss         String?
+  customJs          String?
+  
+  // Profile Completion (0-100)
+  completionScore   Int       @default(0)
+  
+  // Engagement Score
+  engagementScore   Int       @default(0)
+  
+  // Timestamps
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  publishedAt       DateTime?
+  deletedAt         DateTime?
+  
+  // Relations
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cards             Card[]
+  socialLinks       SocialLink[]
+  customLinks       CustomLink[]
+  extraSections     ExtraSection[]
+  leads             Lead[]
+  
+  @@index([userId])
+  @@index([slug])
+  @@index([industry])
+  @@index([createdAt])
+}
+
+model SocialLink {
+  id                  String    @id @default(cuid())
+  businessProfileId    String
+  
+  platform            String    // linkedin, twitter, instagram, facebook, youtube, github, dribbble, tiktok, snapchat, pinterest, reddit, discord, medium, behance, threads, whatsapp, telegram, wechat, line, etc.
+  handle              String    // @username or path
+  url                 String?
+  label               String?   // Custom label
+  icon                String?   // Icon name
+  
+  displayOrder        Int       @default(0)
+  enabled             Boolean   @default(true)
+  
+  // Statistics
+  totalClicks         Int       @default(0)
+  uniqueClicks        Int       @default(0)
+  
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  
+  businessProfile     BusinessProfile @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
+  clicks              LinkClick[]
+  
+  @@index([businessProfileId])
+  @@index([platform])
+}
+
+model CustomLink {
+  id                  String    @id @default(cuid())
+  businessProfileId    String
+  
+  label               String
+  url                 String
+  icon                String?   // lucide icon name
+  color               String?   // hex color
+  
+  displayOrder        Int       @default(0)
+  enabled             Boolean   @default(true)
+  clickTracking       Boolean   @default(true)
+  
+  // Statistics
+  totalClicks         Int       @default(0)
+  uniqueClicks        Int       @default(0)
+  lastClickedAt       DateTime?
+  
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  
+  businessProfile     BusinessProfile @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
+  clicks              LinkClick[]
+  
+  @@index([businessProfileId])
+}
+
+model ExtraSection {
+  id                  String    @id @default(cuid())
+  businessProfileId    String
+  type                ExtraSectionType
+  
+  label               String
+  displayOrder        Int       @default(0)
+  enabled             Boolean   @default(true)
+  expanded            Boolean   @default(true)
+  
+  // Type-specific data (JSON)
+  data                Json      // Structure depends on type
+  
+  // Visibility
+  showOnCard          Boolean   @default(true)
+  showOnPreview       Boolean   @default(true)
+  
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  
+  businessProfile     BusinessProfile @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
+  
+  @@index([businessProfileId])
+  @@index([type])
+}
+
+// =============================================================================
+// DIGITAL BUSINESS CARDS
+// =============================================================================
+
+model Card {
+  id                  String      @id @default(cuid())
+  userId              String
+  businessProfileId   String
+  
+  // Card Identity
+  name                String      // Internal name
+  cardType            CardType    @default(QR)
+  status              CardStatus  @default(DRAFT)
+  
+  // URLs & Sharing
+  slug                String      @unique
+  shareUrl            String      @unique
+  shortUrl            String?     @unique
+  
+  // Content Overrides (for this specific card)
+  headingText         String?
+  headingBodyText     String?
+  
+  // NFC Configuration
+  nfcUid              String?     @unique
+  nfcEnabled          Boolean     @default(false)
+  nfcWriteCount       Int         @default(0)
+  nfcLastWrittenAt    DateTime?
+  
+  // QR Configuration
+  qrEnabled           Boolean     @default(true)
+  qrConfig            Json?       // Full QR customization
+  qrMatrix            Bytes?      // Encoded QR data
+  qrScanCount         Int         @default(0)
+  qrLastScannedAt     DateTime?
+  qrShape             QRShapeType @default(ROUNDED)
+  
+  // Design Theme Override
+  designId            String?
+  themeOverride       Json?       // Custom theme for this card
+  
+  // Section Visibility
+  showProfile         Boolean     @default(true)
+  showHeading         Boolean     @default(true)
+  showContact         Boolean     @default(true)
+  showSocial          Boolean     @default(true)
+  showLinks           Boolean     @default(true)
+  showAppointment     Boolean     @default(true)
+  showBusinessDetails Boolean     @default(true)
+  showExtraSections   Boolean     @default(true)
+  
+  // Appearance (inherited from design but can override)
+  backgroundColor     String      @default("#000000")
+  accentColor         String      @default("#008001")
+  accentLight         String      @default("#49B618")
+  textColor           String      @default("#FFFFFF")
+  cardColor           String      @default("#0a0a0a")
+  cardRadius          Int         @default(16)
+  fontFamily          FontFamily  @default(INTER)
+  nameFontSize        Int         @default(24)
+  bodyFontSize        Int         @default(14)
+  boldHeadings        Boolean     @default(false)
+  
+  // Phone Background
+  phoneBgType         WallpaperType @default(SOLID)
+  phoneBgPreset       String?
+  phoneBgColor1       String      @default("#000000")
+  phoneBgColor2       String      @default("#0a0a0a")
+  phoneBgAngle        Int         @default(180)
+  shadowIntensity     ShadowIntensity @default(MEDIUM)
+  glowEffect          Boolean     @default(false)
+  
+  // Media
+  thumbnailUrl        String?
+  
+  // SEO
+  metaTitle           String?
+  metaDescription     String?
+  ogImage             String?
+  
+  // Statistics
+  totalViews          Int         @default(0)
+  totalTaps           Int         @default(0)
+  totalScans          Int         @default(0)
+  totalSaves          Int         @default(0)
+  totalShares         Int         @default(0)
+  uniqueVisitors      Int         @default(0)
+  linkClicks          Int         @default(0)
+  
+  // This Week Stats (for quick access)
+  thisWeekViews       Int         @default(0)
+  thisWeekTaps        Int         @default(0)
+  
+  // Goals Progress
+  monthlyTapGoal      Int?        // Target taps per month
+  monthlyViewGoal     Int?        // Target views per month
+  
+  // Completion Score
+  completionScore     Int         @default(0)
+  
+  // Timestamps
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+  publishedAt         DateTime?
+  lastSharedAt        DateTime?
+  deletedAt           DateTime?
+  
+  // Relations
+  user                User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessProfile     BusinessProfile @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
+  design              CardDesign? @relation(fields: [designId], references: [id])
+  interactions        CardInteraction[]
+  shares              CardShare[]
+  analytics           CardAnalytics[]
+  leads               Lead[]
+  
+  @@index([userId])
+  @@index([businessProfileId])
+  @@index([status])
+  @@index([slug])
+  @@index([nfcUid])
+  @@index([createdAt])
+}
+
+model CardDesign {
+  id                  String    @id @default(cuid())
+  userId              String?   // null for system presets
+  
+  name                String
+  description         String?
+  isPreset            Boolean   @default(false)
+  isPublic             Boolean   @default(false)
+  
+  // Colors
+  accentColor         String    @default("#008001")
+  accentLight         String    @default("#49B618")
+  backgroundColor     String    @default("#000000")
+  cardColor           String    @default("#0a0a0a")
+  textPrimary         String    @default("#FFFFFF")
+  textMuted           String    @default("#A0A0A0")
+  
+  // Typography
+  fontFamily          FontFamily @default(INTER)
+  nameFontSize        Int       @default(24)
+  bodyFontSize        Int       @default(14)
+  boldHeadings        Boolean   @default(false)
+  
+  // Card Styling
+  cardRadius          Int       @default(16)
+  shadowIntensity     ShadowIntensity @default(MEDIUM)
+  glowEffect          Boolean   @default(false)
+  
+  // Phone Background
+  phoneBgType         WallpaperType @default(SOLID)
+  phoneBgPreset       String?
+  phoneBgColor1       String    @default("#000000")
+  phoneBgColor2       String    @default("#0a0a0a")
+  phoneBgAngle        Int       @default(180)
+  
+  // Preview
+  thumbnailUrl        String?
+  
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  
+  cards               Card[]
+  
+  @@index([userId])
+  @@index([isPreset])
+  @@index([isPublic])
+}
+
+model ColorPalette {
+  id                  String    @id @default(cuid())
+  
+  name                String    @unique
+  emoji               String?
+  
+  // Colors
+  accent              String
+  accentLight         String
+  bg                  String
+  card                String
+  textPrimary         String
+  textMuted           String
+  
+  // Preset
+  wallpaper           String?   // Wallpaper preset name
+  
+  isPreset            Boolean   @default(false)
+  displayOrder        Int       @default(0)
+  
+  createdAt           DateTime  @default(now())
+}
+
+model WallpaperPreset {
+  id                  String    @id @default(cuid())
+  
+  name                String    @unique
+  style               String    // radial-gradient, linear-gradient, etc.
+  color1              String
+  color2              String?
+  angle               Int?      // For linear gradients
+  
+  // Preview
+  thumb               String?   // Thumbnail URL
+  
+  isPreset            Boolean   @default(false)
+  displayOrder        Int       @default(0)
+  
+  createdAt           DateTime  @default(now())
+}
+
+// =============================================================================
+// QR CODE CONFIGURATION (Embedded in Card as JSON, can also be standalone)
+// =============================================================================
+
+model QRTemplate {
+  id                  String    @id @default(cuid())
+  userId              String?
+  
+  name                String
+  description         String?
+  isPreset            Boolean   @default(false)
+  isPublic            Boolean   @default(false)
+  
+  // Shape
+  shapeId             QRShapeType @default(ROUNDED)
+  
+  // Dot Configuration
+  dotShape            QRDotShape @default(ROUNDED)
+  bodyScale           Float     @default(0.8)
+  
+  // Eye Configuration
+  eyeFrameStyle       QREyeFrameStyle @default(ROUNDED)
+  eyeBallStyle        QREyeBallStyle  @default(CIRCLE)
+  
+  // Colors
+  fgColor             String    @default("#FFFFFF")
+  bgColor             String    @default("#000000")
+  
+  // Accent Colors
+  accentFgEnabled     Boolean   @default(false)
+  accentFg            String?
+  accentBgEnabled     Boolean   @default(false)
+  accentBg            String?
+  
+  // Stroke
+  strokeEnabled       Boolean   @default(false)
+  strokeColor         String    @default("#FFFFFF")
+  
+  // Gradient
+  gradEnabled         Boolean   @default(false)
+  gradStops           Json?     // [{ offset: 0, color: "#fff" }]
+  gradAngle           Int       @default(180)
+  
+  // Logo
+  logoId              String?   // Preset logo ID
+  customLogoUrl       String?   // Custom logo URL
+  
+  // Sticker
+  stickerId           String?
+  stickerData         Json?    // Sticker configuration
+  
+  // Decoration
+  decorateImageUrl    String?
+  decoratePosition    String?  // x, y, width, height
+  decorateComposite   Bytes?   // Pre-rendered composite
+  
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  
+  @@index([userId])
+  @@index([isPreset])
+}
+
+model QRPresetLogo {
+  id                  String    @id @default(cuid())
+  
+  name                String
+  category            String    // social, brand, payment, etc.
+  icon                String    // SVG or icon identifier
+  isPreset            Boolean   @default(true)
+  
+  displayOrder        Int       @default(0)
+  
+  createdAt           DateTime  @default(now())
+}
+
+model QRSticker {
+  id                  String    @id @default(cuid())
+  
+  name                String
+  category            String    // circle, square, ribbon, holiday, premium
+  style               String    // SVG or image URL
+  
+  // Position & Size
+  defaultWidth        Int       @default(60)
+  defaultPosition     String    // "bottom-right", "bottom-left", "top-right", "top-left"
+  
+  // Colors
+  defaultColor        String?
+  defaultOutline      String?
+  
+  isPreset            Boolean   @default(true)
+  displayOrder        Int       @default(0)
+  
+  createdAt           DateTime  @default(now())
+}
+
+// =============================================================================
+// CARD INTERACTIONS & ANALYTICS
+// =============================================================================
+
+model CardInteraction {
+  id                  String      @id @default(cuid())
+  cardId              String
+  
+  // Interaction Type
+  type                String      // view, tap, scan, save, share, link_click
+  
+  // Visitor
+  visitorId           String?     // Anonymous or hashed user ID
+  fingerprint         String?     // Browser fingerprint
+  ipAddress           String?
+  userAgent           String?
+  deviceType          DeviceType  @default(UNKNOWN)
+  browser             String?
+  os                  String?
+  
+  // Location
+  city                String?
+  country             String?
+  countryCode         String?
+  region              String?
+  latitude            Float?
+  longitude           Float?
+  
+  // Attribution
+  referrer            String?
+  utmSource           String?
+  utmMedium           String?
+  utmCampaign         String?
+  utmContent          String?
+  
+  // For link clicks
+  linkId              String?
+  linkLabel           String?
+  
+  // Engagement
+  durationSeconds     Int?        // Time spent
+  scrollDepth         Int?        // Max scroll percentage
+  actionsPerformed    Json?       // ["viewed_social", "clicked_link"]
+  
+  // Device Info
+  screenWidth         Int?
+  screenHeight        Int?
+  isMobile            Boolean?
+  isTablet            Boolean?
+  
+  createdAt           DateTime    @default(now())
+  
+  card                Card        @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  
+  @@index([cardId])
+  @@index([type])
+  @@index([createdAt])
+  @@index([visitorId])
+  @@index([country])
+  @@index([deviceType])
+}
+
+model CardShare {
+  id                  String      @id @default(cuid())
+  cardId              String
+  
+  // Share Method
+  method              String      // email, sms, whatsapp, linkedin, twitter, facebook, copy_link, qr_download
+  
+  // Recipients
+  recipientEmail      String?
+  recipientPhone      String?
+  recipientName       String?
+  
+  // URL & Tracking
+  sharedUrl           String
+  sharedByIp          String?
+  sharedByVisitorId   String?
+  
+  // Engagement
+  wasOpened           Boolean     @default(false)
+  openedAt            DateTime?
+  wasEngaged          Boolean     @default(false)
+  engagedAt           DateTime?
+  wasConverted        Boolean     @default(false)
+  convertedAt         DateTime?
+  
+  createdAt           DateTime    @default(now())
+  
+  card                Card        @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  
+  @@index([cardId])
+  @@index([method])
+  @@index([createdAt])
+}
+
+model CardAnalytics {
+  id                  String    @id @default(cuid())
+  cardId              String
+  date                DateTime  @db.Date
+  
+  // Hourly breakdown (optional)
+  hour                Int?      // 0-23
+  
+  // Basic Metrics
+  views               Int       @default(0)
+  uniqueViews         Int       @default(0)
+  taps                Int       @default(0)
+  uniqueTaps          Int       @default(0)
+  scans               Int       @default(0)
+  uniqueScans         Int       @default(0)
+  saves               Int       @default(0)
+  shares              Int       @default(0)
+  linkClicks          Int       @default(0)
+  
+  // Traffic Sources
+  nfcTraffic          Int       @default(0)
+  qrTraffic           Int       @default(0)
+  linkTraffic         Int       @default(0)
+  directTraffic       Int       @default(0)
+  searchTraffic       Int       @default(0)
+  socialTraffic       Int       @default(0)
+  referralTraffic     Int       @default(0)
+  
+  // Device Breakdown
+  deviceBreakdown     Json?     // { ios: 45, android: 40, web: 15 }
+  browserBreakdown    Json?     // { chrome: 60, safari: 30, firefox: 10 }
+  osBreakdown         Json?     // { ios: 45, android: 40, windows: 10, macos: 5 }
+  
+  // Geographic
+  countryBreakdown    Json?     // { US: 50, UK: 20, ... }
+  cityBreakdown       Json?     // { "New York": 30, ... }
+  
+  // Engagement
+  avgDurationSeconds  Float?
+  maxDurationSeconds  Int?
+  avgScrollDepth      Float?
+  totalSessions       Int       @default(0)
+  
+  // Conversion
+  leadsGenerated      Int       @default(0)
+  conversionRate      Float?    // Calculated: leads / views
+  
+  // Link Performance
+  linkClickBreakdown  Json?     // { "portfolio": 50, "resume": 30 }
+  
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  
+  card                Card      @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  
+  @@unique([cardId, date, hour])
+  @@index([cardId])
+  @@index([date])
+}
+
+// =============================================================================
+// LEADS & CONTACT MANAGEMENT
+// =============================================================================
+
+model Lead {
+  id                  String      @id @default(cuid())
+  userId              String
+  businessProfileId    String
+  cardId              String?
+  
+  // Contact Information
+  name                String
+  firstName           String?
+  lastName            String?
+  email               String?
+  phone               String?
+  company             String?
+  jobTitle            String?
+  
+  // Profile
+  avatar              String?
+  notes               String?     @db.Text
+  tags                String[]    // ["enterprise", "potential-client"]
+  
+  // Source
+  source              LeadSource
+  sourceDetail        String?     // "qr_scan", "linkedin_click", "nfc_tap"
+  utmSource           String?
+  utmCampaign         String?
+  
+  // Engagement
+  engagementScore     Int         @default(0) // 0-100
+  interestLevel       Int         @default(0) // 1-5 stars
+  
+  // CRM Status
+  status              LeadStatus  @default(NEW)
+  isFavorite          Boolean     @default(false)
+  isArchived          Boolean     @default(false)
+  
+  // Lead Score (calculated)
+  leadScore           Int         @default(0)
+  
+  // Consent
+  marketingConsent    Boolean     @default(false)
+  consentGivenAt      DateTime?
+  gdprConsent         Boolean     @default(false)
+  
+  // Lead Value (estimated)
+  estimatedValue      Float?      // Monetary value
+  
+  // Activity
+  lastContactedAt     DateTime?
+  lastEngagedAt       DateTime?
+  interactionCount    Int         @default(0)
+  
+  // Timestamps
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+  
+  // Relations
+  user                User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessProfile     BusinessProfile @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
+  card                Card?       @relation(fields: [cardId], references: [id], onDelete: SetNull)
+  interactions        LeadInteraction[]
+  tasks               LeadTask[]
+  activities          LeadActivity[]
+  
+  @@index([userId])
+  @@index([businessProfileId])
+  @@index([cardId])
+  @@index([source])
+  @@index([status])
+  @@index([email])
+  @@index([createdAt])
+  @@index([engagementScore])
+}
+
+model LeadInteraction {
+  id                  String      @id @default(cuid())
+  leadId              String
+  
+  type                String      // email_sent, email_opened, email_clicked, call, sms, note, meeting, task_completed, linkedin_message, linkedin_view, etc.
+  
+  // Content
+  subject             String?
+  body                String?     @db.Text
+  direction           String?     // inbound, outbound
+  
+  // Outcome
+  outcome             String?     // replied, answered, voicemail, no_answer, interested, not_interested, etc.
+  
+  // Scheduling
+  scheduledAt         DateTime?
+  startedAt           DateTime?
+  completedAt         DateTime?
+  durationSeconds     Int?
+  
+  // Metadata
+  metadata            Json?       // { email_id, call_duration, recording_url }
+  
+  // Attachments
+  attachments         Json?       // [{ name, url, type }]
+  
+  createdAt           DateTime    @default(now())
+  
+  lead                Lead        @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  
+  @@index([leadId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+model LeadTask {
+  id                  String      @id @default(cuid())
+  leadId              String
+  
+  title               String
+  description         String?     @db.Text
+  status              String      @default("pending") // pending, in_progress, completed, cancelled
+  priority            String      @default("medium") // low, medium, high, urgent
+  
+  dueDate             DateTime?
+  startedAt           DateTime?
+  completedAt         DateTime?
+  
+  // Reminders
+  reminderAt          DateTime?
+  reminderSent        Boolean     @default(false)
+  
+  // Assignment
+  assignedTo          String?     // User ID or team member ID
+  
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+  
+  lead                Lead        @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  
+  @@index([leadId])
+  @@index([status])
+  @@index([dueDate])
+}
+
+model LeadActivity {
+  id                  String      @id @default(cuid())
+  leadId              String
+  
+  type                String      // viewed_card, tapped_card, saved_contact, shared_card, clicked_link, etc.
+  
+  // Details
+  title               String
+  description         String?
+  metadata            Json?
+  
+  // Location
+  city                String?
+  country             String?
+  deviceType          DeviceType?
+  
+  createdAt           DateTime    @default(now())
+  
+  lead                Lead        @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  
+  @@index([leadId])
+  @@index([createdAt])
+}
+
+// =============================================================================
+// BILLING & SUBSCRIPTIONS
+// =============================================================================
+
+model Order {
+  id                  String      @id @default(cuid())
+  userId              String
+  orderNumber         String      @unique
+  
+  // Items (JSON array)
+  items               Json        // [{ productId, name, sku, quantity, price, options }]
+  
+  // Totals
+  subtotal            Float
+  tax                 Float       @default(0)
+  taxRate             Float       @default(0)
+  discount            Float       @default(0)
+  discountCode        String?
+  shipping            Float       @default(0)
+  total               Float
+  
+  currency            String      @default("USD")
+  
+  // Status
+  status              OrderStatus @default(PENDING)
+  
+  // Shipping
+  shippingName        String?
+  shippingPhone       String?
+  shippingAddress     Json?       // { line1, line2, city, state, postalCode, country }
+  shippingMethod      String?
+  shippingCost        Float?
+  
+  // Tracking
+  trackingNumber      String?
+  trackingUrl         String?
+  carrier             String?
+  
+  // Payment
+  paymentMethodId     String?
+  paymentIntentId     String?
+  paidAt              DateTime?
+  
+  // Fulfillment
+  fulfilledAt         DateTime?
+  shippedAt           DateTime?
+  deliveredAt         DateTime?
+  
+  // Notes
+  customerNotes       String?     @db.Text
+  internalNotes       String?     @db.Text
+  
+  // Refunds
+  refundAmount        Float       @default(0)
+  refundReason        String?
+  refundedAt          DateTime?
+  
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+  
+  user                User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderItems          OrderItem[]
+  
+  @@index([userId])
+  @@index([status])
+  @@index([orderNumber])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id                  String    @id @default(cuid())
+  orderId             String
+  
+  productId           String
+  sku                 String?
+  name                String
+  description         String?
+  quantity            Int
+  unitPrice           Float
+  total               Float
+  
+  // Options
+  options             Json?     // { color: "black", material: "plastic" }
+  
+  // Shipping
+  weight              Float?
+  dimensions          Json?     // { length, width, height }
+  
+  order               Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product             Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@index([orderId])
+  @@index([productId])
+}
+
+model Product {
+  id                  String    @id @default(cuid())
+  
+  name                String
+  slug                String    @unique
+  description         String?   @db.Text
+  shortDescription    String?
+  
+  // Pricing
+  price               Float
+  compareAtPrice      Float?
+  costPrice           Float?
+  
+  // SKU & Inventory
+  sku                 String?   @unique
+  barcode             String?
+  inventory           Int       @default(0)
+  trackInventory      Boolean   @default(true)
+  lowStockThreshold   Int       @default(10)
+  
+  // Physical Properties
+  weight              Float?    // in grams
+  dimensions          Json?     // { length, width, height }
+  
+  // Media
+  images              Json?     // [{ url, alt, position }]
+  thumbnailUrl        String?
+  
+  // Categorization
+  category            String?
+  tags                String[]
+  
+  // Status
+  status              String    @default("active") // active, draft, archived
+  isDigital           Boolean   @default(false)
+  
+  // NFC Card specific
+  nfcChipType         String?   // NTAG213, NTAG215, NTAG216
+  cardMaterial        String?   // plastic, metal, wood
+  cardColors          Json?     // ["black", "white", "silver"]
+  
+  // Shipping
+  requiresShipping    Boolean   @default(true)
+  freeShipping        Boolean   @default(false)
+  
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  
+  orderItems          OrderItem[]
+  
+  @@index([category])
+  @@index([status])
+  @@index([sku])
+}
+
+model Invoice {
+  id                  String        @id @default(cuid())
+  userId              String
+  invoiceNumber       String        @unique
+  
+  // Subscription
+  subscriptionId      String?
+  
+  // Period
+  periodStart         DateTime
+  periodEnd           DateTime
+  
+  // Line Items
+  items               Json          // [{ description, quantity, unitPrice, total }]
+  
+  // Amounts
+  subtotal            Float
+  tax                 Float         @default(0)
+  taxRate             Float         @default(0)
+  discount            Float         @default(0)
+  total               Float
+  currency            String        @default("USD")
+  
+  // Payment
+  status              PaymentStatus @default(PENDING)
+  paidAt              DateTime?
+  dueDate             DateTime?
+  
+  // Stripe
+  stripeInvoiceId     String?       @unique
+  stripePaymentIntent String?
+  stripeSubscriptionId String?
+  stripeChargeId     String?
+  
+  // PDF
+  pdfUrl              String?
+  
+  // Notes
+  notes               String?
+  
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  
+  user                User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model PaymentMethod {
+  id                  String    @id @default(cuid())
+  userId              String
+  
+  // Stripe
+  stripePaymentMethodId String  @unique
+  
+  // Card Info
+  brand               PaymentCardBrand
+  last4               String
+  expMonth            Int
+  expYear             Int
+  funding             String?   // credit, debit, prepaid
+  
+  // Display
+  displayName         String?
+  isDefault           Boolean   @default(false)
+  
+  // Billing Address
+  billingName         String?
+  billingAddress      Json?     // { line1, city, state, postalCode, country }
+  
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+}
+
+model Plan {
+  id                  String    @id @default(cuid())
+  
+  name                String    @unique
+  tier                PlanTier  @unique
+  
+  // Pricing
+  priceMonthly        Float
+  priceYearly          Float
+  currency            String    @default("USD")
+  
+  // Limits
+  maxCards            Int
+  maxTaps             Int
+  maxStorageMb        Int
+  maxLeads            Int
+  maxTeamMembers      Int       @default(1)
+  
+  // Features
+  features            String[]  // List of feature flags
+  
+  // Display
+  description         String?
+  popular             Boolean   @default(false)
+  
+  // Trial
+  trialDays           Int       @default(0)
+  
+  // Status
+  isActive            Boolean   @default(true)
+  displayOrder        Int       @default(0)
+  
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+}
+
+// =============================================================================
+// GOALS & TARGETS
+// =============================================================================
+
+model Goal {
+  id                  String    @id @default(cuid())
+  userId              String
+  
+  name                String
+  type                String    // monthly_taps, weekly_saves, conversion_rate, etc.
+  
+  // Target
+  targetValue         Int
+  currentValue        Int       @default(0)
+  
+  // Period
+  period              String    // weekly, monthly, quarterly, yearly
+  startDate           DateTime
+  endDate             DateTime
+  
+  // Status
+  status              String    @default("active") // active, completed, missed, cancelled
+  
+  // Progress
+  progress            Float     @default(0) // Percentage
+  
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([type])
+  @@index([status])
+}
+
+// =============================================================================
+// NOTIFICATIONS
+// =============================================================================
+
+model Notification {
+  id                  String          @id @default(cuid())
+  userId              String
+  type                NotificationType
+  
+  // Content
+  title               String
+  message             String
+  data                Json?           // { leadId, cardId, etc. }
+  
+  // Read Status
+  read                Boolean         @default(false)
+  readAt              DateTime?
+  
+  // Actions
+  actionUrl           String?
+  actionLabel         String?
+  
+  // Delivery
+  emailSent           Boolean         @default(false)
+  emailSentAt         DateTime?
+  pushSent            Boolean         @default(false)
+  pushSentAt          DateTime?
+  
+  // Priority
+  priority            String          @default("normal") // low, normal, high, urgent
+  
+  // Source
+  sourceId            String?         // Related entity ID
+  sourceType          String?         // lead, card, order, etc.
+  
+  createdAt           DateTime        @default(now())
+  
+  user                User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([read])
+  @@index([type])
+  @@index([createdAt])
+}
+
+// =============================================================================
+// CONNECTED ACCOUNTS (Social/Integration)
+// =============================================================================
+
+model UserConnectedAccount {
+  id                  String    @id @default(cuid())
+  userId              String
+  
+  // Platform
+  platform            String    // linkedin, twitter, instagram, facebook, youtube, github, etc.
+  
+  // Connection Status
+  connected           Boolean   @default(false)
+  connectedAt         DateTime?
+  
+  // Account Info
+  accountId           String?
+  accountName         String?
+  accountUrl          String?   // Profile URL
+  accountAvatar       String?
+  
+  // Access
+  accessToken        String?   // Encrypted
+  refreshToken       String?   // Encrypted
+  expiresAt          DateTime?
+  
+  // Permissions
+  scopes              String[]  // granted permissions
+  
+  // Sync
+  lastSyncedAt        DateTime?
+  syncStatus          String?   // success, failed, pending
+  
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, platform])
+  @@index([userId])
+}
+
+// =============================================================================
+// LINK TRACKING
+// =============================================================================
+
+model LinkClick {
+  id                  String      @id @default(cuid())
+  linkId              String?     // Can be SocialLink or CustomLink
+  
+  // For custom links
+  customLinkId        String?
+  
+  // For social links
+  socialLinkId        String?
+  
+  // Visitor
+  visitorId           String?
+  ipAddress           String?
+  userAgent           String?
+  deviceType          DeviceType  @default(UNKNOWN)
+  
+  // Location
+  city                String?
+  country             String?
+  countryCode         String?
+  
+  // Attribution
+  referrer            String?
+  utmSource           String?
+  
+  // Context
+  cardId              String?
+  
+  createdAt           DateTime    @default(now())
+  
+  socialLink          SocialLink? @relation(fields: [socialLinkId], references: [id], onDelete: Cascade)
+  customLink          CustomLink? @relation(fields: [customLinkId], references: [id], onDelete: Cascade)
+  
+  @@index([linkId])
+  @@index([createdAt])
+  @@index([visitorId])
+}
+
+// =============================================================================
+// NFC CARDS (Physical)
+// =============================================================================
+
+model NfcCard {
+  id                  String    @id @default(cuid())
+  cardId              String?   // Linked digital card
+  userId              String?   // Assigned user
+  
+  // NFC Chip
+  uid                 String    @unique
+  chipType            String?   // NTAG213, NTAG215, NTAG216
+  ndefCapacity        Int?      // Bytes
+  
+  // Physical Card
+  physicalCardId      String?   @unique // SKU/Serial
+  cardMaterial        String?   // plastic, metal, wood
+  cardColors          Json?     // Available colors
+  cardWeight          Float?    // grams
+  
+  // Assignment
+  assignedAt          DateTime?
+  
+  // Status
+  isActivated         Boolean   @default(false)
+  isLinked            Boolean   @default(false)
+  isAssigned          Boolean   @default(false)
+  activationCode      String?
+  
+  // Usage
+  writeCount          Int       @default(0)
+  lastWrittenAt       DateTime?
+  lastTapAt           DateTime?
+  totalTaps           Int       @default(0)
+  
+  // Product
+  productId           String?   // Link to Product
+  sku                 String?
+  
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  
+  @@index([uid])
+  @@index([cardId])
+  @@index([userId])
+  @@index([isActivated])
+}
+
+// =============================================================================
+// ANALYTICS EVENTS
+// =============================================================================
+
+model AnalyticsEvent {
+  id                  String      @id @default(cuid())
+  userId              String?
+  cardId              String?
+  
+  // Event
+  eventName           String
+  eventCategory       String      // engagement, conversion, error, system, etc.
+  
+  // Properties
+  properties          Json?
+  
+  // Context
+  sessionId           String?
+  pageUrl             String?
+  pageName            String?
+  pageTitle           String?
+  referrer            String?
+  
+  // Device
+  deviceType          DeviceType  @default(UNKNOWN)
+  browser             String?
+  browserVersion      String?
+  os                  String?
+  osVersion           String?
+  screenWidth          Int?
+  screenHeight         Int?
+  isMobile             Boolean?
+  
+  // Location
+  ipCountry           String?
+  ipCity              String?
+  ipRegion            String?
+  
+  // UTM
+  utmSource           String?
+  utmMedium           String?
+  utmCampaign         String?
+  utmTerm             String?
+  utmContent          String?
+  
+  createdAt           DateTime    @default(now())
+  
+  @@index([userId])
+  @@index([cardId])
+  @@index([eventName])
+  @@index([eventCategory])
+  @@index([createdAt])
+}
+
+// =============================================================================
+// DASHBOARD STATISTICS (Pre-aggregated for performance)
+// =============================================================================
+
+model DashboardStats {
+  id                  String    @id @default(cuid())
+  userId              String    @unique
+  
+  // Period Stats
+  todayTaps           Int       @default(0)
+  todayViews          Int       @default(0)
+  todayLeads          Int       @default(0)
+  
+  weekTaps            Int       @default(0)
+  weekViews           Int       @default(0)
+  weekLeads          Int       @default(0)
+  
+  monthTaps           Int       @default(0)
+  monthViews          Int       @default(0)
+  monthLeads          Int       @default(0)
+  
+  // Trends (percentage change)
+  tapsTrend           Float     @default(0)
+  viewsTrend          Float     @default(0)
+  leadsTrend          Float     @default(0)
+  
+  // Conversion
+  conversionRate      Float     @default(0)
+  
+  // Top performing card
+  topCardId           String?
+  topCardName         String?
+  topCardTaps         Int       @default(0)
+  
+  // Last updated
+  updatedAt           DateTime  @default(now())
+  
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+}
+
+// =============================================================================
+// AUDIT LOG
+// =============================================================================
+
+model AuditLog {
+  id                  String      @id @default(cuid())
+  userId              String?
+  
+  action              AuditAction
+  entityType          String      // User, Card, Lead, Order, etc.
+  entityId            String?
+  
+  // Details
+  description         String?
+  changes             Json?       // { before: {}, after: {} }
+  
+  // Context
+  ipAddress           String?
+  userAgent           String?
+  sessionId           String?
+  deviceType          DeviceType?
+  
+  // Metadata
+  metadata            Json?
+  
+  createdAt           DateTime    @default(now())
+  
+  user                User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+// =============================================================================
+// EMAIL & NOTIFICATIONS TEMPLATES
+// =============================================================================
+
+model EmailTemplate {
+  id                  String    @id @default(cuid())
+  
+  name                String    @unique
+  slug                String    @unique
+  
+  subject             String
+  body                String    @db.Text
+  preheader           String?   // Email preview text
+  
+  type                String    // lead_notification, welcome, invoice, etc.
+  trigger             String?   // Event that triggers this
+  
+  // Variables
+  variables           String[]  // Available template variables
+  
+  // Status
+  isActive            Boolean   @default(true)
+  isSystem            Boolean   @default(false)
+  
+  // Versioning
+  version             Int       @default(1)
+  
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+}
+
+// =============================================================================
+// WEBHOOKS (Integrations)
+// =============================================================================
+
+model Webhook {
+  id                  String    @id @default(cuid())
+  userId              String?
+  
+  name                String
+  url                 String
+  secret              String?   // For signature verification
+  
+  // Events
+  events              String[]  // lead.created, card.viewed, etc.
+  
+  // Headers
+  headers             Json?     // Custom headers
+  
+  // Status
+  isActive            Boolean   @default(true)
+  
+  // Retry
+  maxRetries          Int       @default(3)
+  retryCount          Int       @default(0)
+  
+  // History
+  lastTriggeredAt     DateTime?
+  lastSuccessAt       DateTime?
+  lastError          String?
+  lastResponseCode    Int?
+  
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  
+  @@index([userId])
+}
+
+model WebhookDelivery {
+  id                  String    @id @default(cuid())
+  webhookId           String
+  
+  event               String
+  payload             Json
+  responseCode        Int?
+  responseBody        String?
+  error               String?
+  
+  attempts            Int       @default(1)
+  delivered           Boolean   @default(false)
+  
+  createdAt           DateTime  @default(now())
+  
+  @@index([webhookId])
+}
