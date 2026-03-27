@@ -4,24 +4,21 @@ import admin from "../config/firebase";
 const router = express.Router();
 
 router.post("/", async (req: Request, res: Response) => {
-  const { idToken } = req.body; // Client sends the Firebase ID Token
+  const { idToken } = req.body; 
 
   if (!idToken) {
     return res.status(400).json({ error: "ID Token is required" });
   }
 
-  // Set session expiration (e.g., 5 days)
   const expiresIn = 60 * 60 * 24 * 5 * 1000;
 
   try {
-    // Create the session cookie
     const sessionCookie = await admin.auth().createSessionCookie(idToken, { expiresIn });
 
-    // Set cookie options
     const options = {
       maxAge: expiresIn,
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // Only send over HTTPS in prod
+      secure: process.env.NODE_ENV === "production", 
       path: "/",
     };
 
