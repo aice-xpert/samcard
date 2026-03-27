@@ -9,6 +9,7 @@ import { FcGoogle } from "react-icons/fc";
 import { FaGithub } from "react-icons/fa";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+import { fetchSignInMethodsForEmail, linkWithCredential, GithubAuthProvider, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -45,6 +46,47 @@ export default function LoginPage() {
       }
     } catch (err: any) {
       setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBackendSession = async (user: any) => {
+    const idToken = await user.getIdToken();
+    const response = await fetch("http://localhost:5001/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idToken }),
+    });
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      throw new Error(data.message || "Backend session failed");
+    }
+    router.push("/dashboard");
+  };
+
+  const handleSocialSignIn = async (providerType: "google" | "github") => {
+    setError(null);
+    setLoading(true);
+
+    const provider = providerType === "google"
+      ? new GoogleAuthProvider()
+      : new GithubAuthProvider();
+
+    try {
+      const result = await signInWithPopup(auth, provider);
+      await handleBackendSession(result.user);
+    } catch (err: any) {
+      if (err.code === "auth/account-exists-with-different-credential") {
+        // Instead of complex linking, we just guide the user
+        const email = err.customData?.email;
+        const methods = await fetchSignInMethodsForEmail(auth, email);
+        const preferred = methods[0]?.replace(".com", "") || "your original method";
+        setError(`This email is already associated with ${preferred}. Please sign in using that provider.`);
+      } else if (err.code !== "auth/popup-closed-by-user") {
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -241,19 +283,29 @@ export default function LoginPage() {
           </div>
 
           {/* Social */}
+          {/* Social Buttons */}
           <div className="grid grid-cols-2 gap-4">
-            <button className="py-3 flex items-center justify-center gap-2 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all">
+            <button
+              onClick={() => handleSocialSignIn("google")}
+              disabled={loading}
+              className="py-3 flex items-center justify-center gap-2 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all"
+            >
               <FcGoogle size={20} />
               <span>Google</span>
             </button>
-            <button className="py-3 flex items-center justify-center gap-2 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all">
+
+            <button
+              onClick={() => handleSocialSignIn("github")}
+              disabled={loading}
+              className="py-3 flex items-center justify-center gap-2 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all"
+            >
               <FaGithub size={20} />
               <span>GitHub</span>
             </button>
           </div>
 
           <p className="mt-6 text-center text-sm text-gray-400">
-            Don&apos;t have an account?{" "}
+            Don't have an account?{" "}
             <Link
               href="/signup"
               className="text-accent hover:text-theme-digital-green transition-colors"

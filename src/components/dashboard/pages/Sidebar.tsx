@@ -14,6 +14,9 @@ import {
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/dashboard/ui/avatar';
 import { Badge } from '@/components/dashboard/ui/badge';
+import { signOut } from "firebase/auth";
+import { auth } from '@/lib/firebase';
+import { useRouter } from "next/navigation";
 
 interface SidebarProps {
   activePage: string;
@@ -56,6 +59,16 @@ function LogoMark() {
 }
 
 export function Sidebar({ activePage, onNavigate, onClose }: SidebarProps) {
+  const router = useRouter();  // Hook must be called inside component
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);      
+      router.push("/login");   
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
   return (
     <div className="h-screen w-60 flex flex-col bg-[#000000] border-r border-[#008001]/30 shadow-2xl">
 
@@ -168,7 +181,7 @@ export function Sidebar({ activePage, onNavigate, onClose }: SidebarProps) {
         </div>
 
         <button
-          onClick={() => onNavigate('logout')}
+          onClick={handleLogout}
           className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[#A0A0A0] hover:text-white hover:bg-[#008001]/10 transition-all"
         >
           <LogOut className="w-4 h-4" />
