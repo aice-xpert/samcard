@@ -1,327 +1,146 @@
-
 ```mermaid
 erDiagram
+    %% ENUMS
+    UserRole {}
+    AccountProvider {}
+    Theme {}
+    CardStatus {}
+    CardType {}
+    LogoPosition {}
+    OrderStatus {}
+    PaymentStatus {}
+    SubscriptionStatus {}
+    PlanTier {}
+    LeadSource {}
+    LeadStatus {}
+    NotificationType {}
+    DeviceType {}
+    AuditAction {}
+    TaskPriority {}
+    GoalType {}
+    SocialPlatform {}
+    ExtraSectionType {}
+    QRShapeType {}
+    QRDotShape {}
+    QREyeFrameStyle {}
+    QREyeBallStyle {}
+    WallpaperType {}
+    ShadowIntensity {}
+    FontFamily {}
+    PaymentCardBrand {}
 
-  User {
-    string id PK
-    string email
-    enum planTier
-    enum role
-    int maxCards
-    int maxTaps
-    int maxLeads
-  }
+    %% USER & AUTHENTICATION
+    User ||--o{ Account : "accounts"
+    User ||--o{ Session : "sessions"
+    User ||--o{ BusinessProfile : "businessProfiles"
+    User ||--o{ Card : "cards"
+    User ||--o{ Order : "orders"
+    User ||--o{ Invoice : "invoices"
+    User ||--o{ Notification : "notifications"
+    User ||--o{ AuditLog : "auditLogs"
+    User ||--o{ Lead : "leads"
+    User ||--o{ Goal : "goals"
+    User ||--o{ UserConnectedAccount : "connectedAccounts"
+    User ||--o{ PaymentMethod : "paymentMethods"
+    User ||--o{ Webhook : "webhookConfigs"
+    User ||--o{ AnalyticsEvent : "analyticsEvents"
+    User ||--o{ NfcCard : "nfcCards"
+    User ||--o{ CardDesign : "cardDesigns"
+    User ||--o{ QRTemplate : "qrTemplates"
+    User ||--o| DashboardStats : "dashboardStats"
 
-  Account {
-    string id PK
-    string userId FK
-    enum provider
-    string providerAccountId
-  }
+    Account {
+        String id
+        String userId
+        AccountProvider provider
+        String providerAccountId
+    }
 
-  Session {
-    string id PK
-    string userId FK
-    string token
-    datetime expiresAt
-  }
+    Session {
+        String id
+        String userId
+        String token
+        DeviceType deviceType
+    }
 
-  BusinessProfile {
-    string id PK
-    string userId FK
-    string slug
-    string name
-    string title
-    string company
-    bool collectContactsEnabled
-  }
+    %% BUSINESS PROFILE
+    BusinessProfile ||--o{ Card : "cards"
+    BusinessProfile ||--o{ SocialLink : "socialLinks"
+    BusinessProfile ||--o{ CustomLink : "customLinks"
+    BusinessProfile ||--o{ ExtraSection : "extraSections"
+    BusinessProfile ||--o{ Lead : "leads"
 
-  SocialLink {
-    string id PK
-    string businessProfileId FK
-    string platform
-    string handle
-    int totalClicks
-  }
+    SocialLink ||--o{ LinkClick : "linkClicks"
+    CustomLink ||--o{ LinkClick : "linkClicks"
 
-  CustomLink {
-    string id PK
-    string businessProfileId FK
-    string label
-    string url
-    int totalClicks
-  }
+    %% DIGITAL BUSINESS CARDS
+    Card ||--o{ CardInteraction : "interactions"
+    Card ||--o{ CardShare : "shares"
+    Card ||--o{ CardAnalytics : "analytics"
+    Card ||--o{ Lead : "leads"
+    Card ||--o{ LinkClick : "linkClicks"
+    Card ||--o| NfcCard : "nfcCard"
+    Card }o--|| BusinessProfile : "businessProfile"
+    Card }o--|| CardDesign : "design"
 
-  ExtraSection {
-    string id PK
-    string businessProfileId FK
-    enum type
-    json data
-    bool enabled
-  }
+    CardDesign {}
 
-  LinkClick {
-    string id PK
-    string socialLinkId FK
-    string customLinkId FK
-    string cardId
-    enum deviceType
-    string country
-  }
+    ColorPalette {}
+    WallpaperPreset {}
 
-  Card {
-    string id PK
-    string userId FK
-    string businessProfileId FK
-    string designId FK
-    string slug
-    enum cardType
-    enum status
-    string nfcUid
-    json qrConfig
-    int totalViews
-    int totalTaps
-  }
+    %% QR CODE CONFIGURATION
+    QRTemplate {}
+    QRPresetLogo {}
+    QRSticker {}
 
-  CardDesign {
-    string id PK
-    string userId
-    string name
-    bool isPreset
-    bool isPublic
-    string accentColor
-    enum fontFamily
-  }
+    %% CARD INTERACTIONS & ANALYTICS
+    CardInteraction {}
+    CardShare {}
+    CardAnalytics {}
+    LinkClick {}
 
-  ColorPalette {
-    string id PK
-    string name
-    string accent
-    bool isPreset
-  }
+    %% LEADS & CONTACT MANAGEMENT
+    Lead ||--o{ LeadInteraction : "interactions"
+    Lead ||--o{ LeadTask : "tasks"
+    Lead ||--o{ LeadActivity : "activities"
 
-  WallpaperPreset {
-    string id PK
-    string name
-    string style
-    bool isPreset
-  }
+    LeadInteraction {}
+    LeadTask {}
+    LeadActivity {}
 
-  QRTemplate {
-    string id PK
-    string userId
-    string name
-    bool isPreset
-    enum shapeId
-  }
+    %% BILLING & SUBSCRIPTIONS
+    Order ||--o{ OrderItem : "orderItems"
+    OrderItem ||--|| Product : "product"
+    Product {}
+    Invoice {}
+    PaymentMethod {}
+    Plan {}
 
-  QRPresetLogo {
-    string id PK
-    string name
-    string category
-  }
+    %% GOALS & TARGETS
+    Goal {}
 
-  QRSticker {
-    string id PK
-    string name
-    string category
-  }
+    %% NOTIFICATIONS
+    Notification {}
 
-  CardInteraction {
-    string id PK
-    string cardId FK
-    string type
-    string visitorId
-    enum deviceType
-    string country
-    string utmSource
-  }
+    %% CONNECTED ACCOUNTS
+    UserConnectedAccount {}
 
-  CardShare {
-    string id PK
-    string cardId FK
-    string platform
-    string visitorId
-  }
+    %% NFC CARDS (Physical)
+    NfcCard {}
 
-  CardAnalytics {
-    string id PK
-    string cardId FK
-    datetime date
-    int views
-    int uniqueViews
-    int taps
-    int scans
-    int saves
-    int shares
-  }
+    %% ANALYTICS EVENTS
+    AnalyticsEvent {}
 
-  AnalyticsEvent {
-    string id PK
-    string userId
-    string cardId
-    string eventName
-    string eventCategory
-    json properties
-  }
+    %% DASHBOARD STATISTICS
+    DashboardStats {}
 
-  DashboardStats {
-    string id PK
-    string userId FK
-    int todayTaps
-    int monthTaps
-    float conversionRate
-    string topCardId
-  }
+    %% AUDIT LOG
+    AuditLog {}
 
-  NfcCard {
-    string id PK
-    string cardId
-    string userId
-    string uid
-    string chipType
-    bool isActivated
-    int totalTaps
-  }
+    %% EMAIL & NOTIFICATIONS TEMPLATES
+    EmailTemplate {}
 
-  Lead {
-    string id PK
-    string userId FK
-    string businessProfileId FK
-    string cardId FK
-    string email
-    enum source
-    enum status
-    int engagementScore
-    bool isArchived
-  }
-
-  LeadInteraction {
-    string id PK
-    string leadId FK
-    string type
-    string note
-  }
-
-  LeadTask {
-    string id PK
-    string leadId FK
-    string title
-    enum priority
-    bool completed
-    datetime dueAt
-  }
-
-  Order {
-    string id PK
-    string userId FK
-    float total
-    enum status
-    json shippingAddress
-  }
-
-  Invoice {
-    string id PK
-    string userId FK
-    float amount
-    enum status
-    datetime dueAt
-  }
-
-  PaymentMethod {
-    string id PK
-    string userId FK
-    string last4
-    enum brand
-    bool isDefault
-  }
-
-  Goal {
-    string id PK
-    string userId FK
-    string cardId
-    string type
-    int targetValue
-    int currentValue
-  }
-
-  Notification {
-    string id PK
-    string userId FK
-    enum type
-    string title
-    bool read
-  }
-
-  UserConnectedAccount {
-    string id PK
-    string userId FK
-    string platform
-    bool connected
-  }
-
-  AuditLog {
-    string id PK
-    string userId FK
-    enum action
-    string entityType
-    string entityId
-    json changes
-  }
-
-  EmailTemplate {
-    string id PK
-    string name
-    string type
-    bool isSystem
-  }
-
-  Webhook {
-    string id PK
-    string userId
-    string url
-    bool isActive
-  }
-
-  WebhookDelivery {
-    string id PK
-    string webhookId FK
-    string event
-    bool delivered
-    int attempts
-  }
-
-  User ||--o{ Account : "has"
-  User ||--o{ Session : "has"
-  User ||--o{ BusinessProfile : "owns"
-  User ||--o{ Card : "creates"
-  User ||--o{ Lead : "collects"
-  User ||--o{ Order : "places"
-  User ||--o{ Invoice : "receives"
-  User ||--o{ Notification : "gets"
-  User ||--o{ AuditLog : "generates"
-  User ||--o{ Goal : "sets"
-  User ||--o{ UserConnectedAccount : "links"
-  User ||--o{ PaymentMethod : "stores"
-  User ||--|| DashboardStats : "has"
-
-  BusinessProfile ||--o{ SocialLink : "has"
-  BusinessProfile ||--o{ CustomLink : "has"
-  BusinessProfile ||--o{ ExtraSection : "has"
-  BusinessProfile ||--o{ Card : "linked to"
-  BusinessProfile ||--o{ Lead : "captures"
-
-  SocialLink ||--o{ LinkClick : "tracked by"
-  CustomLink ||--o{ LinkClick : "tracked by"
-
-  Card ||--o| CardDesign : "uses"
-  Card ||--o{ CardInteraction : "records"
-  Card ||--o{ CardShare : "tracked by"
-  Card ||--o{ CardAnalytics : "aggregated in"
-  Card ||--o{ Lead : "generates"
-
-  Lead ||--o{ LeadInteraction : "has"
-  Lead ||--o{ LeadTask : "has"
-
-  Webhook ||--o{ WebhookDelivery : "delivers via"
-  ```
+    %% WEBHOOKS
+    Webhook ||--o{ WebhookDelivery : "deliveries"
+    WebhookDelivery {}
+```
