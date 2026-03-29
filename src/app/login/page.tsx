@@ -73,30 +73,75 @@ export default function LoginPage() {
   };
 
   const handleSocialSignIn = async (providerType: "google" | "github") => {
-    setError(null);
-    setLoading(true);
+  setError(null);
+  setLoading(true);
 
-    const provider = providerType === "google"
+  const provider =
+    providerType === "google"
       ? new GoogleAuthProvider()
       : new GithubAuthProvider();
 
-    try {
-      const result = await signInWithPopup(auth, provider);
-      await handleBackendSession(result.user);
-    } catch (err: any) {
-      if (err.code === "auth/account-exists-with-different-credential") {
-        // Instead of complex linking, we just guide the user
-        const email = err.customData?.email;
-        const methods = await fetchSignInMethodsForEmail(auth, email);
-        const preferred = methods[0]?.replace(".com", "") || "your original method";
-        setError(`This email is already associated with ${preferred}. Please sign in using that provider.`);
-      } else if (err.code !== "auth/popup-closed-by-user") {
-        setError(err.message);
+  try {
+    const result = await signInWithPopup(auth, provider);
+    await handleBackendSession(result.user);
+
+  } catch (err: any) {
+    if (err.code === "auth/account-exists-with-different-credential") {
+      const pendingCred =
+        providerType === "google"
+          ? GoogleAuthProvider.credentialFromError(err)
+          : GithubAuthProvider.credentialFromError(err);
+
+      const conflictingEmail = err.customData?.email;
+
+      if (!pendingCred || !conflictingEmail) {
+        setError("Sign-in failed. Please try again.");
+        setLoading(false);
+        return;
       }
-    } finally {
-      setLoading(false);
+
+      // --- NO error shown, NO second popup yet ---
+      // Store pending credential in sessionStorage
+      sessionStorage.setItem("pendingCred", JSON.stringify({
+        providerType,
+        email: conflictingEmail,
+      }));
+
+      const oppositeProvider =
+        providerType === "google"
+          ? new GithubAuthProvider()
+          : new GoogleAuthProvider();
+
+      oppositeProvider.setCustomParameters({ login_hint: conflictingEmail });
+
+      try {
+        // Single second popup — silent to user, feels like normal sign-in
+        const originalResult = await signInWithPopup(auth, oppositeProvider);
+        await linkWithCredential(originalResult.user, pendingCred);
+        sessionStorage.removeItem("pendingCred");
+        await handleBackendSession(originalResult.user);
+
+      } catch (linkErr: any) {
+        sessionStorage.removeItem("pendingCred");
+
+        if (linkErr.code === "auth/credential-already-in-use") {
+          // Already linked — just push them through
+          if (auth.currentUser) {
+            await handleBackendSession(auth.currentUser);
+          }
+        } else if (linkErr.code !== "auth/popup-closed-by-user") {
+          setError("Sign-in failed. Please try again.");
+        }
+        // popup-closed-by-user: show nothing, user knows they closed it
+      }
+
+    } else if (err.code !== "auth/popup-closed-by-user") {
+      setError(err.message);
     }
-  };
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div
