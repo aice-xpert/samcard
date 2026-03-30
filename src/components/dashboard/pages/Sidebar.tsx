@@ -69,13 +69,14 @@ function LogoMark() {
   );
 }
 
-export function Sidebar({ activePage, onNavigate, onClose }: SidebarProps) {
-  const { profile } = useUser();
+export function Sidebar({ activePage, onNavigate, onClose, profile }: SidebarProps) {
+  const { profile: userProfile } = useUser();
   const [completionScore, setCompletionScore] = useState(0);
   const [weeklyTrendChange, setWeeklyTrendChange] = useState(0);
-  const initials = profile.name.split(" ").map(n => n[0]).join("").toUpperCase();
+  const router = useRouter();
 
-  const router = useRouter();  // Hook must be called inside component
+  const displayProfile = profile || userProfile || { name: 'User', email: 'user@example.com' };
+  const initials = displayProfile.name.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
 
   useEffect(() => {
     let isMounted = true;
@@ -207,16 +208,16 @@ export function Sidebar({ activePage, onNavigate, onClose }: SidebarProps) {
               transform="rotate(-90 40 40)" />
             <foreignObject x="14" y="14" width="52" height="52">
               <Avatar className="w-full h-full border-2 border-[#008001]/30">
-                {profile.avatar ? (
-                  <AvatarImage src={profile.avatar} />
+                {displayProfile.avatar ? (
+                  <AvatarImage src={displayProfile.avatar} />
                 ) : (
                   <AvatarImage src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop" />
                 )}
                 <AvatarFallback>{initials}</AvatarFallback>
               </Avatar>
             </foreignObject>
-            <text x="90" y="30" fill="white" fontSize="14" fontWeight="600">{profile.name}</text>
-            <text x="90" y="48" fill="#A0A0A0" fontSize="11">{profile.email}</text>
+            <text x="90" y="30" fill="white" fontSize="14" fontWeight="600">{displayProfile.name}</text>
+            <text x="90" y="48" fill="#A0A0A0" fontSize="11">{displayProfile.email}</text>
             <text x="90" y="64" fill="#49B618" fontSize="12" fontWeight="600">
               <tspan>{completionScore}% Complete </tspan>
               <tspan fill="#009200">↑</tspan>
