@@ -24,6 +24,11 @@ interface SidebarProps {
   onNavigate: (page: string) => void;
   /** Optional: passed from parent to allow the sidebar to close itself on mobile */
   onClose?: () => void;
+  profile?: {
+    name: string;
+    email: string;
+    avatar?: string;
+  };
 }
 
 const menuItems = [
@@ -65,10 +70,13 @@ export function Sidebar({ activePage, onNavigate, onClose }: SidebarProps) {
 
   const router = useRouter();  // Hook must be called inside component
 
+  const displayProfile = profile || { name: 'User', email: 'user@example.com' };
+  const initials = displayProfile.name.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
+
   const handleLogout = async () => {
     try {
-      await signOut(auth);      
-      router.push("/login");   
+      await signOut(auth);
+      router.push("/login");
     } catch (error) {
       console.error("Logout failed:", error);
     }
@@ -163,16 +171,16 @@ export function Sidebar({ activePage, onNavigate, onClose }: SidebarProps) {
               transform="rotate(-90 40 40)" />
             <foreignObject x="14" y="14" width="52" height="52">
               <Avatar className="w-full h-full border-2 border-[#008001]/30">
-                {profile.avatar ? (
-                  <AvatarImage src={profile.avatar} />
+                {displayProfile.avatar ? (
+                  <AvatarImage src={displayProfile.avatar} />
                 ) : (
                   <AvatarImage src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop" />
                 )}
                 <AvatarFallback>{initials}</AvatarFallback>
               </Avatar>
             </foreignObject>
-            <text x="90" y="30" fill="white" fontSize="14" fontWeight="600">{profile.name}</text>
-            <text x="90" y="48" fill="#A0A0A0" fontSize="11">{profile.email}</text>
+            <text x="90" y="30" fill="white" fontSize="14" fontWeight="600">{displayProfile.name}</text>
+            <text x="90" y="48" fill="#A0A0A0" fontSize="11">{displayProfile.email}</text>
             <text x="90" y="64" fill="#49B618" fontSize="12" fontWeight="600">
               <tspan>90% Complete </tspan>
               <tspan fill="#009200">↑</tspan>
