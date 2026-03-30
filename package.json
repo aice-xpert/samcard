@@ -64,20 +64,13 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
-<<<<<<< HEAD
     "@tailwindcss/postcss": "^4.2.2",
-=======
-    "@tailwindcss/postcss": "^4",
->>>>>>> d245d4b (Database connected, and tested)
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
     "@types/aria-query": "^5.0.4",
     "@types/bcryptjs": "^2.4.6",
-<<<<<<< HEAD
     "@types/cookie-parser": "^1.4.10",
-=======
->>>>>>> d245d4b (Database connected, and tested)
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^20",
@@ -91,13 +84,8 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "jsdom": "^29.0.1",
-<<<<<<< HEAD
     "prisma": "^5.22.0",
     "tailwindcss": "^4.2.2",
-=======
-    "prisma": "^7.5.0",
-    "tailwindcss": "^4",
->>>>>>> d245d4b (Database connected, and tested)
     "tsx": "^4.19.2",
     "typescript": "^5",
     "vitest": "^4.1.1"
