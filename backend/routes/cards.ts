@@ -33,6 +33,25 @@ router.post("/", verifySession, async (req: AuthRequest, res: Response) => {
   }
 
   try {
+    // Ensure the User row exists in Supabase before any FK-dependent inserts.
+    // Users authenticated via Firebase client-side (Google OAuth, persistent sessions)
+    // may never have gone through /api/auth/login, so the row may be missing.
+    const { error: upsertUserError } = await supabase
+      .from("User")
+      .upsert(
+        {
+          id: req.user!.uid,
+          email: req.user!.email ?? "",
+          updatedAt: new Date().toISOString(),
+        },
+        { onConflict: "id" }
+      );
+
+    if (upsertUserError) {
+      console.error("User upsert error:", upsertUserError);
+      return res.status(500).json({ error: "Failed to initialize user profile" });
+    }
+
     const { data: existingProfile, error: existingProfileError } = await supabase
       .from("BusinessProfile")
       .select("id")
@@ -63,7 +82,7 @@ router.post("/", verifySession, async (req: AuthRequest, res: Response) => {
         .trim()
         .replace(/\s+/g, "-") || "profile";
 
-      const profileSlug = `${slugBase}-${req.user!.uid.slice(0, 8)}-${Date.now().toString(36)}`;
+      const profileSlug = `${slugBase}-${req.user!.uid.slice(0, 8)}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
 
       const { data: createdProfile, error: createProfileError } = await supabase
         .from("BusinessProfile")

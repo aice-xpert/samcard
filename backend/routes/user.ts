@@ -64,6 +64,19 @@ router.put("/profile", verifySession, async (req: AuthRequest, res: Response) =>
 
 router.get("/business-profile", verifySession, async (req: AuthRequest, res: Response) => {
   try {
+    // Ensure User row exists before querying BusinessProfile (FK dependency).
+    // Users who authenticated client-side may not have a Supabase User row yet.
+    await supabase
+      .from("User")
+      .upsert(
+        {
+          id: req.user!.uid,
+          email: req.user!.email ?? "",
+          updatedAt: new Date().toISOString(),
+        },
+        { onConflict: "id" }
+      );
+
     const { data, error } = await supabase
       .from("BusinessProfile")
       .select("*")
@@ -71,10 +84,11 @@ router.get("/business-profile", verifySession, async (req: AuthRequest, res: Res
       .maybeSingle();
 
     if (error) {
-      if (error.code === "PGRST116") {
-        return res.status(404).json({ error: "Business profile not found" });
-      }
       return res.status(500).json({ error: error.message });
+    }
+
+    if (!data) {
+      return res.status(404).json({ error: "Business profile not found" });
     }
 
     return res.json(data);
@@ -100,9 +114,9 @@ router.put("/business-profile", verifySession, async (req: AuthRequest, res: Res
       .from("BusinessProfile")
       .select("id")
       .eq("userId", req.user!.uid)
-      .single();
+      .maybeSingle();
 
-    if (fetchError && fetchError.code !== "PGRST116") {
+    if (fetchError) {
       return res.status(500).json({ error: fetchError.message });
     }
 

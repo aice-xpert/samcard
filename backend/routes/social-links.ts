@@ -23,10 +23,10 @@ router.get("/", verifySession, async (req: AuthRequest, res: Response) => {
       .from("BusinessProfile")
       .select("id")
       .eq("userId", req.user!.uid)
-      .single();
+      .maybeSingle();
 
     if (!profile) {
-      return res.status(404).json({ error: "Business profile not found" });
+      return res.json([]);
     }
 
     const { data, error } = await supabase
@@ -57,7 +57,7 @@ router.put("/", verifySession, async (req: AuthRequest, res: Response) => {
       .from("BusinessProfile")
       .select("id")
       .eq("userId", req.user!.uid)
-      .single();
+      .maybeSingle();
 
     if (!profile) {
       return res.status(404).json({ error: "Business profile not found" });

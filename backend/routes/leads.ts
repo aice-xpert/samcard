@@ -15,10 +15,10 @@ router.get("/", verifySession, async (req: AuthRequest, res: Response) => {
       .from("BusinessProfile")
       .select("id")
       .eq("userId", req.user!.uid)
-      .single();
+      .maybeSingle();
 
     if (!profile) {
-      return res.status(404).json({ error: "Business profile not found" });
+      return res.json({ leads: [], total: 0, page: 1, limit: 20 });
     }
 
     let query = supabase
@@ -58,14 +58,25 @@ router.put("/:id", verifySession, async (req: AuthRequest, res: Response) => {
   const { status, notes, tags, isFavorite, isArchived } = req.body;
 
   try {
+    const { data: lead } = await supabase
+      .from("Lead")
+      .select("businessProfileId")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (!lead) {
+      return res.status(404).json({ error: "Lead not found" });
+    }
+
     const { data: profile } = await supabase
       .from("BusinessProfile")
       .select("id")
+      .eq("id", lead.businessProfileId)
       .eq("userId", req.user!.uid)
-      .single();
+      .maybeSingle();
 
     if (!profile) {
-      return res.status(404).json({ error: "Business profile not found" });
+      return res.status(403).json({ error: "Forbidden" });
     }
 
     const updateData: Record<string, unknown> = { updatedAt: new Date().toISOString() };

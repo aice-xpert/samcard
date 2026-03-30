@@ -4,6 +4,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import signupRoute from "./auth/signup";
 import loginRoute from "./auth/login";
+import logoutRoute from "./auth/logout";
 import userRoute from "./routes/user";
 import cardsRoute from "./routes/cards";
 import socialLinksRoute from "./routes/social-links";
@@ -32,6 +33,7 @@ app.get('/', (req: Request, res: Response) => {
 
 app.use("/api/auth/signup", signupRoute);
 app.use("/api/auth/login", loginRoute);
+app.use("/api/auth/logout", logoutRoute);
 
 // Mount specific routes BEFORE general routes to prevent interception
 app.use("/api/user/cards", cardsRoute);

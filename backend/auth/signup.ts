@@ -1,5 +1,6 @@
 import express from "express";
 import admin from "../config/firebase";
+import { supabase } from "../config/supabase";
 
 const router = express.Router();
 
@@ -52,6 +53,19 @@ router.post("/", async (req, res) => {
       password: passwordTrimmed,
       displayName: nameTrimmed,
     });
+
+    // Sync user to Supabase database
+    const { error: supabaseError } = await supabase.from("User").insert({
+      id: userRecord.uid,
+      email: emailTrimmed,
+      name: nameTrimmed,
+      updatedAt: new Date().toISOString(),
+    });
+
+    if (supabaseError) {
+      console.error("Supabase sync error during signup:", supabaseError);
+      // Don't fail the signup if Supabase insert fails - user can retry login to sync
+    }
 
     if (companyTrimmed) {
       await admin.auth().setCustomUserClaims(userRecord.uid, {
