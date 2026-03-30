@@ -1,25 +1,19 @@
 import admin from "firebase-admin";
-import dotenv from "dotenv";
-import fs from "fs";
 import path from "path";
 
-let serviceAccount: admin.ServiceAccount;
-
-dotenv.config({ path: path.resolve(__dirname, "../../.env") });
+let serviceAccount: any;
 
 // Try to load from environment variable first (for production deployments like Render)
 if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
   try {
     serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
   } catch (err) {
-    console.error("Failed to parse Firebase credentials from environment:", err);
-    throw new Error("Invalid Firebase credentials JSON in environment variables");
+    console.error("Failed to parse FIREBASE_CREDENTIALS environment variable:", err);
+    throw new Error("Invalid FIREBASE_CREDENTIALS JSON");
   }
 } else {
   // Fall back to local file (for local development)
-  const credentialPath = path.join(__dirname, "../firebaseCred.json");
-  const credentialFile = fs.readFileSync(credentialPath, "utf8");
-  serviceAccount = JSON.parse(credentialFile) as admin.ServiceAccount;
+  serviceAccount = require(path.join(__dirname, "../firebaseCred.json"));
 }
 
 if (!admin.apps.length) {

@@ -83,7 +83,7 @@ export function Sidebar({ activePage, onNavigate, onClose }: SidebarProps) {
     Promise.all([getBusinessProfile(), getAnalytics("7")])
       .then(([businessProfile, analytics]) => {
         if (!isMounted) return;
-        setCompletionScore(Math.max(0, Math.min(100, businessProfile.completionScore ?? 0)));
+        setCompletionScore(Math.max(0, Math.min(100, businessProfile?.completionScore ?? 0)));
         setWeeklyTrendChange(analytics.thisWeekChange ?? 0);
       })
       .catch(() => {

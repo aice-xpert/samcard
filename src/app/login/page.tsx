@@ -42,11 +42,13 @@ export default function LoginPage() {
       const response = await fetch(`${apiBaseUrl}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ idToken }),
       });
 
       if (response.ok) {
-        router.push("/dashboard"); // or profile
+        // Full page reload to ensure middleware sees the new session cookie
+        window.location.href = "/dashboard";
       } else {
         throw new Error("Failed to create session");
       }
@@ -63,6 +65,7 @@ export default function LoginPage() {
     const response = await fetch(`${apiBaseUrl}/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({ idToken }),
     });
 
@@ -70,7 +73,8 @@ export default function LoginPage() {
       const data = await response.json().catch(() => ({}));
       throw new Error(data.message || "Backend session failed");
     }
-    router.push("/dashboard");
+    // Full page reload to ensure middleware sees the new session cookie
+    window.location.href = "/dashboard";
   };
 
   const handleSocialSignIn = async (providerType: "google" | "github") => {

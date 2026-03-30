@@ -125,8 +125,13 @@ export interface UpdateBusinessProfilePayload {
   country?: string;
 }
 
-export async function getBusinessProfile() {
-  return apiRequest<ApiBusinessProfile>("/api/user/business-profile", { method: "GET" });
+export async function getBusinessProfile(): Promise<ApiBusinessProfile | null> {
+  try {
+    return await apiRequest<ApiBusinessProfile>("/api/user/business-profile", { method: "GET" });
+  } catch (e) {
+    if (e instanceof Error && e.message.includes("404")) return null;
+    throw e;
+  }
 }
 
 export async function updateBusinessProfile(payload: UpdateBusinessProfilePayload) {

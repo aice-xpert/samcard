@@ -340,10 +340,10 @@ function ImageUploader({ value, onChange, label, ratio, roundedClass = 'rounded-
     <div className="space-y-2">
       <Label className="text-[#A0A0A0] text-xs">{label} <span className="text-[#555]">({ratio})</span></Label>
       <div className="flex items-center gap-3 flex-wrap">
-        <div className={`${size} ${roundedClass} overflow-hidden ring-2 ring-[#008001]/30 bg-[#1E1E1E] flex-shrink-0 flex items-center justify-center`}>
+        <div className={`relative ${size} ${roundedClass} overflow-hidden ring-2 ring-[#008001]/30 bg-[#1E1E1E] flex-shrink-0 flex items-center justify-center`}>
           {/* ── FIX: only render <Image> when value is non-empty ── */}
           {value
-            ? <Image src={value} alt={label} fill className="w-full h-full object-cover" />
+            ? <Image src={value} alt={label} fill className="object-cover" />
             : <ImageIcon className="w-5 h-5 text-[#555]" />
           }
         </div>
@@ -457,7 +457,7 @@ function ExtraSectionBlock({ section, onToggle, onRemove, onUpdateData }: ExtraS
               <div className="mt-1 relative">
                 {section.data.imgUrl ? (
                   <div className="relative group w-full h-32 rounded-xl overflow-hidden">
-                    <Image src={section.data.imgUrl as string} alt="" fill className="w-full h-full object-cover" />
+                    <Image src={section.data.imgUrl as string} alt="" fill className="object-cover" />
                     <label className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer rounded-xl">
                       <Upload className="w-5 h-5 text-white" />
                       <input type="file" accept="image/*" className="hidden"
@@ -573,7 +573,7 @@ export default function BusinessProfile() {
 
       if (!isMounted) return;
 
-      if (profileResult.status === 'fulfilled') {
+      if (profileResult.status === 'fulfilled' && profileResult.value) {
         const profile = profileResult.value;
         setProfileImage(profile.profileImageUrl || initial.profileImage);
         setBrandLogo(profile.brandLogoUrl || initial.brandLogo);
@@ -784,7 +784,7 @@ export default function BusinessProfile() {
         <CardContent className="p-4 sm:p-8">
           <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
             <div className="relative group flex-shrink-0 self-center sm:self-start">
-              <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-2xl overflow-hidden ring-4 ring-[#008001]/30 bg-[#1E1E1E] flex items-center justify-center">
+              <div className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-2xl overflow-hidden ring-4 ring-[#008001]/30 bg-[#1E1E1E] flex items-center justify-center">
                 {/* ── FIX: guard against empty src (line 669 error) ── */}
                 {profileImage
                   ? <Image src={profileImage} alt="Profile" fill className="object-cover" />

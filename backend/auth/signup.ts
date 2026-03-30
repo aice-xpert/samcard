@@ -1,16 +1,14 @@
-import express from "express";
+import express, { Request, Response } from "express";
 import admin from "../config/firebase";
-import { supabase } from "../config/supabase";
 
 const router = express.Router();
 
-const getErrorMessage = (error: unknown): string =>
-  error instanceof Error ? error.message : "Internal server error";
-
-const getErrorCode = (error: unknown): string | undefined =>
-  typeof error === "object" && error !== null && "code" in error
-    ? String((error as { code: unknown }).code)
-    : undefined;
+interface SignupRequest {
+  name?: string;
+  email?: string;
+  password?: string;
+  company?: string;
+}
 
 router.post("/", async (req, res) => {
   try {
@@ -54,19 +52,6 @@ router.post("/", async (req, res) => {
       displayName: nameTrimmed,
     });
 
-    // Sync user to Supabase database
-    const { error: supabaseError } = await supabase.from("User").insert({
-      id: userRecord.uid,
-      email: emailTrimmed,
-      name: nameTrimmed,
-      updatedAt: new Date().toISOString(),
-    });
-
-    if (supabaseError) {
-      console.error("Supabase sync error during signup:", supabaseError);
-      // Don't fail the signup if Supabase insert fails - user can retry login to sync
-    }
-
     if (companyTrimmed) {
       await admin.auth().setCustomUserClaims(userRecord.uid, {
         company: companyTrimmed,
@@ -83,26 +68,24 @@ router.post("/", async (req, res) => {
         displayName: userRecord.displayName,
       },
     });
-  } catch (err: unknown) {
+  } catch (err: any) {
     console.error("Signup error:", err);
 
-    const errorCode = getErrorCode(err);
-
-    if (errorCode === "auth/email-already-exists") {
+    if (err.code === "auth/email-already-exists") {
       return res.status(400).json({
         success: false,
         error: "Email already exists",
       });
     }
 
-    if (errorCode === "auth/invalid-email") {
+    if (err.code === "auth/invalid-email") {
       return res.status(400).json({
         success: false,
         error: "Invalid email format",
       });
     }
 
-    if (errorCode === "auth/weak-password") {
+    if (err.code === "auth/weak-password") {
       return res.status(400).json({
         success: false,
         error: "Password is too weak",
@@ -111,7 +94,7 @@ router.post("/", async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      error: getErrorMessage(err),
+      error: err.message || "Internal server error",
     });
   }
 });
