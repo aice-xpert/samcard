@@ -4,9 +4,9 @@ import path from "path";
 let serviceAccount: any;
 
 // Try to load from environment variable first (for production deployments like Render)
-if (process.env.FIREBASE_CREDENTIALS) {
+if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
   try {
-    serviceAccount = JSON.parse(process.env.FIREBASE_CREDENTIALS);
+    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
   } catch (err) {
     console.error("Failed to parse FIREBASE_CREDENTIALS environment variable:", err);
     throw new Error("Invalid FIREBASE_CREDENTIALS JSON");
