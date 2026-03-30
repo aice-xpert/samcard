@@ -9,11 +9,10 @@ const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 let serviceAccount;
 dotenv_1.default.config({ path: path_1.default.resolve(__dirname, "../../.env") });
-const firebaseCredsRaw = process.env.FIREBASE_CREDENTIALS || process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
 // Try to load from environment variable first (for production deployments like Render)
-if (firebaseCredsRaw) {
+if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
     try {
-        serviceAccount = JSON.parse(firebaseCredsRaw);
+        serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
     }
     catch (err) {
         console.error("Failed to parse Firebase credentials from environment:", err);

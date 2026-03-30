@@ -64,7 +64,7 @@ router.get("/business-profile", auth_1.verifySession, async (req, res) => {
             .from("BusinessProfile")
             .select("*")
             .eq("userId", req.user.uid)
-            .single();
+            .maybeSingle();
         if (error) {
             if (error.code === "PGRST116") {
                 return res.status(404).json({ error: "Business profile not found" });
@@ -123,6 +123,7 @@ router.put("/business-profile", auth_1.verifySession, async (req, res) => {
                 collectContactsEnabled, collectNotesEnabled, contactFormLabel,
                 headingText, headingBodyText, contactUsHeading, contactUsBodyText,
                 metaTitle, metaDescription, ogImage, customCss, customJs,
+                updatedAt: new Date().toISOString(),
             })
                 .select()
                 .single();

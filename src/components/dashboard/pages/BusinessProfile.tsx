@@ -1,5 +1,6 @@
 "use client";
 
+import Image from 'next/image';
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Card, CardContent } from '@/components/dashboard/ui/card';
 import { Button } from '@/components/dashboard/ui/button';
@@ -340,9 +341,9 @@ function ImageUploader({ value, onChange, label, ratio, roundedClass = 'rounded-
       <Label className="text-[#A0A0A0] text-xs">{label} <span className="text-[#555]">({ratio})</span></Label>
       <div className="flex items-center gap-3 flex-wrap">
         <div className={`${size} ${roundedClass} overflow-hidden ring-2 ring-[#008001]/30 bg-[#1E1E1E] flex-shrink-0 flex items-center justify-center`}>
-          {/* ── FIX: only render <img> when value is non-empty ── */}
+          {/* ── FIX: only render <Image> when value is non-empty ── */}
           {value
-            ? <img src={value} alt={label} className="w-full h-full object-cover" />
+            ? <Image src={value} alt={label} fill className="w-full h-full object-cover" />
             : <ImageIcon className="w-5 h-5 text-[#555]" />
           }
         </div>
@@ -456,7 +457,7 @@ function ExtraSectionBlock({ section, onToggle, onRemove, onUpdateData }: ExtraS
               <div className="mt-1 relative">
                 {section.data.imgUrl ? (
                   <div className="relative group w-full h-32 rounded-xl overflow-hidden">
-                    <img src={section.data.imgUrl as string} alt="" className="w-full h-full object-cover" />
+                    <Image src={section.data.imgUrl as string} alt="" fill className="w-full h-full object-cover" />
                     <label className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer rounded-xl">
                       <Upload className="w-5 h-5 text-white" />
                       <input type="file" accept="image/*" className="hidden"
@@ -786,7 +787,7 @@ export default function BusinessProfile() {
               <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-2xl overflow-hidden ring-4 ring-[#008001]/30 bg-[#1E1E1E] flex items-center justify-center">
                 {/* ── FIX: guard against empty src (line 669 error) ── */}
                 {profileImage
-                  ? <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
+                  ? <Image src={profileImage} alt="Profile" fill className="object-cover" />
                   : <User className="w-10 h-10 text-[#333]" />
                 }
               </div>

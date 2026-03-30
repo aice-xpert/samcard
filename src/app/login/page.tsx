@@ -7,9 +7,9 @@ import { motion } from "motion/react";
 import { Mail, Lock, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import { FaGithub } from "react-icons/fa";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, linkWithCredential, GithubAuthProvider, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { FirebaseError } from "firebase/app";
 import { auth } from "@/lib/firebase";
-import { fetchSignInMethodsForEmail, linkWithCredential, GithubAuthProvider, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -50,16 +50,17 @@ export default function LoginPage() {
       } else {
         throw new Error("Failed to create session");
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleBackendSession = async (user: any) => {
+  const handleBackendSession = async (user: { getIdToken: () => Promise<string> }) => {
     const idToken = await user.getIdToken();
-    const response = await fetch("http://localhost:5001/api/auth/login", {
+    const apiBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "");
+    const response = await fetch(`${apiBaseUrl}/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ idToken }),
@@ -85,14 +86,20 @@ export default function LoginPage() {
     const result = await signInWithPopup(auth, provider);
     await handleBackendSession(result.user);
 
-  } catch (err: any) {
-    if (err.code === "auth/account-exists-with-different-credential") {
+  } catch (err: unknown) {
+    if (!(err instanceof FirebaseError)) {
+      setError('An error occurred');
+      setLoading(false);
+      return;
+    }
+    const error = err;
+    if (error.code === "auth/account-exists-with-different-credential") {
       const pendingCred =
         providerType === "google"
-          ? GoogleAuthProvider.credentialFromError(err)
-          : GithubAuthProvider.credentialFromError(err);
+          ? GoogleAuthProvider.credentialFromError(error)
+          : GithubAuthProvider.credentialFromError(error);
 
-      const conflictingEmail = err.customData?.email;
+      const conflictingEmail = error.customData?.email;
 
       if (!pendingCred || !conflictingEmail) {
         setError("Sign-in failed. Please try again.");
@@ -100,11 +107,11 @@ export default function LoginPage() {
         return;
       }
 
-      // --- NO error shown, NO second popup yet ---
+      const email = conflictingEmail as string;
       // Store pending credential in sessionStorage
       sessionStorage.setItem("pendingCred", JSON.stringify({
         providerType,
-        email: conflictingEmail,
+        email,
       }));
 
       const oppositeProvider =
@@ -112,7 +119,7 @@ export default function LoginPage() {
           ? new GithubAuthProvider()
           : new GoogleAuthProvider();
 
-      oppositeProvider.setCustomParameters({ login_hint: conflictingEmail });
+      oppositeProvider.setCustomParameters({ login_hint: email });
 
       try {
         // Single second popup — silent to user, feels like normal sign-in
@@ -121,22 +128,28 @@ export default function LoginPage() {
         sessionStorage.removeItem("pendingCred");
         await handleBackendSession(originalResult.user);
 
-      } catch (linkErr: any) {
+      } catch (linkErr: unknown) {
         sessionStorage.removeItem("pendingCred");
+        if (!(linkErr instanceof FirebaseError)) {
+          setError("Sign-in failed. Please try again.");
+          setLoading(false);
+          return;
+        }
+        const linkError = linkErr;
 
-        if (linkErr.code === "auth/credential-already-in-use") {
+        if (linkError.code === "auth/credential-already-in-use") {
           // Already linked — just push them through
           if (auth.currentUser) {
             await handleBackendSession(auth.currentUser);
           }
-        } else if (linkErr.code !== "auth/popup-closed-by-user") {
+        } else if (linkError.code !== "auth/popup-closed-by-user") {
           setError("Sign-in failed. Please try again.");
         }
         // popup-closed-by-user: show nothing, user knows they closed it
       }
 
-    } else if (err.code !== "auth/popup-closed-by-user") {
-      setError(err.message);
+    } else if (error.code !== "auth/popup-closed-by-user") {
+      setError(error.message || 'An error occurred');
     }
   } finally {
     setLoading(false);
@@ -356,7 +369,7 @@ export default function LoginPage() {
           </div>
 
           <p className="mt-6 text-center text-sm text-gray-400">
-            Don't have an account?{" "}
+            Don&apos;t have an account?{" "}
             <Link
               href="/signup"
               className="text-accent hover:text-theme-digital-green transition-colors"

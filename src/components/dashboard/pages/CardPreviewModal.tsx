@@ -318,9 +318,9 @@ export function CardPreviewModal({
                     style={{ background: T.phoneBgStyle || T.bg, ...ff }}>
 
                     {/* HERO */}
-                    <div className="relative" style={{ aspectRatio: '4/3' }}>
+                    <div className="relative" style={{ aspectRatio: '4/3', maxHeight: '240px' }}>
                       {hasProfileImage ? (
-                        <img src={profileImage} alt={formData.name} className="w-full h-full object-cover object-top" />
+                        <img src={profileImage} alt={formData.name} className="w-full object-cover object-top" />
                       ) : (
                         <div className="w-full h-full"
                           style={{ background: `linear-gradient(160deg, ${T.muted} 0%, ${T.card} 100%)` }} />

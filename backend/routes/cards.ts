@@ -103,16 +103,18 @@ router.post("/", verifySession, async (req: AuthRequest, res: Response) => {
         slug: cardSlug,
         shareUrl,
         status: "DRAFT",
-        totalViews: 0,      // ADD
-    totalTaps: 0,       // ADD
-    totalSaves: 0,      // ADD
-    completionScore: 0, // ADD
-    updatedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       })
       .select()
       .single();
 
     if (error) {
+      console.error("Card creation error:", {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+      });
       return res.status(500).json({ error: error.message });
     }
 

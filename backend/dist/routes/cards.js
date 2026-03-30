@@ -90,6 +90,12 @@ router.post("/", auth_1.verifySession, async (req, res) => {
             .select()
             .single();
         if (error) {
+            console.error("Card creation error:", {
+                message: error.message,
+                code: error.code,
+                details: error.details,
+                hint: error.hint,
+            });
             return res.status(500).json({ error: error.message });
         }
         return res.status(201).json(data);

@@ -277,9 +277,9 @@ export function PhonePreview({
 
                   {/* HERO */}
                   {sections.profile && (
-                    <div className="relative" style={{ aspectRatio: '4/3' }}>
+                    <div className="relative" style={{ aspectRatio: '4/3', maxHeight: '200px' }}>
                       {profileImage ? (
-                        <img src={profileImage} alt={formData.name} className="w-full h-full object-cover object-top" />
+                        <img src={profileImage} alt={formData.name} className="w-full object-cover object-top" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center"
                           style={{ background: `linear-gradient(135deg, ${T.green}66 0%, ${T.bg} 50%, ${T.greenLight}44 100%)` }}>

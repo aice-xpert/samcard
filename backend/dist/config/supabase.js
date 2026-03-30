@@ -33,10 +33,7 @@ const normalizeEnvValue = (value) => {
     return unquoted || undefined;
 };
 const supabaseUrl = normalizeEnvValue(process.env.SUPABASE_URL);
-const supabaseServiceKey = normalizeEnvValue(process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    process.env.SUPABASE_SERVICE_KEY ||
-    process.env.SUPABASE_SECRET_KEY ||
-    process.env.SUPABASE_KEY);
+const supabaseServiceKey = normalizeEnvValue(process.env.SUPABASE_SERVICE_ROLE_KEY);
 if (!supabaseUrl || !supabaseServiceKey) {
     throw new Error(`Missing SUPABASE_URL or Supabase service key${loadedEnvPath ? ` (env loaded from ${loadedEnvPath})` : ""}`);
 }

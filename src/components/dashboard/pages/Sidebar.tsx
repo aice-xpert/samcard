@@ -29,6 +29,11 @@ interface SidebarProps {
   onNavigate: (page: string) => void;
   /** Optional: passed from parent to allow the sidebar to close itself on mobile */
   onClose?: () => void;
+  profile?: {
+    name: string;
+    email: string;
+    avatar?: string;
+  };
 }
 
 const menuItems = [
@@ -94,8 +99,8 @@ export function Sidebar({ activePage, onNavigate, onClose }: SidebarProps) {
 
   const handleLogout = async () => {
     try {
-      await signOut(auth);      
-      router.push("/login");   
+      await signOut(auth);
+      router.push("/login");
     } catch (error) {
       console.error("Logout failed:", error);
     }
