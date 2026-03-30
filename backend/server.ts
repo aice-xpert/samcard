@@ -15,7 +15,6 @@ import ordersRoute from "./routes/orders";
 import invoicesRoute from "./routes/invoices";
 import notificationsRoute from "./routes/notifications";
 
-
 const app = express();
 const PORT: number | string = process.env.PORT || 5001;
 
