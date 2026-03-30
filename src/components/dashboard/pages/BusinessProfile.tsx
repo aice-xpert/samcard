@@ -13,16 +13,27 @@ import { Badge } from '@/components/dashboard/ui/badge';
 import {
   Upload, Eye, Save, Trash2,
   Linkedin, Instagram, Facebook, Twitter, Youtube,
-  MapPin, Mail, Phone, Globe, Share2, Download,
+  MapPin, Mail, Phone, Globe, Share2,
   User, Briefcase, Plus, Minus, GripVertical, Image as ImageIcon,
   Link2, Calendar, MessageSquare, Check, X,
   AlignLeft, Users, ChevronDown, MousePointerClick,
   FileText, UserCheck,
-  ShoppingBag, LayoutTemplate, Megaphone,
+  ShoppingBag, LayoutTemplate, Megaphone, QrCode,
   Smartphone, LayoutDashboard,
 } from 'lucide-react';
 import { CardPreviewModal } from '@/components/dashboard/pages/CardPreviewModal';
 import { PhonePreview, ExtraSection, ThemeOverride } from '@/components/dashboard/pages/PhonePreview';
+import { QrPopup } from '@/components/dashboard/pages/Qrpopup';
+import { makeQRMatrix } from '@/components/dashboard/pages/qr-engine';
+import { useQrStore } from '@/components/dashboard/stores/Useqrstore';
+import {
+  getBusinessProfile,
+  getCustomLinks,
+  getSocialLinks,
+  updateBusinessProfile,
+  updateCustomLinks,
+  updateSocialLinks,
+} from '@/lib/api';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -38,6 +49,8 @@ interface FormData {
 interface SocialLink { platform: number; value: string; }
 interface ConnectField { type: string; label: string; value: string; }
 interface CustomLink { label: string; url: string; }
+interface ApiCustomLinkPayload { label: string; url: string; icon: string; color: string; enabled: boolean; }
+interface ApiSocialLinkPayload { platform: string; url: string; handle: string; label: string; icon: string; enabled: boolean; }
 interface Sections {
   profile: boolean; headingText: boolean; contactUs: boolean;
   socialLinks: boolean; links: boolean; appointment: boolean; collectContacts: boolean;
@@ -523,11 +536,96 @@ export default function BusinessProfile() {
   const [themeOverride, setThemeOverride] = useState<Partial<ThemeOverride>>(loadThemeOverride);
 
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [showQR, setShowQR] = useState(false);
   const [copied, setCopied] = useState(false);
   const [savedContact, setSavedContact] = useState(false);
   const [saveFlash, setSaveFlash] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [mobileTab, setMobileTab] = useState<'edit' | 'preview'>('edit');
+  const [showQrPopup, setShowQrPopup] = useState(false);
+  const [profileShareUrl, setProfileShareUrl] = useState('');
+
+  const setQr = useQrStore(state => state.setQr);
+
+  const qrCardUrl = (() => {
+    const raw = formData.website.trim() || profileShareUrl.trim() || (typeof window !== 'undefined' ? window.location.href : 'https://samcard.app');
+    if (!raw.startsWith('http://') && !raw.startsWith('https://')) {
+      return `https://${raw}`;
+    }
+    return raw;
+  })();
+
+  useEffect(() => {
+    const { matrix, N } = makeQRMatrix(qrCardUrl);
+    setQr(null, matrix, N);
+  }, [qrCardUrl, setQr]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadFromApi = async () => {
+      const [profileResult, socialResult, customResult] = await Promise.allSettled([
+        getBusinessProfile(),
+        getSocialLinks(),
+        getCustomLinks(),
+      ]);
+
+      if (!isMounted) return;
+
+      if (profileResult.status === 'fulfilled') {
+        const profile = profileResult.value;
+        setProfileImage(profile.profileImageUrl || initial.profileImage);
+        setBrandLogo(profile.brandLogoUrl || initial.brandLogo);
+        setLogoPosition((profile.logoPosition as LogoPosition) || initial.logoPosition);
+        setProfileShareUrl(profile.shareUrl || '');
+        setFormData(prev => ({
+          ...prev,
+          name: profile.name || prev.name,
+          title: profile.title || '',
+          company: profile.company || '',
+          tagline: profile.tagline || '',
+          email: profile.primaryEmail || '',
+          phone: profile.primaryPhone || '',
+          website: profile.website || '',
+          location: [profile.city, profile.state, profile.country].filter(Boolean).join(', '),
+        }));
+      }
+
+      if (socialResult.status === 'fulfilled') {
+        const mappedSocials = socialResult.value.map(link => {
+          const platformIndex = SOCIAL_OPTIONS.findIndex(
+            option => option.name.toLowerCase() === (link.platform || '').toLowerCase(),
+          );
+
+          return {
+            platform: platformIndex >= 0 ? platformIndex : 0,
+            value: link.url || link.handle || '',
+          };
+        });
+
+        if (mappedSocials.length > 0) {
+          setSocialLinks(mappedSocials);
+        }
+      }
+
+      if (customResult.status === 'fulfilled') {
+        const mappedLinks = customResult.value.map(link => ({
+          label: link.label || '',
+          url: link.url || '',
+        }));
+
+        if (mappedLinks.length > 0) {
+          setCustomLinks(mappedLinks);
+        }
+      }
+    };
+
+    loadFromApi().catch(() => null);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [initial.brandLogo, initial.logoPosition, initial.profileImage]);
 
   useEffect(() => {
     const refresh = () => setThemeOverride(loadThemeOverride());
@@ -544,10 +642,67 @@ export default function BusinessProfile() {
     };
   }, []);
 
-  const handleSaveChanges = useCallback(() => {
+  const handleSaveChanges = useCallback(async () => {
+    setSaveError(null);
+    setIsSaving(true);
+
     saveCache({ profileImage, brandLogo, logoPosition, formData, socialLinks, connectFields, sections, expanded, customLinks, extraSections });
-    setSaveFlash(true);
-    setTimeout(() => setSaveFlash(false), 2200);
+
+    const normalizedSocialLinks: ApiSocialLinkPayload[] = socialLinks
+      .filter(link => Boolean(link.value.trim()))
+      .map(link => ({
+        platform: SOCIAL_OPTIONS[link.platform]?.name || SOCIAL_OPTIONS[0].name,
+        url: link.value.trim(),
+        handle: '',
+        label: '',
+        icon: '',
+        enabled: true,
+      }));
+
+    const normalizedCustomLinks: ApiCustomLinkPayload[] = customLinks
+      .filter(link => Boolean(link.label.trim() || link.url.trim()))
+      .map(link => ({
+        label: link.label.trim(),
+        url: link.url.trim(),
+        icon: '',
+        color: '',
+        enabled: true,
+      }));
+
+    const locationParts = formData.location.split(',').map(part => part.trim());
+
+    try {
+      const savedProfile = await updateBusinessProfile({
+        name: formData.name,
+        title: formData.title,
+        company: formData.company,
+        tagline: formData.tagline,
+        profileImageUrl: profileImage,
+        brandLogoUrl: brandLogo,
+        logoPosition,
+        primaryEmail: formData.email,
+        primaryPhone: formData.phone,
+        website: formData.website,
+        address: formData.location,
+        city: locationParts[0] || '',
+        state: locationParts[1] || '',
+        country: locationParts[2] || '',
+      });
+
+      setProfileShareUrl(savedProfile.shareUrl || '');
+
+      await Promise.all([
+        updateSocialLinks(normalizedSocialLinks),
+        updateCustomLinks(normalizedCustomLinks),
+      ]);
+
+      setSaveFlash(true);
+      setTimeout(() => setSaveFlash(false), 2200);
+    } catch (error: unknown) {
+      setSaveError(error instanceof Error ? error.message : 'Failed to save changes');
+    } finally {
+      setIsSaving(false);
+    }
   }, [profileImage, brandLogo, logoPosition, formData, socialLinks, connectFields, sections, expanded, customLinks, extraSections]);
 
   const updateField = useCallback(<K extends keyof FormData>(key: K, value: FormData[K]) => setFormData(prev => ({ ...prev, [key]: value })), []);
@@ -616,7 +771,7 @@ export default function BusinessProfile() {
       onPreviewOpen={() => setIsPreviewOpen(true)}
       onShareLink={handleShareLink}
       onSaveContact={handleSaveContact}
-      onShowQR={() => setShowQR(true)}
+      onShowQR={() => setShowQrPopup(true)}
     />
   );
 
@@ -660,9 +815,9 @@ export default function BusinessProfile() {
                   {copied ? <Check className="w-3.5 h-3.5 mr-1.5 text-[#49B618]" /> : <Share2 className="w-3.5 h-3.5 mr-1.5" />}
                   {copied ? 'Copied!' : 'Share'}
                 </Button>
-                {/* <Button variant="outline" size="sm" className="border-[#008001]/30 text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20 text-xs h-8" onClick={() => setShowQR(true)}>
-                  <Download className="w-3.5 h-3.5 mr-1.5" />QR Code
-                </Button> */}
+                <Button variant="outline" size="sm" className="border-[#008001]/30 text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20 text-xs h-8" onClick={() => setShowQrPopup(true)}>
+                  <QrCode className="w-3.5 h-3.5 mr-1.5" />QR Code
+                </Button>
               </div>
             </div>
           </div>
@@ -870,13 +1025,17 @@ export default function BusinessProfile() {
           <Trash2 className="w-4 h-4 mr-2" />Delete Profile
         </Button>
         <div className="flex gap-3">
-          <Button onClick={handleSaveChanges}
+          <Button onClick={() => {
+            void handleSaveChanges();
+          }}
+            disabled={isSaving}
             className={`flex-1 sm:flex-none text-white text-sm transition-all duration-300 ${saveFlash ? 'bg-[#49B618] hover:bg-[#3a9012]' : 'bg-gradient-to-r from-[#008001] to-[#49B618] hover:from-[#006312] hover:to-[#008001]'}`}>
             {saveFlash ? <Check className="w-4 h-4 mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-            {saveFlash ? 'Saved!' : 'Save Changes'}
+            {isSaving ? 'Saving...' : saveFlash ? 'Saved!' : 'Save Changes'}
           </Button>
         </div>
       </div>
+      {saveError && <p className="text-xs text-red-400 -mt-6 pb-6">{saveError}</p>}
     </div>
   );
 
@@ -888,9 +1047,10 @@ export default function BusinessProfile() {
         {...sharedPreviewProps}
         onShareLink={handleShareLink}
         onSaveContact={handleSaveContact}
-        onShowQR={() => setShowQR(true)}
+        onShowQR={() => setShowQrPopup(true)}
       />
-      {/* {showQR && <QRModal text={formData.website || window.location.href} onClose={() => setShowQR(false)} />} */}
+      <QrPopup isOpen={showQrPopup} onClose={() => setShowQrPopup(false)} cardUrl={qrCardUrl} />
+      {/* QR modal can be restored by wiring a dedicated state and callback again. */}
 
       <div className="xl:hidden flex rounded-xl overflow-hidden border border-[#008001]/30 mb-4">
         <button onClick={() => setMobileTab('edit')} className={`flex-1 py-2.5 text-sm font-medium flex items-center justify-center gap-2 transition-all ${mobileTab === 'edit' ? 'bg-[#008001] text-white' : 'bg-[#000000] text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20'}`}>

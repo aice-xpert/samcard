@@ -1,6 +1,7 @@
 "use client";
 
 import Image from 'next/image';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/dashboard/ui/card';
 import { Button } from '@/components/dashboard/ui/button';
 import { Badge } from '@/components/dashboard/ui/badge';
@@ -16,13 +17,29 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
 import { useUser } from '@/contexts/UserContext';
+import {
+  getBusinessProfile,
+  getCards,
+  getAnalytics,
+  getDeviceDistribution,
+  getConversionFunnel,
+  getTopLocations,
+  getMonthOverMonthPerformance,
+  getMonthlyGoal,
+  getWeeklyChallenge,
+  ApiBusinessProfile,
+  ApiCard,
+  AnalyticsData,
+  MonthOverMonthPerformance,
+  GoalProgressData,
+} from '@/lib/api';
 
-// ── Static data (unchanged) ───────────────────────────────────────
-const statsData = [
-  { title: 'Total NFC Taps',  value: '2,547', change: '+12.5%', trend: 'up', icon: Smartphone, gradient: 'from-[#008001] to-[#006312]' },
-  { title: 'Unique Visitors', value: '1,892', change: '+8.2%',  trend: 'up', icon: Users,      gradient: 'from-[#009200] to-[#006312]' },
-  { title: 'Profile Views',   value: '3,421', change: '+24.1%', trend: 'up', icon: Eye,        gradient: 'from-[#49B618] to-[#008001]' },
-  { title: 'Saved Contacts',  value: '189',   change: '+5.3%',  trend: 'up', icon: UserPlus,   gradient: 'from-[#006312] to-[#008001]' },
+// ── Static data (fallback) ───────────────────────────────────────
+const defaultStatsData = [
+  { title: 'Total NFC Taps',  value: '0', change: '+0%', trend: 'up', icon: Smartphone, gradient: 'from-[#008001] to-[#006312]' },
+  { title: 'Unique Visitors', value: '0', change: '+0%',  trend: 'up', icon: Users,      gradient: 'from-[#009200] to-[#006312]' },
+  { title: 'Profile Views',   value: '0', change: '+0%', trend: 'up', icon: Eye,        gradient: 'from-[#49B618] to-[#008001]' },
+  { title: 'Saved Contacts',  value: '0',   change: '+0%',  trend: 'up', icon: UserPlus,   gradient: 'from-[#006312] to-[#008001]' },
 ];
 
 const tapActivityData = [
@@ -35,36 +52,35 @@ const tapActivityData = [
   { date: 'Sun', taps: 320, views: 420, leads: 38 },
 ];
 
-const deviceData = [
-  { name: 'iOS',     value: 62, color: '#008001' },
-  { name: 'Android', value: 35, color: '#49B618' },
-  { name: 'Desktop', value: 3,  color: '#006312' },
-];
+const deviceColorMap: Record<string, string> = {
+  'iOS': '#008001',
+  'Android': '#49B618',
+  'Desktop': '#006312',
+  'UNKNOWN': '#666666',
+};
 
-const topLinksData = [
-  { name: 'LinkedIn',  clicks: 847, percentage: 42, icon: Linkedin,  color: '#008001' },
-  { name: 'Instagram', clicks: 623, percentage: 31, icon: Instagram, color: '#49B618' },
-  { name: 'Website',   clicks: 412, percentage: 20, icon: Globe,     color: '#009200' },
-  { name: 'Email',     clicks: 287, percentage: 14, icon: Mail,      color: '#006312' },
-  { name: 'Phone',     clicks: 156, percentage: 8,  icon: Phone,     color: '#008001' },
-];
+const countryFlagMap: Record<string, string> = {
+  'United States': '🇺🇸',
+  'United Kingdom': '🇬🇧',
+  'Canada': '🇨🇦',
+  'India': '🇮🇳',
+  'Australia': '🇦🇺',
+  'Germany': '🇩🇪',
+  'France': '🇫🇷',
+  'Brazil': '🇧🇷',
+  'Japan': '🇯🇵',
+  'South Korea': '🇰🇷',
+};
 
-const recentTaps = [
-  { id: 1, name: 'Sarah Anderson',  location: 'New York, US',       time: '2 mins ago',  device: 'iPhone 15 Pro',      action: 'Saved Contact',    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop', status: 'hot'    },
-  { id: 2, name: 'Michael Chen',    location: 'San Francisco, US',  time: '5 mins ago',  device: 'Samsung Galaxy S24', action: 'Clicked LinkedIn', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop', status: 'new'    },
-  { id: 3, name: 'Emma Wilson',     location: 'London, UK',         time: '8 mins ago',  device: 'iPhone 14',          action: 'Viewed Profile',   avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop', status: 'active' },
-  { id: 4, name: 'James Rodriguez', location: 'Toronto, CA',        time: '12 mins ago', device: 'Pixel 8 Pro',        action: 'Downloaded vCard', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop', status: 'hot'    },
-  { id: 5, name: 'Sophia Kumar',    location: 'Mumbai, IN',         time: '18 mins ago', device: 'OnePlus 11',         action: 'Clicked Instagram',avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop', status: 'active' },
-  { id: 6, name: 'David Park',      location: 'Seoul, KR',          time: '25 mins ago', device: 'iPhone 13',          action: 'Visited Website',  avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop', status: 'new'    },
-];
-
-const geographicData = [
-  { country: 'United States',  flag: '🇺🇸', visitors: 847, percentage: 42 },
-  { country: 'United Kingdom', flag: '🇬🇧', visitors: 423, percentage: 21 },
-  { country: 'Canada',         flag: '🇨🇦', visitors: 312, percentage: 16 },
-  { country: 'India',          flag: '🇮🇳', visitors: 289, percentage: 14 },
-  { country: 'Others',         flag: '🌍', visitors: 140, percentage: 7  },
-];
+const getLinkIcon = (label: string) => {
+  const lower = label.toLowerCase();
+  if (lower.includes('linkedin')) return Linkedin;
+  if (lower.includes('instagram')) return Instagram;
+  if (lower.includes('email') || lower.includes('mail')) return Mail;
+  if (lower.includes('phone') || lower.includes('call')) return Phone;
+  if (lower.includes('website') || lower.includes('link')) return Globe;
+  return Globe;
+};
 
 const recommendations = [
   { icon: Instagram, title: 'Add Instagram Stories Link', desc: 'Profiles with stories get 35% more engagement', priority: 'high',   color: 'from-[#49B618] to-[#009200]' },
@@ -72,12 +88,30 @@ const recommendations = [
   { icon: Sparkles,  title: 'Upgrade to Pro Plus',        desc: 'Get advanced analytics and AI insights',      priority: 'low',    color: 'from-[#009200] to-[#008001]' },
 ];
 
-const performanceComparison = [
+const defaultPerformanceComparison = [
   { metric: 'Taps',        thisMonth: 2547, lastMonth: 2267, change: 12.3  },
   { metric: 'Visitors',    thisMonth: 1892, lastMonth: 1751, change: 8.1   },
   { metric: 'Leads',       thisMonth: 189,  lastMonth: 179,  change: 5.6   },
   { metric: 'Link Clicks', thisMonth: 2325, lastMonth: 2401, change: -3.2  },
 ];
+
+const defaultMonthlyGoal: GoalProgressData = {
+  name: 'Monthly Goal',
+  metric: 'Profile Taps',
+  current: 0,
+  target: 2000,
+  percentage: 0,
+  statusText: 'No progress yet',
+};
+
+const defaultWeeklyChallenge: GoalProgressData = {
+  name: 'Weekly Challenge',
+  metric: 'New Saves',
+  current: 0,
+  target: 50,
+  percentage: 0,
+  statusText: 'No progress yet',
+};
 
 const funnelSteps = [
   { label: 'NFC Tapped',    value: 2547, percentage: 100, icon: Smartphone,        color: '#008001', lightColor: 'rgba(0,128,1,0.15)',    drop: null },
@@ -89,7 +123,152 @@ const funnelSteps = [
 // ─────────────────────────────────────────────────────────────────
 export function ComprehensiveDashboard() {
   const { profile } = useUser();
-  const firstName = profile.name.split(" ")[0];
+  const [businessProfile, setBusinessProfile] = useState<ApiBusinessProfile | null>(null);
+  const [cards, setCards] = useState<ApiCard[]>([]);
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+  const [deviceDistribution, setDeviceDistribution] = useState<AnalyticsData['deviceDistribution']>([]);
+  const [conversionFunnel, setConversionFunnel] = useState<AnalyticsData['funnelSteps']>([]);
+  const [topLocations, setTopLocations] = useState<AnalyticsData['topLocations']>([]);
+  const [monthOverMonthPerformance, setMonthOverMonthPerformance] = useState<MonthOverMonthPerformance[]>(defaultPerformanceComparison);
+  const [monthlyGoal, setMonthlyGoal] = useState<GoalProgressData>(defaultMonthlyGoal);
+  const [weeklyChallenge, setWeeklyChallenge] = useState<GoalProgressData>(defaultWeeklyChallenge);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([
+      getBusinessProfile().catch(() => null),
+      getCards().catch(() => []),
+      getAnalytics("30").catch(() => null),
+      getDeviceDistribution("30").catch(() => [
+        { name: 'iOS', value: 0, count: 0 },
+        { name: 'Android', value: 0, count: 0 },
+        { name: 'Desktop', value: 0, count: 0 },
+      ]),
+      getConversionFunnel("30").catch(() => [
+        { label: 'NFC Tapped', value: 0, percentage: 0 },
+        { label: 'Link Clicked', value: 0, percentage: 0 },
+        { label: 'Contact Saved', value: 0, percentage: 0 },
+        { label: 'Card Shared', value: 0, percentage: 0 },
+      ]),
+      getTopLocations("30").catch(() => [{ country: 'No Data', visitors: 0, percentage: 0 }]),
+      getMonthOverMonthPerformance().catch(() => defaultPerformanceComparison),
+      getMonthlyGoal().catch(() => defaultMonthlyGoal),
+      getWeeklyChallenge().catch(() => defaultWeeklyChallenge),
+    ]).then(([bp, c, a, dd, funnel, locations, mom, monthly, weekly]) => {
+      setBusinessProfile(bp);
+      setCards(c);
+      setAnalytics(a);
+      setDeviceDistribution(dd);
+      setConversionFunnel(funnel);
+      setTopLocations(locations);
+      setMonthOverMonthPerformance(mom);
+      setMonthlyGoal(monthly);
+      setWeeklyChallenge(weekly);
+      setLoading(false);
+    });
+  }, []);
+
+  const firstName = profile.name ? profile.name.split(" ")[0] : "";
+  const profileCompletion = analytics?.profileCompletion ?? 0;
+  const engagementScore = analytics?.engagementScore ?? 0;
+  const thisWeekChange = analytics?.thisWeekChange ?? 0;
+  const thisWeekTrendUp = thisWeekChange >= 0;
+  const thisWeekValue = `${thisWeekChange >= 0 ? "+" : ""}${thisWeekChange}%`;
+
+  const engagementBadge =
+    engagementScore >= 85 ? 'Excellent' : engagementScore >= 65 ? 'Good' : engagementScore > 0 ? 'Needs work' : 'No data';
+  const thisWeekBadge =
+    analytics ? (thisWeekTrendUp ? 'Growing' : 'Declining') : 'No activity';
+
+  const statsData = analytics ? [
+    { title: 'Total NFC Taps',  value: analytics.totalTaps.toLocaleString(), change: '+0%', trend: 'up', icon: Smartphone, gradient: 'from-[#008001] to-[#006312]' },
+    { title: 'Unique Visitors', value: analytics.totalViews.toLocaleString(), change: '+0%',  trend: 'up', icon: Users,      gradient: 'from-[#009200] to-[#006312]' },
+    { title: 'Profile Views',   value: analytics.totalViews.toLocaleString(), change: '+0%', trend: 'up', icon: Eye,        gradient: 'from-[#49B618] to-[#008001]' },
+    { title: 'Saved Contacts',  value: analytics.totalLeads.toLocaleString(),   change: '+0%',  trend: 'up', icon: UserPlus,   gradient: 'from-[#006312] to-[#008001]' },
+  ] : defaultStatsData;
+
+  const tapActivityData = analytics?.daily.map((d: { date: string; taps: number; views: number; leads: number }) => ({
+    date: new Date(d.date).toLocaleDateString('en-US', { weekday: 'short' }),
+    taps: d.taps,
+    views: d.views,
+    leads: d.leads,
+  })) || [];
+
+  // Transform API data for device distribution
+  const deviceDistributionData = deviceDistribution.length
+    ? deviceDistribution.map(d => ({
+        name: d.name,
+        value: d.value,
+        color: deviceColorMap[d.name] || '#666666',
+      }))
+    : [
+        { name: 'iOS', value: 0, color: '#008001' },
+        { name: 'Android', value: 0, color: '#49B618' },
+        { name: 'Desktop', value: 0, color: '#006312' },
+      ];
+
+  // Transform API data for funnel
+  const funnelData = conversionFunnel.length
+    ? conversionFunnel.map((step, i) => ({
+        label: step.label,
+        value: step.value,
+        percentage: step.percentage,
+        drop: i === 0
+          ? null
+          : i === 1
+            ? Math.round(100 - step.percentage)
+            : i === 2
+              ? Math.round((conversionFunnel[1]?.percentage ?? 0) - step.percentage)
+              : Math.round((conversionFunnel[2]?.percentage ?? 0) - step.percentage),
+      }))
+    : [
+        { label: 'NFC Tapped', value: 0, percentage: 0, drop: null },
+        { label: 'Link Clicked', value: 0, percentage: 0, drop: 0 },
+        { label: 'Contact Saved', value: 0, percentage: 0, drop: 0 },
+        { label: 'Card Shared', value: 0, percentage: 0, drop: 0 },
+      ];
+
+  // Transform API data for top locations
+  const locationData = topLocations.length
+    ? topLocations.map(loc => ({
+        country: loc.country,
+        flag: countryFlagMap[loc.country] || '🌍',
+        visitors: loc.visitors,
+        percentage: loc.percentage,
+      }))
+    : [];
+
+  // Transform API data for top links
+  const topLinksDataMapped = analytics?.topLinks?.length
+    ? analytics.topLinks.map(link => ({
+        name: link.label,
+        clicks: link.clicks,
+        percentage: link.percentage,
+        icon: getLinkIcon(link.label),
+        color: '#008001',
+      }))
+    : [];
+
+  const topLinksData = topLinksDataMapped.length
+    ? topLinksDataMapped
+    : [
+        { name: 'LinkedIn', clicks: 0, percentage: 0, icon: Linkedin, color: '#008001' },
+        { name: 'Website', clicks: 0, percentage: 0, icon: Globe, color: '#49B618' },
+        { name: 'Email', clicks: 0, percentage: 0, icon: Mail, color: '#009200' },
+      ];
+
+  const recentTaps = [
+    {
+      id: 1,
+      name: 'No recent taps yet',
+      location: 'No location data',
+      time: 'Just now',
+      device: 'Unknown',
+      action: 'Waiting for activity',
+      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop',
+      status: 'active' as const,
+    },
+  ];
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -111,10 +290,10 @@ export function ComprehensiveDashboard() {
             <div className="bg-[#000000]/50 backdrop-blur-xl rounded-xl p-4 sm:p-5 border border-[#008001]/30 max-w-md">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-white font-semibold text-sm sm:text-base">Profile Completion</span>
-                <span className="text-white font-bold text-base sm:text-lg">90%</span>
+                <span className="text-white font-bold text-base sm:text-lg">{profileCompletion}%</span>
               </div>
               <div className="relative h-3 bg-[#1E1E1E] rounded-full overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-[#008001] to-[#49B618] rounded-full transition-all duration-1000" style={{ width: '90%' }} />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#008001] to-[#49B618] rounded-full transition-all duration-1000" style={{ width: `${profileCompletion}%` }} />
               </div>
               <div className="flex items-center gap-2 mt-3 text-xs sm:text-sm">
                 <CheckCircle2 className="w-4 h-4 text-[#49B618] flex-shrink-0" />
@@ -126,8 +305,26 @@ export function ComprehensiveDashboard() {
           {/* Score cards — row on mobile, row on desktop */}
           <div className="flex gap-3 sm:gap-4 sm:flex-col md:flex-row">
             {[
-              { icon: Award,    label: 'Engagement Score', value: '87',   badge: 'Excellent', badgeCls: 'bg-[#006312]/20 text-[#49B618] border-[#008001]/30', gradient: 'from-[#49B618] to-[#009200]' },
-              { icon: Activity, label: 'This Week',         value: '+24%', badge: 'Growing',   badgeCls: 'bg-[#008001]/20 text-[#49B618] border-[#008001]/30', gradient: 'from-[#008001] to-[#006312]' },
+              {
+                icon: Award,
+                label: 'Engagement Score',
+                value: String(engagementScore),
+                badge: engagementBadge,
+                badgeCls: 'bg-[#006312]/20 text-[#49B618] border-[#008001]/30',
+                gradient: 'from-[#49B618] to-[#009200]',
+              },
+              {
+                icon: Activity,
+                label: 'This Week',
+                value: thisWeekValue,
+                badge: thisWeekBadge,
+                badgeCls: thisWeekTrendUp
+                  ? 'bg-[#008001]/20 text-[#49B618] border-[#008001]/30'
+                  : 'bg-red-500/20 text-red-400 border-red-500/30',
+                gradient: thisWeekTrendUp
+                  ? 'from-[#008001] to-[#006312]'
+                  : 'from-red-500 to-red-700',
+              },
             ].map(({ icon: Icon, label, value, badge, badgeCls, gradient }) => (
               <div key={label} className="bg-[#000000]/50 backdrop-blur-xl rounded-xl p-4 sm:p-6 border border-[#008001]/30 text-center flex-1 sm:min-w-32">
                 <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br ${gradient} flex items-center justify-center mx-auto mb-2 sm:mb-3`}>
@@ -136,7 +333,10 @@ export function ComprehensiveDashboard() {
                 <p className="text-[#A0A0A0] text-xs sm:text-sm mb-1">{label}</p>
                 <p className="text-2xl sm:text-4xl font-bold text-white">{value}</p>
                 <Badge className={`mt-1 sm:mt-2 ${badgeCls} text-xs`}>
-                  <TrendingUp className="w-3 h-3 mr-1" />{badge}
+                  {label === 'This Week' && !thisWeekTrendUp
+                    ? <TrendingDown className="w-3 h-3 mr-1" />
+                    : <TrendingUp className="w-3 h-3 mr-1" />}
+                  {badge}
                 </Badge>
               </div>
             ))}
@@ -243,8 +443,9 @@ export function ComprehensiveDashboard() {
               {/* On mobile: hide the side conversion summary box to save space */}
               <div className="flex gap-4 sm:gap-6 items-start">
                 <div className="flex-1 space-y-3">
-                  {funnelSteps.map((step, i) => {
-                    const Icon = step.icon;
+                  {funnelData.map((step, i) => {
+                    const Icon = i === 0 ? Smartphone : i === 1 ? MousePointerClick : i === 2 ? Download : Share2;
+                    const colors = ['#008001', '#49B618', '#7ed957', '#a8f060'];
                     return (
                       <div key={i}>
                         {step.drop !== null && (
@@ -255,20 +456,20 @@ export function ComprehensiveDashboard() {
                         )}
                         <div className="flex items-center gap-2 sm:gap-3 rounded-xl px-2 py-2 hover:bg-[#008001]/5 transition-all border border-transparent hover:border-[#008001]/20">
                           <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-                            style={{ backgroundColor: step.lightColor, border: `1px solid ${step.color}40` }}>
-                            <Icon className="w-4 h-4" style={{ color: step.color }} />
+                            style={{ backgroundColor: `${colors[i]}33`, border: `1px solid ${colors[i]}40` }}>
+                            <Icon className="w-4 h-4" style={{ color: colors[i] }} />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between mb-1">
                               <span className="text-xs sm:text-sm font-semibold text-white truncate">{step.label}</span>
                               <div className="flex items-center gap-1 sm:gap-2 ml-2 flex-shrink-0">
-                                <span className="text-xs sm:text-sm font-bold" style={{ color: step.color }}>{step.value.toLocaleString()}</span>
+                                <span className="text-xs sm:text-sm font-bold" style={{ color: colors[i] }}>{step.value.toLocaleString()}</span>
                                 <span className="text-xs text-[#A0A0A0]">{step.percentage}%</span>
                               </div>
                             </div>
                             <div className="h-2 bg-[#1E1E1E] rounded-full overflow-hidden">
                               <div className="h-full rounded-full transition-all duration-700"
-                                style={{ width: `${step.percentage}%`, background: `linear-gradient(90deg, ${step.color}aa, ${step.color})`, boxShadow: `0 0 6px ${step.color}55` }} />
+                                style={{ width: `${step.percentage}%`, background: `linear-gradient(90deg, ${colors[i]}aa, ${colors[i]})`, boxShadow: `0 0 6px ${colors[i]}55` }} />
                             </div>
                           </div>
                         </div>
@@ -309,15 +510,15 @@ export function ComprehensiveDashboard() {
               <div className="h-40 sm:h-48 min-w-0 min-h-[160px] sm:min-h-[192px]">
                 <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={1}>
                   <PieChart>
-                    <Pie data={deviceData} cx="50%" cy="50%" innerRadius={45} outerRadius={65} paddingAngle={3} dataKey="value">
-                      {deviceData.map((entry, index) => (<Cell key={`cell-${index}`} fill={entry.color} />))}
+                    <Pie data={deviceDistributionData} cx="50%" cy="50%" innerRadius={45} outerRadius={65} paddingAngle={3} dataKey="value">
+                      {deviceDistributionData.map((entry, index) => (<Cell key={`cell-${index}`} fill={entry.color} />))}
                     </Pie>
                     <Tooltip contentStyle={{ background: '#000000', border: '1px solid #008001', color: '#FFFFFF', fontSize: '12px' }} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
               <div className="space-y-2 mt-3 sm:mt-4">
-                {deviceData.map((item, index) => (
+                {deviceDistributionData.map((item, index) => (
                   <div key={index} className="flex items-center justify-between p-2 rounded-lg bg-[#1E1E1E]">
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
@@ -340,7 +541,7 @@ export function ComprehensiveDashboard() {
             </CardHeader>
             <CardContent className="pt-3 sm:pt-4">
               <div className="space-y-3">
-                {geographicData.map((location, index) => (
+                {locationData.length > 0 ? locationData.map((location, index) => (
                   <div key={index} className="space-y-1.5 sm:space-y-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -357,7 +558,9 @@ export function ComprehensiveDashboard() {
                         style={{ width: `${location.percentage}%` }} />
                     </div>
                   </div>
-                ))}
+                )) : (
+                  <p className="text-xs text-[#A0A0A0] text-center py-4">No location data available</p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -394,7 +597,7 @@ export function ComprehensiveDashboard() {
                       unoptimized
                       className="w-10 h-10 sm:w-12 sm:h-12 rounded-full ring-2 ring-[#008001]/30 object-cover"
                     />
-                    <div className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full border-2 border-black ${tap.status === 'hot' ? 'bg-[#49B618]' : tap.status === 'new' ? 'bg-[#009200]' : 'bg-[#006312]'}`} />
+                    <div className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full border-2 border-black ${tap.status === 'active' ? 'bg-[#49B618]' : 'bg-[#006312]'}`} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="font-semibold text-white text-sm truncate">{tap.name}</h4>
@@ -504,7 +707,7 @@ export function ComprehensiveDashboard() {
         </CardHeader>
         <CardContent className="pt-4 sm:pt-6">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-            {performanceComparison.map((item, i) => (
+            {monthOverMonthPerformance.map((item, i) => (
               <div key={i} className="p-4 sm:p-6 rounded-xl border border-[#008001]/30 bg-gradient-to-br from-black to-[#1E1E1E] text-center">
                 <p className="text-xs sm:text-sm text-[#A0A0A0] mb-2">{item.metric}</p>
                 <div className="flex items-center justify-center gap-1 sm:gap-3 mb-2 sm:mb-3 flex-wrap">
@@ -538,19 +741,19 @@ export function ComprehensiveDashboard() {
                   <Target className="w-5 h-5 sm:w-6 sm:h-6" />
                   <h3 className="text-lg sm:text-xl font-bold">Monthly Goal</h3>
                 </div>
-                <p className="text-white/80 text-xs sm:text-sm">2,000 Profile Taps</p>
+                <p className="text-white/80 text-xs sm:text-sm">{monthlyGoal.target.toLocaleString()} {monthlyGoal.metric}</p>
               </div>
-              <Badge className="bg-white/20 text-white border-white/30 text-xs">67% Complete</Badge>
+              <Badge className="bg-white/20 text-white border-white/30 text-xs">{monthlyGoal.percentage}% Complete</Badge>
             </div>
             <div className="space-y-2 sm:space-y-3">
               <div className="flex items-center justify-between text-xs sm:text-sm">
                 <span>Current Progress</span>
-                <span className="font-bold text-base sm:text-lg">1,340 / 2,000</span>
+                <span className="font-bold text-base sm:text-lg">{monthlyGoal.current.toLocaleString()} / {monthlyGoal.target.toLocaleString()}</span>
               </div>
-              <Progress value={67} className="h-2 sm:h-3 bg-white/20" />
+              <Progress value={monthlyGoal.percentage} className="h-2 sm:h-3 bg-white/20" />
               <div className="flex items-center gap-2 text-xs sm:text-sm text-white/80">
                 <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
-                <span>You are on track to hit your goal!</span>
+                <span>{monthlyGoal.statusText}</span>
               </div>
             </div>
           </CardContent>
@@ -564,19 +767,19 @@ export function ComprehensiveDashboard() {
                   <Sparkles className="w-5 h-5 sm:w-6 sm:h-6" />
                   <h3 className="text-lg sm:text-xl font-bold">Weekly Challenge</h3>
                 </div>
-                <p className="text-white/80 text-xs sm:text-sm">Get 50 New Saves</p>
+                <p className="text-white/80 text-xs sm:text-sm">Get {weeklyChallenge.target.toLocaleString()} {weeklyChallenge.metric}</p>
               </div>
-              <Badge className="bg-white/20 text-white border-white/30 text-xs">82% Complete</Badge>
+              <Badge className="bg-white/20 text-white border-white/30 text-xs">{weeklyChallenge.percentage}% Complete</Badge>
             </div>
             <div className="space-y-2 sm:space-y-3">
               <div className="flex items-center justify-between text-xs sm:text-sm">
                 <span>Current Progress</span>
-                <span className="font-bold text-base sm:text-lg">41 / 50</span>
+                <span className="font-bold text-base sm:text-lg">{weeklyChallenge.current.toLocaleString()} / {weeklyChallenge.target.toLocaleString()}</span>
               </div>
-              <Progress value={82} className="h-2 sm:h-3 bg-white/20" />
+              <Progress value={weeklyChallenge.percentage} className="h-2 sm:h-3 bg-white/20" />
               <div className="flex items-center gap-2 text-xs sm:text-sm text-white/80">
                 <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current flex-shrink-0" />
-                <span>9 more to unlock bonus rewards!</span>
+                <span>{weeklyChallenge.statusText}</span>
               </div>
             </div>
           </CardContent>

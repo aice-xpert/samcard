@@ -1,14 +1,15 @@
-import express, { Request, Response } from "express";
+import express from "express";
 import admin from "../config/firebase";
 
 const router = express.Router();
 
-interface SignupRequest {
-  name?: string;
-  email?: string;
-  password?: string;
-  company?: string;
-}
+const getErrorMessage = (error: unknown): string =>
+  error instanceof Error ? error.message : "Internal server error";
+
+const getErrorCode = (error: unknown): string | undefined =>
+  typeof error === "object" && error !== null && "code" in error
+    ? String((error as { code: unknown }).code)
+    : undefined;
 
 router.post("/", async (req, res) => {
   try {
@@ -68,24 +69,26 @@ router.post("/", async (req, res) => {
         displayName: userRecord.displayName,
       },
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Signup error:", err);
 
-    if (err.code === "auth/email-already-exists") {
+    const errorCode = getErrorCode(err);
+
+    if (errorCode === "auth/email-already-exists") {
       return res.status(400).json({
         success: false,
         error: "Email already exists",
       });
     }
 
-    if (err.code === "auth/invalid-email") {
+    if (errorCode === "auth/invalid-email") {
       return res.status(400).json({
         success: false,
         error: "Invalid email format",
       });
     }
 
-    if (err.code === "auth/weak-password") {
+    if (errorCode === "auth/weak-password") {
       return res.status(400).json({
         success: false,
         error: "Password is too weak",
@@ -94,7 +97,7 @@ router.post("/", async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      error: err.message || "Internal server error",
+      error: getErrorMessage(err),
     });
   }
 });

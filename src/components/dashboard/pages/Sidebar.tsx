@@ -1,6 +1,10 @@
 "use client";
 
 import {
+  useEffect,
+  useState,
+} from 'react';
+import {
   LayoutDashboard,
   Briefcase,
   CreditCard,
@@ -17,6 +21,7 @@ import { Badge } from '@/components/dashboard/ui/badge';
 import { useUser } from '@/contexts/UserContext';
 import { signOut } from "firebase/auth";
 import { auth } from '@/lib/firebase';
+import { getAnalytics, getBusinessProfile } from '@/lib/api';
 import { useRouter } from "next/navigation";
 
 interface SidebarProps {
@@ -61,9 +66,31 @@ function LogoMark() {
 
 export function Sidebar({ activePage, onNavigate, onClose }: SidebarProps) {
   const { profile } = useUser();
+  const [completionScore, setCompletionScore] = useState(0);
+  const [weeklyTrendChange, setWeeklyTrendChange] = useState(0);
   const initials = profile.name.split(" ").map(n => n[0]).join("").toUpperCase();
 
   const router = useRouter();  // Hook must be called inside component
+
+  useEffect(() => {
+    let isMounted = true;
+
+    Promise.all([getBusinessProfile(), getAnalytics("7")])
+      .then(([businessProfile, analytics]) => {
+        if (!isMounted) return;
+        setCompletionScore(Math.max(0, Math.min(100, businessProfile.completionScore ?? 0)));
+        setWeeklyTrendChange(analytics.thisWeekChange ?? 0);
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setCompletionScore(0);
+        setWeeklyTrendChange(0);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -174,7 +201,7 @@ export function Sidebar({ activePage, onNavigate, onClose }: SidebarProps) {
             <text x="90" y="30" fill="white" fontSize="14" fontWeight="600">{profile.name}</text>
             <text x="90" y="48" fill="#A0A0A0" fontSize="11">{profile.email}</text>
             <text x="90" y="64" fill="#49B618" fontSize="12" fontWeight="600">
-              <tspan>90% Complete </tspan>
+              <tspan>{completionScore}% Complete </tspan>
               <tspan fill="#009200">↑</tspan>
             </text>
           </svg>
@@ -185,7 +212,7 @@ export function Sidebar({ activePage, onNavigate, onClose }: SidebarProps) {
             <Star className="w-3 h-3 fill-current" /> Pro Plan
           </Badge>
           <Badge className="bg-[#006312] text-white border-0 flex items-center gap-1 text-xs">
-            <TrendingUp className="w-3 h-3" /> +12%
+            <TrendingUp className="w-3 h-3" /> {weeklyTrendChange > 0 ? `+${weeklyTrendChange}%` : `${weeklyTrendChange}%`}
           </Badge>
         </div>
 

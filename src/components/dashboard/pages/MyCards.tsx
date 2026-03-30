@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/dashboard/ui/card';
 import { Button } from '@/components/dashboard/ui/button';
 import { Badge } from '@/components/dashboard/ui/badge';
@@ -12,37 +12,11 @@ import {
   Copy, MoreVertical, QrCode, Users, Trash2, Plus, X, Check, SlidersHorizontal,
 } from 'lucide-react';
 import { LineChart, Line, ResponsiveContainer } from 'recharts';
+import { getCards, createCard as apiCreateCard, ApiCard } from '@/lib/api';
 
 const sparklineData = [
   { value: 12 }, { value: 19 }, { value: 15 },
   { value: 25 }, { value: 22 }, { value: 30 }, { value: 28 },
-];
-
-const initialCards = [
-  {
-    id: 1,
-    title: 'Primary Business Card',
-    status: 'active',
-    gradient: 'from-[#006312] to-[#000000]',
-    views: 3421, taps: 2547, saves: 189,
-    trend: sparklineData, completion: 90,
-  },
-  {
-    id: 2,
-    title: 'Personal Card',
-    status: 'active',
-    gradient: 'from-[#1E1E1E] to-[#000000]',
-    views: 1245, taps: 892, saves: 67,
-    trend: sparklineData, completion: 75,
-  },
-  {
-    id: 3,
-    title: 'Event Networking Card',
-    status: 'inactive',
-    gradient: 'from-[#008001] to-[#000000]',
-    views: 456, taps: 324, saves: 23,
-    trend: sparklineData, completion: 60,
-  },
 ];
 
 const gradients = [
@@ -52,25 +26,53 @@ const gradients = [
   'from-[#004d00] to-[#000000]',
 ];
 
-type CardType = typeof initialCards[0];
+type CardType = ApiCard & { 
+  gradient?: string; 
+  trend?: typeof sparklineData; 
+  completion?: number;
+  title?: string;
+  views?: number;
+  taps?: number;
+  saves?: number;
+};
 
 export function MyCardsNew() {
-  const [cards, setCards]                   = useState(initialCards);
+  const [cards, setCards]                   = useState<CardType[]>([]);
+  const [, setLoading]                      = useState(true);
   const [search, setSearch]                 = useState('');
   const [filter, setFilter]                 = useState('all');
   const [sort, setSort]                     = useState('recent');
-  const [openMenu, setOpenMenu]             = useState<number | null>(null);
+  const [openMenu, setOpenMenu]             = useState<string | null>(null);
   const [previewCard, setPreviewCard]       = useState<CardType | null>(null);
   const [shareCard, setShareCard]           = useState<CardType | null>(null);
   const [statsCard, setStatsCard]           = useState<CardType | null>(null);
   const [editCard, setEditCard]             = useState<CardType | null>(null);
   const [editTitle, setEditTitle]           = useState('');
   const [toast, setToast]                   = useState<string | null>(null);
-  const [confirmDelete, setConfirmDelete]   = useState<number | null>(null);
+  const [confirmDelete, setConfirmDelete]   = useState<string | null>(null);
   const [showCreate, setShowCreate]         = useState(false);
   const [newTitle, setNewTitle]             = useState('');
   const [showFilters, setShowFilters]       = useState(false);
-  const nextId = useRef(initialCards.length + 1);
+  const nextId = useRef(1000);
+
+  useEffect(() => {
+    getCards()
+      .then((data) => {
+        const mapped = data.map((c, i) => ({
+          ...c,
+          title: c.name,
+          views: c.totalViews,
+          taps: c.totalTaps,
+          saves: c.totalSaves,
+          gradient: gradients[i % gradients.length],
+          trend: sparklineData,
+          completion: c.completionScore || 0,
+        }));
+        setCards(mapped);
+      })
+      .catch(() => setCards([]))
+      .finally(() => setLoading(false));
+  }, []);
 
   // ── helpers ──────────────────────────────────────────────────────
   const showToast = (msg: string) => {
@@ -81,36 +83,40 @@ export function MyCardsNew() {
   // ── derived list ─────────────────────────────────────────────────
   const visible = cards
     .filter(c => {
-      const matchSearch = c.title.toLowerCase().includes(search.toLowerCase());
+      const matchSearch = (c.title || '').toLowerCase().includes(search.toLowerCase());
       const matchFilter = filter === 'all' || c.status === filter;
       return matchSearch && matchFilter;
     })
     .sort((a, b) => {
-      if (sort === 'views') return b.views - a.views;
-      if (sort === 'name')  return a.title.localeCompare(b.title);
-      return b.id - a.id;
+      if (sort === 'views') return (b.views ?? 0) - (a.views ?? 0);
+      if (sort === 'name')  return (a.title || '').localeCompare(b.title || '');
+      return new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime();
     });
 
   // ── actions ──────────────────────────────────────────────────────
-  const toggleStatus = (id: number) =>
+  const toggleStatus = (id: string) =>
     setCards(prev => prev.map(c =>
       c.id === id ? { ...c, status: c.status === 'active' ? 'inactive' : 'active' } : c
     ));
 
-  const deleteCard = (id: number) => {
+  const deleteCard = (id: string) => {
     setCards(prev => prev.filter(c => c.id !== id));
     setConfirmDelete(null);
     showToast('Card deleted');
   };
 
   const duplicateCard = (card: CardType) => {
-    const newCard = {
+    const now = new Date().toISOString();
+    const newCard: CardType = {
       ...card,
-      id: nextId.current++,
+      id: String(nextId.current++),
       title: `${card.title} (Copy)`,
-      status: 'inactive' as const,
+      name: `${card.name} (Copy)`,
+      status: 'inactive',
+      createdAt: now,
+      updatedAt: now,
       views: 0, taps: 0, saves: 0,
-      gradient: gradients[card.id % gradients.length],
+      gradient: gradients[card.id.charCodeAt(0) % gradients.length],
     };
     setCards(prev => [...prev, newCard]);
     showToast('Card duplicated!');
@@ -124,24 +130,37 @@ export function MyCardsNew() {
     showToast('Card updated!');
   };
 
-  const createCard = () => {
+    const createCard = async () => {
     if (!newTitle.trim()) return;
-    const newCard = {
-      id: nextId.current++,
-      title: newTitle,
-      status: 'active' as const,
-      gradient: gradients[nextId.current % gradients.length],
-      views: 0, taps: 0, saves: 0,
-      trend: sparklineData, completion: 10,
-    };
-    setCards(prev => [...prev, newCard]);
-    setShowCreate(false);
-    setNewTitle('');
-    showToast('New card created!');
+      try {
+        
+        const response = await apiCreateCard({
+          name: newTitle,
+          cardType: 'QR',
+         
+        });
+
+        const newCard: CardType = {
+          ...response,
+          title: response.name,
+          views: response.totalViews,
+          taps: response.totalTaps,
+          saves: response.totalSaves,
+          completion: response.completionScore,
+          gradient: gradients[Math.floor(Math.random() * gradients.length)],
+          trend: sparklineData,
+        };
+        setCards(prev => [...prev, newCard]);
+        setShowCreate(false);
+        setNewTitle('');
+        showToast('New card created!');
+      } catch (error) {
+        showToast(`Error creating card: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
   };
 
   const copyLink = (card: CardType) => {
-    navigator.clipboard.writeText(`https://samcard.app/${card.title.toLowerCase().replace(/ /g, '-')}`);
+    navigator.clipboard.writeText(`https://samcard.app/${(card.title || '').toLowerCase().replace(/ /g, '-')}`);
     showToast('Link copied to clipboard!');
     setShareCard(null);
   };
@@ -262,7 +281,7 @@ export function MyCardsNew() {
                     </button>
                     {openMenu === card.id && (
                       <div className="absolute right-0 top-8 z-30 bg-[#0a0a0a] border border-[#008001]/30 rounded-xl shadow-2xl w-36 py-1">
-                        <button onClick={() => { setEditCard(card); setEditTitle(card.title); setOpenMenu(null); }}
+                        <button onClick={() => { setEditCard(card); setEditTitle(card.title || ''); setOpenMenu(null); }}
                           className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#008001]/20 flex items-center gap-2">
                           <Edit className="w-3 h-3" /> Rename
                         </button>
@@ -296,7 +315,7 @@ export function MyCardsNew() {
                 </div>
                 <div className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 px-2 sm:px-3 py-1 rounded-full bg-black/35 backdrop-blur-md flex items-center gap-1">
                   <Eye className="w-3 h-3 text-white" />
-                  <span className="text-xs text-white font-medium">{card.views.toLocaleString()}</span>
+                  <span className="text-xs text-white font-medium">{(card.views ?? 0).toLocaleString()}</span>
                 </div>
                 <button
                   onClick={() => copyLink(card)}
@@ -310,9 +329,9 @@ export function MyCardsNew() {
               {/* Stats row */}
               <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
                 {[
-                  { label: 'Taps',  value: card.taps.toLocaleString() },
-                  { label: 'Views', value: card.views.toLocaleString() },
-                  { label: 'Saves', value: String(card.saves) },
+                  { label: 'Taps',  value: (card.taps ?? 0).toLocaleString() },
+                  { label: 'Views', value: (card.views ?? 0).toLocaleString() },
+                  { label: 'Saves', value: String(card.saves ?? 0) },
                 ].map(({ label, value }) => (
                   <div key={label} className="bg-[#1E1E1E] rounded-xl p-2 sm:p-3 text-center">
                     <p className="text-sm sm:text-lg font-bold text-white">{value}</p>
@@ -344,7 +363,7 @@ export function MyCardsNew() {
               {/* Action buttons: 2×2 grid */}
               <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
                 {[
-                  { icon: Edit,     label: 'Edit',    onClick: () => { setEditCard(card); setEditTitle(card.title); } },
+                  { icon: Edit,     label: 'Edit',    onClick: () => { setEditCard(card); setEditTitle(card.title || ''); } },
                   { icon: Eye,      label: 'Preview', onClick: () => setPreviewCard(card) },
                   { icon: Share2,   label: 'Share',   onClick: () => setShareCard(card)   },
                   { icon: BarChart3, label: 'Stats',  onClick: () => setStatsCard(card)   },
@@ -440,7 +459,7 @@ export function MyCardsNew() {
           <div className="flex gap-2 mb-4">
             <Input
               readOnly
-              value={`https://samcard.app/${shareCard.title.toLowerCase().replace(/ /g, '-')}`}
+              value={`https://samcard.app/${(shareCard.title || '').toLowerCase().replace(/ /g, '-')}`}
               className="bg-[#1E1E1E] border-[#008001]/30 text-white text-xs sm:text-sm"
             />
             <Button onClick={() => copyLink(shareCard)}
@@ -464,9 +483,9 @@ export function MyCardsNew() {
         <Modal onClose={() => setStatsCard(null)} title={`Stats — ${statsCard.title}`}>
           <div className="space-y-4">
             {[
-              { label: 'Total Views', value: statsCard.views, pct: 100 },
-              { label: 'NFC Taps',    value: statsCard.taps,  pct: Math.round((statsCard.taps  / Math.max(statsCard.views, 1)) * 100) },
-              { label: 'Saves',       value: statsCard.saves, pct: Math.round((statsCard.saves / Math.max(statsCard.views, 1)) * 100) },
+              { label: 'Total Views', value: statsCard.views ?? 0, pct: 100 },
+              { label: 'NFC Taps',    value: statsCard.taps ?? 0,  pct: Math.round(((statsCard.taps ?? 0)  / Math.max(statsCard.views ?? 1, 1)) * 100) },
+              { label: 'Saves',       value: statsCard.saves ?? 0, pct: Math.round(((statsCard.saves ?? 0) / Math.max(statsCard.views ?? 1, 1)) * 100) },
             ].map(({ label, value, pct }) => (
               <div key={label}>
                 <div className="flex justify-between mb-1">

@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { getUserProfile, updateUserProfile, ApiUser } from "@/lib/api";
 
 export interface ConnectedAccountData {
     id: string;
@@ -25,23 +26,25 @@ interface UserContextType {
     setProfile: (p: Partial<UserProfile>) => void;
     connectedAccounts: ConnectedAccountData[];
     setConnectedAccount: (acc: Partial<ConnectedAccountData> & { id: string }) => void;
+    loading: boolean;
+    refreshProfile: () => Promise<void>;
 }
 
 const defaultProfile: UserProfile = {
-    name: "Sam Wilson",
-    email: "sam@samcard.io",
-    phone: "+1 (555) 123-4567",
-    timezone: "America/Los_Angeles",
+    name: "",
+    email: "",
+    phone: "",
+    timezone: "UTC",
     language: "en",
     avatar: "",
 };
 
 const defaultAccounts: ConnectedAccountData[] = [
-    { id: "google", name: "Google", icon: "G", connected: true, email: "sam@gmail.com" },
-    { id: "linkedin", name: "LinkedIn", icon: "in", connected: false, url: "" },
-    { id: "github", name: "GitHub", icon: "GH", connected: false, url: "" },
-    { id: "twitter", name: "Twitter", icon: "X", connected: false, url: "" },
-    { id: "instagram", name: "Instagram", icon: "IG", connected: false, url: "" },
+    { id: "google", name: "Google", icon: "G", connected: false },
+    { id: "linkedin", name: "LinkedIn", icon: "in", connected: false },
+    { id: "github", name: "GitHub", icon: "GH", connected: false },
+    { id: "twitter", name: "Twitter", icon: "X", connected: false },
+    { id: "instagram", name: "Instagram", icon: "IG", connected: false },
 ];
 
 const STORAGE_KEY = "samcard_user_data";
@@ -73,24 +76,74 @@ const UserContext = createContext<UserContextType>({
     setProfile: () => { },
     connectedAccounts: defaultAccounts,
     setConnectedAccount: () => { },
+    loading: true,
+    refreshProfile: async () => { },
 });
 
 export function UserProvider({ children }: { children: ReactNode }) {
     const [mounted, setMounted] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [profile, setProfileState] = useState<UserProfile>(defaultProfile);
     const [connectedAccounts, setConnectedAccounts] = useState<ConnectedAccountData[]>(defaultAccounts);
+
+    const refreshProfile = async () => {
+        try {
+            const user = await getUserProfile();
+            const newProfile: UserProfile = {
+                name: user.name || "",
+                email: user.email || "",
+                phone: user.phone || "",
+                timezone: user.timezone || "UTC",
+                language: user.language || "en",
+                avatar: user.avatar || "",
+            };
+            setProfileState(newProfile);
+            saveToStorage(newProfile, connectedAccounts);
+        } catch (error) {
+            console.error("Failed to fetch profile:", error);
+        }
+    };
 
     useEffect(() => {
         const data = loadFromStorage();
         setProfileState(data.profile);
         setConnectedAccounts(data.accounts);
-        setMounted(true);
+
+        getUserProfile()
+            .then((user: ApiUser) => {
+                const newProfile: UserProfile = {
+                    name: user.name || data.profile.name,
+                    email: user.email || data.profile.email,
+                    phone: user.phone || "",
+                    timezone: user.timezone || "UTC",
+                    language: user.language || "en",
+                    avatar: user.avatar || "",
+                };
+                setProfileState(newProfile);
+                saveToStorage(newProfile, data.accounts);
+            })
+            .catch(() => {
+                console.log("Using stored profile data");
+            })
+            .finally(() => {
+                setMounted(true);
+                setLoading(false);
+            });
     }, []);
 
     const setProfile = (updates: Partial<UserProfile>) => {
         setProfileState(prev => {
             const next = { ...prev, ...updates };
             saveToStorage(next, connectedAccounts);
+
+            updateUserProfile({
+                name: next.name,
+                phone: next.phone,
+                avatar: next.avatar,
+                timezone: next.timezone,
+                language: next.language,
+            }).catch(() => undefined);
+
             return next;
         });
     };
@@ -108,7 +161,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     if (!mounted) return <>{children}</>;
 
     return (
-        <UserContext.Provider value={{ profile, setProfile, connectedAccounts, setConnectedAccount }}>
+        <UserContext.Provider value={{ profile, setProfile, connectedAccounts, setConnectedAccount, loading, refreshProfile }}>
             {children}
         </UserContext.Provider>
     );

@@ -6,6 +6,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const firebase_1 = __importDefault(require("../config/firebase"));
 const router = express_1.default.Router();
+const getErrorMessage = (error) => error instanceof Error ? error.message : "Internal server error";
+const getErrorCode = (error) => typeof error === "object" && error !== null && "code" in error
+    ? String(error.code)
+    : undefined;
 router.post("/", async (req, res) => {
     try {
         const { name, email, password, company } = req.body;
@@ -62,33 +66,28 @@ router.post("/", async (req, res) => {
     }
     catch (err) {
         console.error("Signup error:", err);
-        if (err.code === "auth/email-already-exists") {
+        const errorCode = getErrorCode(err);
+        if (errorCode === "auth/email-already-exists") {
             return res.status(400).json({
                 success: false,
                 error: "Email already exists",
             });
         }
-        if (err.code === "auth/invalid-email") {
+        if (errorCode === "auth/invalid-email") {
             return res.status(400).json({
                 success: false,
                 error: "Invalid email format",
             });
         }
-        if (err.code === "auth/weak-password") {
+        if (errorCode === "auth/weak-password") {
             return res.status(400).json({
                 success: false,
-                error: "Password must be at least 8 characters and include a mix of uppercase, lowercase, numbers, and symbols",
-            });
-        }
-        if (err.code === "auth/invalid-display-name") {
-            return res.status(400).json({
-                success: false,
-                error: "Invalid name format",
+                error: "Password is too weak",
             });
         }
         return res.status(500).json({
             success: false,
-            error: err.message || "Internal server error",
+            error: getErrorMessage(err),
         });
     }
 });
