@@ -8,12 +8,12 @@ if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
   try {
     serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
   } catch (err) {
-    console.error("Failed to parse FIREBASE_CREDENTIALS environment variable:", err);
-    throw new Error("Invalid FIREBASE_CREDENTIALS JSON");
+    console.error("Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY environment variable:", err);
+    throw new Error("Invalid FIREBASE_SERVICE_ACCOUNT_KEY JSON");
   }
 } else {
   // Fall back to local file (for local development)
-  serviceAccount = require(path.join(__dirname, "../firebaseCred.json"));
+  serviceAccount = require(path.join(__dirname, "./firebaseCred.json"));
 }
 
 if (!admin.apps.length) {
