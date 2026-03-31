@@ -26,7 +26,7 @@ router.get("/", verifySession, async (req: AuthRequest, res: Response) => {
 });
 
 router.post("/", verifySession, async (req: AuthRequest, res: Response) => {
-  const { name, cardType, slug } = req.body;
+  const { name, cardType, slug, ...otherFields } = req.body;
 
   if (!name) {
     return res.status(400).json({ error: "Card name is required" });
@@ -75,20 +75,25 @@ router.post("/", verifySession, async (req: AuthRequest, res: Response) => {
     const cardSlug = slug || `${name.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`;
     const shareUrl = `/${req.user!.uid}/${cardSlug}`;
 
+    const cardData: Record<string, unknown> = {
+      id: cardId, // FIXED: Providing manual ID to satisfy constraint 23502
+      userId: req.user!.uid,
+      businessProfileId,
+      name,
+      cardType: cardType || "QR",
+      slug: cardSlug,
+      shareUrl,
+      status: "DRAFT",
+      updatedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+    };
+
+    // Add other fields
+    Object.assign(cardData, otherFields);
+
     const { data, error } = await supabase
       .from("Card")
-      .insert({
-        id: cardId, // FIXED: Providing manual ID to satisfy constraint 23502
-        userId: req.user!.uid,
-        businessProfileId,
-        name,
-        cardType: cardType || "QR",
-        slug: cardSlug,
-        shareUrl,
-        status: "DRAFT",
-        updatedAt: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
-      })
+      .insert(cardData)
       .select()
       .single();
 
