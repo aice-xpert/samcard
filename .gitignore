@@ -39,3 +39,4 @@ insert-test-data.ts
 test-supabase.ts
 skills-lock.json
 
+package-lock.json
