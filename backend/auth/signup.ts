@@ -1,14 +1,16 @@
-import express, { Request, Response } from "express";
+import express from "express";
 import admin from "../config/firebase";
+import { supabase } from "../config/supabase";
 
 const router = express.Router();
 
-interface SignupRequest {
-  name?: string;
-  email?: string;
-  password?: string;
-  company?: string;
-}
+const getErrorMessage = (error: unknown): string =>
+  error instanceof Error ? error.message : "Internal server error";
+
+const getErrorCode = (error: unknown): string | undefined =>
+  typeof error === "object" && error !== null && "code" in error
+    ? String((error as { code: unknown }).code)
+    : undefined;
 
 router.post("/", async (req, res) => {
   try {
@@ -46,6 +48,7 @@ router.post("/", async (req, res) => {
       });
     }
 
+    // 1. Create the user in Firebase
     const userRecord = await admin.auth().createUser({
       email: emailTrimmed,
       password: passwordTrimmed,
@@ -59,6 +62,33 @@ router.post("/", async (req, res) => {
       });
     }
 
+    // 2. Sync to Supabase — log full error details so nothing is silently swallowed
+    const now = new Date().toISOString();
+    const { error: supabaseError } = await supabase
+      .from("User")
+      .upsert(
+        {
+          id: userRecord.uid,
+          email: emailTrimmed,
+          name: nameTrimmed,
+          updatedAt: now,
+          createdAt: now,
+        },
+        { onConflict: "id" }
+      );
+
+    if (supabaseError) {
+      console.error("Supabase sync failed during signup:", {
+        code: supabaseError.code,
+        message: supabaseError.message,
+        details: supabaseError.details,
+        hint: supabaseError.hint,
+      });
+      // Don't fail — Firebase user created successfully, login route will retry upsert
+    } else {
+      console.log(`[signup] User ${userRecord.uid} synced to Supabase`);
+    }
+
     return res.status(201).json({
       success: true,
       message: "User created successfully",
@@ -68,24 +98,26 @@ router.post("/", async (req, res) => {
         displayName: userRecord.displayName,
       },
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Signup error:", err);
 
-    if (err.code === "auth/email-already-exists") {
+    const errorCode = getErrorCode(err);
+
+    if (errorCode === "auth/email-already-exists") {
       return res.status(400).json({
         success: false,
         error: "Email already exists",
       });
     }
 
-    if (err.code === "auth/invalid-email") {
+    if (errorCode === "auth/invalid-email") {
       return res.status(400).json({
         success: false,
         error: "Invalid email format",
       });
     }
 
-    if (err.code === "auth/weak-password") {
+    if (errorCode === "auth/weak-password") {
       return res.status(400).json({
         success: false,
         error: "Password is too weak",
@@ -94,7 +126,7 @@ router.post("/", async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      error: err.message || "Internal server error",
+      error: getErrorMessage(err),
     });
   }
 });

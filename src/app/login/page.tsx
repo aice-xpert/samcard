@@ -42,8 +42,8 @@ export default function LoginPage() {
       const response = await fetch(`${apiBaseUrl}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify({ idToken }),
+        credentials: "include",
       });
 
       if (response.ok) {
@@ -59,106 +59,119 @@ export default function LoginPage() {
     }
   };
 
+  // Replace your existing handleBackendSession function with this:
   const handleBackendSession = async (user: { getIdToken: () => Promise<string> }) => {
     const idToken = await user.getIdToken();
     const apiBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "");
+
+    if (!apiBaseUrl) throw new Error("Missing NEXT_PUBLIC_BACKEND_URL");
+
     const response = await fetch(`${apiBaseUrl}/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      credentials: "include",
       body: JSON.stringify({ idToken }),
+      credentials: "include",
     });
 
     if (!response.ok) {
       const data = await response.json().catch(() => ({}));
-      throw new Error(data.message || "Backend session failed");
+      throw new Error(data.error || data.message || "Backend session failed");
     }
+
+    const data = await response.json();
+
+    // Save session token to localStorage so api.ts can use it as Bearer token
+    // This is needed because cross-origin cookies don't work in local dev
+    if (data.sessionToken) {
+      localStorage.setItem("sessionToken", data.sessionToken);
+    }
+
     // Full page reload to ensure middleware sees the new session cookie
     window.location.href = "/dashboard";
   };
 
   const handleSocialSignIn = async (providerType: "google" | "github") => {
-  setError(null);
-  setLoading(true);
+    setError(null);
+    setLoading(true);
 
-  const provider =
-    providerType === "google"
-      ? new GoogleAuthProvider()
-      : new GithubAuthProvider();
+    const provider =
+      providerType === "google"
+        ? new GoogleAuthProvider()
+        : new GithubAuthProvider();
 
-  try {
-    const result = await signInWithPopup(auth, provider);
-    await handleBackendSession(result.user);
+    try {
+      const result = await signInWithPopup(auth, provider);
+      await handleBackendSession(result.user);
 
-  } catch (err: unknown) {
-    if (!(err instanceof FirebaseError)) {
-      setError('An error occurred');
-      setLoading(false);
-      return;
-    }
-    const error = err;
-    if (error.code === "auth/account-exists-with-different-credential") {
-      const pendingCred =
-        providerType === "google"
-          ? GoogleAuthProvider.credentialFromError(error)
-          : GithubAuthProvider.credentialFromError(error);
-
-      const conflictingEmail = error.customData?.email;
-
-      if (!pendingCred || !conflictingEmail) {
-        setError("Sign-in failed. Please try again.");
+    } catch (err: unknown) {
+      if (!(err instanceof FirebaseError)) {
+        setError('An error occurred');
         setLoading(false);
         return;
       }
+      const error = err;
+      if (error.code === "auth/account-exists-with-different-credential") {
+        const pendingCred =
+          providerType === "google"
+            ? GoogleAuthProvider.credentialFromError(error)
+            : GithubAuthProvider.credentialFromError(error);
 
-      const email = conflictingEmail as string;
-      // Store pending credential in sessionStorage
-      sessionStorage.setItem("pendingCred", JSON.stringify({
-        providerType,
-        email,
-      }));
+        const conflictingEmail = error.customData?.email;
 
-      const oppositeProvider =
-        providerType === "google"
-          ? new GithubAuthProvider()
-          : new GoogleAuthProvider();
-
-      oppositeProvider.setCustomParameters({ login_hint: email });
-
-      try {
-        // Single second popup — silent to user, feels like normal sign-in
-        const originalResult = await signInWithPopup(auth, oppositeProvider);
-        await linkWithCredential(originalResult.user, pendingCred);
-        sessionStorage.removeItem("pendingCred");
-        await handleBackendSession(originalResult.user);
-
-      } catch (linkErr: unknown) {
-        sessionStorage.removeItem("pendingCred");
-        if (!(linkErr instanceof FirebaseError)) {
+        if (!pendingCred || !conflictingEmail) {
           setError("Sign-in failed. Please try again.");
           setLoading(false);
           return;
         }
-        const linkError = linkErr;
 
-        if (linkError.code === "auth/credential-already-in-use") {
-          // Already linked — just push them through
-          if (auth.currentUser) {
-            await handleBackendSession(auth.currentUser);
+        const email = conflictingEmail as string;
+        // Store pending credential in sessionStorage
+        sessionStorage.setItem("pendingCred", JSON.stringify({
+          providerType,
+          email,
+        }));
+
+        const oppositeProvider =
+          providerType === "google"
+            ? new GithubAuthProvider()
+            : new GoogleAuthProvider();
+
+        oppositeProvider.setCustomParameters({ login_hint: email });
+
+        try {
+          // Single second popup — silent to user, feels like normal sign-in
+          const originalResult = await signInWithPopup(auth, oppositeProvider);
+          await linkWithCredential(originalResult.user, pendingCred);
+          sessionStorage.removeItem("pendingCred");
+          await handleBackendSession(originalResult.user);
+
+        } catch (linkErr: unknown) {
+          sessionStorage.removeItem("pendingCred");
+          if (!(linkErr instanceof FirebaseError)) {
+            setError("Sign-in failed. Please try again.");
+            setLoading(false);
+            return;
           }
-        } else if (linkError.code !== "auth/popup-closed-by-user") {
-          setError("Sign-in failed. Please try again.");
-        }
-        // popup-closed-by-user: show nothing, user knows they closed it
-      }
+          const linkError = linkErr;
 
-    } else if (error.code !== "auth/popup-closed-by-user") {
-      setError(error.message || 'An error occurred');
+          if (linkError.code === "auth/credential-already-in-use") {
+            // Already linked — just push them through
+            if (auth.currentUser) {
+              await handleBackendSession(auth.currentUser);
+            }
+          } else if (linkError.code !== "auth/popup-closed-by-user") {
+            setError("Sign-in failed. Please try again.");
+          }
+          // popup-closed-by-user: show nothing, user knows they closed it
+        }
+
+      } else if (error.code !== "auth/popup-closed-by-user") {
+        setError(error.message || 'An error occurred');
+      }
+    } finally {
+      setLoading(false);
     }
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   return (
     <div
