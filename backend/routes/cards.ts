@@ -154,6 +154,37 @@ router.put("/:id", verifySession, async (req: AuthRequest, res: Response) => {
   }
 });
 
+router.put("/:id/qr", verifySession, async (req: AuthRequest, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    const { data: existing } = await supabase
+      .from("Card")
+      .select("userId")
+      .eq("id", id)
+      .single();
+
+    if (!existing || existing.userId !== req.user!.uid) {
+      return res.status(404).json({ error: "Card not found" });
+    }
+
+    const { data, error } = await supabase
+      .from("Card")
+      .update({ qrConfig: req.body })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) {
+      return res.status(500).json({ error: error.message });
+    }
+
+    return res.json(data);
+  } catch (error: unknown) {
+    return res.status(500).json({ error: getErrorMessage(error) });
+  }
+});
+
 router.delete("/:id", verifySession, async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
 

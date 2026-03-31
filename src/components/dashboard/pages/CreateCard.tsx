@@ -12,7 +12,7 @@ const STEPS = [
     { id: 3, label: "QR Code" },
 ];
 
-function CampaignNameModal({ onCancel, onSave }: { onCancel: () => void; onSave: () => void }) {
+function CampaignNameModal({ onCancel, onSave }: { onCancel: () => void; onSave: (campaignName: string) => void }) {
     const [campaignName, setCampaignName] = useState("");
     const [folder, setFolder] = useState("");
 
@@ -87,7 +87,7 @@ function CampaignNameModal({ onCancel, onSave }: { onCancel: () => void; onSave:
                         Cancel
                     </button>
                     <button
-                        onClick={onSave}
+                        onClick={() => onSave(campaignName)}
                         className="px-6 py-2.5 rounded-xl bg-[#008001] text-white text-sm font-semibold hover:bg-[#49B618] transition-all"
                     >
                         Save
@@ -222,7 +222,7 @@ export function CreateCard({ cardId }: { cardId?: string }) {
     const [designSettings, setDesignSettings] = useState<any>(null);
 
     const handleSaveFinish = () => setShowCampaignModal(true);
-    const handleCampaignSave = async () => {
+    const handleCampaignSave = async (campaignName: string) => {
         // Create the card with settings
         const payload: any = {
             name: campaignName || "My Card",
@@ -237,16 +237,16 @@ export function CreateCard({ cardId }: { cardId?: string }) {
             payload.textColor = designSettings.textPrimary;
             payload.cardColor = designSettings.cardColor;
             payload.cardRadius = designSettings.cardRadius;
-            payload.fontFamily = designSettings.font;
+            payload.fontFamily = designSettings.font ? designSettings.font.toUpperCase().replace("-", "_") : "INTER";
             payload.nameFontSize = designSettings.nameFontSize;
             payload.bodyFontSize = designSettings.bodyFontSize;
             payload.boldHeadings = designSettings.boldHeadings;
-            payload.phoneBgType = designSettings.phoneBgType;
+            payload.phoneBgType = designSettings.phoneBgType ? designSettings.phoneBgType.toUpperCase() : "SOLID";
             payload.phoneBgPreset = designSettings.phoneBgPreset;
             payload.phoneBgColor1 = designSettings.phoneBgColor1;
             payload.phoneBgColor2 = designSettings.phoneBgColor2;
-            payload.phoneBgAngle = designSettings.phoneBgAngle;
-            payload.shadowIntensity = designSettings.shadowIntensity;
+            payload.phoneBgAngle = parseInt(designSettings.phoneBgAngle, 10) || 0;
+            payload.shadowIntensity = designSettings.shadowIntensity ? designSettings.shadowIntensity.toUpperCase() : "NONE";
             payload.glowEffect = designSettings.glowEffect;
         }
 
