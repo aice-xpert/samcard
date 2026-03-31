@@ -1,7 +1,8 @@
 import express, { Response } from "express";
 import { supabase } from "../config/supabase";
 import { AuthRequest, verifySession } from "../middleware/auth";
-
+import { create } from "node:domain";
+import { v4 as uuidv4 } from 'uuid';
 const router = express.Router();
 
 const getErrorMessage = (error: unknown): string =>
@@ -64,39 +65,60 @@ router.put("/profile", verifySession, async (req: AuthRequest, res: Response) =>
 
 router.get("/business-profile", verifySession, async (req: AuthRequest, res: Response) => {
   try {
-    // Ensure User row exists before querying BusinessProfile (FK dependency).
-    // Users who authenticated client-side may not have a Supabase User row yet.
-    await supabase
+    // 1. Ensure User exists - Using upsert on 'email' to handle existing accounts
+    const { data: user, error: userError } = await supabase
       .from("User")
-      .upsert(
-        {
+      .upsert({
           id: req.user!.uid,
           email: req.user!.email ?? "",
           updatedAt: new Date().toISOString(),
-        },
-        { onConflict: "id" }
-      );
+        }, { onConflict: "email" }) 
+      .select()
+      .single();
 
-    const { data, error } = await supabase
+    if (userError) throw userError;
+
+    // 2. Try to get the Business Profile
+    let { data: profile, error: profileError } = await supabase
       .from("BusinessProfile")
       .select("*")
       .eq("userId", req.user!.uid)
       .maybeSingle();
 
-    if (error) {
-      return res.status(500).json({ error: error.message });
+    if (profileError) throw profileError;
+
+    // 3. AUTO-CREATE: Generate manual ID and timestamp to fix the 23502 error
+    if (!profile) {
+      const safeName = req.user!.email?.split('@')[0] || "profile";
+      // Generate a unique ID string since the DB won't do it automatically for 'text' types
+      const manualId = `bp_${Math.random().toString(36).substring(2, 11)}`; 
+      const slug = `${safeName.toLowerCase()}-${req.user!.uid.slice(0, 5)}`;
+      
+      const { data: newProfile, error: createError } = await supabase
+        .from("BusinessProfile")
+        .insert({
+          id: manualId, // FIX: Providing the missing ID
+          userId: req.user!.uid,
+          name: safeName,
+          slug: slug,
+          createdAt: new Date().toISOString(), // FIX: Ensuring timestamps are set
+          updatedAt: new Date().toISOString(),
+          completionScore: 0, // Matching schema defaults 
+          engagementScore: 0  // Matching schema defaults 
+        })
+        .select()
+        .single();
+        
+      if (createError) throw createError;
+      profile = newProfile;
     }
 
-    if (!data) {
-      return res.status(404).json({ error: "Business profile not found" });
-    }
-
-    return res.json(data);
+    return res.json(profile);
   } catch (error: unknown) {
+    console.error("Error in business-profile sync:", error);
     return res.status(500).json({ error: getErrorMessage(error) });
   }
 });
-
 router.put("/business-profile", verifySession, async (req: AuthRequest, res: Response) => {
   const {
     name, title, company, tagline, profileImageUrl, coverImageUrl, brandLogoUrl, logoPosition,
@@ -125,6 +147,7 @@ router.put("/business-profile", verifySession, async (req: AuthRequest, res: Res
       const { data, error } = await supabase
         .from("BusinessProfile")
         .update({
+          id: existing.id,
           name, title, company, tagline, profileImageUrl, coverImageUrl, brandLogoUrl, logoPosition,
           primaryEmail, secondaryEmail, primaryPhone, secondaryPhone, website,
           address, city, state, country, postalCode, latitude, longitude,
@@ -146,6 +169,7 @@ router.put("/business-profile", verifySession, async (req: AuthRequest, res: Res
       const { data, error } = await supabase
         .from("BusinessProfile")
         .insert({
+          id: `bp_${Math.random().toString(36).substring(2, 11)}`,
           userId: req.user!.uid,
           name, title, company, slug, tagline, profileImageUrl, coverImageUrl, brandLogoUrl, logoPosition,
           primaryEmail, secondaryEmail, primaryPhone, secondaryPhone, website,

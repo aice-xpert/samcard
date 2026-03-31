@@ -99,7 +99,19 @@ export function Sidebar({ activePage, onNavigate, onClose }: SidebarProps) {
 
   const handleLogout = async () => {
     try {
+      // Sign out from Firebase
       await signOut(auth);
+      
+      // Clear session cookie on backend
+      try {
+        await fetch("http://localhost:5001/api/auth/logout", {
+          method: "POST",
+          credentials: "include",
+        });
+      } catch (error) {
+        console.warn("Failed to clear backend session:", error);
+      }
+      
       router.push("/login");
     } catch (error) {
       console.error("Logout failed:", error);
