@@ -1,13 +1,17 @@
 "use client";
 
-import { useId, useState } from 'react';
+import { useId, useState, useEffect } from 'react';
+import { useQrStore } from '@/components/dashboard/stores/Useqrstore';
+import { getCardQRConfig } from '@/lib/api';
+import { makeQRMatrix } from '@/components/dashboard/pages/qr-engine';
 import {
   Linkedin, Instagram, Facebook, Twitter, Youtube,
   Mail, Phone, Globe, MapPin, Calendar, Link2,
   Share2, QrCode, Check, Copy, Eye,
   Video as VideoIcon, ChevronRight, Upload,
-  MessageSquare, Briefcase,
+  MessageSquare, Briefcase, Layout, Smartphone, ChevronDown,
 } from 'lucide-react';
+import { STICKER_DEFS } from '@/components/dashboard/pages/Qrrenderers';
 import { QrPopup } from '@/components/dashboard/pages/Qrpopup';
 
 // ── Types ──────────────────────────────────────────────────────────
@@ -52,6 +56,7 @@ export interface ThemeOverride {
 }
 
 export interface PhonePreviewProps {
+  cardId?: string;
   profileImage: string;
   brandLogo: string;
   logoPosition: LogoPosition;
@@ -158,6 +163,7 @@ function Divider({ T }: { T: ThemeOverride }) {
 // Main PhonePreview
 // ═══════════════════════════════════════════════════════════════════
 export function PhonePreview({
+  cardId,
   profileImage, brandLogo, logoPosition,
   formData, socialLinks, customLinks, extraSections, sections,
   savedContact, copied,
@@ -180,6 +186,46 @@ export function PhonePreview({
     [data-scrollid="${uid}"]::-webkit-scrollbar-thumb:hover { background: ${T.green}; }
     [data-scrollid="${uid}"] { scrollbar-width: thin; scrollbar-color: ${T.green}99 transparent; }
   `;
+
+  const setQr = useQrStore((s) => s.setQr);
+
+  useEffect(() => {
+    if (!cardId) return;
+
+    getCardQRConfig(cardId)
+      .then((savedConfig) => {
+        if (!savedConfig) return;
+
+        const qrFromBackend: any = {
+          shapeId: savedConfig.shapeId,
+          dotShape: savedConfig.dotShape,
+          finderStyle: savedConfig.finderStyle,
+          eyeBall: savedConfig.eyeBall,
+          bodyScale: savedConfig.bodyScale,
+          fg: savedConfig.fg,
+          bg: savedConfig.bg,
+          accentFg: savedConfig.accentFg,
+          accentBg: savedConfig.accentBg,
+          strokeEnabled: savedConfig.strokeEnabled,
+          strokeColor: savedConfig.strokeColor,
+          gradEnabled: savedConfig.gradEnabled,
+          gradStops: savedConfig.gradStops,
+          gradAngle: savedConfig.gradAngle,
+          selectedLogo: savedConfig.selectedLogo,
+          customLogoUrl: savedConfig.customLogoUrl,
+          logoNode: null,
+          logoBg: savedConfig.logoBg,
+          selectedSticker: savedConfig.stickerId ? STICKER_DEFS.find(s => s.id === savedConfig.stickerId) ?? null : null,
+          designLabel: savedConfig.designLabel,
+          shapeLabel: savedConfig.shapeLabel,
+        };
+
+        setQr(qrFromBackend, makeQRMatrix(cardUrl).matrix, makeQRMatrix(cardUrl).N);
+      })
+      .catch(() => {
+        // ignore
+      });
+  }, [cardId, cardUrl, setQr]);
 
   const filledSocials = socialLinks.filter(s => s.value.trim());
   const filledLinks = customLinks.filter(l => l.label || l.url);
@@ -279,7 +325,12 @@ export function PhonePreview({
                   {sections.profile && (
                     <div className="relative" style={{ aspectRatio: '4/3', maxHeight: '200px' }}>
                       {profileImage ? (
-                        <img src={profileImage} alt={formData.name} className="w-full object-cover object-top" />
+                        <img
+                          src={profileImage}
+                          alt={formData.name}
+                          className="w-full h-full object-contain object-center"
+                          style={{ backgroundColor: '#000' }}
+                        />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center"
                           style={{ background: `linear-gradient(135deg, ${T.green}66 0%, ${T.bg} 50%, ${T.greenLight}44 100%)` }}>

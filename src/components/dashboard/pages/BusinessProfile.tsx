@@ -34,6 +34,9 @@ import {
   updateBusinessProfile,
   updateCustomLinks,
   updateSocialLinks,
+  getCardContent,
+  updateCardContent,
+  CardContentPayload,
 } from '@/lib/api';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -146,6 +149,50 @@ const DEFAULT_STATE: CacheShape = {
   customLinks: [{ label: '', url: '' }],
   extraSections: [],
 };
+
+function normalizeLogoPositionFromApi(value: unknown): LogoPosition {
+  if (typeof value !== 'string') return DEFAULT_STATE.logoPosition;
+  const raw = value.trim().toLowerCase();
+  switch (raw) {
+    case 'top-left':
+    case 'top_left':
+    case 'top left':
+    case 'top_left':
+      return 'top-left';
+    case 'top-right':
+    case 'top_right':
+    case 'top right':
+      return 'top-right';
+    case 'below-photo':
+    case 'below_photo':
+    case 'below photo':
+      return 'below-photo';
+    case 'below-name':
+    case 'below_name':
+    case 'below name':
+      return 'below-name';
+    case 'top_left':
+      return 'top-left';
+    case 'topright':
+      return 'top-right';
+    default:
+      return DEFAULT_STATE.logoPosition;
+  }
+}
+
+function normalizeLogoPositionForCardContent(value: unknown): "top-left" | "top-right" | "below-photo" | "below-name" {
+  return normalizeLogoPositionFromApi(value);
+}
+
+function normalizeLogoPositionForBusinessProfile(value: unknown): 'TOP_LEFT' | 'TOP_RIGHT' | 'BELOW_PHOTO' | 'BELOW_NAME' {
+  const normalized = normalizeLogoPositionFromApi(value);
+  switch (normalized) {
+    case 'top-left': return 'TOP_LEFT';
+    case 'top-right': return 'TOP_RIGHT';
+    case 'below-photo': return 'BELOW_PHOTO';
+    case 'below-name': return 'BELOW_NAME';
+  }
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Cache helpers
@@ -520,7 +567,13 @@ function ExtraSectionBlock({ section, onToggle, onRemove, onUpdateData }: ExtraS
 // ─────────────────────────────────────────────────────────────────────────────
 // Main component
 // ─────────────────────────────────────────────────────────────────────────────
-export default function BusinessProfile() {
+export default function BusinessProfile({
+  cardId,
+  onContentChange,
+}: {
+  cardId?: string;
+  onContentChange?: (content: CardContentPayload) => void;
+}) {
   const initial = loadCache();
 
   const [profileImage, setProfileImage] = useState<string>(initial.profileImage);
@@ -577,7 +630,7 @@ export default function BusinessProfile() {
         const profile = profileResult.value;
         setProfileImage(profile.profileImageUrl || initial.profileImage);
         setBrandLogo(profile.brandLogoUrl || initial.brandLogo);
-        setLogoPosition((profile.logoPosition as LogoPosition) || initial.logoPosition);
+        setLogoPosition(normalizeLogoPositionFromApi(profile.logoPosition));
         setProfileShareUrl(profile.shareUrl || '');
         setFormData(prev => ({
           ...prev,
@@ -629,6 +682,58 @@ export default function BusinessProfile() {
   }, [initial.brandLogo, initial.logoPosition, initial.profileImage]);
 
   useEffect(() => {
+    if (!cardId) return;
+    let isMounted = true;
+
+    const loadCardContent = async () => {
+      try {
+        const content = await getCardContent(cardId);
+        if (!isMounted || !content) return;
+
+        setProfileImage(content.profileImage || initial.profileImage);
+        setBrandLogo(content.brandLogo || initial.brandLogo);
+        setLogoPosition(normalizeLogoPositionFromApi(content.logoPosition));
+
+        if (content.formData) {
+          setFormData(prev => ({ ...prev, ...content.formData }));
+        }
+
+        if (content.socialLinks) {
+          const mappedSocials = (content.socialLinks as { platform: string; url: string }[])
+            .map(sl => {
+              const platformIndex = SOCIAL_OPTIONS.findIndex(
+                option => option.name.toLowerCase() === (sl.platform || '').toLowerCase(),
+              );
+              return {
+                platform: platformIndex >= 0 ? platformIndex : 0,
+                value: sl.url || '',
+              };
+            });
+          if (mappedSocials.length > 0) setSocialLinks(mappedSocials);
+        }
+
+        if (content.customLinks) {
+          setCustomLinks(content.customLinks.map(link => ({ label: link.label || '', url: link.url || '' })));
+        }
+
+        if (content.sections) {
+          setSections(content.sections as Sections);
+        }
+
+        if (content.extraSections) {
+          setExtraSections(content.extraSections as ExtraSection[]);
+        }
+      } catch {
+        // ignore load errors
+      }
+    };
+
+    loadCardContent();
+
+    return () => { isMounted = false; };
+  }, [cardId, initial.brandLogo, initial.logoPosition, initial.profileImage]);
+
+  useEffect(() => {
     const refresh = () => setThemeOverride(loadThemeOverride());
     const onStorage = (e: StorageEvent) => { if (e.key === DESIGN_KEY || e.key === null) refresh(); };
     const onFocus = () => refresh();
@@ -642,6 +747,21 @@ export default function BusinessProfile() {
       window.removeEventListener('designSaved', onDesignSaved);
     };
   }, []);
+
+  useEffect(() => {
+    if (!onContentChange) return;
+
+    onContentChange({
+      profileImage,
+      brandLogo,
+      logoPosition,
+      formData,
+      connectFields,
+      sections,
+      customLinks,
+      extraSections,
+    });
+  }, [onContentChange, profileImage, brandLogo, logoPosition, formData, connectFields, sections, customLinks, extraSections]);
 
   const handleSaveChanges = useCallback(async () => {
     setSaveError(null);
@@ -673,6 +793,9 @@ export default function BusinessProfile() {
     const locationParts = formData.location.split(',').map(part => part.trim());
 
     try {
+      const normalizedLogoPosition = normalizeLogoPositionForBusinessProfile(logoPosition);
+      const contentLogoPosition = normalizeLogoPositionForCardContent(logoPosition);
+
       const savedProfile = await updateBusinessProfile({
         name: formData.name,
         title: formData.title,
@@ -680,7 +803,7 @@ export default function BusinessProfile() {
         tagline: formData.tagline,
         profileImageUrl: profileImage,
         brandLogoUrl: brandLogo,
-        logoPosition,
+        logoPosition: normalizedLogoPosition,
         primaryEmail: formData.email,
         primaryPhone: formData.phone,
         website: formData.website,
@@ -696,6 +819,19 @@ export default function BusinessProfile() {
         updateSocialLinks(normalizedSocialLinks),
         updateCustomLinks(normalizedCustomLinks),
       ]);
+
+      if (cardId) {
+        await updateCardContent(cardId, {
+          profileImage,
+          brandLogo,
+          logoPosition: contentLogoPosition,
+          formData,
+          connectFields,
+          sections,
+          customLinks,
+          extraSections,
+        });
+      }
 
       setSaveFlash(true);
       setTimeout(() => setSaveFlash(false), 2200);

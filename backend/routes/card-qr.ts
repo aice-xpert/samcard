@@ -31,7 +31,7 @@ interface QRConfigData {
   stickerId: string | null;
 }
 
-router.get("/:cardId", verifySession, async (req: AuthRequest, res: Response) => {
+router.get("/", verifySession, async (req: AuthRequest, res: Response) => {
   const { cardId } = req.params;
 
   try {
@@ -61,7 +61,7 @@ router.get("/:cardId", verifySession, async (req: AuthRequest, res: Response) =>
   }
 });
 
-router.put("/:cardId", verifySession, async (req: AuthRequest, res: Response) => {
+router.put("/", verifySession, async (req: AuthRequest, res: Response) => {
   const { cardId } = req.params;
   const qrData: Partial<QRConfigData> = req.body;
 

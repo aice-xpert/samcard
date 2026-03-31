@@ -12,6 +12,7 @@ import { QRWithShape, STICKER_DEFS } from '@/components/dashboard/pages/Qrrender
 import { LOGOS } from '@/components/dashboard/pages/constants';
 import { makeQRMatrix } from '@/components/dashboard/pages/qr-engine';
 import { useQrStore } from '@/components/dashboard/stores/Useqrstore';
+import { getCardQRConfig } from '@/lib/api';
 
 // ─── Persistence helpers ──────────────────────────────────────────────────────
 
@@ -215,7 +216,7 @@ function ActionBtn({ icon: Icon, label, onClick, variant = 'ghost' }: {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export function NfcQr({ onConfigChange }: { onConfigChange?: (config: QRCustomConfig) => void }) {
+export function NfcQr({ onConfigChange, cardId }: { onConfigChange?: (config: QRCustomConfig) => void; cardId?: string; }) {
   const [copiedLink, setCopiedLink] = useState(false);
   const [customizerOpen, setCustomizerOpen] = useState(false);
   const [qrConfig, setQrConfig] = useState<QRCustomConfig | null>(() => {
@@ -231,6 +232,49 @@ export function NfcQr({ onConfigChange }: { onConfigChange?: (config: QRCustomCo
 
   const { matrix: liveQrMatrix, N: liveQrN } = useMemo(() => makeQRMatrix(CARD_URL), [CARD_URL]);
   const setQr = useQrStore((s) => s.setQr);
+
+  useEffect(() => {
+    if (!cardId) return;
+
+    getCardQRConfig(cardId)
+      .then((savedConfig) => {
+        if (!savedConfig) return;
+
+        const qrFromBackend: QRCustomConfig = {
+          shapeId: savedConfig.shapeId,
+          dotShape: savedConfig.dotShape,
+          finderStyle: savedConfig.finderStyle,
+          eyeBall: savedConfig.eyeBall,
+          bodyScale: savedConfig.bodyScale,
+          fg: savedConfig.fg,
+          bg: savedConfig.bg,
+          accentFg: savedConfig.accentFg,
+          accentBg: savedConfig.accentBg,
+          strokeEnabled: savedConfig.strokeEnabled,
+          strokeColor: savedConfig.strokeColor,
+          gradEnabled: savedConfig.gradEnabled,
+          gradStops: savedConfig.gradStops,
+          gradAngle: savedConfig.gradAngle,
+          selectedLogo: savedConfig.selectedLogo,
+          customLogoUrl: savedConfig.customLogoUrl,
+          logoNode: null,
+          logoBg: savedConfig.logoBg,
+          selectedSticker: savedConfig.stickerId ? STICKER_DEFS.find(s => s.id === savedConfig.stickerId) ?? null : null,
+          designLabel: savedConfig.designLabel,
+          shapeLabel: savedConfig.shapeLabel,
+          qrMatrix: liveQrMatrix,
+          qrN: liveQrN,
+          decorateImageUrl: null,
+          decorateCompositeDataUrl: null,
+        };
+
+        setQrConfig(qrFromBackend);
+        setQr(qrFromBackend, liveQrMatrix, liveQrN);
+      })
+      .catch(() => {
+        // ignore missing config
+      });
+  }, [cardId, liveQrMatrix, liveQrN, setQr]);
 
   useEffect(() => {
     setQr(qrConfig, liveQrMatrix, liveQrN);

@@ -27,6 +27,39 @@ interface ExtraSection {
   data: Record<string, unknown>;
 }
 
+const normalizeLogoPosition = (value: unknown): "top-left" | "top-right" | "below-photo" | "below-name" | null => {
+  if (typeof value !== 'string') return null;
+  const normalized = value.trim().replace(/[_\s]+/g, '-').toLowerCase();
+  switch (normalized) {
+    case 'top-left':
+      return 'top-left';
+    case 'top-right':
+      return 'top-right';
+    case 'below-photo':
+      return 'below-photo';
+    case 'below-name':
+      return 'below-name';
+    case 'top-left':
+      return 'top-left';
+    case 'top-right':
+      return 'top-right';
+    case 'below-photo':
+      return 'below-photo';
+    case 'below-name':
+      return 'below-name';
+    case 'top_left':
+      return 'top-left';
+    case 'top_right':
+      return 'top-right';
+    case 'below_photo':
+      return 'below-photo';
+    case 'below_name':
+      return 'below-name';
+    default:
+      return null;
+  }
+};
+
 interface CardContentData {
   cardId?: string;
   profileImage: string;
@@ -60,7 +93,7 @@ interface CardContentData {
   extraSections: ExtraSection[];
 }
 
-router.get("/:cardId", verifySession, async (req: AuthRequest, res: Response) => {
+router.get("/", verifySession, async (req: AuthRequest, res: Response) => {
   const { cardId } = req.params;
 
   try {
@@ -90,7 +123,7 @@ router.get("/:cardId", verifySession, async (req: AuthRequest, res: Response) =>
   }
 });
 
-router.put("/:cardId", verifySession, async (req: AuthRequest, res: Response) => {
+router.put("/", verifySession, async (req: AuthRequest, res: Response) => {
   const { cardId } = req.params;
   const contentData: Partial<CardContentData> = req.body;
 
@@ -138,11 +171,13 @@ router.put("/:cardId", verifySession, async (req: AuthRequest, res: Response) =>
       businessDetails: true,
     };
 
+    const normalizedLogoPosition = normalizeLogoPosition(contentData.logoPosition) ?? "top-right";
+
     const insertData = {
       cardId,
       profileImage: contentData.profileImage ?? "",
       brandLogo: contentData.brandLogo ?? "",
-      logoPosition: contentData.logoPosition ?? "top-right",
+      logoPosition: normalizedLogoPosition,
       formData: contentData.formData ?? defaultFormData,
       connectFields: contentData.connectFields ?? [],
       sections: contentData.sections ?? defaultSections,
