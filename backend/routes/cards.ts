@@ -4,8 +4,11 @@ import { AuthRequest, verifySession } from "../middleware/auth";
 
 const router = express.Router();
 
-const getErrorMessage = (error: unknown): string =>
-  error instanceof Error ? error.message : "Internal server error";
+const getErrorMessage = (error: any): string => {
+  if (error?.message) return error.message; 
+  if (error instanceof Error) return error.message;
+  return "Internal server error";
+};
 
 router.get("/", verifySession, async (req: AuthRequest, res: Response) => {
   try {

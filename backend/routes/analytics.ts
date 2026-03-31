@@ -4,8 +4,11 @@ import { AuthRequest, verifySession } from "../middleware/auth";
 
 const router = express.Router();
 
-const getErrorMessage = (error: unknown): string =>
-  error instanceof Error ? error.message : "Internal server error";
+const getErrorMessage = (error: any): string => {
+  if (error?.message) return error.message; 
+  if (error instanceof Error) return error.message;
+  return "Internal server error";
+};
 
 const ZERO_DEVICE_DISTRIBUTION = [
   { name: "iOS", value: 0, count: 0 },
