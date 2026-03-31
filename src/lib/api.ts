@@ -164,6 +164,7 @@ export interface CreateCardPayload {
   name: string;
   cardType?: string;
   slug?: string;
+  [key: string]: any; // Allow additional fields
 }
 
 export async function getCards() {
@@ -187,6 +188,13 @@ export async function updateCard(id: string, payload: Partial<ApiCard>) {
 export async function deleteCard(id: string) {
   return apiRequest<{ success: boolean }>(`/api/user/cards/${id}`, {
     method: "DELETE",
+  });
+}
+
+export async function updateCardQR(cardId: string, qrConfig: any) {
+  return apiRequest<any>(`/api/user/cards/${cardId}/qr`, {
+    method: "PUT",
+    body: JSON.stringify(qrConfig),
   });
 }
 

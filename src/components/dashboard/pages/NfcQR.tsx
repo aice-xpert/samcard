@@ -215,7 +215,7 @@ function ActionBtn({ icon: Icon, label, onClick, variant = 'ghost' }: {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export function NfcQr() {
+export function NfcQr({ onConfigChange }: { onConfigChange?: (config: QRCustomConfig) => void }) {
   const [copiedLink, setCopiedLink] = useState(false);
   const [customizerOpen, setCustomizerOpen] = useState(false);
   const [qrConfig, setQrConfig] = useState<QRCustomConfig | null>(() => {
@@ -275,8 +275,9 @@ export function NfcQr() {
   const handleCustomizerApply = useCallback((cfg: QRCustomConfig) => {
     setQrConfig(cfg);
     saveConfig(cfg);
+    onConfigChange?.(cfg);
     setCustomizerOpen(false);
-  }, []);
+  }, [onConfigChange]);
 
   const handleReset = useCallback(() => {
     setQrConfig(null);

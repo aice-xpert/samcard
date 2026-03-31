@@ -478,7 +478,7 @@ function WallpaperPicker({ draft, set }: {
 // ══════════════════════════════════════════════════════════════════
 // Main component
 // ══════════════════════════════════════════════════════════════════
-export function DesignNew() {
+export function DesignNew({ onSettingsChange }: { onSettingsChange?: (settings: DesignSettings) => void }) {
   const [saved,         setSaved]         = useState<DesignSettings>(() => loadDesign());
   const [draft,         setDraft]         = useState<DesignSettings>(() => loadDesign());
   const [profile,       setProfile]       = useState<ProfileCache>(() => loadProfile());
@@ -488,6 +488,10 @@ export function DesignNew() {
   const [showQR,        setShowQR]        = useState(false);
   const [copied,        setCopied]        = useState(false);
   const [savedContact,  setSavedContact]  = useState(false);
+
+  useEffect(() => {
+    onSettingsChange?.(draft);
+  }, [draft, onSettingsChange]);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   useEffect(() => {

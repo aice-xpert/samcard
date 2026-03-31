@@ -4,6 +4,7 @@ import { useState } from "react";
 import BusinessProfile from "./BusinessProfile";
 import { DesignNew } from "./Design";
 import { NfcQr } from "./NfcQR";
+import { createCard, updateCardQR } from "@/lib/api";
 
 const STEPS = [
     { id: 1, label: "Content" },
@@ -213,13 +214,55 @@ function SavedSuccessModal({ onCancel, onDashboard }: { onCancel: () => void; on
         </div>
     );
 }
-export function CreateCard() {
+export function CreateCard({ cardId }: { cardId?: string }) {
     const [step, setStep] = useState(1);
     const [showCampaignModal, setShowCampaignModal] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [qrConfig, setQrConfig] = useState<any>(null);
+    const [designSettings, setDesignSettings] = useState<any>(null);
 
     const handleSaveFinish = () => setShowCampaignModal(true);
-    const handleCampaignSave = () => { setShowCampaignModal(false); setShowSuccessModal(true); };
+    const handleCampaignSave = async () => {
+        // Create the card with settings
+        const payload: any = {
+            name: campaignName || "My Card",
+            cardType: "QR",
+        };
+
+        // Add design settings
+        if (designSettings) {
+            payload.backgroundColor = designSettings.bgColor;
+            payload.accentColor = designSettings.accentColor;
+            payload.accentLight = designSettings.accentLight;
+            payload.textColor = designSettings.textPrimary;
+            payload.cardColor = designSettings.cardColor;
+            payload.cardRadius = designSettings.cardRadius;
+            payload.fontFamily = designSettings.font;
+            payload.nameFontSize = designSettings.nameFontSize;
+            payload.bodyFontSize = designSettings.bodyFontSize;
+            payload.boldHeadings = designSettings.boldHeadings;
+            payload.phoneBgType = designSettings.phoneBgType;
+            payload.phoneBgPreset = designSettings.phoneBgPreset;
+            payload.phoneBgColor1 = designSettings.phoneBgColor1;
+            payload.phoneBgColor2 = designSettings.phoneBgColor2;
+            payload.phoneBgAngle = designSettings.phoneBgAngle;
+            payload.shadowIntensity = designSettings.shadowIntensity;
+            payload.glowEffect = designSettings.glowEffect;
+        }
+
+        try {
+            const card = await createCard(payload);
+            // If QR config, save it
+            if (qrConfig && card.id) {
+                await updateCardQR(card.id, qrConfig);
+            }
+            setShowCampaignModal(false);
+            setShowSuccessModal(true);
+        } catch (error) {
+            console.error("Error creating card:", error);
+            // Handle error
+        }
+    };
     const handleClose = () => { setShowCampaignModal(false); setShowSuccessModal(false); };
     const handleDashboard = () => { setShowSuccessModal(false); /* navigate to dashboard */ };
 
@@ -260,8 +303,8 @@ export function CreateCard() {
             {/* ── Step Content ── */}
             <div className="flex-1">
                 {step === 1 && <BusinessProfile />}
-                {step === 2 && <DesignNew />}
-                {step === 3 && <NfcQr />}
+                {step === 2 && <DesignNew onSettingsChange={setDesignSettings} />}
+                {step === 3 && <NfcQr onConfigChange={setQrConfig} />}
             </div>
 
             {/* ── Navigation Buttons ── */}
