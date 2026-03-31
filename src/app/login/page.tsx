@@ -44,7 +44,6 @@ export default function LoginPage() {
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ idToken }),
-        credentials: "include",
       });
 
       if (response.ok) {
