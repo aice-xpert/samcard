@@ -40,3 +40,4 @@ test-supabase.ts
 skills-lock.json
 
 package-lock.json
+node_modules/
