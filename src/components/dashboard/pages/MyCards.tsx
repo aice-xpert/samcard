@@ -12,7 +12,7 @@ import {
   Copy, MoreVertical, QrCode, Users, Trash2, Plus, X, Check, SlidersHorizontal,
 } from 'lucide-react';
 import { LineChart, Line, ResponsiveContainer } from 'recharts';
-import { getCards, createCard as apiCreateCard, ApiCard } from '@/lib/api';
+import { getCards, createCard as apiCreateCard, deleteCard as apiDeleteCard, ApiCard } from '@/lib/api';
 
 const sparklineData = [
   { value: 12 }, { value: 19 }, { value: 15 },
@@ -99,10 +99,15 @@ export function MyCardsNew() {
       c.id === id ? { ...c, status: c.status === 'active' ? 'inactive' : 'active' } : c
     ));
 
-  const deleteCard = (id: string) => {
-    setCards(prev => prev.filter(c => c.id !== id));
-    setConfirmDelete(null);
-    showToast('Card deleted');
+  const deleteCard = async (id: string) => {
+    try {
+      await apiDeleteCard(id);
+      setCards(prev => prev.filter(c => c.id !== id));
+      setConfirmDelete(null);
+      showToast('Card deleted');
+    } catch (error) {
+      showToast(`Error deleting card: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   };
 
   const duplicateCard = (card: CardType) => {

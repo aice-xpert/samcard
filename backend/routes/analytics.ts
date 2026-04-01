@@ -205,12 +205,17 @@ async function buildAnalyticsPayload(uid: string, periodQuery: unknown) {
     ? (currentWeekTotal > 0 ? 100 : 0)
     : Math.round(((currentWeekTotal - prevWeekTotal) / prevWeekTotal) * 100);
 
-  const sources = [
-    { name: "NFC", value: Math.floor(totalTaps * 0.4), percentage: 40 },
-    { name: "QR", value: Math.floor(totalTaps * 0.3), percentage: 30 },
-    { name: "Direct", value: Math.floor(totalTaps * 0.2), percentage: 20 },
-    { name: "Other", value: Math.floor(totalTaps * 0.1), percentage: 10 },
+  const sourceValues = [
+    { name: "NFC", value: Math.floor(totalTaps * 0.4) },
+    { name: "QR", value: Math.floor(totalTaps * 0.3) },
+    { name: "Direct", value: Math.floor(totalTaps * 0.2) },
+    { name: "Other", value: Math.floor(totalTaps * 0.1) },
   ];
+  const totalSourceValue = sourceValues.reduce((sum, source) => sum + source.value, 0);
+  const sources = sourceValues.map((source) => ({
+    ...source,
+    percentage: totalSourceValue > 0 ? Math.round((source.value / totalSourceValue) * 100) : 0,
+  }));
 
   const deviceMap: Record<string, number> = {};
   interactions?.forEach(interaction => {

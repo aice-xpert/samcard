@@ -84,8 +84,8 @@ export function Sidebar({ activePage, onNavigate, onClose, profile }: SidebarPro
     Promise.all([getBusinessProfile(), getAnalytics("7")])
       .then(([businessProfile, analytics]) => {
         if (!isMounted) return;
-        setCompletionScore(Math.max(0, Math.min(100, businessProfile?.completionScore ?? 0)));
-        setWeeklyTrendChange(analytics.thisWeekChange ?? 0);
+        setCompletionScore(Math.max(0, Math.min(100, analytics?.profileCompletion ?? 0)));
+        setWeeklyTrendChange(analytics?.thisWeekChange ?? 0);
       })
       .catch(() => {
         if (!isMounted) return;
@@ -204,7 +204,7 @@ export function Sidebar({ activePage, onNavigate, onClose, profile }: SidebarPro
             </defs>
             <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="3" />
             <circle cx="40" cy="40" r="32" fill="none" stroke="url(#progressGradient)" strokeWidth="3"
-              strokeDasharray="201" strokeDashoffset="20" strokeLinecap="round"
+              strokeDasharray="201" strokeDashoffset={201 - (201 * (completionScore / 100))} strokeLinecap="round"
               transform="rotate(-90 40 40)" />
             <foreignObject x="14" y="14" width="52" height="52">
               <Avatar className="w-full h-full border-2 border-[#008001]/30">
