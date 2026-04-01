@@ -1,5 +1,3 @@
--- Digital Business Card Backend Tables
--- Run these in Supabase SQL Editor
 
 -- CardDesign table - stores design settings for cards
 CREATE TABLE IF NOT EXISTS "CardDesign" (
