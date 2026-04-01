@@ -311,8 +311,8 @@ export function CreateCard({ cardId }: { cardId?: string }) {
 
             {/* ── Step Content ── */}
             <div className="flex-1">
-                {step === 1 && <BusinessProfile />}
-                {step === 2 && <DesignNew onSettingsChange={setDesignSettings} />}
+                {step === 1 && <BusinessProfile cardId={cardId} />}
+                {step === 2 && <DesignNew cardId={cardId} onSettingsChange={setDesignSettings} />}
                 {step === 3 && <NfcQr onConfigChange={setQrConfig} cardId={cardId} />}
             </div>
 

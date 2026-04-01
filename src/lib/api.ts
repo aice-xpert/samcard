@@ -280,6 +280,33 @@ export async function updateCardQR(cardId: string, qrConfig: CardQRConfigPayload
   });
 }
 
+export interface CardDesignPayload {
+  palette: string;
+  accentColor: string;
+  accentLight: string;
+  bgColor: string;
+  cardColor: string;
+  textPrimary: string;
+  textMuted: string;
+  phoneBgPreset: string;
+  phoneBgColor1: string;
+  phoneBgColor2: string;
+  phoneBgAngle: number;
+  phoneBgType: 'solid' | 'gradient';
+  font: string;
+  bodyFontSize: number;
+  nameFontSize: number;
+  boldHeadings: boolean;
+  cardRadius: number;
+  shadowIntensity: 'none' | 'soft' | 'medium' | 'strong';
+  glowEffect: boolean;
+}
+
+export interface CardDesignResponse extends CardDesignPayload {
+  cardId?: string;
+  updatedAt?: string;
+}
+
 export async function getCardContent(cardId: string) {
   return apiRequest<CardContentResponse | null>(`/api/user/cards/${cardId}/content`, {
     method: "GET",
@@ -288,6 +315,19 @@ export async function getCardContent(cardId: string) {
 
 export async function updateCardContent(cardId: string, payload: CardContentPayload) {
   return apiRequest<CardContentResponse>(`/api/user/cards/${cardId}/content`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getCardDesign(cardId: string) {
+  return apiRequest<CardDesignResponse | null>(`/api/user/cards/${cardId}/design`, {
+    method: "GET",
+  });
+}
+
+export async function updateCardDesign(cardId: string, payload: Partial<CardDesignPayload>) {
+  return apiRequest<CardDesignResponse>(`/api/user/cards/${cardId}/design`, {
     method: "PUT",
     body: JSON.stringify(payload),
   });

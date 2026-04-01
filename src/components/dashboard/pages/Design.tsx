@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { PhonePreview, ThemeOverride, ExtraSection } from '@/components/dashboard/pages/PhonePreview';
 import { CardPreviewModal } from '@/components/dashboard/pages/CardPreviewModal';
+import { getBusinessProfile, getCardContent, getCardDesign, updateCardDesign, getSocialLinks, getCustomLinks, getCards } from '@/lib/api';
 import type { LogoPosition } from '@/components/dashboard/pages/PhonePreview';
 
 // ── Cache keys ────────────────────────────────────────────────────
@@ -173,10 +174,10 @@ const DEFAULT_DESIGN: DesignSettings = {
 };
 
 const DEFAULT_PROFILE_FORM = {
-  name: 'Alex Johnson', title: 'Senior Product Designer', company: 'TechCorp Labs',
-  tagline: 'Innovation at Every Step', email: 'alex@techcorp.com',
-  phone: '+1 (555) 123-4567', website: 'https://alexjohnson.com',
-  location: 'San Francisco, CA', industry: 'Technology', yearFounded: '2018',
+  name: '', title: '', company: '',
+  tagline: '', email: '',
+  phone: '', website: '',
+  location: '', industry: '', yearFounded: '',
   appointmentUrl: '', headingText: '', bodyText: '',
 };
 const DEFAULT_SECTIONS = {
@@ -478,10 +479,24 @@ function WallpaperPicker({ draft, set }: {
 // ══════════════════════════════════════════════════════════════════
 // Main component
 // ══════════════════════════════════════════════════════════════════
-export function DesignNew({ onSettingsChange }: { onSettingsChange?: (settings: DesignSettings) => void }) {
+export function DesignNew({ onSettingsChange, cardId }: { onSettingsChange?: (settings: DesignSettings) => void; cardId?: string }) {
+  const [resolvedCardId, setResolvedCardId] = useState<string | undefined>(cardId);
+  useEffect(() => {
+    if (cardId) {
+      setResolvedCardId(cardId);
+      return;
+    }
+    if (!resolvedCardId) {
+      getCards().then(cards => {
+        if (cards?.length) setResolvedCardId(cards[0].id);
+      }).catch(() => undefined);
+    }
+  }, [cardId, resolvedCardId]);
+
   const [saved,         setSaved]         = useState<DesignSettings>(() => loadDesign());
   const [draft,         setDraft]         = useState<DesignSettings>(() => loadDesign());
   const [profile,       setProfile]       = useState<ProfileCache>(() => loadProfile());
+  const [isLoading,     setIsLoading]     = useState<boolean>(false);
   const [isSaved,       setIsSaved]       = useState(false);
   const [toast,         setToast]         = useState('');
   const [mobileTab,     setMobileTab]     = useState<'controls' | 'preview'>('controls');
@@ -499,20 +514,131 @@ export function DesignNew({ onSettingsChange }: { onSettingsChange?: (settings: 
     const onFocus = () => setProfile(loadProfile());
     window.addEventListener('storage', onStorage);
     window.addEventListener('focus', onFocus);
-    return () => { window.removeEventListener('storage', onStorage); window.removeEventListener('focus', onFocus); };
-  }, []);
+
+    const onCardUpdate = () => {
+      if (resolvedCardId) {
+        setIsLoading(true);
+        Promise.all([getCardDesign(resolvedCardId), getCardContent(resolvedCardId), getBusinessProfile()])
+          .then(([designData, contentData, profileData]) => {
+            if (designData) {
+              setDraft(designData as DesignSettings);
+              setSaved(designData as DesignSettings);
+            }
+            if (contentData) {
+              setProfile(prev => ({
+                ...prev,
+                profileImage: contentData.profileImage || prev.profileImage,
+                brandLogo: contentData.brandLogo || prev.brandLogo,
+                logoPosition: (contentData.logoPosition as LogoPosition) || prev.logoPosition,
+                formData: { ...prev.formData, ...(contentData.formData ?? {}) },
+              }));
+            }
+            if (profileData) {
+              setProfile(prev => {
+                const existingFormData = prev.formData ?? {
+                  name: '', title: '', company: '', tagline: '', email: '',
+                  phone: '', website: '', location: '', industry: '', yearFounded: '',
+                  appointmentUrl: '', headingText: '', bodyText: '',
+                };
+
+                return {
+                  ...prev,
+                  profileImage: profileData.profileImageUrl || prev.profileImage,
+                  brandLogo: profileData.brandLogoUrl || prev.brandLogo,
+                  logoPosition: (profileData.logoPosition as LogoPosition) || prev.logoPosition,
+                  formData: {
+                    ...existingFormData,
+                    name: profileData.name || existingFormData.name,
+                    title: profileData.title || existingFormData.title,
+                    company: profileData.company || existingFormData.company,
+                    tagline: profileData.tagline || existingFormData.tagline,
+                  },
+                };
+              });
+            }
+          })
+          .finally(() => setIsLoading(false));
+      }
+    };
+
+    window.addEventListener('cardDataUpdated', onCardUpdate as EventListener);
+
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener('focus', onFocus);
+      window.removeEventListener('cardDataUpdated', onCardUpdate as EventListener);
+    };
+  }, [resolvedCardId]);
 
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 2500); };
+
+  useEffect(() => {
+    if (!resolvedCardId) return;
+
+    setIsLoading(true);
+    Promise.all([getCardDesign(resolvedCardId), getCardContent(resolvedCardId), getBusinessProfile()])
+      .then(([designData, contentData, profileData]) => {
+        if (designData) {
+          setDraft(designData as DesignSettings);
+          setSaved(designData as DesignSettings);
+        }
+
+        if (contentData) {
+          setProfile(prev => ({
+            ...prev,
+            profileImage: contentData.profileImage || prev.profileImage,
+            brandLogo: contentData.brandLogo || prev.brandLogo,
+            logoPosition: (contentData.logoPosition as LogoPosition) || prev.logoPosition,
+            formData: { ...prev.formData, ...(contentData.formData ?? {}) },
+          }));
+        }
+
+        if (profileData) {
+          setProfile(prev => {
+            const existingFormData = prev.formData ?? {
+              name: '', title: '', company: '', tagline: '', email: '',
+              phone: '', website: '', location: '', industry: '', yearFounded: '',
+              appointmentUrl: '', headingText: '', bodyText: '',
+            };
+
+            return {
+              ...prev,
+              profileImage: profileData.profileImageUrl || prev.profileImage,
+              brandLogo: profileData.brandLogoUrl || prev.brandLogo,
+              logoPosition: (profileData.logoPosition as LogoPosition) || prev.logoPosition,
+              formData: {
+                ...existingFormData,
+                name: profileData.name || existingFormData.name,
+                title: profileData.title || existingFormData.title,
+                company: profileData.company || existingFormData.company,
+                tagline: profileData.tagline || existingFormData.tagline,
+              },
+            };
+          });
+        }
+      })
+      .catch(() => { /* ignore load error */ })
+      .finally(() => setIsLoading(false));
+  }, [cardId]);
 
   const set = useCallback(<K extends keyof DesignSettings>(key: K, val: DesignSettings[K]) =>
     setDraft(prev => ({ ...prev, [key]: val })), []);
 
-  const handleSave = useCallback(() => {
+  const handleSave = useCallback(async () => {
     saveDesign(draft);
     setSaved(draft);
     setIsSaved(true); showToast('Design saved!');
     setTimeout(() => setIsSaved(false), 2000);
-  }, [draft]);
+
+    if (resolvedCardId) {
+      try {
+        await updateCardDesign(resolvedCardId, draft);
+        window.dispatchEvent(new Event('cardDataUpdated'));
+      } catch (error) {
+        console.error('Failed to update card design:', error);
+      }
+    }
+  }, [draft, cardId]);
 
   const handleReset = useCallback(() => { setDraft(saved); showToast('Reverted to last saved'); }, [saved]);
 
@@ -544,7 +670,15 @@ export function DesignNew({ onSettingsChange }: { onSettingsChange?: (settings: 
   }, [profile.formData?.website]);
 
   const handleSaveContact = useCallback(() => {
-    const fd = { name: profile.formData?.name || DEFAULT_PROFILE_FORM.name, title: profile.formData?.title || DEFAULT_PROFILE_FORM.title, company: profile.formData?.company || DEFAULT_PROFILE_FORM.company, email: profile.formData?.email || DEFAULT_PROFILE_FORM.email, phone: profile.formData?.phone || DEFAULT_PROFILE_FORM.phone, website: profile.formData?.website || DEFAULT_PROFILE_FORM.website, location: profile.formData?.location || DEFAULT_PROFILE_FORM.location };
+    const fd = {
+      name: profile.formData?.name || '',
+      title: profile.formData?.title || '',
+      company: profile.formData?.company || '',
+      email: profile.formData?.email || '',
+      phone: profile.formData?.phone || '',
+      website: profile.formData?.website || '',
+      location: profile.formData?.location || '',
+    };
     const parts = fd.name.trim().split(' '); const last = parts.slice(-1)[0] || ''; const first = parts.slice(0, -1).join(' ') || fd.name;
     const vcf = ['BEGIN:VCARD','VERSION:3.0',`N:${last};${first};;;`,`FN:${fd.name}`,fd.title?`TITLE:${fd.title}`:'',fd.company?`ORG:${fd.company}`:'',fd.email?`EMAIL:${fd.email}`:'',fd.phone?`TEL:${fd.phone}`:'',fd.website?`URL:${fd.website}`:'',fd.location?`ADR:;;${fd.location};;;;`:'','END:VCARD'].filter(Boolean).join('\n');
     const blob = new Blob([vcf], { type: 'text/vcard' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `${fd.name.replace(/\s+/g,'_')}.vcf`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
@@ -557,14 +691,14 @@ export function DesignNew({ onSettingsChange }: { onSettingsChange?: (settings: 
   const brandLogo     = profile.brandLogo     || '';
   const logoPosition  = profile.logoPosition  || 'top-right';
   const formData = {
-    name: profile.formData?.name || DEFAULT_PROFILE_FORM.name, title: profile.formData?.title || DEFAULT_PROFILE_FORM.title,
-    company: profile.formData?.company || DEFAULT_PROFILE_FORM.company, tagline: profile.formData?.tagline || DEFAULT_PROFILE_FORM.tagline,
-    email: profile.formData?.email || DEFAULT_PROFILE_FORM.email, phone: profile.formData?.phone || DEFAULT_PROFILE_FORM.phone,
-    website: profile.formData?.website || DEFAULT_PROFILE_FORM.website, location: profile.formData?.location || DEFAULT_PROFILE_FORM.location,
-    industry: profile.formData?.industry || DEFAULT_PROFILE_FORM.industry, yearFounded: profile.formData?.yearFounded || DEFAULT_PROFILE_FORM.yearFounded,
-    appointmentUrl: profile.formData?.appointmentUrl || DEFAULT_PROFILE_FORM.appointmentUrl,
-    headingText: profile.formData?.headingText || DEFAULT_PROFILE_FORM.headingText,
-    bodyText: profile.formData?.bodyText || DEFAULT_PROFILE_FORM.bodyText,
+    name: profile.formData?.name || '', title: profile.formData?.title || '',
+    company: profile.formData?.company || '', tagline: profile.formData?.tagline || '',
+    email: profile.formData?.email || '', phone: profile.formData?.phone || '',
+    website: profile.formData?.website || '', location: profile.formData?.location || '',
+    industry: profile.formData?.industry || '', yearFounded: profile.formData?.yearFounded || '',
+    appointmentUrl: profile.formData?.appointmentUrl || '',
+    headingText: profile.formData?.headingText || '',
+    bodyText: profile.formData?.bodyText || '',
   };
   const socialLinks   = profile.socialLinks   || [{ platform: 0, value: 'linkedin.com/in/alex' }];
   const customLinks   = profile.customLinks   || [{ label: 'Portfolio', url: 'https://alexjohnson.com' }];
@@ -575,7 +709,7 @@ export function DesignNew({ onSettingsChange }: { onSettingsChange?: (settings: 
   const shadowMap = { none: 'none', soft: `0 4px 24px ${draft.accentColor}25`, medium: `0 8px 48px ${draft.accentColor}45`, strong: `0 12px 72px ${draft.accentColor}70` };
   const wrapperShadow = draft.glowEffect ? `${shadowMap[draft.shadowIntensity]}, 0 0 40px ${draft.accentColor}22` : shadowMap[draft.shadowIntensity];
 
-  const sharedPreviewProps = { profileImage, brandLogo, logoPosition, formData, socialLinks, customLinks, extraSections, sections, savedContact, copied, themeOverride };
+  const sharedPreviewProps = { cardId, profileImage, brandLogo, logoPosition, formData, socialLinks, customLinks, extraSections, sections, savedContact, copied, themeOverride };
 
   // ── Controls ──────────────────────────────────────────────────────
   const ControlsPanel = (

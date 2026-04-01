@@ -248,6 +248,7 @@ export function PhonePreview({
         isOpen={qrPopupOpen}
         onClose={() => setQrPopupOpen(false)}
         cardUrl={cardUrl}
+        cardId={cardId}
       />
 
       {/* Panel wrapper */}
@@ -356,7 +357,7 @@ export function PhonePreview({
                       )}
                       <div className="absolute bottom-0 left-0 right-0 px-4 pb-3 z-10">
                         <h1 style={{ fontWeight: T.boldHeadings ? 800 : 600, fontSize: T.nameFontSize, lineHeight: 1.2, color: '#fff', textShadow: '0 1px 8px rgba(0,0,0,0.7)', fontFamily: T.fontFamily }}>
-                          {formData.name || 'Your Name'}
+                          {formData.name}
                         </h1>
                         {formData.title && (
                           <p style={{ fontSize: T.bodyFontSize, marginTop: 2, color: T.greenLight, fontFamily: T.fontFamily }}>{formData.title}</p>
@@ -541,7 +542,7 @@ export function PhonePreview({
                     <CardBlock T={T}>
                       <SectionHeader T={T} icon={<MessageSquare className="w-3.5 h-3.5 text-white" />} title="Get in Touch" />
                       <div className="px-4 py-3 space-y-2">
-                        {['Your Name', 'Your Email', 'Your Phone'].map(ph => (
+                        {['', '', ''].map(ph => (
                           <input key={ph} placeholder={ph} className="w-full px-3 py-2 rounded-xl outline-none"
                             style={{ background: T.bg, border: `1px solid ${T.green}33`, color: T.textPrimary, fontSize: T.bodyFontSize, fontFamily: T.fontFamily }} />
                         ))}
