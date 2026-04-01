@@ -1,9 +1,7 @@
 import express, { Response } from "express";
 import { supabase } from "../config/supabase";
 import { AuthRequest, verifySession } from "../middleware/auth";
-
-const router = express.Router();
-
+const router = express.Router({ mergeParams: true });
 const getErrorMessage = (error: unknown): string =>
   error instanceof Error ? error.message : "Internal server error";
 
@@ -111,6 +109,7 @@ router.get("/", verifySession, async (req: AuthRequest, res: Response) => {
       .from("CardContent")
       .select("*")
       .eq("cardId", cardId)
+      .limit(1)
       .maybeSingle();
 
     if (error) {
@@ -142,6 +141,7 @@ router.put("/", verifySession, async (req: AuthRequest, res: Response) => {
       .from("CardContent")
       .select("id")
       .eq("cardId", cardId)
+      .limit(1)
       .maybeSingle();
 
     const defaultFormData = {

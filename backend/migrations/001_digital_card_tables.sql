@@ -2,7 +2,7 @@
 -- CardDesign table - stores design settings for cards
 CREATE TABLE IF NOT EXISTS "CardDesign" (
   "id" UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  "cardId" UUID NOT NULL REFERENCES "Card"(id) ON DELETE CASCADE,
+  "cardId" TEXT NOT NULL REFERENCES "Card"(id) ON DELETE CASCADE,
   "palette" TEXT DEFAULT 'green',
   "accentColor" TEXT DEFAULT '#008001',
   "accentLight" TEXT DEFAULT '#49B618',
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS "CardDesign" (
 -- CardContent table - stores content/sections for cards
 CREATE TABLE IF NOT EXISTS "CardContent" (
   "id" UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  "cardId" UUID NOT NULL REFERENCES "Card"(id) ON DELETE CASCADE,
+  "cardId" TEXT NOT NULL REFERENCES "Card"(id) ON DELETE CASCADE,
   "profileImage" TEXT DEFAULT '',
   "brandLogo" TEXT DEFAULT '',
   "logoPosition" TEXT DEFAULT 'top-right',
@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS "CardContent" (
 -- CardQRConfig table - stores QR code configuration for cards
 CREATE TABLE IF NOT EXISTS "CardQRConfig" (
   "id" UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  "cardId" UUID NOT NULL REFERENCES "Card"(id) ON DELETE CASCADE,
+  "cardId" TEXT NOT NULL REFERENCES "Card"(id) ON DELETE CASCADE,
   "shapeId" TEXT DEFAULT 'square',
   "dotShape" TEXT DEFAULT 'square',
   "finderStyle" TEXT DEFAULT 'square',
@@ -85,32 +85,32 @@ CREATE POLICY "Users can view their own card designs"
   ON "CardDesign" FOR SELECT
   USING ( EXISTS (
     SELECT 1 FROM "Card"
-    WHERE "Card".id = "CardDesign".cardId
-    AND "Card".userId = auth.uid()
+    WHERE "Card".id = "CardDesign"."cardId"
+    AND "Card"."userId" = auth.uid()::text
   ));
 
 CREATE POLICY "Users can insert their own card designs"
   ON "CardDesign" FOR INSERT
   WITH CHECK ( EXISTS (
     SELECT 1 FROM "Card"
-    WHERE "Card".id = "CardDesign".cardId
-    AND "Card".userId = auth.uid()
+    WHERE "Card".id = "CardDesign"."cardId"
+    AND "Card"."userId" = auth.uid()::text
   ));
 
 CREATE POLICY "Users can update their own card designs"
   ON "CardDesign" FOR UPDATE
   USING ( EXISTS (
     SELECT 1 FROM "Card"
-    WHERE "Card".id = "CardDesign".cardId
-    AND "Card".userId = auth.uid()
+    WHERE "Card".id = "CardDesign"."cardId"
+    AND "Card"."userId" = auth.uid()::text
   ));
 
 CREATE POLICY "Users can delete their own card designs"
   ON "CardDesign" FOR DELETE
   USING ( EXISTS (
     SELECT 1 FROM "Card"
-    WHERE "Card".id = "CardDesign".cardId
-    AND "Card".userId = auth.uid()
+    WHERE "Card".id = "CardDesign"."cardId"
+    AND "Card"."userId" = auth.uid()::text
   ));
 
 -- CardContent policies
@@ -118,32 +118,32 @@ CREATE POLICY "Users can view their own card content"
   ON "CardContent" FOR SELECT
   USING ( EXISTS (
     SELECT 1 FROM "Card"
-    WHERE "Card".id = "CardContent".cardId
-    AND "Card".userId = auth.uid()
+    WHERE "Card".id = "CardContent"."cardId"
+    AND "Card"."userId" = auth.uid()::text
   ));
 
 CREATE POLICY "Users can insert their own card content"
   ON "CardContent" FOR INSERT
   WITH CHECK ( EXISTS (
     SELECT 1 FROM "Card"
-    WHERE "Card".id = "CardContent".cardId
-    AND "Card".userId = auth.uid()
+    WHERE "Card".id = "CardContent"."cardId"
+    AND "Card"."userId" = auth.uid()::text
   ));
 
 CREATE POLICY "Users can update their own card content"
   ON "CardContent" FOR UPDATE
   USING ( EXISTS (
     SELECT 1 FROM "Card"
-    WHERE "Card".id = "CardContent".cardId
-    AND "Card".userId = auth.uid()
+    WHERE "Card".id = "CardContent"."cardId"
+    AND "Card"."userId" = auth.uid()::text
   ));
 
 CREATE POLICY "Users can delete their own card content"
   ON "CardContent" FOR DELETE
   USING ( EXISTS (
     SELECT 1 FROM "Card"
-    WHERE "Card".id = "CardContent".cardId
-    AND "Card".userId = auth.uid()
+    WHERE "Card".id = "CardContent"."cardId"
+    AND "Card"."userId" = auth.uid()::text
   ));
 
 -- CardQRConfig policies
@@ -151,30 +151,30 @@ CREATE POLICY "Users can view their own QR configs"
   ON "CardQRConfig" FOR SELECT
   USING ( EXISTS (
     SELECT 1 FROM "Card"
-    WHERE "Card".id = "CardQRConfig".cardId
-    AND "Card".userId = auth.uid()
+    WHERE "Card".id = "CardQRConfig"."cardId"
+    AND "Card"."userId" = auth.uid()::text
   ));
 
 CREATE POLICY "Users can insert their own QR configs"
   ON "CardQRConfig" FOR INSERT
   WITH CHECK ( EXISTS (
     SELECT 1 FROM "Card"
-    WHERE "Card".id = "CardQRConfig".cardId
-    AND "Card".userId = auth.uid()
+    WHERE "Card".id = "CardQRConfig"."cardId"
+    AND "Card"."userId" = auth.uid()::text
   ));
 
 CREATE POLICY "Users can update their own QR configs"
   ON "CardQRConfig" FOR UPDATE
   USING ( EXISTS (
     SELECT 1 FROM "Card"
-    WHERE "Card".id = "CardQRConfig".cardId
-    AND "Card".userId = auth.uid()
+    WHERE "Card".id = "CardQRConfig"."cardId"
+    AND "Card"."userId" = auth.uid()::text
   ));
 
 CREATE POLICY "Users can delete their own QR configs"
   ON "CardQRConfig" FOR DELETE
   USING ( EXISTS (
     SELECT 1 FROM "Card"
-    WHERE "Card".id = "CardQRConfig".cardId
-    AND "Card".userId = auth.uid()
+    WHERE "Card".id = "CardQRConfig"."cardId"
+    AND "Card"."userId" = auth.uid()::text
   ));
