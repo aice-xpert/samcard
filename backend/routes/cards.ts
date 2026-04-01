@@ -4,8 +4,11 @@ import { AuthRequest, verifySession } from "../middleware/auth";
 
 const router = express.Router();
 
-const getErrorMessage = (error: unknown): string =>
-  error instanceof Error ? error.message : "Internal server error";
+const getErrorMessage = (error: any): string => {
+  if (error?.message) return error.message; 
+  if (error instanceof Error) return error.message;
+  return "Internal server error";
+};
 
 router.get("/", verifySession, async (req: AuthRequest, res: Response) => {
   try {
@@ -26,114 +29,79 @@ router.get("/", verifySession, async (req: AuthRequest, res: Response) => {
 });
 
 router.post("/", verifySession, async (req: AuthRequest, res: Response) => {
-  const { name, cardType, slug } = req.body;
+  const { name, cardType, slug, ...otherFields } = req.body;
 
   if (!name) {
     return res.status(400).json({ error: "Card name is required" });
   }
 
   try {
-    // Ensure the User row exists in Supabase before any FK-dependent inserts.
-    // Users authenticated via Firebase client-side (Google OAuth, persistent sessions)
-    // may never have gone through /api/auth/login, so the row may be missing.
-    const { error: upsertUserError } = await supabase
-      .from("User")
-      .upsert(
-        {
-          id: req.user!.uid,
-          email: req.user!.email ?? "",
-          updatedAt: new Date().toISOString(),
-        },
-        { onConflict: "id" }
-      );
+    // 1. Ensure User exists - using email conflict to handle project/auth mismatches
+    await supabase.from("User").upsert({
+      id: req.user!.uid,
+      email: req.user!.email ?? "",
+      updatedAt: new Date().toISOString(),
+    }, { onConflict: "email" });
 
-    if (upsertUserError) {
-      console.error("User upsert error:", upsertUserError);
-      return res.status(500).json({ error: "Failed to initialize user profile" });
-    }
-
-    const { data: existingProfile, error: existingProfileError } = await supabase
+    // 2. Resolve or Create Business Profile
+    const { data: existingProfile } = await supabase
       .from("BusinessProfile")
       .select("id")
       .eq("userId", req.user!.uid)
       .maybeSingle();
 
-    if (existingProfileError) {
-      return res.status(500).json({ error: existingProfileError.message });
-    }
-
     let businessProfileId = existingProfile?.id;
 
     if (!businessProfileId) {
-      const { data: user } = await supabase
-        .from("User")
-        .select("name, email")
-        .eq("id", req.user!.uid)
-        .maybeSingle();
-
-      const baseName =
-        (typeof user?.name === "string" && user.name.trim()) ||
-        req.user?.email?.split("@")[0] ||
-        "My Profile";
-
-      const slugBase = baseName
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, "")
-        .trim()
-        .replace(/\s+/g, "-") || "profile";
-
-      const profileSlug = `${slugBase}-${req.user!.uid.slice(0, 8)}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+      // Manually generate ID for Business Profile to satisfy NOT NULL constraint
+      const profileId = `bp_${Math.random().toString(36).substring(2, 11)}`;
+      const profileSlug = `profile-${req.user!.uid.slice(0, 5)}-${Date.now().toString(36)}`;
 
       const { data: createdProfile, error: createProfileError } = await supabase
         .from("BusinessProfile")
         .insert({
+          id: profileId, // FIXED: Manual ID
           userId: req.user!.uid,
-          name: baseName,
+          name: name || "My Profile",
           slug: profileSlug,
-          primaryEmail: req.user?.email ?? null,
           updatedAt: new Date().toISOString(),
         })
         .select("id")
         .single();
 
-      if (createProfileError || !createdProfile) {
-        return res
-          .status(500)
-          .json({ error: createProfileError?.message || "Failed to create business profile" });
-      }
-
+      if (createProfileError) throw createProfileError;
       businessProfileId = createdProfile.id;
     }
 
-    if (!businessProfileId) {
-      return res.status(500).json({ error: "Unable to resolve business profile" });
-    }
-
+    // 3. Create the Card with a Manual ID
+    const cardId = `card_${Math.random().toString(36).substring(2, 11)}`; // Generate Card ID
     const cardSlug = slug || `${name.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`;
     const shareUrl = `/${req.user!.uid}/${cardSlug}`;
 
+    const cardData: Record<string, unknown> = {
+      id: cardId, // FIXED: Providing manual ID to satisfy constraint 23502
+      userId: req.user!.uid,
+      businessProfileId,
+      name,
+      cardType: cardType || "QR",
+      slug: cardSlug,
+      shareUrl,
+      status: "DRAFT",
+      updatedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+    };
+
+    // Add other fields
+    Object.assign(cardData, otherFields);
+
     const { data, error } = await supabase
       .from("Card")
-      .insert({
-        userId: req.user!.uid,
-        businessProfileId,
-        name,
-        cardType: cardType || "QR",
-        slug: cardSlug,
-        shareUrl,
-        status: "DRAFT",
-        updatedAt: new Date().toISOString(),
-      })
+      .insert(cardData)
       .select()
       .single();
 
     if (error) {
-      console.error("Card creation error:", {
-        message: error.message,
-        code: error.code,
-        details: error.details,
-        hint: error.hint,
-      });
+      console.error("Card creation error:", error);
       return res.status(500).json({ error: error.message });
     }
 
@@ -172,6 +140,37 @@ router.put("/:id", verifySession, async (req: AuthRequest, res: Response) => {
     const { data, error } = await supabase
       .from("Card")
       .update(updateData)
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) {
+      return res.status(500).json({ error: error.message });
+    }
+
+    return res.json(data);
+  } catch (error: unknown) {
+    return res.status(500).json({ error: getErrorMessage(error) });
+  }
+});
+
+router.put("/:id/qr", verifySession, async (req: AuthRequest, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    const { data: existing } = await supabase
+      .from("Card")
+      .select("userId")
+      .eq("id", id)
+      .single();
+
+    if (!existing || existing.userId !== req.user!.uid) {
+      return res.status(404).json({ error: "Card not found" });
+    }
+
+    const { data, error } = await supabase
+      .from("Card")
+      .update({ qrConfig: req.body })
       .eq("id", id)
       .select()
       .single();

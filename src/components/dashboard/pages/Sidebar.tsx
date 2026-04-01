@@ -69,13 +69,14 @@ function LogoMark() {
   );
 }
 
-export function Sidebar({ activePage, onNavigate, onClose }: SidebarProps) {
-  const { profile } = useUser();
+export function Sidebar({ activePage, onNavigate, onClose, profile }: SidebarProps) {
+  const { profile: userProfile } = useUser();
   const [completionScore, setCompletionScore] = useState(0);
   const [weeklyTrendChange, setWeeklyTrendChange] = useState(0);
-  const initials = profile.name.split(" ").map(n => n[0]).join("").toUpperCase();
+  const router = useRouter();
 
-  const router = useRouter();  // Hook must be called inside component
+  const displayProfile = profile || userProfile || { name: 'User', email: 'user@example.com' };
+  const initials = displayProfile.name.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
 
   useEffect(() => {
     let isMounted = true;
@@ -83,8 +84,8 @@ export function Sidebar({ activePage, onNavigate, onClose }: SidebarProps) {
     Promise.all([getBusinessProfile(), getAnalytics("7")])
       .then(([businessProfile, analytics]) => {
         if (!isMounted) return;
-        setCompletionScore(Math.max(0, Math.min(100, businessProfile?.completionScore ?? 0)));
-        setWeeklyTrendChange(analytics.thisWeekChange ?? 0);
+        setCompletionScore(Math.max(0, Math.min(100, analytics?.profileCompletion ?? 0)));
+        setWeeklyTrendChange(analytics?.thisWeekChange ?? 0);
       })
       .catch(() => {
         if (!isMounted) return;
@@ -99,7 +100,19 @@ export function Sidebar({ activePage, onNavigate, onClose }: SidebarProps) {
 
   const handleLogout = async () => {
     try {
+      // Sign out from Firebase
       await signOut(auth);
+      
+      // Clear session cookie on backend
+      try {
+        await fetch("http://localhost:5001/api/auth/logout", {
+          method: "POST",
+          credentials: "include",
+        });
+      } catch (error) {
+        console.warn("Failed to clear backend session:", error);
+      }
+      
       router.push("/login");
     } catch (error) {
       console.error("Logout failed:", error);
@@ -191,20 +204,20 @@ export function Sidebar({ activePage, onNavigate, onClose }: SidebarProps) {
             </defs>
             <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="3" />
             <circle cx="40" cy="40" r="32" fill="none" stroke="url(#progressGradient)" strokeWidth="3"
-              strokeDasharray="201" strokeDashoffset="20" strokeLinecap="round"
+              strokeDasharray="201" strokeDashoffset={201 - (201 * (completionScore / 100))} strokeLinecap="round"
               transform="rotate(-90 40 40)" />
             <foreignObject x="14" y="14" width="52" height="52">
               <Avatar className="w-full h-full border-2 border-[#008001]/30">
-                {profile.avatar ? (
-                  <AvatarImage src={profile.avatar} />
+                {displayProfile.avatar ? (
+                  <AvatarImage src={displayProfile.avatar} />
                 ) : (
                   <AvatarImage src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop" />
                 )}
                 <AvatarFallback>{initials}</AvatarFallback>
               </Avatar>
             </foreignObject>
-            <text x="90" y="30" fill="white" fontSize="14" fontWeight="600">{profile.name}</text>
-            <text x="90" y="48" fill="#A0A0A0" fontSize="11">{profile.email}</text>
+            <text x="90" y="30" fill="white" fontSize="14" fontWeight="600">{displayProfile.name}</text>
+            <text x="90" y="48" fill="#A0A0A0" fontSize="11">{displayProfile.email}</text>
             <text x="90" y="64" fill="#49B618" fontSize="12" fontWeight="600">
               <tspan>{completionScore}% Complete </tspan>
               <tspan fill="#009200">↑</tspan>

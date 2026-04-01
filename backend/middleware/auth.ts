@@ -58,6 +58,15 @@ const verifyIdTokenSafely = async (token: string) => {
   }
 };
 
+const verifyUserExists = async (uid: string): Promise<boolean> => {
+  try {
+    await admin.auth().getUser(uid);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 export const verifySession = async (
   req: AuthRequest,
   res: Response,
@@ -94,6 +103,10 @@ export const verifySession = async (
     }
 
     if (decodedClaims) {
+      const userExists = await verifyUserExists(decodedClaims.uid);
+      if (!userExists) {
+        return res.status(401).json({ error: "User no longer exists" });
+      }
       req.user = {
         uid: decodedClaims.uid,
         email: decodedClaims.email,

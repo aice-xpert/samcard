@@ -34,6 +34,10 @@ import {
   updateBusinessProfile,
   updateCustomLinks,
   updateSocialLinks,
+  getCards,
+  getCardContent,
+  updateCardContent,
+  CardContentPayload,
 } from '@/lib/api';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -119,14 +123,14 @@ const DEFAULT_EXPANDED: Expanded = {
 };
 
 const DEFAULT_STATE: CacheShape = {
-  profileImage: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop',
+  profileImage: '',
   brandLogo: '',
   logoPosition: 'top-right',
   formData: {
-    name: 'Alex Johnson', title: 'Senior Product Designer', company: 'TechCorp Labs',
-    tagline: 'Innovation at Every Step', email: 'alex@techcorp.com',
-    phone: '+1 (555) 123-4567', website: 'https://alexjohnson.com',
-    location: 'San Francisco, CA', industry: 'tech', yearFounded: '2018',
+    name: '', title: '', company: '',
+    tagline: '', email: '',
+    phone: '', website: '',
+    location: '', industry: '', yearFounded: '',
     appointmentUrl: '', headingText: '', bodyText: '',
   },
   socialLinks: [
@@ -146,6 +150,50 @@ const DEFAULT_STATE: CacheShape = {
   customLinks: [{ label: '', url: '' }],
   extraSections: [],
 };
+
+function normalizeLogoPositionFromApi(value: unknown): LogoPosition {
+  if (typeof value !== 'string') return DEFAULT_STATE.logoPosition;
+  const raw = value.trim().toLowerCase();
+  switch (raw) {
+    case 'top-left':
+    case 'top_left':
+    case 'top left':
+    case 'top_left':
+      return 'top-left';
+    case 'top-right':
+    case 'top_right':
+    case 'top right':
+      return 'top-right';
+    case 'below-photo':
+    case 'below_photo':
+    case 'below photo':
+      return 'below-photo';
+    case 'below-name':
+    case 'below_name':
+    case 'below name':
+      return 'below-name';
+    case 'top_left':
+      return 'top-left';
+    case 'topright':
+      return 'top-right';
+    default:
+      return DEFAULT_STATE.logoPosition;
+  }
+}
+
+function normalizeLogoPositionForCardContent(value: unknown): "top-left" | "top-right" | "below-photo" | "below-name" {
+  return normalizeLogoPositionFromApi(value);
+}
+
+function normalizeLogoPositionForBusinessProfile(value: unknown): 'TOP_LEFT' | 'TOP_RIGHT' | 'BELOW_PHOTO' | 'BELOW_NAME' {
+  const normalized = normalizeLogoPositionFromApi(value);
+  switch (normalized) {
+    case 'top-left': return 'TOP_LEFT';
+    case 'top-right': return 'TOP_RIGHT';
+    case 'below-photo': return 'BELOW_PHOTO';
+    case 'below-name': return 'BELOW_NAME';
+  }
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Cache helpers
@@ -520,8 +568,28 @@ function ExtraSectionBlock({ section, onToggle, onRemove, onUpdateData }: ExtraS
 // ─────────────────────────────────────────────────────────────────────────────
 // Main component
 // ─────────────────────────────────────────────────────────────────────────────
-export default function BusinessProfile() {
+export default function BusinessProfile({
+  cardId,
+  onContentChange,
+}: {
+  cardId?: string;
+  onContentChange?: (content: CardContentPayload) => void;
+}) {
   const initial = loadCache();
+  const [resolvedCardId, setResolvedCardId] = useState<string | undefined>(cardId);
+
+  useEffect(() => {
+    if (cardId) {
+      setResolvedCardId(cardId);
+      return;
+    }
+
+    if (!resolvedCardId) {
+      getCards().then(cards => {
+        if (cards?.length) setResolvedCardId(cards[0].id);
+      }).catch(() => undefined);
+    }
+  }, [cardId, resolvedCardId]);
 
   const [profileImage, setProfileImage] = useState<string>(initial.profileImage);
   const [brandLogo, setBrandLogo] = useState<string>(initial.brandLogo);
@@ -545,6 +613,7 @@ export default function BusinessProfile() {
   const [mobileTab, setMobileTab] = useState<'edit' | 'preview'>('edit');
   const [showQrPopup, setShowQrPopup] = useState(false);
   const [profileShareUrl, setProfileShareUrl] = useState('');
+  const [reloadTrigger, setReloadTrigger] = useState(0);
 
   const setQr = useQrStore(state => state.setQr);
 
@@ -561,87 +630,146 @@ export default function BusinessProfile() {
     setQr(null, matrix, N);
   }, [qrCardUrl, setQr]);
 
-  useEffect(() => {
-    let isMounted = true;
+  const loadFromApi = useCallback(async () => {
+    const [profileResult, socialResult, customResult] = await Promise.allSettled([
 
-    const loadFromApi = async () => {
-      const [profileResult, socialResult, customResult] = await Promise.allSettled([
-        getBusinessProfile(),
-        getSocialLinks(),
-        getCustomLinks(),
-      ]);
+      getBusinessProfile(),
+      getSocialLinks(),
+      getCustomLinks(),
+    ]);
 
-      if (!isMounted) return;
+    if (profileResult.status === 'fulfilled' && profileResult.value) {
+      const profile = profileResult.value;
+      setProfileImage(profile.profileImageUrl || initial.profileImage);
+      setBrandLogo(profile.brandLogoUrl || initial.brandLogo);
+      setLogoPosition(normalizeLogoPositionFromApi(profile.logoPosition));
+      setProfileShareUrl(profile.shareUrl || '');
+      setFormData(prev => ({
+        ...prev,
+        name: profile.name || prev.name,
+        title: profile.title || '',
+        company: profile.company || '',
+        tagline: profile.tagline || '',
+        email: profile.primaryEmail || '',
+        phone: profile.primaryPhone || '',
+        website: profile.website || '',
+        location: [profile.city, profile.state, profile.country].filter(Boolean).join(', '),
+      }));
+    }
 
-      if (profileResult.status === 'fulfilled' && profileResult.value) {
-        const profile = profileResult.value;
-        setProfileImage(profile.profileImageUrl || initial.profileImage);
-        setBrandLogo(profile.brandLogoUrl || initial.brandLogo);
-        setLogoPosition((profile.logoPosition as LogoPosition) || initial.logoPosition);
-        setProfileShareUrl(profile.shareUrl || '');
-        setFormData(prev => ({
-          ...prev,
-          name: profile.name || prev.name,
-          title: profile.title || '',
-          company: profile.company || '',
-          tagline: profile.tagline || '',
-          email: profile.primaryEmail || '',
-          phone: profile.primaryPhone || '',
-          website: profile.website || '',
-          location: [profile.city, profile.state, profile.country].filter(Boolean).join(', '),
-        }));
+    if (socialResult.status === 'fulfilled') {
+      const mappedSocials = socialResult.value.map(link => {
+        const platformIndex = SOCIAL_OPTIONS.findIndex(
+          option => option.name.toLowerCase() === (link.platform || '').toLowerCase(),
+        );
+
+        return {
+          platform: platformIndex >= 0 ? platformIndex : 0,
+          value: link.url || link.handle || '',
+        };
+      });
+
+      if (mappedSocials.length > 0) {
+        setSocialLinks(mappedSocials);
       }
+    }
 
-      if (socialResult.status === 'fulfilled') {
-        const mappedSocials = socialResult.value.map(link => {
-          const platformIndex = SOCIAL_OPTIONS.findIndex(
-            option => option.name.toLowerCase() === (link.platform || '').toLowerCase(),
-          );
+    if (customResult.status === 'fulfilled') {
+      const mappedLinks = customResult.value.map(link => ({
+        label: link.label || '',
+        url: link.url || '',
+      }));
 
-          return {
-            platform: platformIndex >= 0 ? platformIndex : 0,
-            value: link.url || link.handle || '',
-          };
-        });
-
-        if (mappedSocials.length > 0) {
-          setSocialLinks(mappedSocials);
-        }
+      if (mappedLinks.length > 0) {
+        setCustomLinks(mappedLinks);
       }
-
-      if (customResult.status === 'fulfilled') {
-        const mappedLinks = customResult.value.map(link => ({
-          label: link.label || '',
-          url: link.url || '',
-        }));
-
-        if (mappedLinks.length > 0) {
-          setCustomLinks(mappedLinks);
-        }
-      }
-    };
-
-    loadFromApi().catch(() => null);
-
-    return () => {
-      isMounted = false;
-    };
+    }
   }, [initial.brandLogo, initial.logoPosition, initial.profileImage]);
+
+  useEffect(() => {
+    loadFromApi().catch(() => null);
+  }, [loadFromApi, reloadTrigger]);
+
+  const loadCardContent = useCallback(async () => {
+    if (!resolvedCardId) return;
+    try {
+      const content = await getCardContent(resolvedCardId);
+      if (!content) return;
+
+      setProfileImage(content.profileImage || initial.profileImage);
+      setBrandLogo(content.brandLogo || initial.brandLogo);
+      setLogoPosition(normalizeLogoPositionFromApi(content.logoPosition));
+
+      if (content.formData) {
+        setFormData(prev => ({ ...prev, ...content.formData }));
+      }
+
+      if (content.socialLinks) {
+        const mappedSocials = (content.socialLinks as { platform: string; url: string }[])
+          .map(sl => {
+            const platformIndex = SOCIAL_OPTIONS.findIndex(
+              option => option.name.toLowerCase() === (sl.platform || '').toLowerCase(),
+            );
+            return {
+              platform: platformIndex >= 0 ? platformIndex : 0,
+              value: sl.url || '',
+            };
+          });
+        if (mappedSocials.length > 0) setSocialLinks(mappedSocials);
+      }
+
+      if (content.customLinks) {
+        setCustomLinks(content.customLinks.map(link => ({ label: link.label || '', url: link.url || '' })));
+      }
+
+      if (content.sections) {
+        setSections(content.sections as Sections);
+      }
+
+      if (content.extraSections) {
+        setExtraSections(content.extraSections as ExtraSection[]);
+      }
+    } catch {
+      // ignore load errors
+    }
+  }, [cardId, initial.brandLogo, initial.logoPosition, initial.profileImage]);
+
+  useEffect(() => {
+    loadCardContent();
+  }, [loadCardContent, reloadTrigger]);
 
   useEffect(() => {
     const refresh = () => setThemeOverride(loadThemeOverride());
     const onStorage = (e: StorageEvent) => { if (e.key === DESIGN_KEY || e.key === null) refresh(); };
     const onFocus = () => refresh();
     const onDesignSaved = () => refresh();
+    const onCardUpdated = () => setReloadTrigger(prev => prev + 1);
     window.addEventListener('storage', onStorage);
     window.addEventListener('focus', onFocus);
     window.addEventListener('designSaved', onDesignSaved);
+    window.addEventListener('cardDataUpdated', onCardUpdated);
     return () => {
       window.removeEventListener('storage', onStorage);
       window.removeEventListener('focus', onFocus);
       window.removeEventListener('designSaved', onDesignSaved);
+      window.removeEventListener('cardDataUpdated', onCardUpdated);
     };
   }, []);
+
+  useEffect(() => {
+    if (!onContentChange) return;
+
+    onContentChange({
+      profileImage,
+      brandLogo,
+      logoPosition,
+      formData,
+      connectFields,
+      sections,
+      customLinks,
+      extraSections,
+    });
+  }, [onContentChange, profileImage, brandLogo, logoPosition, formData, connectFields, sections, customLinks, extraSections]);
 
   const handleSaveChanges = useCallback(async () => {
     setSaveError(null);
@@ -673,6 +801,9 @@ export default function BusinessProfile() {
     const locationParts = formData.location.split(',').map(part => part.trim());
 
     try {
+      const normalizedLogoPosition = normalizeLogoPositionForBusinessProfile(logoPosition);
+      const contentLogoPosition = normalizeLogoPositionForCardContent(logoPosition);
+
       const savedProfile = await updateBusinessProfile({
         name: formData.name,
         title: formData.title,
@@ -680,7 +811,7 @@ export default function BusinessProfile() {
         tagline: formData.tagline,
         profileImageUrl: profileImage,
         brandLogoUrl: brandLogo,
-        logoPosition,
+        logoPosition: normalizedLogoPosition,
         primaryEmail: formData.email,
         primaryPhone: formData.phone,
         website: formData.website,
@@ -697,8 +828,22 @@ export default function BusinessProfile() {
         updateCustomLinks(normalizedCustomLinks),
       ]);
 
+      if (resolvedCardId) {
+        await updateCardContent(resolvedCardId, {
+          profileImage,
+          brandLogo,
+          logoPosition: contentLogoPosition,
+          formData,
+          connectFields,
+          sections,
+          customLinks,
+          extraSections,
+        });
+      }
+
       setSaveFlash(true);
       setTimeout(() => setSaveFlash(false), 2200);
+      setReloadTrigger(prev => prev + 1);
     } catch (error: unknown) {
       setSaveError(error instanceof Error ? error.message : 'Failed to save changes');
     } finally {
@@ -753,6 +898,7 @@ export default function BusinessProfile() {
   const removeExtra = useCallback((id: string) => setExtraSections(prev => prev.filter(s => s.id !== id)), []);
 
   const sharedPreviewProps = {
+    cardId: resolvedCardId,
     profileImage,
     brandLogo,
     logoPosition,
@@ -1050,7 +1196,7 @@ export default function BusinessProfile() {
         onSaveContact={handleSaveContact}
         onShowQR={() => setShowQrPopup(true)}
       />
-      <QrPopup isOpen={showQrPopup} onClose={() => setShowQrPopup(false)} cardUrl={qrCardUrl} />
+      <QrPopup isOpen={showQrPopup} onClose={() => setShowQrPopup(false)} cardUrl={qrCardUrl} cardId={resolvedCardId} />
       {/* QR modal can be restored by wiring a dedicated state and callback again. */}
 
       <div className="xl:hidden flex rounded-xl overflow-hidden border border-[#008001]/30 mb-4">

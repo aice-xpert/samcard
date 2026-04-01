@@ -5,20 +5,93 @@
 // Reads qrConfig + qrMatrix from useQrStore so it always mirrors
 // whatever is showing on the NfcQr page.
 
-import { useEffect, useCallback, useRef } from "react";
+import { useEffect, useCallback, useRef, useState, useMemo } from "react";
 import { X, Download, Share2 } from "lucide-react";
 import { useQrStore } from "@/components/dashboard/stores/Useqrstore";
 import { LiveQrDisplay } from "@/components/dashboard/pages/NfcQR";
+import { getCardQRConfig, getCards } from "@/lib/api";
+import { STICKER_DEFS } from "@/components/dashboard/pages/Qrrenderers";
+import { makeQRMatrix } from "@/components/dashboard/pages/qr-engine";
+import type { QRCustomConfig } from "@/components/dashboard/pages/Qrcustomizer";
 
 interface QrPopupProps {
   isOpen:  boolean;
   onClose: () => void;
   cardUrl: string;
+  cardId?: string;
 }
 
-export function QrPopup({ isOpen, onClose, cardUrl }: QrPopupProps) {
-  const { qrConfig, qrMatrix, qrN } = useQrStore();
+export function QrPopup({ isOpen, onClose, cardUrl, cardId }: QrPopupProps) {
+  const { qrConfig, qrMatrix, qrN, setQr } = useQrStore();
+  const [resolvedCardId, setResolvedCardId] = useState<string | undefined>(cardId);
+  const [popupQrConfig, setPopupQrConfig] = useState<QRCustomConfig | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const { matrix: cardMatrix, N: cardN } = useMemo(() => makeQRMatrix(cardUrl), [cardUrl]);
+
+  useEffect(() => {
+    if (cardId) {
+      setResolvedCardId(cardId);
+      return;
+    }
+    if (!resolvedCardId) {
+      getCards()
+        .then(cards => { if (cards?.length) setResolvedCardId(cards[0].id); })
+        .catch(() => undefined);
+    }
+  }, [cardId, resolvedCardId]);
+
+  // Sync QR config from DB into store whenever the card ID is resolved.
+  useEffect(() => {
+    if (!resolvedCardId) return;
+
+    const fetchQrConfig = async () => {
+      try {
+        const savedConfig = await getCardQRConfig(resolvedCardId);
+        if (!savedConfig) return;
+
+        const selectedSticker = savedConfig.stickerId
+          ? STICKER_DEFS.find((s) => s.id === savedConfig.stickerId) ?? null
+          : null;
+
+        const qrFromDb = {
+          shapeId: savedConfig.shapeId,
+          dotShape: savedConfig.dotShape,
+          finderStyle: savedConfig.finderStyle,
+          eyeBall: savedConfig.eyeBall,
+          bodyScale: savedConfig.bodyScale,
+          fg: savedConfig.fg,
+          bg: savedConfig.bg,
+          accentFg: savedConfig.accentFg,
+          accentBg: savedConfig.accentBg,
+          strokeEnabled: savedConfig.strokeEnabled,
+          strokeColor: savedConfig.strokeColor,
+          gradEnabled: savedConfig.gradEnabled,
+          gradStops: savedConfig.gradStops,
+          gradAngle: savedConfig.gradAngle,
+          selectedLogo: savedConfig.selectedLogo,
+          customLogoUrl: savedConfig.customLogoUrl,
+          logoNode: null,
+          logoBg: savedConfig.logoBg,
+          selectedSticker,
+          designLabel: savedConfig.designLabel,
+          shapeLabel: savedConfig.shapeLabel,
+          decorateImageUrl: null,
+          decorateCompositeDataUrl: null,
+        };
+
+        setPopupQrConfig(qrFromDb);
+        setQr(qrFromDb, cardMatrix, cardN);
+      } catch {
+        // If fetch fails, maintain current store state.
+      }
+    };
+
+    fetchQrConfig();
+
+    const onCardUpdated = () => fetchQrConfig();
+    window.addEventListener('cardDataUpdated', onCardUpdated);
+    return () => window.removeEventListener('cardDataUpdated', onCardUpdated);
+  }, [resolvedCardId, cardMatrix, cardN, setQr]);
 
   // Close on Escape
   useEffect(() => {
@@ -122,11 +195,11 @@ export function QrPopup({ isOpen, onClose, cardUrl }: QrPopupProps) {
             </p>
           </div>
 
-          {/* Live QR — mirrors NfcQr page exactly */}
+          {/* Live QR — reflect DB-loaded config when available */}
           <LiveQrDisplay
-            config={qrConfig}
-            qrMatrix={qrMatrix ?? undefined}
-            qrN={qrN ?? undefined}
+            config={popupQrConfig ?? qrConfig}
+            qrMatrix={cardMatrix}
+            qrN={cardN}
           />
 
           {/* URL pill */}

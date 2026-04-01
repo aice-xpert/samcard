@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import signupRoute from "./auth/signup";
 import loginRoute from "./auth/login";
 import logoutRoute from "./auth/logout";
+import verifyRoute from "./auth/verify";
 import userRoute from "./routes/user";
 import cardsRoute from "./routes/cards";
 import socialLinksRoute from "./routes/social-links";
@@ -14,29 +15,48 @@ import leadsRoute from "./routes/leads";
 import ordersRoute from "./routes/orders";
 import invoicesRoute from "./routes/invoices";
 import notificationsRoute from "./routes/notifications";
-
+import cardQrRoute from "./routes/card-qr";
+import cardContentRoute from "./routes/card-content";
 
 const app = express();
 const PORT: number | string = process.env.PORT || 5001;
 
-const corsOptions = {
-  origin: process.env.FRONTEND_URL || "http://localhost:3000",
+const allowedOrigins = [
+  process.env.FRONTEND_URL || "http://localhost:3000",
+  "http://localhost:3000",
+  "http://localhost:3001",
+];
+
+const corsOptions: cors.CorsOptions = {
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error(`CORS: origin ${origin} not allowed`));
+  },
   credentials: true,
+  allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
+  exposedHeaders: ["Set-Cookie"],
 };
+
 app.use(cors(corsOptions));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(cookieParser());
 
-app.get('/', (req: Request, res: Response) => {
+app.get('/', (_req: Request, res: Response) => {
   res.send('Backend server is running!');
 });
 
 app.use("/api/auth/signup", signupRoute);
 app.use("/api/auth/login", loginRoute);
 app.use("/api/auth/logout", logoutRoute);
+app.use("/api/auth/verify", verifyRoute);
 
 // Mount specific routes BEFORE general routes to prevent interception
 app.use("/api/user/cards", cardsRoute);
+app.use("/api/user/cards/:cardId/qr", cardQrRoute);
+app.use("/api/user/cards/:cardId/content", cardContentRoute);
 app.use("/api/user/social-links", socialLinksRoute);
 app.use("/api/user/custom-links", customLinksRoute);
 app.use("/api/user/analytics", analyticsRoute);

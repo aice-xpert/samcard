@@ -164,6 +164,7 @@ export interface CreateCardPayload {
   name: string;
   cardType?: string;
   slug?: string;
+  [key: string]: any; // Allow additional fields
 }
 
 export async function getCards() {
@@ -187,6 +188,148 @@ export async function updateCard(id: string, payload: Partial<ApiCard>) {
 export async function deleteCard(id: string) {
   return apiRequest<{ success: boolean }>(`/api/user/cards/${id}`, {
     method: "DELETE",
+  });
+}
+
+export interface CardContentFormData {
+  name: string;
+  title: string;
+  company: string;
+  tagline: string;
+  email: string;
+  phone: string;
+  website: string;
+  location: string;
+  industry: string;
+  yearFounded: string;
+  appointmentUrl: string;
+  headingText: string;
+  bodyText: string;
+}
+
+export interface CardContentSectionConfig {
+  profile: boolean;
+  headingText: boolean;
+  contactUs: boolean;
+  socialLinks: boolean;
+  links: boolean;
+  appointment: boolean;
+  collectContacts: boolean;
+  businessDetails: boolean;
+}
+
+export interface CardContentExtraSection {
+  id: string;
+  type: string;
+  label: string;
+  enabled: boolean;
+  expanded: boolean;
+  data: Record<string, unknown>;
+}
+
+export interface CardContentPayload {
+  profileImage?: string;
+  brandLogo?: string;
+  logoPosition?: "top-left" | "top-right" | "below-photo" | "below-name";
+  formData?: CardContentFormData;
+  socialLinks?: { platform: string; url: string }[];
+  connectFields?: { type: string; label: string; value: string }[];
+  sections?: CardContentSectionConfig;
+  customLinks?: { label: string; url: string }[];
+  extraSections?: CardContentExtraSection[];
+}
+
+export interface CardContentResponse extends CardContentPayload {
+  cardId: string;
+  updatedAt?: string;
+}
+
+export interface CardQRConfigPayload {
+  shapeId: string;
+  dotShape: string;
+  finderStyle: string;
+  eyeBall: string;
+  bodyScale: number;
+  fg: string;
+  bg: string;
+  accentFg: string;
+  accentBg: string;
+  strokeEnabled: boolean;
+  strokeColor: string;
+  gradEnabled: boolean;
+  gradStops: { offset: number; color: string }[];
+  gradAngle: number;
+  selectedLogo: string;
+  customLogoUrl: string;
+  logoBg: string;
+  designLabel: string;
+  shapeLabel: string;
+  stickerId: string | null;
+}
+
+export async function getCardQRConfig(cardId: string) {
+  return apiRequest<CardQRConfigPayload | null>(`/api/user/cards/${cardId}/qr`, {
+    method: "GET",
+  });
+}
+
+export async function updateCardQR(cardId: string, qrConfig: CardQRConfigPayload) {
+  return apiRequest<CardQRConfigPayload>(`/api/user/cards/${cardId}/qr`, {
+    method: "PUT",
+    body: JSON.stringify(qrConfig),
+  });
+}
+
+export interface CardDesignPayload {
+  palette: string;
+  accentColor: string;
+  accentLight: string;
+  bgColor: string;
+  cardColor: string;
+  textPrimary: string;
+  textMuted: string;
+  phoneBgPreset: string;
+  phoneBgColor1: string;
+  phoneBgColor2: string;
+  phoneBgAngle: number;
+  phoneBgType: 'solid' | 'gradient';
+  font: string;
+  bodyFontSize: number;
+  nameFontSize: number;
+  boldHeadings: boolean;
+  cardRadius: number;
+  shadowIntensity: 'none' | 'soft' | 'medium' | 'strong';
+  glowEffect: boolean;
+}
+
+export interface CardDesignResponse extends CardDesignPayload {
+  cardId?: string;
+  updatedAt?: string;
+}
+
+export async function getCardContent(cardId: string) {
+  return apiRequest<CardContentResponse | null>(`/api/user/cards/${cardId}/content`, {
+    method: "GET",
+  });
+}
+
+export async function updateCardContent(cardId: string, payload: CardContentPayload) {
+  return apiRequest<CardContentResponse>(`/api/user/cards/${cardId}/content`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getCardDesign(cardId: string) {
+  return apiRequest<CardDesignResponse | null>(`/api/user/cards/${cardId}/design`, {
+    method: "GET",
+  });
+}
+
+export async function updateCardDesign(cardId: string, payload: Partial<CardDesignPayload>) {
+  return apiRequest<CardDesignResponse>(`/api/user/cards/${cardId}/design`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
   });
 }
 

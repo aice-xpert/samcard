@@ -1,11 +1,15 @@
 import express, { Response } from "express";
 import { supabase } from "../config/supabase";
 import { AuthRequest, verifySession } from "../middleware/auth";
+import { v4 as uuidv4 } from 'uuid';
 
 const router = express.Router();
 
-const getErrorMessage = (error: unknown): string =>
-  error instanceof Error ? error.message : "Internal server error";
+const getErrorMessage = (error: any): string => {
+  if (error?.message) return error.message; 
+  if (error instanceof Error) return error.message;
+  return "Internal server error";
+};
 
 interface IncomingCustomLink {
   label?: string;
@@ -70,6 +74,7 @@ router.put("/", verifySession, async (req: AuthRequest, res: Response) => {
 
     if (links.length > 0) {
       const linksToInsert = links.map((link: IncomingCustomLink, index: number) => ({
+        id: uuidv4(),
         businessProfileId: profile.id,
         label: link.label || "",
         url: link.url || "",
@@ -78,6 +83,7 @@ router.put("/", verifySession, async (req: AuthRequest, res: Response) => {
         displayOrder: link.displayOrder ?? index,
         enabled: link.enabled ?? true,
         clickTracking: link.clickTracking ?? true,
+        updatedAt: new Date().toISOString(),
       }));
 
       const { data, error } = await supabase

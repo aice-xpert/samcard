@@ -22,7 +22,7 @@ router.post("/", async (req: Request, res: Response) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       path: "/",
-      sameSite: "lax",
+      sameSite: process.env.NODE_ENV === "production" ? "none" as const : "lax" as const,
     });
 
     return res.status(200).json({ success: true, message: "Logged out successfully" });
