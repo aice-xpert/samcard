@@ -11,6 +11,21 @@ const getErrorMessage = (error: any): string => {
   return "Internal server error";
 };
 
+const normalizeLogoPosition = (value: unknown): string | null => {
+  if (typeof value !== 'string') return null;
+  const mapping: Record<string, string> = {
+    'top-left': 'TOP_LEFT',
+    'top-right': 'TOP_RIGHT',
+    'below-photo': 'BELOW_PHOTO',
+    'below-name': 'BELOW_NAME',
+    'TOP_LEFT': 'TOP_LEFT',
+    'TOP_RIGHT': 'TOP_RIGHT',
+    'BELOW_PHOTO': 'BELOW_PHOTO',
+    'BELOW_NAME': 'BELOW_NAME',
+  };
+  return mapping[value] ?? null;
+};
+
 router.get("/profile", verifySession, async (req: AuthRequest, res: Response) => {
   try {
     const { data, error } = await supabase
@@ -147,11 +162,13 @@ router.put("/business-profile", verifySession, async (req: AuthRequest, res: Res
 
     let result;
     if (existing) {
+      const normalizedLogoPosition = normalizeLogoPosition(logoPosition);
       const { data, error } = await supabase
         .from("BusinessProfile")
         .update({
           id: existing.id,
-          name, title, company, tagline, profileImageUrl, coverImageUrl, brandLogoUrl, logoPosition,
+          name, title, company, tagline, profileImageUrl, coverImageUrl, brandLogoUrl,
+          logoPosition: normalizedLogoPosition ?? undefined,
           primaryEmail, secondaryEmail, primaryPhone, secondaryPhone, website,
           address, city, state, country, postalCode, latitude, longitude,
           industry, department, jobLevel, yearFounded, companySize,
@@ -169,12 +186,14 @@ router.put("/business-profile", verifySession, async (req: AuthRequest, res: Res
     } else {
       const safeName = typeof name === "string" ? name : "profile";
       const slug = `${safeName.toLowerCase().replace(/[^a-z0-9\s-]/g, "").trim().replace(/\s+/g, "-") || "profile"}-${req.user!.uid.slice(0, 8)}`;
+      const normalizedLogoPosition = normalizeLogoPosition(logoPosition);
       const { data, error } = await supabase
         .from("BusinessProfile")
         .insert({
           id: `bp_${Math.random().toString(36).substring(2, 11)}`,
           userId: req.user!.uid,
-          name, title, company, slug, tagline, profileImageUrl, coverImageUrl, brandLogoUrl, logoPosition,
+          name, title, company, slug, tagline, profileImageUrl, coverImageUrl, brandLogoUrl,
+          logoPosition: normalizedLogoPosition ?? undefined,
           primaryEmail, secondaryEmail, primaryPhone, secondaryPhone, website,
           address, city, state, country, postalCode, latitude, longitude,
           industry, department, jobLevel, yearFounded, companySize,

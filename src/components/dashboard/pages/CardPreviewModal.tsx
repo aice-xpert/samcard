@@ -344,11 +344,15 @@ export function CardPreviewModal({
                           {formData.name || 'Your Name'}
                         </h1>
                         {formData.title && <p style={{ fontSize: T.bodyFontSize, marginTop: 2, color: T.greenLight, fontFamily: T.fontFamily }}>{formData.title}</p>}
+
+                        {hasBrandLogo && logoPosition === 'below-name' && (
+                          <div className="flex justify-center mt-1">
+                            <BrandLogoBadge src={brandLogo!} bg="rgba(0,0,0,0.45)" blur={false} maxSize={22} padding="2px 4px" borderRadius={5} />
+                          </div>
+                        )}
+
                         {formData.company && (
-                          <div className="flex items-center gap-1.5 mt-0.5">
-                            {hasBrandLogo && logoPosition === 'below-name' && (
-                              <BrandLogoBadge src={brandLogo!} bg="rgba(0,0,0,0.45)" blur={false} maxSize={22} padding="2px 4px" borderRadius={5} />
-                            )}
+                          <div className="flex items-center gap-1.5 mt-0.5 justify-center">
                             <p style={{ fontSize: T.bodyFontSize, color: 'rgba(255,255,255,0.65)', fontFamily: T.fontFamily }}>{formData.company}</p>
                           </div>
                         )}

@@ -4,7 +4,7 @@ import { useState } from "react";
 import BusinessProfile from "./BusinessProfile";
 import { DesignNew } from "./Design";
 import { NfcQr } from "./NfcQR";
-import { createCard, updateCardQR } from "@/lib/api";
+import { createCard, updateCard, updateCardQR, updateCardContent, CardContentPayload } from "@/lib/api";
 
 const STEPS = [
     { id: 1, label: "Content" },
@@ -220,6 +220,8 @@ export function CreateCard({ cardId }: { cardId?: string }) {
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [qrConfig, setQrConfig] = useState<any>(null);
     const [designSettings, setDesignSettings] = useState<any>(null);
+    const [cardContent, setCardContent] = useState<CardContentPayload | null>(null);
+    const [campaignName, setCampaignName] = useState("");
 
     const handleSaveFinish = () => setShowCampaignModal(true);
     const handleCampaignSave = async (campaignName: string) => {
@@ -252,12 +254,19 @@ export function CreateCard({ cardId }: { cardId?: string }) {
 
         try {
             const card = await createCard(payload);
-            // If QR config, save it
-            if (qrConfig && card.id) {
-                await updateCardQR(card.id, qrConfig);
-            }
-            setShowCampaignModal(false);
-            setShowSuccessModal(true);
+
+        // If QR config, save it
+        if (qrConfig && card.id) {
+            await updateCardQR(card.id, qrConfig);
+        }
+
+        // If contents from step 1 exist, save them to CardContent
+        if (cardContent && card.id) {
+            await updateCardContent(card.id, cardContent);
+        }
+
+        setShowCampaignModal(false);
+        setShowSuccessModal(true);
         } catch (error) {
             console.error("Error creating card:", error);
             // Handle error
@@ -304,7 +313,7 @@ export function CreateCard({ cardId }: { cardId?: string }) {
             <div className="flex-1">
                 {step === 1 && <BusinessProfile />}
                 {step === 2 && <DesignNew onSettingsChange={setDesignSettings} />}
-                {step === 3 && <NfcQr onConfigChange={setQrConfig} />}
+                {step === 3 && <NfcQr onConfigChange={setQrConfig} cardId={cardId} />}
             </div>
 
             {/* ── Navigation Buttons ── */}

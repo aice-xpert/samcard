@@ -15,6 +15,8 @@ import leadsRoute from "./routes/leads";
 import ordersRoute from "./routes/orders";
 import invoicesRoute from "./routes/invoices";
 import notificationsRoute from "./routes/notifications";
+import cardQrRoute from "./routes/card-qr";
+import cardContentRoute from "./routes/card-content";
 
 const app = express();
 const PORT: number | string = process.env.PORT || 5001;
@@ -38,7 +40,8 @@ const corsOptions: cors.CorsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(cookieParser());
 
 app.get('/', (_req: Request, res: Response) => {
@@ -52,6 +55,8 @@ app.use("/api/auth/verify", verifyRoute);
 
 // Mount specific routes BEFORE general routes to prevent interception
 app.use("/api/user/cards", cardsRoute);
+app.use("/api/user/cards/:cardId/qr", cardQrRoute);
+app.use("/api/user/cards/:cardId/content", cardContentRoute);
 app.use("/api/user/social-links", socialLinksRoute);
 app.use("/api/user/custom-links", customLinksRoute);
 app.use("/api/user/analytics", analyticsRoute);
