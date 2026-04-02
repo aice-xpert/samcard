@@ -11,7 +11,7 @@ router.post("/", async (req: Request, res: Response) => {
   const { idToken } = req.body;
 
   if (!idToken) {
-    return res.status(400).json({ error: "ID Token is required" });
+    return res.status(400).json({ error: "ID Token is required, get it" });
   }
 
   const expiresIn = 60 * 60 * 24 * 5 * 1000;
