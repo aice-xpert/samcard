@@ -12,7 +12,7 @@ import {
   MessageSquare, Briefcase, Layout, Smartphone, ChevronDown,
 } from 'lucide-react';
 import { STICKER_DEFS } from '@/components/dashboard/pages/Qrrenderers';
-import { QrPopup } from '@/components/dashboard/pages/Qrpopup';
+// import { QrPopup } from '@/components/dashboard/pages/Qrpopup';
 
 // ── Types ──────────────────────────────────────────────────────────
 export type LogoPosition = 'top-left' | 'top-right' | 'below-photo' | 'below-name';
@@ -244,12 +244,12 @@ export function PhonePreview({
       <style>{scrollCss}</style>
 
       {/* ── QR Popup ── */}
-      <QrPopup
+      {/* <QrPopup
         isOpen={qrPopupOpen}
         onClose={() => setQrPopupOpen(false)}
         cardUrl={cardUrl}
         cardId={cardId}
-      />
+      /> */}
 
       {/* Panel wrapper */}
       <div className="rounded-2xl p-4" style={{ background: '#000', border: `1px solid ${T.green}4d` }}>
@@ -542,8 +542,8 @@ export function PhonePreview({
                     <CardBlock T={T}>
                       <SectionHeader T={T} icon={<MessageSquare className="w-3.5 h-3.5 text-white" />} title="Get in Touch" />
                       <div className="px-4 py-3 space-y-2">
-                        {['', '', ''].map(ph => (
-                          <input key={ph} placeholder={ph} className="w-full px-3 py-2 rounded-xl outline-none"
+                        {['', '', ''].map((ph, i) => (
+                          <input key={i} placeholder={ph} className="w-full px-3 py-2 rounded-xl outline-none"
                             style={{ background: T.bg, border: `1px solid ${T.green}33`, color: T.textPrimary, fontSize: T.bodyFontSize, fontFamily: T.fontFamily }} />
                         ))}
                         <button className="w-full py-2.5 rounded-full font-bold text-white"
@@ -554,8 +554,8 @@ export function PhonePreview({
                     </CardBlock>
                   )}
 
-                  {extraSections.filter(s => s.enabled).map(section => (
-                    <ExtraSectionPreview key={section.id} section={section} T={T} />
+                  {extraSections.filter(s => s.enabled).map((section, index) => (
+                    <ExtraSectionPreview key={section.id || `extra-sec-${index}`} section={section} T={T} />
                   ))}
 
                   <div style={{ height: 64 }} />

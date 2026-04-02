@@ -14,15 +14,24 @@ import analyticsRoute from "./routes/analytics";
 import leadsRoute from "./routes/leads";
 import ordersRoute from "./routes/orders";
 import invoicesRoute from "./routes/invoices";
+import plansRoute from "./routes/plans";
 import notificationsRoute from "./routes/notifications";
 import cardQrRoute from "./routes/card-qr";
 import cardContentRoute from "./routes/card-content";
+import cardDesignRoute from "./routes/card-design";
+import designPresetsRoute from "./routes/design-presets";
+import publicCardRoute from "./routes/public-card";
+import cardShareRoute from "./routes/card-share";
+import nfcCardsRoute from "./routes/nfc-cards";
+import qrTemplatesRoute from "./routes/qr-templates";
+
 
 const app = express();
 const PORT: number | string = process.env.PORT || 5001;
 
 const allowedOrigins = [
-  process.env.FRONTEND_URL || "http://localhost:3000",
+  "https://samcard.vercel.app",
+"http://localhost:3000",
   "http://localhost:3000",
   "http://localhost:3001",
 ];
@@ -54,9 +63,15 @@ app.use("/api/auth/logout", logoutRoute);
 app.use("/api/auth/verify", verifyRoute);
 
 // Mount specific routes BEFORE general routes to prevent interception
+app.use("/api/public/cards", publicCardRoute);
 app.use("/api/user/cards", cardsRoute);
+app.use("/api/user/cards/:cardId/design", cardDesignRoute);
 app.use("/api/user/cards/:cardId/qr", cardQrRoute);
 app.use("/api/user/cards/:cardId/content", cardContentRoute);
+app.use("/api/user/cards", cardShareRoute);
+app.use("/api/user/design", designPresetsRoute);
+app.use("/api/user/qr", qrTemplatesRoute);
+app.use("/api/user/nfc-cards", nfcCardsRoute);
 app.use("/api/user/social-links", socialLinksRoute);
 app.use("/api/user/custom-links", customLinksRoute);
 app.use("/api/user/analytics", analyticsRoute);
@@ -64,6 +79,7 @@ app.use("/api/user/leads", leadsRoute);
 app.use("/api/user/orders", ordersRoute);
 app.use("/api/user/invoices", invoicesRoute);
 app.use("/api/user/notifications", notificationsRoute);
+app.use("/api/plans", plansRoute);
 
 // Mount general user route LAST so it doesn't intercept specific routes
 app.use("/api/user", userRoute);

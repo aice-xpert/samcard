@@ -7,7 +7,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 import {
-  BarChart2, Download, Info, Grid3X3, Mail,
+  BarChart2, Download, Info, Mail,
   Globe, Phone, MessageSquare, Star, MoreVertical,
   Search, ChevronLeft, ChevronRight, Check, X,
   TrendingUp, TrendingDown, Smartphone, Users, Eye,
@@ -420,7 +420,7 @@ export default function Analytics() {
           {loading ? (
             <Skeleton className="h-full w-full" />
           ) : (
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={1}>
               <AreaChart data={dailyChartData}>
                 <defs>
                   <linearGradient id="colorTaps" x1="0" y1="0" x2="0" y2="1">
@@ -547,7 +547,7 @@ export default function Analytics() {
           ) : (
             <>
               <div className="relative w-40 h-40 mx-auto mb-4">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={1}>
                   <PieChart>
                     <Pie
                       data={analytics?.deviceDistribution ?? []}
@@ -648,7 +648,7 @@ export default function Analytics() {
           {loading ? (
             <Skeleton className="h-48 w-full" />
           ) : (
-            <ResponsiveContainer width="100%" height={180}>
+            <ResponsiveContainer width="100%" height={180} minWidth={0} minHeight={1}>
               <BarChart
                 data={monthOverMonth}
                 margin={{ top: 4, right: 4, left: -20, bottom: 0 }}

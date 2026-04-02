@@ -4,6 +4,40 @@ import { AuthRequest, verifySession } from "../middleware/auth";
 
 const router = express.Router();
 
+const SOCIAL_PLATFORM_ALIASES: Record<string, string> = {
+  linkedin: "LINKEDIN",
+  instagram: "INSTAGRAM",
+  facebook: "FACEBOOK",
+  twitter: "TWITTER",
+  x: "TWITTER",
+  youtube: "YOUTUBE",
+  "you-tube": "YOUTUBE",
+  tiktok: "TIKTOK",
+  "tik-tok": "TIKTOK",
+  github: "GITHUB",
+  discord: "DISCORD",
+  yelp: "YELP",
+  snapchat: "SNAPCHAT",
+  pinterest: "PINTEREST",
+  reddit: "REDDIT",
+  medium: "MEDIUM",
+  behance: "BEHANCE",
+  threads: "THREADS",
+  whatsapp: "WHATSAPP",
+  telegram: "TELEGRAM",
+  custom: "CUSTOM",
+};
+
+const normalizePlatformKey = (platform: string): string =>
+  platform.trim().toLowerCase().replace(/[\s_-]+/g, "");
+
+const mapPlatformToEnum = (platform?: string): string | null => {
+  if (!platform) return null;
+
+  const normalized = normalizePlatformKey(platform);
+  return SOCIAL_PLATFORM_ALIASES[normalized] ?? null;
+};
+
 const getErrorMessage = (error: any): string => {
   if (error?.message) return error.message; 
   if (error instanceof Error) return error.message;
@@ -72,16 +106,33 @@ router.put("/", verifySession, async (req: AuthRequest, res: Response) => {
       .eq("businessProfileId", profile.id);
 
     if (links.length > 0) {
-      const linksToInsert = links.map((link: IncomingSocialLink, index: number) => ({
-        businessProfileId: profile.id,
-        platform: link.platform || "",
-        handle: link.handle || "",
-        url: link.url || "",
-        label: link.label || "",
-        icon: link.icon || "",
-        displayOrder: link.displayOrder ?? index,
-        enabled: link.enabled ?? true,
-      }));
+      const invalidPlatforms: string[] = [];
+
+      const linksToInsert = links.map((link: IncomingSocialLink, index: number) => {
+        const mappedPlatform = mapPlatformToEnum(link.platform);
+
+        if (!mappedPlatform) {
+          invalidPlatforms.push(link.platform || "");
+        }
+
+        return {
+          businessProfileId: profile.id,
+          platform: mappedPlatform,
+          handle: link.handle || "",
+          url: link.url || "",
+          label: link.label || "",
+          icon: link.icon || "",
+          displayOrder: link.displayOrder ?? index,
+          enabled: link.enabled ?? true,
+          updatedAt: new Date().toISOString(),
+        };
+      });
+
+      if (invalidPlatforms.length > 0) {
+        return res.status(400).json({
+          error: `Invalid social platform value(s): ${invalidPlatforms.join(", ")}`,
+        });
+      }
 
       const { data, error } = await supabase
         .from("SocialLink")

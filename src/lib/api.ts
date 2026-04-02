@@ -1,4 +1,7 @@
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
+export const BACKEND_URL =
+  process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "") ||
+  process.env.BACKEND_URL?.replace(/\/$/, "") ||
+  "";
 
 const jsonHeaders = {
   "Content-Type": "application/json",
@@ -19,7 +22,10 @@ async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
     (headers as Record<string, string>)["Authorization"] = `Bearer ${sessionToken}`;
   }
   
-  const response = await fetch(`${BACKEND_URL}${path}`, {
+  const fullUrl = BACKEND_URL ? `${BACKEND_URL}${path}` : path;
+  console.log('→ API call:', fullUrl);
+  
+  const response = await fetch(fullUrl, {
     credentials: "include",
     cache: "no-store",
     ...init,
@@ -56,6 +62,15 @@ export interface ApiUser {
   showPhone: boolean;
   planTier: string;
   subscriptionStatus: string;
+  subscriptionEndsAt: string | null;
+  maxCards: number;
+  maxTaps: number;
+  maxStorageMb: number;
+  maxLeads: number;
+  totalCards: number;
+  totalTaps: number;
+  totalViews: number;
+  totalLeads: number;
 }
 
 export interface UpdateUserPayload {
@@ -139,6 +154,30 @@ export async function updateBusinessProfile(payload: UpdateBusinessProfilePayloa
     method: "PUT",
     body: JSON.stringify(payload),
   });
+}
+
+// ─── Plans ───────────────────────────────────────────────────────────
+export interface ApiPlan {
+  id: number;
+  name: string;
+  tier: string;
+  priceMonthly: number;
+  priceYearly: number;
+  currency: string;
+  maxCards: number;
+  maxTaps: number;
+  maxStorageMb: number;
+  maxLeads: number;
+  features: string[];
+  description: string | null;
+  popular: boolean;
+  trialDays: number;
+  isActive: boolean;
+  displayOrder: number;
+}
+
+export async function getPlans() {
+  return apiRequest<ApiPlan[]>("/api/plans", { method: "GET" });
 }
 
 // ─── Cards ───────────────────────────────────────────────────────────
@@ -537,9 +576,16 @@ export interface Invoice {
   id: string;
   invoiceNumber: string;
   date: string;
+  periodStart?: string;
+  periodEnd?: string;
   amount: number;
+  subtotal?: number;
+  tax?: number;
+  discount?: number;
+  currency?: string;
   status: string;
   pdfUrl: string | null;
+  billingName?: string;
 }
 
 export interface InvoicesResponse {

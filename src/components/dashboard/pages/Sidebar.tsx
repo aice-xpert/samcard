@@ -21,7 +21,7 @@ import { Badge } from '@/components/dashboard/ui/badge';
 import { useUser } from '@/contexts/UserContext';
 import { signOut } from "firebase/auth";
 import { auth } from '@/lib/firebase';
-import { getAnalytics, getBusinessProfile } from '@/lib/api';
+import { BACKEND_URL, getAnalytics, getUserProfile } from '@/lib/api';
 import { useRouter } from "next/navigation";
 
 interface SidebarProps {
@@ -39,8 +39,8 @@ interface SidebarProps {
 const menuItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, badge: null },
   { id: 'create-card', label: 'Digital business card', icon: Briefcase },
-  { id: 'my-cards', label: 'My Cards', icon: CreditCard, badge: '2' },
-  { id: 'analytics', label: 'Analytics', icon: BarChart3, badge: '+12%' },
+  { id: 'my-cards', label: 'My Cards', icon: CreditCard, badge: null },
+  { id: 'analytics', label: 'Analytics', icon: BarChart3, badge: 'New' },
   // { id: 'design', label: 'Design & Customization', icon: Palette, badge: null },
   // { id: 'nfc-qr', label: 'NFC & QR Management', icon: Smartphone, badge: null },
   { id: 'orders', label: 'Orders', icon: ShoppingCart, badge: 'New' },
@@ -73,7 +73,17 @@ export function Sidebar({ activePage, onNavigate, onClose, profile }: SidebarPro
   const { profile: userProfile } = useUser();
   const [completionScore, setCompletionScore] = useState(0);
   const [weeklyTrendChange, setWeeklyTrendChange] = useState(0);
+  const [planLabel, setPlanLabel] = useState("Pro");
   const router = useRouter();
+
+  const normalizePlanLabel = (tier: string | null | undefined) => {
+    const normalized = (tier ?? "").trim().toUpperCase();
+    if (normalized === "FREE") return "Free";
+    if (normalized === "BUSINESS") return "Business";
+    if (normalized === "PRO") return "Pro";
+    if (!normalized) return "Free";
+    return `${normalized.charAt(0)}${normalized.slice(1).toLowerCase()}`;
+  };
 
   const displayProfile = profile || userProfile || { name: 'User', email: 'user@example.com' };
   const initials = displayProfile.name.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
@@ -81,16 +91,18 @@ export function Sidebar({ activePage, onNavigate, onClose, profile }: SidebarPro
   useEffect(() => {
     let isMounted = true;
 
-    Promise.all([getBusinessProfile(), getAnalytics("7")])
-      .then(([businessProfile, analytics]) => {
+    Promise.all([getAnalytics("7"), getUserProfile()])
+      .then(([analytics, user]) => {
         if (!isMounted) return;
         setCompletionScore(Math.max(0, Math.min(100, analytics?.profileCompletion ?? 0)));
         setWeeklyTrendChange(analytics?.thisWeekChange ?? 0);
+        setPlanLabel(normalizePlanLabel(user?.planTier));
       })
       .catch(() => {
         if (!isMounted) return;
         setCompletionScore(0);
         setWeeklyTrendChange(0);
+        setPlanLabel("Pro");
       });
 
     return () => {
@@ -105,7 +117,8 @@ export function Sidebar({ activePage, onNavigate, onClose, profile }: SidebarPro
       
       // Clear session cookie on backend
       try {
-        await fetch("http://localhost:5001/api/auth/logout", {
+        const logoutUrl = BACKEND_URL ? `${BACKEND_URL}/api/auth/logout` : "/api/auth/logout";
+        await fetch(logoutUrl, {
           method: "POST",
           credentials: "include",
         });
@@ -178,15 +191,18 @@ export function Sidebar({ activePage, onNavigate, onClose, profile }: SidebarPro
               )}
               <Icon className="w-5 h-5 flex-shrink-0 relative z-10 ml-1" />
               <span className="text-sm relative z-10 flex-1 text-left font-medium">{item.label}</span>
-              {item.badge && (
-                <Badge className={`relative z-10 text-xs px-2 font-medium border-0 ${item.badge === 'New' ? 'bg-[#49B618] text-white' :
-                  item.badge === 'Pro' ? 'bg-[#009200] text-white' :
-                    item.badge.includes('%') ? 'bg-[#006312] text-white' :
-                      'bg-[#008001] text-white'
-                  }`}>
-                  {item.badge}
-                </Badge>
-              )}
+              {(() => {
+                const badge = item.id === 'billing' ? planLabel : item.badge;
+                if (!badge) return null;
+                return (
+                  <Badge className={`relative z-10 text-xs px-2 font-medium border-0 ${badge === 'New' ? 'bg-[#49B618] text-white' :
+                    badge.includes('%') ? 'bg-[#006312] text-white' :
+                      'bg-[#009200] text-white'
+                    }`}>
+                    {badge}
+                  </Badge>
+                );
+              })()}
             </button>
           );
         })}
@@ -227,7 +243,7 @@ export function Sidebar({ activePage, onNavigate, onClose, profile }: SidebarPro
 
         <div className="flex items-center gap-2 mb-3 flex-wrap">
           <Badge className="bg-gradient-to-r from-[#008001] to-[#49B618] text-white border-0 flex items-center gap-1 text-xs">
-            <Star className="w-3 h-3 fill-current" /> Pro Plan
+            <Star className="w-3 h-3 fill-current" /> {planLabel} Plan
           </Badge>
           <Badge className="bg-[#006312] text-white border-0 flex items-center gap-1 text-xs">
             <TrendingUp className="w-3 h-3" /> {weeklyTrendChange > 0 ? `+${weeklyTrendChange}%` : `${weeklyTrendChange}%`}
