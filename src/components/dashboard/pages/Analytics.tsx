@@ -7,7 +7,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 import {
-  BarChart2, Download, Info, Grid3X3, Mail,
+  BarChart2, Download, Info, Mail,
   Globe, Phone, MessageSquare, Star, MoreVertical,
   Search, ChevronLeft, ChevronRight, Check, X,
   TrendingUp, TrendingDown, Smartphone, Users, Eye,

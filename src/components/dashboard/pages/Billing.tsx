@@ -29,10 +29,21 @@ import {
     CheckCircle2,
     Loader2,
 } from "lucide-react";
+import {
+    ApiPlan,
+    ApiUser,
+    getAnalytics,
+    getInvoices,
+    getPlans,
+    getUserProfile,
+    Invoice as ApiInvoice,
+} from "@/lib/api";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface PlanData {
+    id: string;
     name: string;
+    tier: string;
     price: string;
     period: string;
     features: string[];
@@ -41,13 +52,13 @@ interface PlanData {
     cardsLimit: string;
     tapsLimit: string;
     storageLimit: string;
+    maxCards: number;
+    maxTaps: number;
+    maxStorageMb: number;
 }
 
-interface Invoice {
-    id: string;
-    date: string;
-    amount: string;
-    status: string;
+interface Invoice extends ApiInvoice {
+    amount: number;
 }
 
 interface PaymentMethod {
@@ -71,73 +82,86 @@ interface Toast {
     type: "success" | "info";
 }
 
-// ── Static Data ───────────────────────────────────────────────────────────────
-const ALL_PLANS: PlanData[] = [
-    {
-        name: "Free",
-        price: "$0",
-        period: "forever",
-        icon: Shield,
-        features: [
-            "1 Digital Card",
-            "Basic Analytics",
-            "QR Code Only",
-            "Limited Customization",
-        ],
-        cardsLimit: "1 / 1",
-        tapsLimit: "500",
-        storageLimit: "256 MB",
-    },
-    {
-        name: "Pro",
-        price: "$19",
-        period: "per month",
-        icon: Crown,
-        popular: true,
-        features: [
-            "5 Digital Cards",
-            "Advanced Analytics",
-            "NFC + QR Code",
-            "Full Customization",
-            "Priority Support",
-            "Custom Branding",
-        ],
-        cardsLimit: "3 / 5",
-        tapsLimit: "2,547",
-        storageLimit: "1.2 GB",
-    },
-    {
-        name: "Business",
-        price: "$49",
-        period: "per month",
-        icon: Sparkles,
-        features: [
-            "Unlimited Cards",
-            "Team Management",
-            "API Access",
-            "White Label",
-            "Dedicated Support",
-            "Advanced Integrations",
-        ],
-        cardsLimit: "3 / ∞",
-        tapsLimit: "2,547",
-        storageLimit: "1.2 GB",
-    },
-];
+const PLAN_ICONS: Record<string, React.ElementType> = {
+    FREE: Shield,
+    PRO: Crown,
+    BUSINESS: Sparkles,
+    STARTER: Shield,
+    GROWTH: Crown,
+    ENTERPRISE: Sparkles,
+};
 
-const INITIAL_INVOICES: Invoice[] = [
-    { id: "INV-2026-02", date: "Feb 1, 2026", amount: "$19.00", status: "Paid" },
-    { id: "INV-2026-01", date: "Jan 1, 2026", amount: "$19.00", status: "Paid" },
-    { id: "INV-2025-12", date: "Dec 1, 2025", amount: "$19.00", status: "Paid" },
-    { id: "INV-2025-11", date: "Nov 1, 2025", amount: "$19.00", status: "Paid" },
-    { id: "INV-2025-10", date: "Oct 1, 2025", amount: "$19.00", status: "Paid" },
-];
+const BILLING_PLAN_ORDER = ["FREE", "PRO", "BUSINESS"] as const;
+type BillingPlanKey = (typeof BILLING_PLAN_ORDER)[number];
 
-// ── Usage percentages per plan ────────────────────────────────────────────────
-const USAGE: Record<string, { cards: number; taps: number; storage: number }> = {
-    Free: { cards: 100, taps: 40, storage: 15 },
-    Pro: { cards: 60, taps: 85, storage: 24 },
-    Business: { cards: 10, taps: 25, storage: 12 },
+const resolveBillingPlanKey = (plan: PlanData): BillingPlanKey | null => {
+    const tierKey = normalizePlanTier(plan.tier);
+    if (BILLING_PLAN_ORDER.includes(tierKey as BillingPlanKey)) {
+        return tierKey as BillingPlanKey;
+    }
+
+    const nameKey = normalizePlanTier(plan.name);
+    if (nameKey.includes("FREE")) return "FREE";
+    if (nameKey.includes("PRO")) return "PRO";
+    if (nameKey.includes("BUSINESS")) return "BUSINESS";
+
+    return null;
+};
+
+const formatCurrency = (amount: number, currency = "USD") =>
+    new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency,
+        maximumFractionDigits: amount % 1 === 0 ? 0 : 2,
+    }).format(amount);
+
+const formatDate = (value: string | null | undefined) => {
+    if (!value) return "";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return date.toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+    });
+};
+
+const normalizePlanTier = (tier: string) => tier.trim().toUpperCase();
+
+const formatLimit = (value: number) => {
+    if (value >= 1_000_000) return "∞";
+    return value.toLocaleString();
+};
+
+const formatUsageValue = (used: number | null, limit: number, suffix = "") => {
+    const usedText = used === null ? "—" : used.toLocaleString();
+    return `${usedText} / ${formatLimit(limit)}${suffix}`;
+};
+
+const getUsagePercent = (used: number | null, limit: number) => {
+    if (used === null || limit <= 0) return 0;
+    return Math.min(100, Math.round((used / limit) * 100));
+};
+
+const mapPlanToCard = (plan: ApiPlan): PlanData => {
+    const tier = normalizePlanTier(plan.tier);
+    const icon = PLAN_ICONS[tier] ?? Shield;
+    return {
+        id: String(plan.id),
+        name: plan.name,
+        tier,
+        price: formatCurrency(plan.priceMonthly, plan.currency),
+        period: "per month",
+        features: plan.features,
+        icon,
+        popular: plan.popular,
+        cardsLimit: plan.maxCards >= 1_000_000 ? "∞" : plan.maxCards.toLocaleString(),
+        tapsLimit: plan.maxTaps.toLocaleString(),
+        storageLimit: `${plan.maxStorageMb.toLocaleString()} MB`,
+        maxCards: plan.maxCards,
+        maxTaps: plan.maxTaps,
+        maxStorageMb: plan.maxStorageMb,
+    };
 };
 
 // ── Toast Component ───────────────────────────────────────────────────────────
@@ -286,7 +310,7 @@ function PaymentModal({
     onClose,
 }: {
     open: boolean;
-    currentMethod: PaymentMethod;
+    currentMethod: PaymentMethod | null;
     loading: boolean;
     onSave: (m: PaymentMethod) => void;
     onClose: () => void;
@@ -337,7 +361,10 @@ function PaymentModal({
                         <div>
                             <h3 className="text-white font-bold text-lg">Update Payment</h3>
                             <p className="text-xs text-[#A0A0A0] mt-0.5">
-                                Current: {currentMethod.brand} •••• {currentMethod.last4}
+                                Current:{" "}
+                                {currentMethod
+                                    ? `${currentMethod.brand} •••• ${currentMethod.last4}`
+                                    : "No payment method on file"}
                             </p>
                         </div>
                     </div>
@@ -466,14 +493,13 @@ function UsageStat({
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export function Billing() {
-    const [mounted, setMounted] = useState(false);
-    const [currentPlanIdx, setCurrentPlanIdx] = useState(1); // Pro by default
-    const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>({
-        brand: "Visa",
-        last4: "4242",
-        expiry: "12/27",
-    });
-    const [allInvoices] = useState<Invoice[]>(INITIAL_INVOICES);
+    const mounted = true;
+    const [user, setUser] = useState<ApiUser | null>(null);
+    const [plans, setPlans] = useState<PlanData[]>([]);
+    const [currentPlanIdx, setCurrentPlanIdx] = useState(0);
+    const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
+    const [allInvoices, setAllInvoices] = useState<Invoice[]>([]);
+    const [monthlyTaps, setMonthlyTaps] = useState<number>(0);
     const [showAllInvoices, setShowAllInvoices] = useState(false);
 
     // Modals
@@ -500,18 +526,59 @@ export function Billing() {
     const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
     useEffect(() => {
-        setMounted(true);
+        let cancelled = false;
+
+        const loadData = async () => {
+            try {
+                const [userData, planData, invoiceData, analyticsData] = await Promise.all([
+                    getUserProfile(),
+                    getPlans(),
+                    getInvoices("all", 1),
+                    getAnalytics("30"),
+                ]);
+
+                if (cancelled) return;
+
+                const mappedPlans = planData
+                    .map(mapPlanToCard)
+                    .map((plan) => ({ plan, key: resolveBillingPlanKey(plan) }))
+                    .filter((item): item is { plan: PlanData; key: BillingPlanKey } => item.key !== null)
+                    .sort((a, b) => BILLING_PLAN_ORDER.indexOf(a.key) - BILLING_PLAN_ORDER.indexOf(b.key))
+                    .map((item) => item.plan);
+                const activePlanIdx = mappedPlans.findIndex(
+                    (plan) => normalizePlanTier(plan.tier) === normalizePlanTier(userData.planTier)
+                );
+
+                setUser(userData);
+                setPlans(mappedPlans);
+                setCurrentPlanIdx(activePlanIdx >= 0 ? activePlanIdx : 0);
+                setAllInvoices(invoiceData.invoices);
+                setMonthlyTaps(analyticsData.totalTaps ?? 0);
+            } catch (error) {
+                console.error("Failed to load billing data:", error);
+            }
+        };
+
+        loadData();
+
+        return () => {
+            cancelled = true;
+        };
     }, []);
 
-    const currentPlan = ALL_PLANS[currentPlanIdx];
-    const usage = USAGE[currentPlan.name];
+    const currentPlan = plans[currentPlanIdx] ?? null;
+    const usage = {
+        cards: currentPlan ? getUsagePercent(user?.totalCards ?? null, currentPlan.maxCards) : 0,
+        taps: currentPlan ? getUsagePercent(monthlyTaps, currentPlan.maxTaps) : 0,
+        storage: currentPlan ? 0 : 0,
+    };
     const visibleInvoices = showAllInvoices ? allInvoices : allInvoices.slice(0, 3);
 
     // ── Handlers ──────────────────────────────────────────────────────────────
     const handleCancelPlan = () => setModal("cancel");
 
     const handleUpgradeFromBanner = () => {
-        if (currentPlanIdx < ALL_PLANS.length - 1) {
+        if (currentPlanIdx < plans.length - 1) {
             setTargetPlanIdx(currentPlanIdx + 1);
             setModal("upgrade");
         }
@@ -525,19 +592,22 @@ export function Billing() {
 
     const confirmPlanChange = async () => {
         if (targetPlanIdx === null) return;
+        const target = plans[targetPlanIdx];
+        if (!target) {
+            setTargetPlanIdx(null);
+            setModal(null);
+            return;
+        }
         setModalLoading(true);
-        await new Promise((r) => setTimeout(r, 1500));
         setCurrentPlanIdx(targetPlanIdx);
         setModalLoading(false);
         setModal(null);
-        const target = ALL_PLANS[targetPlanIdx];
         addToast(`Successfully switched to ${target.name} plan!`);
         setTargetPlanIdx(null);
     };
 
     const confirmCancel = async () => {
         setModalLoading(true);
-        await new Promise((r) => setTimeout(r, 1500));
         setCurrentPlanIdx(0); // go to Free
         setModalLoading(false);
         setModal(null);
@@ -548,7 +618,6 @@ export function Billing() {
 
     const handleSavePayment = async (m: PaymentMethod) => {
         setModalLoading(true);
-        await new Promise((r) => setTimeout(r, 1200));
         setPaymentMethod(m);
         setModalLoading(false);
         setModal(null);
@@ -557,28 +626,30 @@ export function Billing() {
 
     const handleDownload = async (invoice: Invoice) => {
         setDownloadingId(invoice.id);
-        await new Promise((r) => setTimeout(r, 1000));
-        // Simulate file download
-        const blob = new Blob(
-            [
-                `SAMCARD INVOICE\n${"─".repeat(40)}\n\nInvoice: ${invoice.id}\nDate: ${invoice.date}\nAmount: ${invoice.amount}\nStatus: ${invoice.status}\nPlan: ${currentPlan.name}\n\nThank you for your business!`,
-            ],
-            { type: "text/plain" }
-        );
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `${invoice.id}.txt`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        if (invoice.pdfUrl) {
+            window.open(invoice.pdfUrl, "_blank", "noopener,noreferrer");
+        } else {
+            const blob = new Blob(
+                [
+                    `SAMCARD INVOICE\n${"─".repeat(40)}\n\nInvoice: ${invoice.invoiceNumber}\nDate: ${formatDate(invoice.date)}\nAmount: ${formatCurrency(invoice.amount, invoice.currency)}\nStatus: ${invoice.status}\n${invoice.billingName ? `Billing Name: ${invoice.billingName}\n` : ""}${invoice.periodStart ? `Period: ${formatDate(invoice.periodStart)} → ${formatDate(invoice.periodEnd ?? invoice.periodStart)}\n` : ""}\nThank you for your business!`,
+                ],
+                { type: "text/plain" }
+            );
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `${invoice.invoiceNumber}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
         setDownloadingId(null);
-        addToast(`Downloaded ${invoice.id}`);
+        addToast(`Downloaded ${invoice.invoiceNumber}`);
     };
 
     // ── Derived ───────────────────────────────────────────────────────────────
-    const targetPlan = targetPlanIdx !== null ? ALL_PLANS[targetPlanIdx] : null;
+    const targetPlan = targetPlanIdx !== null ? plans[targetPlanIdx] ?? null : null;
 
     return (
         <>
@@ -588,7 +659,9 @@ export function Billing() {
             <ConfirmModal
                 open={modal === "cancel"}
                 title="Cancel Your Plan?"
-                description={`You'll be downgraded to the Free plan at the end of your billing period. You'll lose access to ${currentPlan.name} features like ${currentPlan.features.slice(2, 4).join(", ")}.`}
+                description={currentPlan
+                    ? `You'll be downgraded to the Free plan at the end of your billing period. You'll lose access to ${currentPlan.name} features like ${currentPlan.features.slice(2, 4).join(", ")}.`
+                    : "You'll be downgraded to the Free plan at the end of your billing period."}
                 confirmLabel="Yes, Cancel Plan"
                 confirmColor="red"
                 icon={AlertTriangle}
@@ -606,9 +679,11 @@ export function Billing() {
             {/* ── Upgrade Modal ─────────────────────────────────────────── */}
             <ConfirmModal
                 open={modal === "upgrade"}
-                title={`Upgrade to ${targetPlan?.name}?`}
-                description={`You'll be charged ${targetPlan?.price}/${targetPlan?.period} starting today. The price difference will be prorated.`}
-                confirmLabel={`Upgrade to ${targetPlan?.name}`}
+                title={`Upgrade to ${targetPlan?.name ?? "selected plan"}?`}
+                description={targetPlan
+                    ? `You'll be charged ${targetPlan.price}/${targetPlan.period} starting today. The price difference will be prorated.`
+                    : "You'll be charged based on the selected plan."}
+                confirmLabel={`Upgrade to ${targetPlan?.name ?? "plan"}`}
                 confirmColor="green"
                 icon={ArrowUpRight}
                 loading={modalLoading}
@@ -633,9 +708,11 @@ export function Billing() {
             {/* ── Downgrade Modal ───────────────────────────────────────── */}
             <ConfirmModal
                 open={modal === "downgrade"}
-                title={`Downgrade to ${targetPlan?.name}?`}
-                description={`Your plan will switch to ${targetPlan?.name} (${targetPlan?.price}/${targetPlan?.period}). You may lose access to some current features.`}
-                confirmLabel={`Downgrade to ${targetPlan?.name}`}
+                title={`Downgrade to ${targetPlan?.name ?? "selected plan"}?`}
+                description={targetPlan
+                    ? `Your plan will switch to ${targetPlan.name} (${targetPlan.price}/${targetPlan.period}). You may lose access to some current features.`
+                    : "Your plan will switch to the selected plan."}
+                confirmLabel={`Downgrade to ${targetPlan?.name ?? "plan"}`}
                 confirmColor="red"
                 icon={AlertTriangle}
                 loading={modalLoading}
@@ -679,20 +756,24 @@ export function Billing() {
                                 </div>
                                 <div>
                                     <CardTitle className="text-white text-base sm:text-lg flex items-center gap-2">
-                                        {currentPlan.name} Plan
+                                        {currentPlan ? `${currentPlan.name} Plan` : "Billing"}
                                         <Badge className="bg-[#49B618]/20 text-[#49B618] border-[#49B618]/30 text-[10px] px-2 hover:bg-[#49B618]/20">
                                             Active
                                         </Badge>
                                     </CardTitle>
                                     <p className="text-xs text-[#A0A0A0] mt-0.5">
-                                        {currentPlan.name === "Free"
-                                            ? "Free forever — upgrade anytime"
-                                            : `Renews on March 1, 2026 · ${currentPlan.price}/${currentPlan.period}`}
+                                        {user?.subscriptionEndsAt
+                                            ? `Renews on ${formatDate(user.subscriptionEndsAt)} · ${currentPlan?.price ?? "—"}/${currentPlan?.period ?? "—"}`
+                                            : currentPlan?.name === "Free"
+                                                ? "Free forever — upgrade anytime"
+                                                : user
+                                                    ? `Billing status: ${user.subscriptionStatus}`
+                                                    : "Loading billing data..."}
                                     </p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-2">
-                                {currentPlan.name !== "Free" && (
+                                {currentPlan && currentPlan.name !== "Free" && (
                                     <Button
                                         variant="outline"
                                         size="sm"
@@ -702,7 +783,7 @@ export function Billing() {
                                         Cancel Plan
                                     </Button>
                                 )}
-                                {currentPlanIdx < ALL_PLANS.length - 1 && (
+                                {currentPlanIdx < plans.length - 1 && (
                                     <Button
                                         size="sm"
                                         className="text-white text-xs h-9 rounded-full gap-1.5"
@@ -723,21 +804,21 @@ export function Billing() {
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-6">
                             <UsageStat
                                 label="Cards Used"
-                                value={currentPlan.cardsLimit}
+                                value={currentPlan ? formatUsageValue(user?.totalCards ?? null, currentPlan.maxCards) : "—"}
                                 pct={usage.cards}
                                 color="#49B618"
                                 delay={200}
                             />
                             <UsageStat
                                 label="Monthly Taps"
-                                value={currentPlan.tapsLimit}
+                                value={currentPlan ? formatUsageValue(monthlyTaps, currentPlan.maxTaps) : "—"}
                                 pct={usage.taps}
                                 color="#008001"
                                 delay={400}
                             />
                             <UsageStat
                                 label="Storage Used"
-                                value={currentPlan.storageLimit}
+                                value={currentPlan ? formatUsageValue(null, currentPlan.maxStorageMb, " MB") : "—"}
                                 pct={usage.storage}
                                 color="#006312"
                                 delay={600}
@@ -754,7 +835,7 @@ export function Billing() {
                     </h3>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-                        {ALL_PLANS.map((plan, index) => {
+                        {plans.map((plan, index) => {
                             const PlanIcon = plan.icon;
                             const isCurrent = index === currentPlanIdx;
                             const isUpgrade = index > currentPlanIdx;
@@ -918,10 +999,12 @@ export function Billing() {
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm font-medium text-white">
-                                    {paymentMethod.brand} ending in {paymentMethod.last4}
+                                    {paymentMethod
+                                        ? `${paymentMethod.brand} ending in ${paymentMethod.last4}`
+                                        : "No payment method on file"}
                                 </p>
                                 <p className="text-xs text-[#A0A0A0] mt-0.5">
-                                    Expires {paymentMethod.expiry}
+                                    {paymentMethod ? `Expires ${paymentMethod.expiry}` : "Add a card to continue"}
                                 </p>
                             </div>
                             <Badge
@@ -985,13 +1068,13 @@ export function Billing() {
                                             }}
                                         >
                                             <TableCell className="font-mono text-sm text-[#49B618] font-semibold">
-                                                {invoice.id}
+                                                {invoice.invoiceNumber}
                                             </TableCell>
                                             <TableCell className="text-[#A0A0A0] text-sm">
-                                                {invoice.date}
+                                                {formatDate(invoice.date)}
                                             </TableCell>
                                             <TableCell className="text-white font-semibold text-sm">
-                                                {invoice.amount}
+                                                {formatCurrency(invoice.amount, invoice.currency)}
                                             </TableCell>
                                             <TableCell>
                                                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#49B618]/10 text-[#49B618] border border-[#49B618]/20">
@@ -1040,10 +1123,10 @@ export function Billing() {
                                     <div className="flex items-start justify-between mb-2">
                                         <div>
                                             <span className="font-mono text-sm font-semibold text-[#49B618]">
-                                                {invoice.id}
+                                                {invoice.invoiceNumber}
                                             </span>
                                             <p className="text-xs text-[#A0A0A0] mt-0.5">
-                                                {invoice.date}
+                                                {formatDate(invoice.date)}
                                             </p>
                                         </div>
                                         <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#49B618]/10 text-[#49B618] border border-[#49B618]/20">
@@ -1053,7 +1136,7 @@ export function Billing() {
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <p className="text-sm font-bold text-white">
-                                            {invoice.amount}
+                                            {formatCurrency(invoice.amount, invoice.currency)}
                                         </p>
                                         <button
                                             className="flex items-center gap-1 text-[#A0A0A0] hover:text-white transition-colors text-xs disabled:opacity-50"
