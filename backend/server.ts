@@ -24,6 +24,7 @@ import publicCardRoute from "./routes/public-card";
 import cardShareRoute from "./routes/card-share";
 import nfcCardsRoute from "./routes/nfc-cards";
 import qrTemplatesRoute from "./routes/qr-templates";
+import uploadRoute from "./routes/upload";
 
 
 const app = express();
@@ -75,6 +76,7 @@ app.use("/api/user/nfc-cards", nfcCardsRoute);
 app.use("/api/user/social-links", socialLinksRoute);
 app.use("/api/user/custom-links", customLinksRoute);
 app.use("/api/user/analytics", analyticsRoute);
+app.use("/api/user/upload", uploadRoute);
 app.use("/api/user/leads", leadsRoute);
 app.use("/api/user/orders", ordersRoute);
 app.use("/api/user/invoices", invoicesRoute);

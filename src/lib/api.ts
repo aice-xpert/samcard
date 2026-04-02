@@ -636,3 +636,35 @@ export async function markNotificationRead(id: string) {
 export async function markAllNotificationsRead() {
   return apiRequest<{ success: boolean }>("/api/user/notifications/read-all", { method: "PUT" });
 }
+
+// ─── File Uploads ──────────────────────────────────────────────────────
+export async function uploadFile(file: File, bucket?: string): Promise<{ url: string }> {
+  const sessionToken = getSessionToken();
+  const headers: HeadersInit = {};
+  if (sessionToken) {
+    (headers as Record<string, string>)["Authorization"] = `Bearer ${sessionToken}`;
+  }
+  
+  const formData = new FormData();
+  formData.append('file', file);
+  if (bucket) {
+    formData.append('bucket', bucket);
+  }
+
+  const fullUrl = `${BACKEND_URL}/api/user/upload`;
+  const response = await fetch(fullUrl, {
+    method: "POST",
+    credentials: "include",
+    cache: "no-store",
+    headers,
+    body: formData,
+  });
+
+  if (!response.ok) {
+    let payload;
+    try { payload = await response.json(); } catch { payload = null; }
+    throw new Error(payload?.error || `Upload failed (${response.status})`);
+  }
+
+  return response.json();
+}

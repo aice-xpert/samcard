@@ -14,6 +14,7 @@ import {
     Globe, Palette, Moon, Sun, Lock, Link2, Unlink, ExternalLink,
 } from "lucide-react";
 import { useUser, ConnectedAccountData } from "@/contexts/UserContext";
+import { uploadFile } from "@/lib/api";
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Types
@@ -188,16 +189,17 @@ export function Settings() {
         setProfileAvatar(profile.avatar || "");
     }, [profile]);
 
-    const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const result = reader.result as string;
-                setProfileAvatar(result);
-                setProfile({ avatar: result });
-            };
-            reader.readAsDataURL(file);
+            try {
+                const res = await uploadFile(file);
+                setProfileAvatar(res.url);
+                setProfile({ avatar: res.url });
+            } catch (err: any) {
+                console.error("Avatar upload failed:", err);
+                addToast("Failed to upload avatar: " + (err.message || 'Unknown error'), "error");
+            }
         }
     };
 
