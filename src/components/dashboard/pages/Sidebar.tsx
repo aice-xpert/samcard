@@ -21,7 +21,7 @@ import { Badge } from '@/components/dashboard/ui/badge';
 import { useUser } from '@/contexts/UserContext';
 import { signOut } from "firebase/auth";
 import { auth } from '@/lib/firebase';
-import { getAnalytics, getUserProfile } from '@/lib/api';
+import { BACKEND_URL, getAnalytics, getUserProfile } from '@/lib/api';
 import { useRouter } from "next/navigation";
 
 interface SidebarProps {
@@ -117,7 +117,8 @@ export function Sidebar({ activePage, onNavigate, onClose, profile }: SidebarPro
       
       // Clear session cookie on backend
       try {
-        await fetch("http://localhost:5001/api/auth/logout", {
+        const logoutUrl = BACKEND_URL ? `${BACKEND_URL}/api/auth/logout` : "/api/auth/logout";
+        await fetch(logoutUrl, {
           method: "POST",
           credentials: "include",
         });
