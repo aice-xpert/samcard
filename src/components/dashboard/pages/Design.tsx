@@ -638,7 +638,7 @@ export function DesignNew({ onSettingsChange, cardId }: { onSettingsChange?: (se
         console.error('Failed to update card design:', error);
       }
     }
-  }, [draft, cardId]);
+  }, [draft, resolvedCardId]);
 
   const handleReset = useCallback(() => { setDraft(saved); showToast('Reverted to last saved'); }, [saved]);
 
@@ -859,7 +859,7 @@ export function DesignNew({ onSettingsChange, cardId }: { onSettingsChange?: (se
 
       {/* Save / Reset */}
       <div className="flex gap-3 pt-1 pb-6">
-        <Button onClick={handleSave} className="flex-1 h-11 gap-2 font-semibold text-white" style={{ background: 'linear-gradient(135deg,#008001,#49B618)' }}>
+        <Button onClick={handleSave} disabled={!resolvedCardId} className="flex-1 h-11 gap-2 font-semibold text-white" style={{ background: 'linear-gradient(135deg,#008001,#49B618)' }}>
           <Save className="w-4 h-4" />{isSaved ? 'Saved!' : 'Save Changes'}
         </Button>
       </div>
@@ -915,7 +915,7 @@ export function DesignNew({ onSettingsChange, cardId }: { onSettingsChange?: (se
                 style={{ borderColor: hasUnsaved ? 'rgba(251,191,36,0.5)' : 'rgba(0,128,1,0.3)', color: hasUnsaved ? '#fbbf24' : '#a0a0a0' }}>
                 <RotateCcw className="w-3.5 h-3.5" /><span className="hidden sm:inline">Reset</span>
               </Button>
-              <Button onClick={handleSave} size="sm" className="gap-2 text-sm font-semibold text-white" style={{ background: 'linear-gradient(135deg,#008001,#49B618)' }}>
+              <Button onClick={handleSave} disabled={!resolvedCardId} size="sm" className="gap-2 text-sm font-semibold text-white" style={{ background: 'linear-gradient(135deg,#008001,#49B618)' }}>
                 <Save className="w-3.5 h-3.5" />{isSaved ? 'Saved!' : 'Save'}
               </Button>
             </div>

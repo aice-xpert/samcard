@@ -468,7 +468,7 @@ export function Orders() {
                                         No order data available
                                     </div>
                                 ) : (
-                                    <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                                    <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={1}>
                                         <BarChart data={chartData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
                                             <CartesianGrid strokeDasharray="3 3" stroke="#008001" strokeOpacity={0.15} vertical={false} />
                                             <XAxis dataKey="month" stroke="#A0A0A0" fontSize={11} tickLine={false} axisLine={false} />

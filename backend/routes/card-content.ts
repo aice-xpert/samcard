@@ -92,7 +92,7 @@ interface CardContentData {
 }
 
 router.get("/", verifySession, async (req: AuthRequest, res: Response) => {
-  const { cardId } = req.params;
+  const cardId = req.params.cardId || req.params.id;
 
   try {
     const { data: card } = await supabase
@@ -123,7 +123,7 @@ router.get("/", verifySession, async (req: AuthRequest, res: Response) => {
 });
 
 router.put("/", verifySession, async (req: AuthRequest, res: Response) => {
-  const { cardId } = req.params;
+  const cardId = req.params.cardId || req.params.id;
   const contentData: Partial<CardContentData> = req.body;
 
   try {

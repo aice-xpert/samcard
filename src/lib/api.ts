@@ -19,7 +19,10 @@ async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
     (headers as Record<string, string>)["Authorization"] = `Bearer ${sessionToken}`;
   }
   
-  const response = await fetch(`${BACKEND_URL}${path}`, {
+  const fullUrl = `${BACKEND_URL}${path}`;
+  console.log('→ API call:', fullUrl);
+  
+  const response = await fetch(fullUrl, {
     credentials: "include",
     cache: "no-store",
     ...init,
