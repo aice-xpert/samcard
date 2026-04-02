@@ -25,6 +25,7 @@ import cardShareRoute from "./routes/card-share";
 import nfcCardsRoute from "./routes/nfc-cards";
 import qrTemplatesRoute from "./routes/qr-templates";
 
+
 const app = express();
 const PORT: number | string = process.env.PORT || 5001;
 
