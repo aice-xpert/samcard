@@ -1160,8 +1160,8 @@ export default function BusinessProfile({
         <div className="px-4 sm:px-6 pb-4 -mt-1"><p className="text-xs text-[#555]">Enable this feature to collect your prospects contact details</p></div>
       </Card>
 
-      {extraSections.map(section => (
-        <ExtraSectionBlock key={section.id} section={section} onToggle={toggleExtra} onRemove={removeExtra} onUpdateData={updateExtraData} />
+      {extraSections.map((section, index) => (
+        <ExtraSectionBlock key={section.id || `extra-sec-${index}`} section={section} onToggle={toggleExtra} onRemove={removeExtra} onUpdateData={updateExtraData} />
       ))}
 
       <AddComponentMenu onAdd={handleAddComponent} />

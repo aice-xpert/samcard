@@ -1,8 +1,7 @@
 import express, { Response } from "express";
 import { supabase } from "../config/supabase";
 import { AuthRequest, verifySession } from "../middleware/auth";
-
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
 
 const getErrorMessage = (error: unknown): string =>
   error instanceof Error ? error.message : "Internal server error";
@@ -31,7 +30,7 @@ interface CardDesignData {
 }
 
 router.get("/", verifySession, async (req: AuthRequest, res: Response) => {
-  const { cardId } = req.params;
+  const cardId = req.params.cardId || req.params.id;
 
   try {
     const { data: card } = await supabase
@@ -61,17 +60,23 @@ router.get("/", verifySession, async (req: AuthRequest, res: Response) => {
 });
 
 router.put("/", verifySession, async (req: AuthRequest, res: Response) => {
-  const { cardId } = req.params;
+  const cardId = req.params.cardId || req.params.id;
   const designData: Partial<CardDesignData> = req.body;
 
   try {
-    const { data: card } = await supabase
+    const { data: card, error: fetchErr } = await supabase
       .from("Card")
       .select("userId")
       .eq("id", cardId)
       .single();
 
+    console.log("PUT /design - cardId:", cardId);
+    console.log("PUT /design - req.params:", req.params);
+    console.log("PUT /design - req.user.uid:", req.user?.uid);
+    console.log("PUT /design - fetch result:", { card, fetchErr });
+
     if (!card || card.userId !== req.user!.uid) {
+      console.log("Throwing 404 - card is null?", !card, "userId mismatch?", card?.userId !== req.user?.uid);
       return res.status(404).json({ error: "Card not found" });
     }
 

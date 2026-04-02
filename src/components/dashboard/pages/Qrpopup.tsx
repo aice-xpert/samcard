@@ -15,7 +15,7 @@ import { makeQRMatrix } from "@/components/dashboard/pages/qr-engine";
 import type { QRCustomConfig } from "@/components/dashboard/pages/Qrcustomizer";
 
 interface QrPopupProps {
-  isOpen:  boolean;
+  isOpen: boolean;
   onClose: () => void;
   cardUrl: string;
   cardId?: string;
@@ -148,15 +148,15 @@ export function QrPopup({ isOpen, onClose, cardUrl, cardId }: QrPopupProps) {
       <div
         onClick={onClose}
         style={{
-          position:          "fixed",
-          inset:             0,
-          zIndex:            999999,
-          background:        "rgba(0,0,0,0.75)",
-          backdropFilter:    "blur(10px)",
+          position: "fixed",
+          inset: 0,
+          zIndex: 999999,
+          background: "rgba(0,0,0,0.75)",
+          backdropFilter: "blur(10px)",
           WebkitBackdropFilter: "blur(10px)",
-          display:           "flex",
-          alignItems:        "center",
-          justifyContent:    "center",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
         {/* Panel */}
@@ -165,28 +165,28 @@ export function QrPopup({ isOpen, onClose, cardUrl, cardId }: QrPopupProps) {
           className="qr-pop-panel"
           onClick={e => e.stopPropagation()}
           style={{
-            position:      "relative",
-            display:       "flex",
+            position: "relative",
+            display: "flex",
             flexDirection: "column",
-            alignItems:    "center",
-            gap:           14,
-            padding:       "20px 18px 18px",
-            borderRadius:  22,
-            background:    "#0d1a0d",
-            border:        "1px solid rgba(0,128,1,0.35)",
-            boxShadow:     "0 8px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(73,182,24,0.1)",
-            width:         "min(300px, 90vw)",
+            alignItems: "center",
+            gap: 14,
+            padding: "20px 18px 18px",
+            borderRadius: 22,
+            background: "#0d1a0d",
+            border: "1px solid rgba(0,128,1,0.35)",
+            boxShadow: "0 8px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(73,182,24,0.1)",
+            width: "min(300px, 90vw)",
           }}
         >
           {/* Header */}
           <div style={{ textAlign: "center" }}>
             <p style={{
-              margin:        0,
-              fontSize:      10,
-              fontWeight:    700,
+              margin: 0,
+              fontSize: 10,
+              fontWeight: 700,
               letterSpacing: "0.12em",
               textTransform: "uppercase",
-              color:         "#49B618",
+              color: "#49B618",
             }}>
               Your Digital Card
             </p>
@@ -204,22 +204,22 @@ export function QrPopup({ isOpen, onClose, cardUrl, cardId }: QrPopupProps) {
 
           {/* URL pill */}
           <div style={{
-            display:      "flex",
-            alignItems:   "center",
-            padding:      "7px 13px",
+            display: "flex",
+            alignItems: "center",
+            padding: "7px 13px",
             borderRadius: 999,
-            background:   "#111a11",
-            border:       "1px solid rgba(0,128,1,0.2)",
-            width:        "100%",
-            overflow:     "hidden",
+            background: "#111a11",
+            border: "1px solid rgba(0,128,1,0.2)",
+            width: "100%",
+            overflow: "hidden",
           }}>
             <span style={{
-              fontSize:     11,
-              color:        "#7a9a7a",
-              overflow:     "hidden",
+              fontSize: 11,
+              color: "#7a9a7a",
+              overflow: "hidden",
               textOverflow: "ellipsis",
-              whiteSpace:   "nowrap",
-              flex:         1,
+              whiteSpace: "nowrap",
+              flex: 1,
             }}>
               {cardUrl}
             </span>
@@ -230,20 +230,20 @@ export function QrPopup({ isOpen, onClose, cardUrl, cardId }: QrPopupProps) {
             <button
               onClick={handleDownload}
               style={{
-                flex:           1,
-                display:        "flex",
-                alignItems:     "center",
+                flex: 1,
+                display: "flex",
+                alignItems: "center",
                 justifyContent: "center",
-                gap:            6,
-                padding:        "10px 0",
-                borderRadius:   12,
-                background:     "linear-gradient(135deg,#008001,#49B618)",
-                border:         "none",
-                color:          "#fff",
-                fontSize:       12,
-                fontWeight:     700,
-                cursor:         "pointer",
-                boxShadow:      "0 3px 14px rgba(0,128,1,0.3)",
+                gap: 6,
+                padding: "10px 0",
+                borderRadius: 12,
+                background: "linear-gradient(135deg,#008001,#49B618)",
+                border: "none",
+                color: "#fff",
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: "pointer",
+                boxShadow: "0 3px 14px rgba(0,128,1,0.3)",
               }}
             >
               <Download style={{ width: 14, height: 14 }} />
@@ -252,19 +252,19 @@ export function QrPopup({ isOpen, onClose, cardUrl, cardId }: QrPopupProps) {
             <button
               onClick={handleShare}
               style={{
-                flex:           1,
-                display:        "flex",
-                alignItems:     "center",
+                flex: 1,
+                display: "flex",
+                alignItems: "center",
                 justifyContent: "center",
-                gap:            6,
-                padding:        "10px 0",
-                borderRadius:   12,
-                background:     "rgba(0,128,1,0.1)",
-                border:         "1px solid rgba(0,128,1,0.3)",
-                color:          "#f0f0f0",
-                fontSize:       12,
-                fontWeight:     700,
-                cursor:         "pointer",
+                gap: 6,
+                padding: "10px 0",
+                borderRadius: 12,
+                background: "rgba(0,128,1,0.1)",
+                border: "1px solid rgba(0,128,1,0.3)",
+                color: "#f0f0f0",
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: "pointer",
               }}
             >
               <Share2 style={{ width: 14, height: 14 }} />
@@ -276,18 +276,18 @@ export function QrPopup({ isOpen, onClose, cardUrl, cardId }: QrPopupProps) {
           <button
             onClick={onClose}
             style={{
-              position:       "absolute",
-              top:            10,
-              right:          10,
-              width:          28,
-              height:         28,
-              borderRadius:   "50%",
-              background:     "rgba(0,128,1,0.12)",
-              border:         "1px solid rgba(0,128,1,0.3)",
-              color:          "#7a9a7a",
-              cursor:         "pointer",
-              display:        "flex",
-              alignItems:     "center",
+              position: "absolute",
+              top: 10,
+              right: 10,
+              width: 28,
+              height: 28,
+              borderRadius: "50%",
+              background: "rgba(0,128,1,0.12)",
+              border: "1px solid rgba(0,128,1,0.3)",
+              color: "#7a9a7a",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
               justifyContent: "center",
             }}
           >

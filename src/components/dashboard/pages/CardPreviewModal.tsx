@@ -7,13 +7,13 @@ import {
   Video as VideoIcon, ChevronRight, MessageSquare, Briefcase,
 } from 'lucide-react';
 import { Button } from '@/components/dashboard/ui/button';
-import { QrPopup } from '@/components/dashboard/pages/Qrpopup';
+// import { QrPopup } from '@/components/dashboard/pages/Qrpopup';
 
 // ── Types ──────────────────────────────────────────────────────────
 export type LogoPosition = 'top-left' | 'top-right' | 'below-photo' | 'below-name';
 
-interface SocialLink  { platform: number; value: string; }
-interface CustomLink  { label: string; url: string; }
+interface SocialLink { platform: number; value: string; }
+interface CustomLink { label: string; url: string; }
 
 export interface ExtraSection {
   id: string; type: string; label: string;
@@ -28,20 +28,20 @@ interface Sections {
 }
 
 export interface ThemeOverride {
-  green:        string;
-  greenLight:   string;
-  bg:           string;
-  card:         string;
-  cardBorder:   string;
-  textPrimary:  string;
-  textMuted:    string;
-  divider:      string;
-  muted:        string;
-  fontFamily:   string;
+  green: string;
+  greenLight: string;
+  bg: string;
+  card: string;
+  cardBorder: string;
+  textPrimary: string;
+  textMuted: string;
+  divider: string;
+  muted: string;
+  fontFamily: string;
   nameFontSize: number;
   bodyFontSize: number;
   boldHeadings: boolean;
-  cardRadius:   number;
+  cardRadius: number;
   phoneBgStyle?: string;
 }
 
@@ -72,36 +72,36 @@ export interface CardPreviewModalProps {
 
 // ── Social config ──────────────────────────────────────────────────
 const SOCIAL_OPTIONS = [
-  { icon: Linkedin,  name: 'LinkedIn',  color: '#0A66C2', baseUrl: 'https://linkedin.com/in/' },
-  { icon: Instagram, name: 'Instagram', color: '#E1306C', baseUrl: 'https://instagram.com/'   },
-  { icon: Twitter,   name: 'Twitter',   color: '#1DA1F2', baseUrl: 'https://twitter.com/'     },
-  { icon: Facebook,  name: 'Facebook',  color: '#1877F2', baseUrl: 'https://facebook.com/'    },
-  { icon: Youtube,   name: 'YouTube',   color: '#FF0000', baseUrl: 'https://youtube.com/'     },
+  { icon: Linkedin, name: 'LinkedIn', color: '#0A66C2', baseUrl: 'https://linkedin.com/in/' },
+  { icon: Instagram, name: 'Instagram', color: '#E1306C', baseUrl: 'https://instagram.com/' },
+  { icon: Twitter, name: 'Twitter', color: '#1DA1F2', baseUrl: 'https://twitter.com/' },
+  { icon: Facebook, name: 'Facebook', color: '#1877F2', baseUrl: 'https://facebook.com/' },
+  { icon: Youtube, name: 'YouTube', color: '#FF0000', baseUrl: 'https://youtube.com/' },
 ] as const;
 
 const CONTACT_CONFIG = [
-  { key: 'phone',    icon: Phone,  label: 'Call Us',  hrefFn: (v: string) => `tel:${v}` },
-  { key: 'email',    icon: Mail,   label: 'Email',    hrefFn: (v: string) => `mailto:${v}` },
-  { key: 'location', icon: MapPin, label: 'Address',  hrefFn: (v: string) => `https://maps.google.com/?q=${encodeURIComponent(v)}` },
-  { key: 'website',  icon: Globe,  label: 'Website',  hrefFn: (v: string) => v },
+  { key: 'phone', icon: Phone, label: 'Call Us', hrefFn: (v: string) => `tel:${v}` },
+  { key: 'email', icon: Mail, label: 'Email', hrefFn: (v: string) => `mailto:${v}` },
+  { key: 'location', icon: MapPin, label: 'Address', hrefFn: (v: string) => `https://maps.google.com/?q=${encodeURIComponent(v)}` },
+  { key: 'website', icon: Globe, label: 'Website', hrefFn: (v: string) => v },
 ] as const;
 
 // ── Default Theme ──────────────────────────────────────────────────
 const DEFAULT_T: ThemeOverride = {
-  bg:           '#0a0f0a',
-  card:         '#111a11',
-  cardBorder:   'rgba(0,128,1,0.2)',
-  green:        '#008001',
-  greenLight:   '#49B618',
-  muted:        '#3a4a3a',
-  textPrimary:  '#f0f0f0',
-  textMuted:    '#7a9a7a',
-  divider:      'rgba(0,128,1,0.12)',
-  fontFamily:   'inherit',
+  bg: '#0a0f0a',
+  card: '#111a11',
+  cardBorder: 'rgba(0,128,1,0.2)',
+  green: '#008001',
+  greenLight: '#49B618',
+  muted: '#3a4a3a',
+  textPrimary: '#f0f0f0',
+  textMuted: '#7a9a7a',
+  divider: 'rgba(0,128,1,0.12)',
+  fontFamily: 'inherit',
   nameFontSize: 22,
   bodyFontSize: 11,
   boldHeadings: true,
-  cardRadius:   16,
+  cardRadius: 16,
 };
 
 function resolveSocialUrl(value: string, platform: number): string {
@@ -219,7 +219,7 @@ export function CardPreviewModal({
   if (!isOpen) return null;
 
   const hasProfileImage = !!profileImage?.trim();
-  const hasBrandLogo    = !!brandLogo?.trim();
+  const hasBrandLogo = !!brandLogo?.trim();
 
   const dynamicStyles = `
     @keyframes modal-in {
@@ -241,19 +241,19 @@ export function CardPreviewModal({
     .filter(c => c.value.trim());
 
   const activeSocials = socialLinks.filter(s => s.value.trim());
-  const activeLinks   = customLinks.filter(l => l.label || l.url);
+  const activeLinks = customLinks.filter(l => l.label || l.url);
 
   return (
     <>
       <style>{dynamicStyles}</style>
 
       {/* ── QR Popup — renders above everything, zIndex 999999 ── */}
-      <QrPopup
+      {/* <QrPopup
         isOpen={qrPopupOpen}
         onClose={() => setQrPopupOpen(false)}
         cardUrl={cardUrl}
         cardId={cardId}
-      />
+      /> */}
 
       <div
         className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -281,7 +281,7 @@ export function CardPreviewModal({
                 background: 'linear-gradient(160deg,#444,#1c1c1c)',
                 boxShadow: '0 0 0 1px rgba(255,255,255,0.06), 0 40px 80px rgba(0,0,0,0.95)',
               }}>
-                <div className="absolute rounded-l-sm" style={{ left: -3, top: 88,  width: 3, height: 28, background: '#2a2a2a' }} />
+                <div className="absolute rounded-l-sm" style={{ left: -3, top: 88, width: 3, height: 28, background: '#2a2a2a' }} />
                 <div className="absolute rounded-l-sm" style={{ left: -3, top: 124, width: 3, height: 40, background: '#2a2a2a' }} />
                 <div className="absolute rounded-l-sm" style={{ left: -3, top: 172, width: 3, height: 40, background: '#2a2a2a' }} />
                 <div className="absolute rounded-r-sm" style={{ right: -3, top: 120, width: 3, height: 56, background: '#2a2a2a' }} />
@@ -297,20 +297,20 @@ export function CardPreviewModal({
                     <span style={{ fontSize: 11, fontWeight: 700, color: T.textPrimary, ...ff }}>9:41</span>
                     <div className="flex items-center gap-[5px]">
                       <svg width="16" height="11" viewBox="0 0 16 11" fill="none">
-                        <rect x="0"    y="7"   width="3"   height="4"   rx="0.8" fill={T.greenLight}/>
-                        <rect x="4.5"  y="4.5" width="3"   height="6.5" rx="0.8" fill={T.greenLight}/>
-                        <rect x="9"    y="2"   width="3"   height="9"   rx="0.8" fill={T.greenLight}/>
-                        <rect x="13.5" y="0"   width="2.5" height="11"  rx="0.8" fill={T.greenLight} opacity="0.3"/>
+                        <rect x="0" y="7" width="3" height="4" rx="0.8" fill={T.greenLight} />
+                        <rect x="4.5" y="4.5" width="3" height="6.5" rx="0.8" fill={T.greenLight} />
+                        <rect x="9" y="2" width="3" height="9" rx="0.8" fill={T.greenLight} />
+                        <rect x="13.5" y="0" width="2.5" height="11" rx="0.8" fill={T.greenLight} opacity="0.3" />
                       </svg>
                       <svg width="15" height="11" viewBox="0 0 15 11" fill="none">
-                        <circle cx="7.5" cy="8.5" r="1.2" fill={T.greenLight}/>
-                        <path d="M4.1 6.8a4.8 4.8 0 0 1 6.8 0" stroke={T.greenLight} strokeWidth="1.3" strokeLinecap="round" fill="none"/>
-                        <path d="M1.3 4a8.7 8.7 0 0 1 12.4 0" stroke={T.greenLight} strokeWidth="1.3" strokeLinecap="round" fill="none" opacity="0.35"/>
+                        <circle cx="7.5" cy="8.5" r="1.2" fill={T.greenLight} />
+                        <path d="M4.1 6.8a4.8 4.8 0 0 1 6.8 0" stroke={T.greenLight} strokeWidth="1.3" strokeLinecap="round" fill="none" />
+                        <path d="M1.3 4a8.7 8.7 0 0 1 12.4 0" stroke={T.greenLight} strokeWidth="1.3" strokeLinecap="round" fill="none" opacity="0.35" />
                       </svg>
                       <svg width="25" height="12" viewBox="0 0 25 12" fill="none">
-                        <rect x="0.5" y="0.5" width="21" height="11" rx="3" stroke={T.greenLight} strokeOpacity="0.5"/>
-                        <rect x="2" y="2" width="14" height="8" rx="1.5" fill={T.greenLight}/>
-                        <path d="M23 4v4a2 2 0 0 0 0-4z" fill={T.greenLight} fillOpacity="0.4"/>
+                        <rect x="0.5" y="0.5" width="21" height="11" rx="3" stroke={T.greenLight} strokeOpacity="0.5" />
+                        <rect x="2" y="2" width="14" height="8" rx="1.5" fill={T.greenLight} />
+                        <path d="M23 4v4a2 2 0 0 0 0-4z" fill={T.greenLight} fillOpacity="0.4" />
                       </svg>
                     </div>
                   </div>
@@ -320,9 +320,9 @@ export function CardPreviewModal({
                     style={{ background: T.phoneBgStyle || T.bg, ...ff }}>
 
                     {/* HERO */}
-                    <div className="relative" style={{ aspectRatio: '4/3', maxHeight: '240px' }}>
+                    <div className="relative" style={{ aspectRatio: '4/3', maxHeight: '240px', overflow: 'hidden' }}>
                       {hasProfileImage ? (
-                        <img src={profileImage} alt={formData.name} className="w-full object-cover object-top" />
+                        <img src={profileImage} alt={formData.name} className="w-full h-full object-contain object-center" />
                       ) : (
                         <div className="w-full h-full"
                           style={{ background: `linear-gradient(160deg, ${T.muted} 0%, ${T.card} 100%)` }} />
@@ -434,10 +434,10 @@ export function CardPreviewModal({
                       <CardBlock T={T}>
                         <SectionHeader T={T} icon={<Briefcase className="w-3.5 h-3.5 text-white" />} title="Business Details" />
                         {[
-                          formData.company      && { label: 'Company',      val: formData.company },
-                          formData.industry     && { label: 'Industry',     val: formData.industry },
-                          formData.yearFounded  && { label: 'Year Founded', val: formData.yearFounded },
-                          formData.location     && { label: 'Location',     val: formData.location },
+                          formData.company && { label: 'Company', val: formData.company },
+                          formData.industry && { label: 'Industry', val: formData.industry },
+                          formData.yearFounded && { label: 'Year Founded', val: formData.yearFounded },
+                          formData.location && { label: 'Location', val: formData.location },
                         ].filter(Boolean).map((row, i, arr) => {
                           const { label, val } = row as { label: string; val: string };
                           return (
@@ -457,9 +457,9 @@ export function CardPreviewModal({
                       <CardBlock T={T}>
                         <SectionHeader T={T} icon={<Share2 className="w-3.5 h-3.5 text-white" />} title="Social Links" />
                         {activeSocials.map((s, i) => {
-                          const opt  = SOCIAL_OPTIONS[s.platform] ?? SOCIAL_OPTIONS[0];
+                          const opt = SOCIAL_OPTIONS[s.platform] ?? SOCIAL_OPTIONS[0];
                           const Icon = opt.icon;
-                          const url  = resolveSocialUrl(s.value, s.platform);
+                          const url = resolveSocialUrl(s.value, s.platform);
                           return (
                             <div key={i}>
                               <a href={url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
@@ -560,14 +560,14 @@ export function CardPreviewModal({
                     style={{ background: T.card, borderTop: `1px solid ${T.cardBorder}` }}>
                     <div className="flex items-center gap-2">
                       {/* ── QR button — opens our popup only, does NOT call onShowQR ── */}
-                      {onShowQR && (
+                      {/* {onShowQR && (
                         <button
                           onClick={e => { e.stopPropagation(); setQrPopupOpen(true); }}
                           className="modal-tap w-9 h-9 rounded-full flex items-center justify-center"
                           style={{ background: T.bg, border: `1px solid ${T.green}4d` }}>
                           <QrCode className="w-4 h-4" style={{ color: T.textMuted }} />
                         </button>
-                      )}
+                      )} */}
                       {onShareLink && (
                         <button onClick={e => { e.stopPropagation(); onShareLink(); }}
                           className="modal-tap w-9 h-9 rounded-full flex items-center justify-center"
@@ -675,12 +675,14 @@ function ExtraModalSection({ section, T }: { section: ExtraSection; T: ThemeOver
               style={{ background: `linear-gradient(135deg,${T.green},${T.greenLight})` }}>🕐</div>
             <span style={{ fontWeight: T.boldHeadings ? 700 : 500, fontSize: T.bodyFontSize, color: T.textPrimary, ...ff }}>Business Hours</span>
           </div>
-          {days.map(day => { const val = str(d, day); return val ? (
-            <div key={day} className="flex items-center justify-between px-4 py-2">
-              <span style={{ fontSize: T.bodyFontSize, color: T.textMuted, ...ff }}>{day}</span>
-              <span style={{ fontWeight: T.boldHeadings ? 700 : 500, fontSize: T.bodyFontSize, color: T.textPrimary, ...ff }}>{val}</span>
-            </div>
-          ) : null; })}
+          {days.map(day => {
+            const val = str(d, day); return val ? (
+              <div key={day} className="flex items-center justify-between px-4 py-2">
+                <span style={{ fontSize: T.bodyFontSize, color: T.textMuted, ...ff }}>{day}</span>
+                <span style={{ fontWeight: T.boldHeadings ? 700 : 500, fontSize: T.bodyFontSize, color: T.textPrimary, ...ff }}>{val}</span>
+              </div>
+            ) : null;
+          })}
         </div>
       ) : null;
     }
