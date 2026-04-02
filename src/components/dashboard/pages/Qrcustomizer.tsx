@@ -7,6 +7,7 @@ import {
   QR_SHAPE_DEFS, STICKER_DEFS, StickerDef,
 } from "@/components/dashboard/pages/Qrrenderers";
 import { makeQRMatrix } from "@/components/dashboard/pages/qr-engine";
+import { uploadFile } from "@/lib/api";
 
 const PREVIEW_PX = 240;
 const STICKER_RING_PAD = 44;
@@ -744,7 +745,14 @@ export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUr
             <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: 12, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" as const }}>
               <label style={{ display: "flex", alignItems: "center", gap: 7, background: "linear-gradient(135deg,#16a34a,#22c55e)", color: "#052e14", borderRadius: 9, padding: "8px 14px", cursor: "pointer", fontSize: 11, fontWeight: 700, fontFamily: FONT, boxShadow: "0 2px 10px rgba(34,197,94,0.25)" }}>
                 + Add Your Own Logo
-                <input type="file" accept="image/*" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (!f) return; setCustomLogoUrl(URL.createObjectURL(f)); setSelectedLogoIdx(null); }} />
+                <input type="file" accept="image/*" style={{ display: "none" }} onChange={async e => {
+                  const f = e.target.files?.[0]; if (!f) return;
+                  try {
+                    const res = await uploadFile(f);
+                    setCustomLogoUrl(res.url);
+                    setSelectedLogoIdx(null);
+                  } catch (err) { alert("Failed to upload logo."); }
+                }} />
               </label>
               <span style={{ fontSize: 10, color: "rgba(148,163,184,0.35)" }}>Min 512px · 1:1 ratio</span>
             </div>
@@ -804,7 +812,14 @@ export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUr
                   </div>
                   <label style={{ background: "linear-gradient(135deg,#16a34a,#22c55e)", color: "#052e14", borderRadius: 9, padding: "9px 18px", cursor: "pointer", fontSize: 12, fontWeight: 700, fontFamily: FONT, boxShadow: "0 2px 12px rgba(34,197,94,0.25)" }}>
                     + Add Picture
-                    <input type="file" accept="image/*" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (!f) return; setDecoratePicUrl(URL.createObjectURL(f)); setQrOverlay({ x: 5, y: 5, size: 100 }); }} />
+                    <input type="file" accept="image/*" style={{ display: "none" }} onChange={async e => {
+                      const f = e.target.files?.[0]; if (!f) return;
+                      try {
+                        const res = await uploadFile(f);
+                        setDecoratePicUrl(res.url);
+                        setQrOverlay({ x: 5, y: 5, size: 100 });
+                      } catch (err) { alert("Failed to upload picture."); }
+                    }} />
                   </label>
                   <p style={{ margin: 0, fontSize: 10, color: "rgba(148,163,184,0.35)", textAlign: "center" }}>PNG, JPG, GIF supported</p>
                 </div>
@@ -812,9 +827,16 @@ export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUr
             </div>
             {decoratePicUrl && (
               <div style={{ display: "flex", gap: 7 }}>
-                <label style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, background: "rgba(34,197,94,0.06)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.15)", borderRadius: 9, padding: "7px 12px", cursor: "pointer", fontSize: 11, fontWeight: 700, fontFamily: FONT }}>
+                  <label style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, background: "rgba(34,197,94,0.06)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.15)", borderRadius: 9, padding: "7px 12px", cursor: "pointer", fontSize: 11, fontWeight: 700, fontFamily: FONT }}>
                   🔄 Change Picture
-                  <input type="file" accept="image/*" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (!f) return; setDecoratePicUrl(URL.createObjectURL(f)); setQrOverlay({ x: 5, y: 5, size: 100 }); }} />
+                  <input type="file" accept="image/*" style={{ display: "none" }} onChange={async e => {
+                    const f = e.target.files?.[0]; if (!f) return;
+                    try {
+                      const res = await uploadFile(f);
+                      setDecoratePicUrl(res.url);
+                      setQrOverlay({ x: 5, y: 5, size: 100 });
+                    } catch (err) { alert("Failed to upload picture."); }
+                  }} />
                 </label>
                 <button onClick={() => { setDecoratePicUrl(null); setQrOverlay({ x: 5, y: 5, size: 100 }); }} style={{ padding: "7px 12px", borderRadius: 9, border: "1px solid rgba(239,68,68,0.2)", background: "rgba(239,68,68,0.06)", color: "#f87171", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: FONT }}>✕ Remove</button>
               </div>
