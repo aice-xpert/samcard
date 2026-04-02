@@ -56,6 +56,15 @@ export interface ApiUser {
   showPhone: boolean;
   planTier: string;
   subscriptionStatus: string;
+  subscriptionEndsAt: string | null;
+  maxCards: number;
+  maxTaps: number;
+  maxStorageMb: number;
+  maxLeads: number;
+  totalCards: number;
+  totalTaps: number;
+  totalViews: number;
+  totalLeads: number;
 }
 
 export interface UpdateUserPayload {
@@ -139,6 +148,30 @@ export async function updateBusinessProfile(payload: UpdateBusinessProfilePayloa
     method: "PUT",
     body: JSON.stringify(payload),
   });
+}
+
+// ─── Plans ───────────────────────────────────────────────────────────
+export interface ApiPlan {
+  id: number;
+  name: string;
+  tier: string;
+  priceMonthly: number;
+  priceYearly: number;
+  currency: string;
+  maxCards: number;
+  maxTaps: number;
+  maxStorageMb: number;
+  maxLeads: number;
+  features: string[];
+  description: string | null;
+  popular: boolean;
+  trialDays: number;
+  isActive: boolean;
+  displayOrder: number;
+}
+
+export async function getPlans() {
+  return apiRequest<ApiPlan[]>("/api/plans", { method: "GET" });
 }
 
 // ─── Cards ───────────────────────────────────────────────────────────
@@ -537,9 +570,16 @@ export interface Invoice {
   id: string;
   invoiceNumber: string;
   date: string;
+  periodStart?: string;
+  periodEnd?: string;
   amount: number;
+  subtotal?: number;
+  tax?: number;
+  discount?: number;
+  currency?: string;
   status: string;
   pdfUrl: string | null;
+  billingName?: string;
 }
 
 export interface InvoicesResponse {

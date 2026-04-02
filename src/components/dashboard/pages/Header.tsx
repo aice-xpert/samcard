@@ -1,9 +1,8 @@
 "use client";
 
-import { Bell, ChevronDown, Search, X } from 'lucide-react';
+import { Bell, ChevronDown } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/dashboard/ui/avatar';
 import { Button } from '@/components/dashboard/ui/button';
-import { Input } from '@/components/dashboard/ui/input';
 import {
   Select,
   SelectContent,
@@ -19,8 +18,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/dashboard/ui/dropdown-menu';
+import { getUserProfile } from '@/lib/api';
 import { useUser } from '@/contexts/UserContext';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 interface Notification {
   id: string;
@@ -36,7 +36,6 @@ interface EnhancedHeaderProps {
   showDateFilter?: boolean;
   dateRange?: string;
   onDateRangeChange?: (value: string) => void;
-  onSearch?: (query: string) => void;
   onNavigate?: (page: string) => void;
 }
 
@@ -52,14 +51,37 @@ export function EnhancedHeader({
   showDateFilter = false,
   dateRange = '7',
   onDateRangeChange,
-  onSearch,
   onNavigate
 }: EnhancedHeaderProps) {
-  const { profile, connectedAccounts } = useUser();
-  const [searchQuery, setSearchQuery] = useState('');
+  const { profile } = useUser();
   const [notifications, setNotifications] = useState<Notification[]>(defaultNotifications);
+  const [membershipLabel, setMembershipLabel] = useState('Free');
   const initials = profile.name.split(" ").map(n => n[0]).join("").toUpperCase();
   const unreadCount = notifications.filter(n => !n.read).length;
+
+  useEffect(() => {
+    let isMounted = true;
+
+    getUserProfile()
+      .then((user) => {
+        if (!isMounted) return;
+        const normalized = (user?.planTier ?? '').trim().toUpperCase();
+        if (!normalized) {
+          setMembershipLabel('Free');
+          return;
+        }
+        const pretty = `${normalized.charAt(0)}${normalized.slice(1).toLowerCase()}`;
+        setMembershipLabel(pretty);
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setMembershipLabel('Free');
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
 
   const handleNavigate = useCallback((page: string) => {
@@ -73,15 +95,6 @@ export function EnhancedHeader({
   const markAsRead = useCallback((id: string) => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
   }, []);
-
-  const getPageForDropdown = (item: string) => {
-    switch (item) {
-      case 'Profile Settings': return 'settings';
-      case 'Billing': return 'billing';
-      case 'Team': return 'settings';
-      default: return 'settings';
-    }
-  };
 
   return (
     <header className="h-16 border-b border-[#008001]/30 bg-[#000000]/95 backdrop-blur-xl px-8 flex items-center justify-between shadow-sm">
@@ -199,7 +212,7 @@ export function EnhancedHeader({
               </Avatar>
               <div className="text-left hidden md:block">
                 <p className="text-sm text-white font-medium">{profile.name}</p>
-                <p className="text-xs text-[#A0A0A0]">Pro Member</p>
+                <p className="text-xs text-[#A0A0A0]">{membershipLabel} Member</p>
               </div>
               <ChevronDown className="w-4 h-4 text-[#A0A0A0]" />
             </Button>

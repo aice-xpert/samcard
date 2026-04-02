@@ -4,9 +4,12 @@ import { AuthRequest, verifySession } from "../middleware/auth";
 
 const router = express.Router();
 
-const getErrorMessage = (error: any): string => {
-  if (error?.message) return error.message; 
+const getErrorMessage = (error: unknown): string => {
   if (error instanceof Error) return error.message;
+  if (typeof error === "object" && error !== null && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string") return message;
+  }
   return "Internal server error";
 };
 
@@ -39,9 +42,16 @@ router.get("/", verifySession, async (req: AuthRequest, res: Response) => {
       id: inv.id,
       invoiceNumber: inv.invoiceNumber,
       date: inv.createdAt,
+      periodStart: inv.periodStart,
+      periodEnd: inv.periodEnd,
       amount: inv.total,
+      subtotal: inv.subtotal,
+      tax: inv.tax,
+      discount: inv.discount,
+      currency: inv.currency,
       status: inv.status,
       pdfUrl: inv.pdfUrl,
+      billingName: inv.billingName,
     }));
 
     return res.json({

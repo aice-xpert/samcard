@@ -30,7 +30,7 @@ interface CardDesignData {
   glowEffect: boolean;
 }
 
-router.get("/:cardId", verifySession, async (req: AuthRequest, res: Response) => {
+router.get("/", verifySession, async (req: AuthRequest, res: Response) => {
   const { cardId } = req.params;
 
   try {
@@ -60,7 +60,7 @@ router.get("/:cardId", verifySession, async (req: AuthRequest, res: Response) =>
   }
 });
 
-router.put("/:cardId", verifySession, async (req: AuthRequest, res: Response) => {
+router.put("/", verifySession, async (req: AuthRequest, res: Response) => {
   const { cardId } = req.params;
   const designData: Partial<CardDesignData> = req.body;
 
