@@ -253,26 +253,11 @@ router.get("/:slug", async (req, res: Response) => {
       .eq("cardId", card.id)
       .maybeSingle();
 
-    console.log("[public-card] about to fetch qrConfig", {
-      slug,
-      cardId: card.id,
-      cardIdType: typeof card.id,
-    });
-
-    const { data: qrConfig, error: qrError } = await supabase
+    const { data: qrConfig } = await supabase
       .from("CardQRConfig")
       .select("*")
       .eq("cardId", card.id)
       .maybeSingle();
-
-    console.log("[public-card] fetched QR config", {
-      slug,
-      cardId: card.id,
-      hasQrConfig: !!qrConfig,
-      qrError: qrError?.message,
-      allQrConfigKeys: qrConfig ? Object.keys(qrConfig) : null,
-      qrConfig: qrConfig ? { shapeId: qrConfig.shapeId, fg: qrConfig.fg, bg: qrConfig.bg, stickerId: qrConfig.stickerId, selectedLogo: qrConfig.selectedLogo } : null,
-    });
 
     const { data: socialLinks } = await supabase
       .from("SocialLink")
@@ -511,12 +496,6 @@ router.get("/:slug", async (req, res: Response) => {
       },
     });
 
-    console.log("[public-card] final response", {
-      slug,
-      hasQrConfig: !!response.qrConfig,
-      qrConfig: response.qrConfig ? { shapeId: response.qrConfig.shapeId, fg: response.qrConfig.fg, bg: response.qrConfig.bg } : null,
-    });
-
     res.set("Cache-Control", "no-store");
     return res.json(response);
   } catch (error) {
@@ -544,21 +523,46 @@ router.post("/:slug/leads", async (req, res: Response) => {
   try {
     const isPreview = req.query.preview === "true";
 
-    const { data: card, error: cardError } = await supabase
-      .from("Card")
-      .select("id, userId, businessProfileId, name, status")
-      .eq("slug", slug)
-      .maybeSingle();
+    console.log("[public-card POST] Lead submission attempt", { slug, isPreview, hasName: !!name, hasEmail: !!email });
 
-    if (cardError) {
-      return res.status(500).json({ error: cardError.message });
+    // Try slug first, then customSlug (same pattern as GET endpoint)
+    const buildQuery = (field: "slug" | "customSlug") => {
+      console.log(`[public-card POST] Querying ${field} = ${slug}`);
+      let q = supabase.from("Card").select("id, userId, businessProfileId, name, status").eq(field, slug);
+      if (!isPreview) q = q.eq("status", "ACTIVE");
+      return q.maybeSingle();
+    };
+
+    console.log("[public-card POST] Searching for card with", { slug, field: "slug" });
+    const { data: bySlug, error: slugError } = await buildQuery("slug");
+    if (slugError) {
+      console.error("[public-card POST] Slug query error:", slugError);
+      return res.status(500).json({ error: slugError.message });
     }
 
+    console.log("[public-card POST] Slug search result:", { found: !!bySlug, cardId: bySlug?.id });
+
+    let card = bySlug;
     if (!card) {
+      console.log("[public-card POST] Not found by slug, searching for card with", { slug, field: "customSlug" });
+      const { data: byCustomSlug, error: customSlugError } = await buildQuery("customSlug");
+      if (customSlugError) {
+        console.error("[public-card POST] CustomSlug query error:", customSlugError);
+        return res.status(500).json({ error: customSlugError.message });
+      }
+      console.log("[public-card POST] CustomSlug search result:", { found: !!byCustomSlug, cardId: byCustomSlug?.id });
+      card = byCustomSlug;
+    }
+
+    console.log("[public-card POST] Card lookup result", { slug, cardFound: !!card, cardStatus: card?.status });
+
+    if (!card) {
+      console.log("[public-card POST] Card not found for slug or customSlug", slug);
       return res.status(404).json({ error: "Card not found" });
     }
 
     if (card.status !== "ACTIVE" && !isPreview) {
+      console.log("[public-card POST] Card not active", { cardId: card.id, status: card.status, isPreview });
       return res.status(409).json({
         error:
           "Card exists but is not published yet. Publish the card to accept public leads.",
@@ -580,6 +584,7 @@ router.post("/:slug/leads", async (req, res: Response) => {
         .maybeSingle();
 
       if (existingLead) {
+        console.log("[public-card POST] Duplicate lead email", { cardId: card.id, email });
         return res
           .status(409)
           .json({
@@ -619,11 +624,13 @@ router.post("/:slug/leads", async (req, res: Response) => {
       .single();
 
     if (leadError) {
-      console.error("Lead creation error:", leadError);
+      console.error("[public-card POST] Lead creation error", { cardId: card.id, error: leadError.message });
       return res
         .status(500)
         .json({ error: leadError.message || "Failed to create lead" });
     }
+
+    console.log("[public-card POST] Lead created successfully", { leadId: lead.id, cardId: card.id, email });
 
     void createNotification(
       card.userId,
@@ -635,7 +642,7 @@ router.post("/:slug/leads", async (req, res: Response) => {
 
     return res.status(201).json({ success: true, lead });
   } catch (error) {
-    console.error("Error creating lead:", error);
+    console.error("[public-card POST] Error creating lead:", error);
     return res.status(500).json({ error: getErrorMessage(error) });
   }
 });
@@ -670,16 +677,33 @@ router.post("/:slug/track", async (req, res: Response) => {
   }
 
   try {
-    const { data: card, error: cardError } = await supabase
-      .from("Card")
-      .select(
-        "id, userId, totalViews, totalTaps, totalScans, totalSaves, totalShares, totalLinkClicks",
-      )
-      .eq("slug", slug)
-      .eq("status", "ACTIVE")
-      .single();
+    const CARD_SELECT =
+      "id, userId, totalViews, totalTaps, totalScans, totalSaves, totalShares, totalLinkClicks";
 
-    if (cardError || !card) {
+    const buildQuery = (field: "slug" | "customSlug") =>
+      supabase
+        .from("Card")
+        .select(CARD_SELECT)
+        .eq(field, slug)
+        .eq("status", "ACTIVE")
+        .maybeSingle();
+
+    const { data: bySlug, error: slugError } = await buildQuery("slug");
+    if (slugError) {
+      return res.status(500).json({ error: slugError.message });
+    }
+
+    let card = bySlug;
+    if (!card) {
+      const { data: byCustomSlug, error: customSlugError } =
+        await buildQuery("customSlug");
+      if (customSlugError) {
+        return res.status(500).json({ error: customSlugError.message });
+      }
+      card = byCustomSlug;
+    }
+
+    if (!card) {
       return res.status(404).json({ error: "Card not found" });
     }
 
@@ -761,14 +785,30 @@ router.get("/:slug/qr", async (req, res: Response) => {
   const { size = 300 } = req.query;
 
   try {
-    const { data: card, error: cardError } = await supabase
-      .from("Card")
-      .select("id, slug, shareUrl, qrEnabled, qrConfig, qrShape")
-      .eq("slug", slug)
-      .eq("status", "ACTIVE")
-      .single();
+    const buildQuery = (field: "slug" | "customSlug") =>
+      supabase
+        .from("Card")
+        .select("id, slug, shareUrl, qrEnabled, qrConfig, qrShape")
+        .eq(field, slug)
+        .eq("status", "ACTIVE")
+        .maybeSingle();
 
-    if (cardError || !card) {
+    const { data: bySlug, error: slugError } = await buildQuery("slug");
+    if (slugError) {
+      return res.status(500).json({ error: slugError.message });
+    }
+
+    let card = bySlug;
+    if (!card) {
+      const { data: byCustomSlug, error: customSlugError } =
+        await buildQuery("customSlug");
+      if (customSlugError) {
+        return res.status(500).json({ error: customSlugError.message });
+      }
+      card = byCustomSlug;
+    }
+
+    if (!card) {
       return res.status(404).json({ error: "Card not found" });
     }
 

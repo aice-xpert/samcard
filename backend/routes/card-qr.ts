@@ -65,15 +65,6 @@ router.put("/", verifySession, async (req: AuthRequest, res: Response) => {
   const cardId = req.params.cardId || req.params.id;
   const qrData: Partial<QRConfigData> = req.body;
 
-  console.log("[card-qr PUT] request received", {
-    cardId,
-    userId: req.user?.uid,
-    hasQrData: !!qrData,
-    qrDataKeys: qrData ? Object.keys(qrData) : null,
-    fg: qrData?.fg,
-    bg: qrData?.bg,
-  });
-
   try {
     const { data: card } = await supabase
       .from("Card")
@@ -81,10 +72,7 @@ router.put("/", verifySession, async (req: AuthRequest, res: Response) => {
       .eq("id", cardId)
       .single();
 
-    console.log("[card-qr PUT] card fetch", { cardId, cardExists: !!card, cardUserId: card?.userId });
-
     if (!card || card.userId !== req.user!.uid) {
-      console.log("[card-qr PUT] card not found or unauthorized", { cardId, userId: req.user?.uid });
       return res.status(404).json({ error: "Card not found" });
     }
 
@@ -147,7 +135,6 @@ router.put("/", verifySession, async (req: AuthRequest, res: Response) => {
 
     let result;
     if (existing) {
-      console.log("[card-qr PUT] updating existing config", { cardId });
       const { data, error } = await supabase
         .from("CardQRConfig")
         .update(insertData)
@@ -155,26 +142,21 @@ router.put("/", verifySession, async (req: AuthRequest, res: Response) => {
         .select()
         .single();
 
-      console.log("[card-qr PUT] update result", { cardId, success: !error, error: error?.message, hasData: !!data });
       result = { data, error };
     } else {
-      console.log("[card-qr PUT] inserting new config", { cardId });
       const { data, error } = await supabase
         .from("CardQRConfig")
         .insert(insertData)
         .select()
         .single();
 
-      console.log("[card-qr PUT] insert result", { cardId, success: !error, error: error?.message, hasData: !!data });
       result = { data, error };
     }
 
     if (result.error) {
-      console.log("[card-qr PUT] error returned", { cardId, error: result.error.message });
       return res.status(500).json({ error: result.error.message });
     }
 
-    console.log("[card-qr PUT] success", { cardId, hasData: !!result.data });
     return res.json(result.data);
   } catch (error: unknown) {
     return res.status(500).json({ error: getErrorMessage(error) });

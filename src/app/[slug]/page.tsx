@@ -954,14 +954,19 @@ function QRModal({
     fontFamily: string;
   };
 }) {
-  // Use the qrConfig passed from props (already fetched from public API)
-  // No need to fetch again — the public endpoint returns it for published cards
-  const qrConfig = initialQrConfig;
+  const [qrConfig, setQrConfig] = useState(initialQrConfig);
+  const fetched = useRef(false);
 
-  console.log("[QRModal] received qrConfig", {
-    qrConfig: initialQrConfig,
-    hasCustomization: !!initialQrConfig?.shapeId,
-  });
+  useEffect(() => {
+    if (qrConfig || !cardId || fetched.current) return;
+    fetched.current = true;
+
+    getCardQRConfig(cardId)
+      .then((data) => {
+        if (data) setQrConfig(data);
+      })
+      .catch(() => { });
+  }, [cardId]);
 
   return (
     <div
@@ -1151,10 +1156,8 @@ export default function PublicCardPage() {
       })
       .then((data) => {
         if (data) {
-          console.log("[public-card-page] fetched card data", {
+          console.log("[public-card-page] fetched background payload", {
             slug,
-            hasQrConfig: !!data?.qrConfig,
-            qrConfig: data?.qrConfig,
             design: {
               bgColor: data?.design?.bgColor,
               phoneBgType: data?.design?.phoneBgType,
@@ -1164,7 +1167,7 @@ export default function PublicCardPage() {
             },
           });
           setCard(data);
-          track(slug, "view");
+          track(data.slug || slug, "view");
         }
       })
       .catch(() => setNotFound(true))
@@ -1197,13 +1200,19 @@ export default function PublicCardPage() {
   }, [card, slug]);
 
   const cardUrl = `${PUBLIC_BASE}/${slug}`;
+  const apiSlug = card?.slug || slug;
+
+  const trackEvent = useCallback((type: string) => {
+    if (!apiSlug) return;
+    track(apiSlug, type);
+  }, [apiSlug]);
 
   const copyLink = useCallback(async () => {
     await navigator.clipboard.writeText(window.location.href).catch(() => { });
     setCopied(true);
-    track(slug, "share");
+    trackEvent("share");
     setTimeout(() => setCopied(false), 2000);
-  }, [slug]);
+  }, [trackEvent]);
 
   // Download vCard / Add to Contacts
   const saveContact = useCallback(() => {
@@ -1233,11 +1242,11 @@ export default function PublicCardPage() {
     a.click();
     URL.revokeObjectURL(a.href);
     setContactSaved(true);
-    track(slug, "save");
-  }, [card, slug]);
+    trackEvent("save");
+  }, [card, trackEvent]);
 
   const submitLead = useCallback(async () => {
-    if (!slug || leadSubmitting) return;
+    if (!apiSlug || leadSubmitting) return;
 
     const name = leadForm.name.trim();
     const email = leadForm.email.trim();
@@ -1260,7 +1269,7 @@ export default function PublicCardPage() {
           ? new URLSearchParams(window.location.search)
           : null;
       const isPreview = searchParams?.get("preview") === "true";
-      const leadsUrl = `${BACKEND_URL}/api/public/cards/${slug}/leads${isPreview ? "?preview=true" : ""}`;
+      const leadsUrl = `${BACKEND_URL}/api/public/cards/${apiSlug}/leads${isPreview ? "?preview=true" : ""}`;
 
       const response = await fetch(leadsUrl, {
         method: "POST",
@@ -1283,7 +1292,7 @@ export default function PublicCardPage() {
             type: "success",
             message: "This contact was already submitted.",
           });
-          track(slug, "contact_submit");
+          trackEvent("contact_submit");
           return;
         }
         throw new Error(payload?.error || `Failed to submit (${response.status})`);
@@ -1294,7 +1303,7 @@ export default function PublicCardPage() {
         type: "success",
         message: "Successfully submitted!",
       });
-      track(slug, "contact_submit");
+      trackEvent("contact_submit");
     } catch (error) {
       setLeadSubmitFeedback({
         type: "error",
@@ -1306,7 +1315,7 @@ export default function PublicCardPage() {
     } finally {
       setLeadSubmitting(false);
     }
-  }, [leadForm, leadSubmitting, slug]);
+  }, [apiSlug, leadForm, leadSubmitting, trackEvent]);
 
   if (loading) return <LoadingScreen />;
   if (notFound || !card) return <NotFoundScreen />;
@@ -1969,7 +1978,7 @@ export default function PublicCardPage() {
                 <div style={{ display: 'flex', justifyContent: 'center', gap: 12, padding: '12px', margin: '0 12px 10px', background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: T.cardRadius }}>
                   {contactItems.slice(0, 4).map(({ href, Icon }, i) => (
                     <a key={i} href={href} target="_blank" rel="noopener noreferrer"
-                      onClick={() => track(slug, "link_click")}
+                      onClick={() => trackEvent("link_click")}
                       style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                       <div style={{ width: 44, height: 44, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: `linear-gradient(135deg, ${T.green}, ${T.greenLight})`, boxShadow: `0 3px 10px ${T.green}66` }}>
                         <Icon size={16} color="#fff" />
@@ -1998,7 +2007,7 @@ export default function PublicCardPage() {
                       <div style={{ display: 'flex', justifyContent: 'center', gap: 12, padding: '12px', margin: '0 12px 10px', background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: T.cardRadius }}>
                         {contactItems.slice(0, 4).map(({ href, Icon }, i) => (
                           <a key={i} href={href} target="_blank" rel="noopener noreferrer"
-                            onClick={() => track(slug, "link_click")}
+                            onClick={() => trackEvent("link_click")}
                             style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                             <div style={{ width: 44, height: 44, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: `linear-gradient(135deg, ${T.green}, ${T.greenLight})`, boxShadow: `0 3px 10px ${T.green}66` }}>
                               <Icon size={16} color="#fff" />
@@ -2022,7 +2031,7 @@ export default function PublicCardPage() {
                   key={section.id}
                   section={section}
                   T={T}
-                  onLinkClick={() => track(slug, "link_click")}
+                  onLinkClick={() => trackEvent("link_click")}
                 />
               );
             }
@@ -2058,7 +2067,7 @@ export default function PublicCardPage() {
                     {contactItems.map(({ label, sub, href, Icon }, i) => (
                       <div key={i}>
                         <a href={href} target="_blank" rel="noopener noreferrer"
-                          onClick={() => track(slug, "link_click")} className="sc-row"
+                          onClick={() => trackEvent("link_click")} className="sc-row"
                           style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", color: "inherit", transition: "background .15s" }}>
                           <div style={{ width: 28, height: 28, borderRadius: 8, flexShrink: 0, background: `${T.green}28`, border: `1px solid ${T.green}44`, display: "flex", alignItems: "center", justifyContent: "center" }}>
                             <Icon size={13} color={T.greenLight} />
@@ -2111,7 +2120,7 @@ export default function PublicCardPage() {
                       const { Icon, color, label } = meta;
                       return (
                         <div key={i}>
-                          <button onClick={() => { track(slug, "link_click"); openLink(sl.url); }} className="sc-row"
+                          <button onClick={() => { trackEvent("link_click"); openLink(sl.url); }} className="sc-row"
                             style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", background: "none", border: "none", cursor: "pointer", textAlign: "left", transition: "background .15s" }}>
                             <div style={{ width: 36, height: 36, borderRadius: 10, background: `${color}22`, border: `1px solid ${color}44`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                               <Icon size={16} color={color} />
@@ -2135,7 +2144,7 @@ export default function PublicCardPage() {
                     <SectionHeader T={T} icon={<Link2 size={14} color="#fff" />} title="Links" />
                     {activeLinks.map((l, i) => (
                       <div key={i}>
-                        <button onClick={() => { track(slug, "link_click"); openLink(l.url); }} className="sc-row"
+                        <button onClick={() => { trackEvent("link_click"); openLink(l.url); }} className="sc-row"
                           style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", background: "none", border: "none", cursor: "pointer", textAlign: "left", transition: "background .15s" }}>
                           <div style={{ width: 32, height: 32, borderRadius: 8, background: `${T.green}22`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                             <Link2 size={14} color={T.greenLight} />
@@ -2163,7 +2172,7 @@ export default function PublicCardPage() {
                     </div>
                     <div style={{ padding: "0 16px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
                       {["Book on Calendly", "Add to Calendar"].map((label) => (
-                        <button key={label} onClick={() => { track(slug, "link_click"); openLink(fd.appointmentUrl!); }}
+                        <button key={label} onClick={() => { trackEvent("link_click"); openLink(fd.appointmentUrl!); }}
                           style={{ width: "100%", padding: "10px", borderRadius: 999, border: `1px solid ${T.green}59`, color: T.greenLight, background: `${T.green}1a`, fontWeight: 600, fontSize: T.bodyFontSize, cursor: "pointer", fontFamily: T.fontFamily }}>
                           {label}
                         </button>

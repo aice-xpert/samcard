@@ -6,6 +6,7 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/server.js",
+    "deploy": "node ../scripts/deploy-render-backend.mjs",
     "dev": "nodemon --exec ts-node index.ts"
   },
   "keywords": [],
