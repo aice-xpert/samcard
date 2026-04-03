@@ -38,6 +38,7 @@ import {
   getCardContent,
   updateCardContent,
   CardContentPayload,
+  uploadFile,
 } from '@/lib/api';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -376,32 +377,50 @@ function AddComponentMenu({ onAdd }: { onAdd: (key: string) => void }) {
 interface ImageUploaderProps {
   value: string; onChange: (v: string) => void;
   label: string; ratio: string; roundedClass?: string; size?: string;
+  pendingFile?: File | null;
+  onFileSelect?: (file: File | null) => void;
 }
-function ImageUploader({ value, onChange, label, ratio, roundedClass = 'rounded-2xl', size = 'w-20 h-20' }: ImageUploaderProps) {
+function ImageUploader({ value, onChange, label, ratio, roundedClass = 'rounded-2xl', size = 'w-20 h-20', pendingFile, onFileSelect }: ImageUploaderProps) {
   const ref = useRef<HTMLInputElement>(null);
-  const handleFile = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = (e) => { if (e.target?.result) onChange(e.target.result as string); };
-    reader.readAsDataURL(file);
+  const [preview, setPreview] = useState<string>('');
+
+  useEffect(() => {
+    if (pendingFile) {
+      const reader = new FileReader();
+      reader.onload = e => setPreview(e.target?.result as string);
+      reader.readAsDataURL(pendingFile);
+    } else {
+      setPreview('');
+    }
+  }, [pendingFile]);
+
+  const handleFileSelect = (file: File) => {
+    if (onFileSelect) {
+      onFileSelect(file);
+    }
   };
+
+  const displaySrc = preview || value;
+  const hasContent = !!displaySrc;
+
   return (
     <div className="space-y-2">
       <Label className="text-[#A0A0A0] text-xs">{label} <span className="text-[#555]">({ratio})</span></Label>
       <div className="flex items-center gap-3 flex-wrap">
         <div className={`relative ${size} ${roundedClass} overflow-hidden ring-2 ring-[#008001]/30 bg-[#1E1E1E] flex-shrink-0 flex items-center justify-center`}>
-          {/* ── FIX: only render <Image> when value is non-empty ── */}
-          {value
-            ? <Image src={value} alt={label} fill className="object-cover" />
+          {hasContent
+            ? <Image src={displaySrc} alt={label} fill className="object-cover" />
             : <ImageIcon className="w-5 h-5 text-[#555]" />
           }
         </div>
         <button type="button" onClick={() => ref.current?.click()}
           className="flex flex-col items-center justify-center gap-1 w-14 h-14 rounded-xl border-2 border-dashed border-[#008001]/40 hover:border-[#49B618] hover:bg-[#008001]/10 transition-all text-[#A0A0A0] hover:text-[#49B618]">
-          <Upload className="w-4 h-4" /><span className="text-[10px]">Upload</span>
+          <Upload className="w-4 h-4" />
+          <span className="text-[10px]">Upload</span>
         </button>
         <input ref={ref} type="file" accept="image/*" className="hidden"
-          onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = ''; }} />
-        {value && <button type="button" onClick={() => onChange('')} className="text-xs text-red-400 hover:text-red-300 underline">Remove</button>}
+          onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileSelect(f); e.target.value = ''; }} />
+        {hasContent && <button type="button" onClick={() => { onChange(''); onFileSelect?.(null); }} className="text-xs text-red-400 hover:text-red-300 underline">Remove</button>}
       </div>
     </div>
   );
@@ -509,11 +528,14 @@ function ExtraSectionBlock({ section, onToggle, onRemove, onUpdateData }: ExtraS
                     <label className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer rounded-xl">
                       <Upload className="w-5 h-5 text-white" />
                       <input type="file" accept="image/*" className="hidden"
-                        onChange={e => {
+                        onChange={async e => {
                           const file = e.target.files?.[0]; if (!file) return;
-                          const reader = new FileReader();
-                          reader.onload = ev => { if (ev.target?.result) onUpdateData(section.id, 'imgUrl', ev.target.result as string); };
-                          reader.readAsDataURL(file);
+                          try {
+                            const res = await uploadFile(file);
+                            onUpdateData(section.id, 'imgUrl', res.url);
+                          } catch (err: any) {
+                            alert('Upload failed: ' + err.message);
+                          }
                         }} />
                     </label>
                   </div>
@@ -522,11 +544,14 @@ function ExtraSectionBlock({ section, onToggle, onRemove, onUpdateData }: ExtraS
                     <Upload className="w-5 h-5 text-[#49B618] mb-1" />
                     <span className="text-xs text-[#A0A0A0]">Upload Image</span>
                     <input type="file" accept="image/*" className="hidden"
-                      onChange={e => {
+                      onChange={async e => {
                         const file = e.target.files?.[0]; if (!file) return;
-                        const reader = new FileReader();
-                        reader.onload = ev => { if (ev.target?.result) onUpdateData(section.id, 'imgUrl', ev.target.result as string); };
-                        reader.readAsDataURL(file);
+                        try {
+                          const res = await uploadFile(file);
+                          onUpdateData(section.id, 'imgUrl', res.url);
+                        } catch (err: any) {
+                          alert('Upload failed: ' + err.message);
+                        }
                       }} />
                   </label>
                 )}
@@ -593,6 +618,8 @@ export default function BusinessProfile({
 
   const [profileImage, setProfileImage] = useState<string>(initial.profileImage);
   const [brandLogo, setBrandLogo] = useState<string>(initial.brandLogo);
+  const [pendingProfileImage, setPendingProfileImage] = useState<File | null>(null);
+  const [pendingBrandLogo, setPendingBrandLogo] = useState<File | null>(null);
   const [logoPosition, setLogoPosition] = useState<LogoPosition>(initial.logoPosition);
   const [formData, setFormData] = useState<FormData>(initial.formData);
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>(initial.socialLinks);
@@ -775,7 +802,36 @@ export default function BusinessProfile({
     setSaveError(null);
     setIsSaving(true);
 
-    saveCache({ profileImage, brandLogo, logoPosition, formData, socialLinks, connectFields, sections, expanded, customLinks, extraSections });
+    let updatedProfileImage = profileImage;
+    let updatedBrandLogo = brandLogo;
+
+    if (pendingProfileImage) {
+      try {
+        const res = await uploadFile(pendingProfileImage);
+        updatedProfileImage = res.url;
+        setProfileImage(res.url);
+        setPendingProfileImage(null);
+      } catch (e: any) {
+        setIsSaving(false);
+        setSaveError('Failed to upload profile image: ' + e.message);
+        return;
+      }
+    }
+
+    if (pendingBrandLogo) {
+      try {
+        const res = await uploadFile(pendingBrandLogo);
+        updatedBrandLogo = res.url;
+        setBrandLogo(res.url);
+        setPendingBrandLogo(null);
+      } catch (e: any) {
+        setIsSaving(false);
+        setSaveError('Failed to upload brand logo: ' + e.message);
+        return;
+      }
+    }
+
+    saveCache({ profileImage: updatedProfileImage, brandLogo: updatedBrandLogo, logoPosition, formData, socialLinks, connectFields, sections, expanded, customLinks, extraSections });
 
     const normalizedSocialLinks: ApiSocialLinkPayload[] = socialLinks
       .filter(link => Boolean(link.value.trim()))
@@ -809,8 +865,8 @@ export default function BusinessProfile({
         title: formData.title,
         company: formData.company,
         tagline: formData.tagline,
-        profileImageUrl: profileImage,
-        brandLogoUrl: brandLogo,
+        profileImageUrl: updatedProfileImage,
+        brandLogoUrl: updatedBrandLogo,
         logoPosition: normalizedLogoPosition,
         primaryEmail: formData.email,
         primaryPhone: formData.phone,
@@ -830,8 +886,8 @@ export default function BusinessProfile({
 
       if (resolvedCardId) {
         await updateCardContent(resolvedCardId, {
-          profileImage,
-          brandLogo,
+          profileImage: updatedProfileImage,
+          brandLogo: updatedBrandLogo,
           logoPosition: contentLogoPosition,
           formData,
           connectFields,
@@ -849,7 +905,7 @@ export default function BusinessProfile({
     } finally {
       setIsSaving(false);
     }
-  }, [profileImage, brandLogo, logoPosition, formData, socialLinks, connectFields, sections, expanded, customLinks, extraSections]);
+  }, [profileImage, brandLogo, pendingProfileImage, pendingBrandLogo, logoPosition, formData, socialLinks, connectFields, sections, expanded, customLinks, extraSections]);
 
   const updateField = useCallback(<K extends keyof FormData>(key: K, value: FormData[K]) => setFormData(prev => ({ ...prev, [key]: value })), []);
   const toggleSection = useCallback((key: keyof Sections) => setSections(prev => ({ ...prev, [key]: !prev[key] })), []);
@@ -977,9 +1033,9 @@ export default function BusinessProfile({
         expanded={expanded.profile} onExpand={() => toggleExpand('profile')}>
         <div className="space-y-4 sm:space-y-5">
           <div className="p-3 sm:p-4 rounded-xl bg-[#0A0A0A] border border-[#008001]/20 space-y-4">
-            <ImageUploader value={profileImage} onChange={setProfileImage} label="Profile Photo" ratio="500×625px" roundedClass="rounded-xl" size="w-16 h-16 sm:w-20 sm:h-20" />
+            <ImageUploader value={profileImage} onChange={setProfileImage} label="Profile Photo" ratio="500×625px" roundedClass="rounded-xl" size="w-16 h-16 sm:w-20 sm:h-20" pendingFile={pendingProfileImage} onFileSelect={setPendingProfileImage} />
             <div className="border-t border-[#008001]/10 pt-4">
-              <ImageUploader value={brandLogo} onChange={setBrandLogo} label="Brand Logo" ratio="160×80px" roundedClass="rounded-lg" size="w-20 h-12 sm:w-24 sm:h-14" />
+              <ImageUploader value={brandLogo} onChange={setBrandLogo} label="Brand Logo" ratio="160×80px" roundedClass="rounded-lg" size="w-20 h-12 sm:w-24 sm:h-14" pendingFile={pendingBrandLogo} onFileSelect={setPendingBrandLogo} />
               {brandLogo && (
                 <div className="mt-3">
                   <div className="flex items-center gap-2 mb-1">

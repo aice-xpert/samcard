@@ -6,6 +6,7 @@ export interface AuthRequest extends Request {
     uid: string;
     email?: string;
   };
+  file?: Express.Multer.File;
 }
 
 const shouldCheckRevoked = process.env.FIREBASE_CHECK_REVOKED !== "false";
