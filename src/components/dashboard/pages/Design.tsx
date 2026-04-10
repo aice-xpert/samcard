@@ -17,21 +17,21 @@ import type { LogoPosition } from '@/components/dashboard/pages/PhonePreview';
 
 // ── Cache keys ────────────────────────────────────────────────────
 const PROFILE_KEY = 'businessProfile_v1';
-const DESIGN_KEY  = 'cardDesign_v1';
+const DESIGN_KEY = 'cardDesign_v1';
 
 // ── Profile cache shape ───────────────────────────────────────────
 interface ProfileCache {
-  profileImage?:  string;
-  brandLogo?:     string;
-  logoPosition?:  LogoPosition;
+  profileImage?: string;
+  brandLogo?: string;
+  logoPosition?: LogoPosition;
   formData?: {
     name?: string; title?: string; company?: string; tagline?: string;
     email?: string; phone?: string; website?: string; location?: string;
     industry?: string; yearFounded?: string; appointmentUrl?: string;
     headingText?: string; bodyText?: string;
   };
-  socialLinks?:   { platform: number; value: string }[];
-  customLinks?:   { label: string; url: string }[];
+  socialLinks?: { platform: number; value: string }[];
+  customLinks?: { label: string; url: string }[];
   sections?: {
     profile?: boolean; headingText?: boolean; contactUs?: boolean;
     socialLinks?: boolean; links?: boolean; appointment?: boolean; collectContacts?: boolean;
@@ -41,8 +41,8 @@ interface ProfileCache {
 
 // ── Wallpaper presets ─────────────────────────────────────────────
 interface WallpaperPreset {
-  id:    string;
-  name:  string;
+  id: string;
+  name: string;
   style: string;
   thumb: string;
 }
@@ -94,28 +94,28 @@ const WALLPAPER_PRESETS: WallpaperPreset[] = [
 
 // ── Design settings ───────────────────────────────────────────────
 export interface DesignSettings {
-  accentColor:      string;
-  accentLight:      string;
-  bgColor:          string;
-  cardColor:        string;
-  textPrimary:      string;
-  textMuted:        string;
-  palette:          string;
+  accentColor: string;
+  accentLight: string;
+  bgColor: string;
+  cardColor: string;
+  textPrimary: string;
+  textMuted: string;
+  palette: string;
   // Phone wallpaper
-  phoneBgPreset:    string;
-  phoneBgColor1:    string;
-  phoneBgColor2:    string;
-  phoneBgAngle:     number;
-  phoneBgType:      'solid' | 'gradient';
+  phoneBgPreset: string;
+  phoneBgColor1: string;
+  phoneBgColor2: string;
+  phoneBgAngle: number;
+  phoneBgType: 'solid' | 'gradient';
   // Typography
-  font:             string;
-  bodyFontSize:     number;
-  nameFontSize:     number;
-  boldHeadings:     boolean;
+  font: string;
+  bodyFontSize: number;
+  nameFontSize: number;
+  boldHeadings: boolean;
   // Cards
-  cardRadius:       number;
-  shadowIntensity:  'none' | 'soft' | 'medium' | 'strong';
-  glowEffect:       boolean;
+  cardRadius: number;
+  shadowIntensity: 'none' | 'soft' | 'medium' | 'strong';
+  glowEffect: boolean;
 }
 
 // ── Color palette presets ─────────────────────────────────────────
@@ -126,51 +126,51 @@ interface Palette {
   wallpaper: string;
 }
 const PALETTES: Record<string, Palette> = {
-  green:  { name: 'Forest',  emoji: '🌿', accent: '#008001', accentLight: '#49B618', bg: '#0a0f0a', card: '#111a11', textPrimary: '#f0f0f0', textMuted: '#7a9a7a', wallpaper: 'aurora'          },
-  ocean:  { name: 'Ocean',   emoji: '🌊', accent: '#0284c7', accentLight: '#38bdf8', bg: '#0c1a2e', card: '#112040', textPrimary: '#e0f2fe', textMuted: '#93c5fd', wallpaper: 'ocean-depth'     },
-  sunset: { name: 'Sunset',  emoji: '🌅', accent: '#ea580c', accentLight: '#fb923c', bg: '#1c0a00', card: '#2d1200', textPrimary: '#fff7ed', textMuted: '#fcd34d', wallpaper: 'sunset-dusk'     },
-  violet: { name: 'Violet',  emoji: '💜', accent: '#7c3aed', accentLight: '#a78bfa', bg: '#0d0618', card: '#1a0a2e', textPrimary: '#f5f3ff', textMuted: '#c4b5fd', wallpaper: 'midnight-purple' },
-  rose:   { name: 'Rose',    emoji: '🌸', accent: '#db2777', accentLight: '#f472b6', bg: '#1a0011', card: '#2a0018', textPrimary: '#fdf2f8', textMuted: '#f9a8d4', wallpaper: 'volcanic'        },
-  mono:   { name: 'Mono',    emoji: '◆',  accent: '#e5e5e5', accentLight: '#ffffff', bg: '#111111', card: '#1e1e1e', textPrimary: '#ffffff', textMuted: '#888888', wallpaper: 'deep-space'      },
+  green: { name: 'Forest', emoji: '🌿', accent: '#008001', accentLight: '#49B618', bg: '#0a0f0a', card: '#111a11', textPrimary: '#f0f0f0', textMuted: '#7a9a7a', wallpaper: 'aurora' },
+  ocean: { name: 'Ocean', emoji: '🌊', accent: '#0284c7', accentLight: '#38bdf8', bg: '#0c1a2e', card: '#112040', textPrimary: '#e0f2fe', textMuted: '#93c5fd', wallpaper: 'ocean-depth' },
+  sunset: { name: 'Sunset', emoji: '🌅', accent: '#ea580c', accentLight: '#fb923c', bg: '#1c0a00', card: '#2d1200', textPrimary: '#fff7ed', textMuted: '#fcd34d', wallpaper: 'sunset-dusk' },
+  violet: { name: 'Violet', emoji: '💜', accent: '#7c3aed', accentLight: '#a78bfa', bg: '#0d0618', card: '#1a0a2e', textPrimary: '#f5f3ff', textMuted: '#c4b5fd', wallpaper: 'midnight-purple' },
+  rose: { name: 'Rose', emoji: '🌸', accent: '#db2777', accentLight: '#f472b6', bg: '#1a0011', card: '#2a0018', textPrimary: '#fdf2f8', textMuted: '#f9a8d4', wallpaper: 'volcanic' },
+  mono: { name: 'Mono', emoji: '◆', accent: '#e5e5e5', accentLight: '#ffffff', bg: '#111111', card: '#1e1e1e', textPrimary: '#ffffff', textMuted: '#888888', wallpaper: 'deep-space' },
 };
 
 // ── Font map ──────────────────────────────────────────────────────
 const FONTS: Record<string, { label: string; css: string }> = {
-  inter:     { label: 'Inter',            css: 'Inter, sans-serif' },
-  sora:      { label: 'Sora',             css: 'Sora, sans-serif' },
-  'dm-sans': { label: 'DM Sans',          css: '"DM Sans", sans-serif' },
-  poppins:   { label: 'Poppins',          css: 'Poppins, sans-serif' },
-  raleway:   { label: 'Raleway',          css: 'Raleway, sans-serif' },
-  playfair:  { label: 'Playfair Display', css: '"Playfair Display", serif' },
-  mono:      { label: 'Fira Code',        css: '"Fira Code", monospace' },
+  inter: { label: 'Inter', css: 'Inter, sans-serif' },
+  sora: { label: 'Sora', css: 'Sora, sans-serif' },
+  'dm-sans': { label: 'DM Sans', css: '"DM Sans", sans-serif' },
+  poppins: { label: 'Poppins', css: 'Poppins, sans-serif' },
+  raleway: { label: 'Raleway', css: 'Raleway, sans-serif' },
+  playfair: { label: 'Playfair Display', css: '"Playfair Display", serif' },
+  mono: { label: 'Fira Code', css: '"Fira Code", monospace' },
 };
 
 const QUICK_COLORS = [
-  '#008001','#49B618','#0284c7','#38bdf8','#7c3aed',
-  '#a78bfa','#db2777','#f472b6','#ea580c','#fb923c',
-  '#ca8a04','#facc15','#06b6d4','#2dd4bf','#e5e5e5',
+  '#008001', '#49B618', '#0284c7', '#38bdf8', '#7c3aed',
+  '#a78bfa', '#db2777', '#f472b6', '#ea580c', '#fb923c',
+  '#ca8a04', '#facc15', '#06b6d4', '#2dd4bf', '#e5e5e5',
 ];
 
 const DEFAULT_DESIGN: DesignSettings = {
-  accentColor:     '#008001',
-  accentLight:     '#49B618',
-  bgColor:         '#0a0f0a',
-  cardColor:       '#111a11',
-  textPrimary:     '#f0f0f0',
-  textMuted:       '#7a9a7a',
-  palette:         'green',
-  phoneBgPreset:   'aurora',
-  phoneBgColor1:   '#0a0f0a',
-  phoneBgColor2:   '#003322',
-  phoneBgAngle:    135,
-  phoneBgType:     'gradient',
-  font:            'inter',
-  bodyFontSize:    11,
-  nameFontSize:    22,
-  boldHeadings:    true,
-  cardRadius:      16,
+  accentColor: '#008001',
+  accentLight: '#49B618',
+  bgColor: '#0a0f0a',
+  cardColor: '#111a11',
+  textPrimary: '#f0f0f0',
+  textMuted: '#7a9a7a',
+  palette: 'green',
+  phoneBgPreset: 'aurora',
+  phoneBgColor1: '#0a0f0a',
+  phoneBgColor2: '#003322',
+  phoneBgAngle: 135,
+  phoneBgType: 'gradient',
+  font: 'inter',
+  bodyFontSize: 11,
+  nameFontSize: 22,
+  boldHeadings: true,
+  cardRadius: 16,
   shadowIntensity: 'soft',
-  glowEffect:      true,
+  glowEffect: true,
 };
 
 const DEFAULT_PROFILE_FORM = {
@@ -210,20 +210,20 @@ function saveDesign(d: DesignSettings) {
     const phoneBgStyle = getPhoneBgStyle(d);
     const payload = {
       ...d,
-      green:        d.accentColor,
-      greenLight:   d.accentLight,
-      bg:           d.bgColor,
-      card:         d.cardColor,
-      cardBorder:   `${d.accentColor}33`,
-      textPrimary:  d.textPrimary,
-      textMuted:    d.textMuted,
-      divider:      `${d.accentColor}1f`,
-      muted:        `${d.accentColor}55`,
-      fontFamily:   FONTS[d.font]?.css ?? FONTS.inter.css,
+      green: d.accentColor,
+      greenLight: d.accentLight,
+      bg: d.bgColor,
+      card: d.cardColor,
+      cardBorder: `${d.accentColor}33`,
+      textPrimary: d.textPrimary,
+      textMuted: d.textMuted,
+      divider: `${d.accentColor}1f`,
+      muted: `${d.accentColor}55`,
+      fontFamily: FONTS[d.font]?.css ?? FONTS.inter.css,
       nameFontSize: d.nameFontSize,
       bodyFontSize: d.bodyFontSize,
       boldHeadings: d.boldHeadings,
-      cardRadius:   d.cardRadius,
+      cardRadius: d.cardRadius,
       phoneBgStyle,
     };
     localStorage.setItem(DESIGN_KEY, JSON.stringify(payload));
@@ -241,30 +241,30 @@ function loadProfile(): ProfileCache {
 
 function buildThemeOverride(d: DesignSettings): Partial<ThemeOverride> {
   return {
-    green:        d.accentColor,
-    greenLight:   d.accentLight,
-    bg:           d.bgColor,
-    card:         d.cardColor,
-    cardBorder:   `${d.accentColor}33`,
-    textPrimary:  d.textPrimary,
-    textMuted:    d.textMuted,
-    divider:      `${d.accentColor}1f`,
-    muted:        `${d.accentColor}55`,
-    fontFamily:   FONTS[d.font]?.css ?? FONTS.inter.css,
+    green: d.accentColor,
+    greenLight: d.accentLight,
+    bg: d.bgColor,
+    card: d.cardColor,
+    cardBorder: `${d.accentColor}33`,
+    textPrimary: d.textPrimary,
+    textMuted: d.textMuted,
+    divider: `${d.accentColor}1f`,
+    muted: `${d.accentColor}55`,
+    fontFamily: FONTS[d.font]?.css ?? FONTS.inter.css,
     nameFontSize: d.nameFontSize,
     bodyFontSize: d.bodyFontSize,
     boldHeadings: d.boldHeadings,
-    cardRadius:   d.cardRadius,
+    cardRadius: d.cardRadius,
     phoneBgStyle: getPhoneBgStyle(d),
   };
 }
 
 function lightenHex(hex: string, amount: number): string {
   try {
-    const n = parseInt(hex.replace('#',''), 16);
+    const n = parseInt(hex.replace('#', ''), 16);
     const r = Math.min(255, ((n >> 16) & 0xff) + amount);
-    const g = Math.min(255, ((n >>  8) & 0xff) + amount);
-    const b = Math.min(255, ( n        & 0xff) + amount);
+    const g = Math.min(255, ((n >> 8) & 0xff) + amount);
+    const b = Math.min(255, (n & 0xff) + amount);
     return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
   } catch { return hex; }
 }
@@ -272,7 +272,7 @@ function lightenHex(hex: string, amount: number): string {
 // ── QR Modal ──────────────────────────────────────────────────────
 function QRModal({ text, onClose }: { text: string; onClose: () => void }) {
   const encoded = encodeURIComponent(text || 'https://example.com');
-  const qrUrl   = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encoded}&bgcolor=000000&color=49B618&margin=20`;
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encoded}&bgcolor=000000&color=49B618&margin=20`;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={onClose}>
       <div className="relative bg-[#0D0D0D] border border-[#008001]/40 rounded-2xl p-6 sm:p-8 flex flex-col items-center gap-4 shadow-2xl w-full max-w-xs" onClick={e => e.stopPropagation()}>
@@ -437,8 +437,8 @@ function WallpaperPicker({ draft, set }: {
 
           <Chips
             options={[
-              { value: 'solid',    label: 'Solid Color' },
-              { value: 'gradient', label: 'Gradient'    },
+              { value: 'solid', label: 'Solid Color' },
+              { value: 'gradient', label: 'Gradient' },
             ]}
             value={draft.phoneBgType}
             onChange={v => set('phoneBgType', v as 'solid' | 'gradient')}
@@ -488,21 +488,22 @@ export function DesignNew({ onSettingsChange, cardId }: { onSettingsChange?: (se
     }
     if (!resolvedCardId) {
       getCards().then(cards => {
+        console.log('Cards fetched:', cards); // add this
         if (cards?.length) setResolvedCardId(cards[0].id);
-      }).catch(() => undefined);
+      }).catch((err) => console.error('getCards failed:', err)); // add this
     }
   }, [cardId, resolvedCardId]);
 
-  const [saved,         setSaved]         = useState<DesignSettings>(() => loadDesign());
-  const [draft,         setDraft]         = useState<DesignSettings>(() => loadDesign());
-  const [profile,       setProfile]       = useState<ProfileCache>(() => loadProfile());
-  const [isLoading,     setIsLoading]     = useState<boolean>(false);
-  const [isSaved,       setIsSaved]       = useState(false);
-  const [toast,         setToast]         = useState('');
-  const [mobileTab,     setMobileTab]     = useState<'controls' | 'preview'>('controls');
-  const [showQR,        setShowQR]        = useState(false);
-  const [copied,        setCopied]        = useState(false);
-  const [savedContact,  setSavedContact]  = useState(false);
+  const [saved, setSaved] = useState<DesignSettings>(() => loadDesign());
+  const [draft, setDraft] = useState<DesignSettings>(() => loadDesign());
+  const [profile, setProfile] = useState<ProfileCache>(() => loadProfile());
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [toast, setToast] = useState('');
+  const [mobileTab, setMobileTab] = useState<'controls' | 'preview'>('controls');
+  const [showQR, setShowQR] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [savedContact, setSavedContact] = useState(false);
 
   useEffect(() => {
     onSettingsChange?.(draft);
@@ -646,13 +647,13 @@ export function DesignNew({ onSettingsChange, cardId }: { onSettingsChange?: (se
     const p = PALETTES[key]; if (!p) return;
     setDraft(prev => ({
       ...prev,
-      palette:       key,
-      accentColor:   p.accent,
-      accentLight:   p.accentLight,
-      bgColor:       p.bg,
-      cardColor:     p.card,
-      textPrimary:   p.textPrimary,
-      textMuted:     p.textMuted,
+      palette: key,
+      accentColor: p.accent,
+      accentLight: p.accentLight,
+      bgColor: p.bg,
+      cardColor: p.card,
+      textPrimary: p.textPrimary,
+      textMuted: p.textMuted,
       // ── NEW: auto-switch wallpaper to the palette's matching preset ──
       phoneBgPreset: p.wallpaper,
     }));
@@ -680,16 +681,16 @@ export function DesignNew({ onSettingsChange, cardId }: { onSettingsChange?: (se
       location: profile.formData?.location || '',
     };
     const parts = fd.name.trim().split(' '); const last = parts.slice(-1)[0] || ''; const first = parts.slice(0, -1).join(' ') || fd.name;
-    const vcf = ['BEGIN:VCARD','VERSION:3.0',`N:${last};${first};;;`,`FN:${fd.name}`,fd.title?`TITLE:${fd.title}`:'',fd.company?`ORG:${fd.company}`:'',fd.email?`EMAIL:${fd.email}`:'',fd.phone?`TEL:${fd.phone}`:'',fd.website?`URL:${fd.website}`:'',fd.location?`ADR:;;${fd.location};;;;`:'','END:VCARD'].filter(Boolean).join('\n');
-    const blob = new Blob([vcf], { type: 'text/vcard' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `${fd.name.replace(/\s+/g,'_')}.vcf`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+    const vcf = ['BEGIN:VCARD', 'VERSION:3.0', `N:${last};${first};;;`, `FN:${fd.name}`, fd.title ? `TITLE:${fd.title}` : '', fd.company ? `ORG:${fd.company}` : '', fd.email ? `EMAIL:${fd.email}` : '', fd.phone ? `TEL:${fd.phone}` : '', fd.website ? `URL:${fd.website}` : '', fd.location ? `ADR:;;${fd.location};;;;` : '', 'END:VCARD'].filter(Boolean).join('\n');
+    const blob = new Blob([vcf], { type: 'text/vcard' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `${fd.name.replace(/\s+/g, '_')}.vcf`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
     setSavedContact(true); setTimeout(() => setSavedContact(false), 2500);
   }, [profile.formData]);
 
   const hasUnsaved = JSON.stringify(draft) !== JSON.stringify(saved);
 
-  const profileImage  = profile.profileImage  || '';
-  const brandLogo     = profile.brandLogo     || '';
-  const logoPosition  = profile.logoPosition  || 'top-right';
+  const profileImage = profile.profileImage || '';
+  const brandLogo = profile.brandLogo || '';
+  const logoPosition = profile.logoPosition || 'top-right';
   const formData = {
     name: profile.formData?.name || '', title: profile.formData?.title || '',
     company: profile.formData?.company || '', tagline: profile.formData?.tagline || '',
@@ -700,9 +701,9 @@ export function DesignNew({ onSettingsChange, cardId }: { onSettingsChange?: (se
     headingText: profile.formData?.headingText || '',
     bodyText: profile.formData?.bodyText || '',
   };
-  const socialLinks   = profile.socialLinks   || [{ platform: 0, value: 'linkedin.com/in/alex' }];
-  const customLinks   = profile.customLinks   || [{ label: 'Portfolio', url: 'https://alexjohnson.com' }];
-  const sections      = { ...DEFAULT_SECTIONS, ...(profile.sections ?? {}) };
+  const socialLinks = profile.socialLinks || [{ platform: 0, value: 'linkedin.com/in/alex' }];
+  const customLinks = profile.customLinks || [{ label: 'Portfolio', url: 'https://alexjohnson.com' }];
+  const sections = { ...DEFAULT_SECTIONS, ...(profile.sections ?? {}) };
   const extraSections = profile.extraSections || [];
   const themeOverride = buildThemeOverride(draft);
 
@@ -741,9 +742,9 @@ export function DesignNew({ onSettingsChange, cardId }: { onSettingsChange?: (se
                 onClick={() => applyPalette(key)}
                 className="relative rounded-xl overflow-hidden transition-all text-left"
                 style={{
-                  border:     isActive ? `2px solid ${p.accentLight}` : '2px solid rgba(255,255,255,0.06)',
-                  boxShadow:  isActive ? `0 0 18px ${p.accent}55` : 'none',
-                  transform:  isActive ? 'scale(1.03)' : 'scale(1)',
+                  border: isActive ? `2px solid ${p.accentLight}` : '2px solid rgba(255,255,255,0.06)',
+                  boxShadow: isActive ? `0 0 18px ${p.accent}55` : 'none',
+                  transform: isActive ? 'scale(1.03)' : 'scale(1)',
                   transition: 'all 0.18s ease',
                 }}
               >
@@ -806,17 +807,17 @@ export function DesignNew({ onSettingsChange, cardId }: { onSettingsChange?: (se
               const rect = (e.target as HTMLElement).getBoundingClientRect();
               const hue = Math.round(((e.clientX - rect.left) / rect.width) * 360);
               const h = hue / 360, s = 1, l = 0.45; const q = l < 0.5 ? l * (1 + s) : l + s - l * s; const p2 = 2 * l - q;
-              const toHex = (t: number) => { const x = t < 0 ? t + 1 : t > 1 ? t - 1 : t; const v = x < 1/6 ? p2+(q-p2)*6*x : x < 0.5 ? q : x < 2/3 ? p2+(q-p2)*(2/3-x)*6 : p2; return Math.round(v*255).toString(16).padStart(2,'0'); };
-              applyAccent(`#${toHex(h+1/3)}${toHex(h)}${toHex(h-1/3)}`);
+              const toHex = (t: number) => { const x = t < 0 ? t + 1 : t > 1 ? t - 1 : t; const v = x < 1 / 6 ? p2 + (q - p2) * 6 * x : x < 0.5 ? q : x < 2 / 3 ? p2 + (q - p2) * (2 / 3 - x) * 6 : p2; return Math.round(v * 255).toString(16).padStart(2, '0'); };
+              applyAccent(`#${toHex(h + 1 / 3)}${toHex(h)}${toHex(h - 1 / 3)}`);
             }} />
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <ColorRow label="Primary Accent"  value={draft.accentColor}  onChange={v => { set('accentColor', v); set('palette', 'custom'); }} />
-          <ColorRow label="Light Accent"    value={draft.accentLight}  onChange={v => { set('accentLight', v); set('palette', 'custom'); }} />
-          <ColorRow label="Card Background" value={draft.cardColor}    onChange={v => { set('cardColor', v);   set('palette', 'custom'); }} />
-          <ColorRow label="Body Background" value={draft.bgColor}      onChange={v => { set('bgColor', v);     set('palette', 'custom'); }} />
-          <ColorRow label="Primary Text"    value={draft.textPrimary}  onChange={v => { set('textPrimary', v); set('palette', 'custom'); }} />
-          <ColorRow label="Muted Text"      value={draft.textMuted}    onChange={v => { set('textMuted', v);   set('palette', 'custom'); }} />
+          <ColorRow label="Primary Accent" value={draft.accentColor} onChange={v => { set('accentColor', v); set('palette', 'custom'); }} />
+          <ColorRow label="Light Accent" value={draft.accentLight} onChange={v => { set('accentLight', v); set('palette', 'custom'); }} />
+          <ColorRow label="Card Background" value={draft.cardColor} onChange={v => { set('cardColor', v); set('palette', 'custom'); }} />
+          <ColorRow label="Body Background" value={draft.bgColor} onChange={v => { set('bgColor', v); set('palette', 'custom'); }} />
+          <ColorRow label="Primary Text" value={draft.textPrimary} onChange={v => { set('textPrimary', v); set('palette', 'custom'); }} />
+          <ColorRow label="Muted Text" value={draft.textMuted} onChange={v => { set('textMuted', v); set('palette', 'custom'); }} />
         </div>
       </PanelSection>
 
@@ -859,7 +860,7 @@ export function DesignNew({ onSettingsChange, cardId }: { onSettingsChange?: (se
 
       {/* Save / Reset */}
       <div className="flex gap-3 pt-1 pb-6">
-        <Button onClick={handleSave} disabled={!resolvedCardId} className="flex-1 h-11 gap-2 font-semibold text-white" style={{ background: 'linear-gradient(135deg,#008001,#49B618)' }}>
+        <Button onClick={handleSave} className="flex-1 h-11 gap-2 font-semibold text-white" style={{ background: 'linear-gradient(135deg,#008001,#49B618)' }}>
           <Save className="w-4 h-4" />{isSaved ? 'Saved!' : 'Save Changes'}
         </Button>
       </div>
@@ -877,10 +878,10 @@ export function DesignNew({ onSettingsChange, cardId }: { onSettingsChange?: (se
         {[
           { k: 'Palette', v: draft.palette === 'custom' ? 'Custom' : PALETTES[draft.palette]?.name ?? draft.palette },
           { k: 'Wallpaper', v: WALLPAPER_PRESETS.find(p => p.id === draft.phoneBgPreset)?.name ?? draft.phoneBgPreset },
-          { k: 'Font',    v: FONTS[draft.font]?.label ?? draft.font },
-          { k: 'Radius',  v: `${draft.cardRadius}px` },
-          { k: 'Name',    v: `${draft.nameFontSize}px` },
-          { k: 'Body',    v: `${draft.bodyFontSize}px` },
+          { k: 'Font', v: FONTS[draft.font]?.label ?? draft.font },
+          { k: 'Radius', v: `${draft.cardRadius}px` },
+          { k: 'Name', v: `${draft.nameFontSize}px` },
+          { k: 'Body', v: `${draft.bodyFontSize}px` },
         ].map(({ k, v }) => (
           <div key={k} className="text-center py-2 px-1 rounded-xl" style={{ background: '#0a0a0a', border: '1px solid rgba(0,128,1,0.12)' }}>
             <p className="text-[9px] uppercase tracking-wider" style={{ color: '#444' }}>{k}</p>
@@ -915,7 +916,7 @@ export function DesignNew({ onSettingsChange, cardId }: { onSettingsChange?: (se
                 style={{ borderColor: hasUnsaved ? 'rgba(251,191,36,0.5)' : 'rgba(0,128,1,0.3)', color: hasUnsaved ? '#fbbf24' : '#a0a0a0' }}>
                 <RotateCcw className="w-3.5 h-3.5" /><span className="hidden sm:inline">Reset</span>
               </Button>
-              <Button onClick={handleSave} disabled={!resolvedCardId} size="sm" className="gap-2 text-sm font-semibold text-white" style={{ background: 'linear-gradient(135deg,#008001,#49B618)' }}>
+              <Button onClick={handleSave} size="sm" className="gap-2 text-sm font-semibold text-white" style={{ background: 'linear-gradient(135deg,#008001,#49B618)' }}>
                 <Save className="w-3.5 h-3.5" />{isSaved ? 'Saved!' : 'Save'}
               </Button>
             </div>

@@ -5,7 +5,7 @@ import { AuthRequest, verifySession } from "../middleware/auth";
 const router = express.Router();
 
 const getErrorMessage = (error: any): string => {
-  if (error?.message) return error.message; 
+  if (error?.message) return error.message;
   if (error instanceof Error) return error.message;
   return "Internal server error";
 };
@@ -41,7 +41,7 @@ router.post("/", verifySession, async (req: AuthRequest, res: Response) => {
       id: req.user!.uid,
       email: req.user!.email ?? "",
       updatedAt: new Date().toISOString(),
-    }, { onConflict: "email" });
+    }, { onConflict: "id" });
 
     // 2. Resolve or Create Business Profile
     const { data: existingProfile } = await supabase

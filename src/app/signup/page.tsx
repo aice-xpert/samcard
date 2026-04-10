@@ -18,6 +18,9 @@ export default function SignupPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
 
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -28,6 +31,8 @@ export default function SignupPage() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError("");
 
     try {
       const apiBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "");
@@ -53,8 +58,10 @@ export default function SignupPage() {
       }
 
       router.push(`/check-email?email=${encodeURIComponent(formData.email)}`);
-    } catch  {
-      alert("Something went wrong!");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Something went wrong!");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -89,6 +96,12 @@ export default function SignupPage() {
           transition={{ duration: 0.5 }}
           className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10"
         >
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/50 text-red-500 text-sm p-4 rounded-xl mb-6">
+              {error}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-5">
 
             <InputField
@@ -175,15 +188,22 @@ export default function SignupPage() {
 
             <button
               type="submit"
+              disabled={isLoading}
               className="w-full py-3 bg-gradient-to-r from-primary to-theme-strong-green text-white rounded-xl
-              hover:shadow-2xl hover:shadow-theme-digital-green/30 hover:scale-105
+              hover:shadow-2xl hover:shadow-theme-digital-green/30 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed
               transition-all flex items-center justify-center gap-2 group"
             >
-              Create Account
-              <ArrowRight
-                className="group-hover:translate-x-1 transition-transform"
-                size={20}
-              />
+              {isLoading ? (
+                "Creating account..."
+              ) : (
+                <>
+                  Create Account
+                  <ArrowRight
+                    className="group-hover:translate-x-1 transition-transform"
+                    size={20}
+                  />
+                </>
+              )}
             </button>
           </form>
 

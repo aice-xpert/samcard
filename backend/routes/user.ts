@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 const router = express.Router();
 
 const getErrorMessage = (error: any): string => {
-  if (error?.message) return error.message; 
+  if (error?.message) return error.message;
   if (error instanceof Error) return error.message;
   return "Internal server error";
 };
@@ -87,10 +87,10 @@ router.get("/business-profile", verifySession, async (req: AuthRequest, res: Res
     const { data: user, error: userError } = await supabase
       .from("User")
       .upsert({
-          id: req.user!.uid,
-          email: req.user!.email ?? "",
-          updatedAt: new Date().toISOString(),
-        }, { onConflict: "email" }) 
+        id: req.user!.uid,
+        email: req.user!.email ?? "",
+        updatedAt: new Date().toISOString(),
+      }, { onConflict: "id" })
       .select()
       .single();
 
@@ -109,9 +109,9 @@ router.get("/business-profile", verifySession, async (req: AuthRequest, res: Res
     if (!profile) {
       const safeName = req.user!.email?.split('@')[0] || "profile";
       // Generate a unique ID string since the DB won't do it automatically for 'text' types
-      const manualId = `bp_${Math.random().toString(36).substring(2, 11)}`; 
+      const manualId = `bp_${Math.random().toString(36).substring(2, 11)}`;
       const slug = `${safeName.toLowerCase()}-${req.user!.uid.slice(0, 5)}`;
-      
+
       const { data: newProfile, error: createError } = await supabase
         .from("BusinessProfile")
         .insert({
@@ -126,7 +126,7 @@ router.get("/business-profile", verifySession, async (req: AuthRequest, res: Res
         })
         .select()
         .single();
-        
+
       if (createError) throw createError;
       profile = newProfile;
     }

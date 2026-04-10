@@ -38,7 +38,6 @@ export default function LoginPage() {
         throw new Error("Missing NEXT_PUBLIC_BACKEND_URL environment variable");
       }
 
-      // 3. Send to your Node.js Backend
       const response = await fetch(`${apiBaseUrl}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -46,11 +45,22 @@ export default function LoginPage() {
         credentials: "include",
       });
 
+      const data = await response.json();
+
       if (response.ok) {
+        if (data.sessionToken) {
+          localStorage.removeItem("sessionToken");  // clear old session
+          if (data.sessionToken) {
+            localStorage.setItem("sessionToken", data.sessionToken);
+          }
+
+          // Manually set cookie in case cross-origin Set-Cookie gets blocked in dev
+          document.cookie = `session=${data.sessionToken}; path=/; max-age=${60 * 60 * 24 * 5}; SameSite=Lax`;
+        }
         // Full page reload to ensure middleware sees the new session cookie
         window.location.href = "/dashboard";
       } else {
-        throw new Error("Failed to create session");
+        throw new Error(data.error || "Failed to create session");
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -84,6 +94,8 @@ export default function LoginPage() {
     // This is needed because cross-origin cookies don't work in local dev
     if (data.sessionToken) {
       localStorage.setItem("sessionToken", data.sessionToken);
+      // Manually set cookie in case cross-origin Set-Cookie gets blocked in dev
+      document.cookie = `session=${data.sessionToken}; path=/; max-age=${60 * 60 * 24 * 5}; SameSite=Lax`;
     }
 
     // Full page reload to ensure middleware sees the new session cookie

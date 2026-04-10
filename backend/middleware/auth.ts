@@ -33,12 +33,20 @@ const isInvalidCredentialError = (error: unknown): boolean => {
 const verifySessionCookieSafely = async (token: string) => {
   try {
     return await admin.auth().verifySessionCookie(token, shouldCheckRevoked);
-  } catch (error) {
-    if (shouldCheckRevoked && isInvalidCredentialError(error)) {
-      console.warn(
-        "Firebase credentials cannot run revocation checks; falling back to signature-only session verification."
-      );
-      return admin.auth().verifySessionCookie(token, false);
+  } catch (error: any) {
+    if (shouldCheckRevoked) {
+      if (isInvalidCredentialError(error)) {
+        console.warn(
+          "Firebase credentials cannot run revocation checks; falling back to signature-only session verification."
+        );
+        return admin.auth().verifySessionCookie(token, false);
+      }
+      
+      // If the error is a revocation or clock skew issue that just happened because the user was created newly:
+      if (error?.code === 'auth/user-token-expired' || error?.code === 'auth/session-cookie-expired' || error?.code === 'auth/session-cookie-revoked') {
+        console.warn("Possible clock skew or revocation issue detecting newly created session! Retrying without revocation check...");
+        return admin.auth().verifySessionCookie(token, false);
+      }
     }
     throw error;
   }
@@ -116,7 +124,7 @@ export const verifySession = async (
 
     return res.status(401).json({ error: "Invalid or expired session" });
   } catch (error) {
-    console.error("Auth verification failed:", error);
+    console.error("Auth verification failed inside verifySession:", error);
     return res.status(401).json({ error: "Invalid or expired session" });
   }
 };
