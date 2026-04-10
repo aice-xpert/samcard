@@ -12,7 +12,7 @@ import {
   Copy, MoreVertical, QrCode, Users, Trash2, Plus, X, Check, SlidersHorizontal,
 } from 'lucide-react';
 import { LineChart, Line, ResponsiveContainer } from 'recharts';
-import { getCards, createCard as apiCreateCard, deleteCard as apiDeleteCard, ApiCard } from '@/lib/api';
+import { getCards, createCard as apiCreateCard, deleteCard as apiDeleteCard, updateCard, BACKEND_URL, ApiCard } from '@/lib/api';
 
 const sparklineData = [
   { value: 12 }, { value: 19 }, { value: 15 },
@@ -26,9 +26,14 @@ const gradients = [
   'from-[#004d00] to-[#000000]',
 ];
 
-type CardType = ApiCard & { 
-  gradient?: string; 
-  trend?: typeof sparklineData; 
+// Derive the public base URL from the backend env or fall back to samcard.vercel.app
+const PUBLIC_BASE =
+  process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
+  "https://samcard.vercel.app";
+
+type CardType = ApiCard & {
+  gradient?: string;
+  trend?: typeof sparklineData;
   completion?: number;
   title?: string;
   views?: number;
@@ -80,11 +85,22 @@ export function MyCardsNew() {
     setTimeout(() => setToast(null), 2500);
   };
 
+  // Returns the shareable public URL for a card
+  const cardPublicUrl = (card: CardType) =>
+    `${PUBLIC_BASE}/${card.slug}`;
+
+  // Returns the preview URL (works for DRAFT too)
+  const cardPreviewUrl = (card: CardType) =>
+    `${PUBLIC_BASE}/${card.slug}?preview=true`;
+
   // ── derived list ─────────────────────────────────────────────────
   const visible = cards
     .filter(c => {
       const matchSearch = (c.title || '').toLowerCase().includes(search.toLowerCase());
-      const matchFilter = filter === 'all' || c.status === filter;
+      const matchFilter =
+        filter === 'all' ||
+        (filter === 'active' && c.status === 'ACTIVE') ||
+        (filter === 'inactive' && c.status !== 'ACTIVE');
       return matchSearch && matchFilter;
     })
     .sort((a, b) => {
@@ -94,10 +110,27 @@ export function MyCardsNew() {
     });
 
   // ── actions ──────────────────────────────────────────────────────
-  const toggleStatus = (id: string) =>
-    setCards(prev => prev.map(c =>
-      c.id === id ? { ...c, status: c.status === 'active' ? 'inactive' : 'active' } : c
-    ));
+
+  // Toggle ACTIVE ↔ DRAFT and persist to backend
+  const toggleStatus = async (card: CardType) => {
+    const newStatus = card.status === 'ACTIVE' ? 'DRAFT' : 'ACTIVE';
+
+    // Optimistic update
+    setCards(prev =>
+      prev.map(c => c.id === card.id ? { ...c, status: newStatus } : c)
+    );
+
+    try {
+      await updateCard(card.id, { status: newStatus });
+      showToast(newStatus === 'ACTIVE' ? 'Card published!' : 'Card set to draft.');
+    } catch (err) {
+      // Rollback on failure
+      setCards(prev =>
+        prev.map(c => c.id === card.id ? { ...c, status: card.status } : c)
+      );
+      showToast(`Failed to update status: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    }
+  };
 
   const deleteCard = async (id: string) => {
     try {
@@ -117,7 +150,7 @@ export function MyCardsNew() {
       id: String(nextId.current++),
       title: `${card.title} (Copy)`,
       name: `${card.name} (Copy)`,
-      status: 'inactive',
+      status: 'DRAFT',
       createdAt: now,
       updatedAt: now,
       views: 0, taps: 0, saves: 0,
@@ -128,46 +161,51 @@ export function MyCardsNew() {
     setOpenMenu(null);
   };
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (!editCard || !editTitle.trim()) return;
-    setCards(prev => prev.map(c => c.id === editCard.id ? { ...c, title: editTitle } : c));
-    setEditCard(null);
-    showToast('Card updated!');
+    try {
+      await updateCard(editCard.id, { name: editTitle } as any);
+      setCards(prev =>
+        prev.map(c => c.id === editCard.id ? { ...c, title: editTitle, name: editTitle } : c)
+      );
+      setEditCard(null);
+      showToast('Card renamed!');
+    } catch (err) {
+      showToast(`Error renaming card: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    }
   };
 
-    const createCard = async () => {
+  const createCard = async () => {
     if (!newTitle.trim()) return;
-      try {
-        
-        const response = await apiCreateCard({
-          name: newTitle,
-          cardType: 'QR',
-         
-        });
-
-        const newCard: CardType = {
-          ...response,
-          title: response.name,
-          views: response.totalViews,
-          taps: response.totalTaps,
-          saves: response.totalSaves,
-          completion: response.completionScore,
-          gradient: gradients[Math.floor(Math.random() * gradients.length)],
-          trend: sparklineData,
-        };
-        setCards(prev => [...prev, newCard]);
-        setShowCreate(false);
-        setNewTitle('');
-        showToast('New card created!');
-      } catch (error) {
-        showToast(`Error creating card: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      }
+    try {
+      const response = await apiCreateCard({ name: newTitle, cardType: 'QR' });
+      const newCard: CardType = {
+        ...response,
+        title: response.name,
+        views: response.totalViews,
+        taps: response.totalTaps,
+        saves: response.totalSaves,
+        completion: response.completionScore,
+        gradient: gradients[Math.floor(Math.random() * gradients.length)],
+        trend: sparklineData,
+      };
+      setCards(prev => [...prev, newCard]);
+      setShowCreate(false);
+      setNewTitle('');
+      showToast('New card created!');
+    } catch (error) {
+      showToast(`Error creating card: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   };
 
   const copyLink = (card: CardType) => {
-    navigator.clipboard.writeText(`https://samcard.app/${(card.title || '').toLowerCase().replace(/ /g, '-')}`);
+    navigator.clipboard.writeText(cardPublicUrl(card));
     showToast('Link copied to clipboard!');
     setShareCard(null);
+  };
+
+  const openPreview = (card: CardType) => {
+    window.open(cardPreviewUrl(card), '_blank');
   };
 
   // ─────────────────────────────────────────────────────────────────
@@ -212,9 +250,8 @@ export function MyCardsNew() {
           </div>
         </div>
 
-        {/* Row 2: Search + filters — always visible on desktop, collapsible on mobile */}
+        {/* Row 2: Search + filters */}
         <div className={`${showFilters ? 'flex' : 'hidden'} sm:flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3`}>
-          {/* Search */}
           <div className="relative flex-1 sm:max-w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A0A0A0]" />
             <Input
@@ -230,7 +267,6 @@ export function MyCardsNew() {
             )}
           </div>
 
-          {/* Filter + Sort — side by side on mobile */}
           <div className="flex gap-2">
             <Select value={filter} onValueChange={setFilter}>
               <SelectTrigger className="flex-1 sm:w-32 bg-[#008001] text-white border-0 rounded-full h-10 text-sm">
@@ -257,7 +293,7 @@ export function MyCardsNew() {
         </div>
       </div>
 
-      {/* ── Cards Grid: 1-col mobile, 2-col sm, 3-col lg ── */}
+      {/* ── Cards Grid ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {visible.map((card) => (
           <Card
@@ -269,11 +305,11 @@ export function MyCardsNew() {
                 <h3 className="text-sm sm:text-base font-bold text-white truncate">{card.title}</h3>
                 <div className="flex items-center gap-1.5 flex-shrink-0">
                   <Badge className={`rounded-full px-2 sm:px-3 text-xs font-bold ${
-                    card.status === 'active'
+                    card.status === 'ACTIVE'
                       ? 'bg-[#49B618]/15 text-[#49B618] hover:bg-[#49B618]/15'
                       : 'bg-[#A0A0A0]/15 text-[#A0A0A0] hover:bg-[#A0A0A0]/15'
                   }`}>
-                    {card.status.charAt(0).toUpperCase() + card.status.slice(1)}
+                    {card.status === 'ACTIVE' ? 'Active' : 'Draft'}
                   </Badge>
 
                   {/* 3-dot menu */}
@@ -285,7 +321,7 @@ export function MyCardsNew() {
                       <MoreVertical className="w-4 h-4" />
                     </button>
                     {openMenu === card.id && (
-                      <div className="absolute right-0 top-8 z-30 bg-[#0a0a0a] border border-[#008001]/30 rounded-xl shadow-2xl w-36 py-1">
+                      <div className="absolute right-0 top-8 z-30 bg-[#0a0a0a] border border-[#008001]/30 rounded-xl shadow-2xl w-40 py-1">
                         <button onClick={() => { setEditCard(card); setEditTitle(card.title || ''); setOpenMenu(null); }}
                           className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#008001]/20 flex items-center gap-2">
                           <Edit className="w-3 h-3" /> Rename
@@ -293,6 +329,10 @@ export function MyCardsNew() {
                         <button onClick={() => duplicateCard(card)}
                           className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#008001]/20 flex items-center gap-2">
                           <Copy className="w-3 h-3" /> Duplicate
+                        </button>
+                        <button onClick={() => { openPreview(card); setOpenMenu(null); }}
+                          className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#008001]/20 flex items-center gap-2">
+                          <Eye className="w-3 h-3" /> Preview
                         </button>
                         <button onClick={() => { setConfirmDelete(card.id); setOpenMenu(null); }}
                           className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2">
@@ -325,7 +365,7 @@ export function MyCardsNew() {
                 <button
                   onClick={() => copyLink(card)}
                   className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white/15 backdrop-blur-md hover:bg-white/25 flex items-center justify-center transition-colors"
-                  title="Copy QR link"
+                  title="Copy share link"
                 >
                   <QrCode className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
                 </button>
@@ -365,13 +405,13 @@ export function MyCardsNew() {
                 </div>
               </div>
 
-              {/* Action buttons: 2×2 grid */}
+              {/* Action buttons */}
               <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
                 {[
-                  { icon: Edit,     label: 'Edit',    onClick: () => { setEditCard(card); setEditTitle(card.title || ''); } },
-                  { icon: Eye,      label: 'Preview', onClick: () => setPreviewCard(card) },
-                  { icon: Share2,   label: 'Share',   onClick: () => setShareCard(card)   },
-                  { icon: BarChart3, label: 'Stats',  onClick: () => setStatsCard(card)   },
+                  { icon: Edit,      label: 'Edit',    onClick: () => { setEditCard(card); setEditTitle(card.title || ''); } },
+                  { icon: Eye,       label: 'Preview', onClick: () => openPreview(card) },
+                  { icon: Share2,    label: 'Share',   onClick: () => setShareCard(card)   },
+                  { icon: BarChart3, label: 'Stats',   onClick: () => setStatsCard(card)   },
                 ].map(({ icon: Icon, label, onClick }) => (
                   <Button key={label} onClick={onClick}
                     variant="outline"
@@ -381,17 +421,24 @@ export function MyCardsNew() {
                 ))}
               </div>
 
-              {/* Bottom row */}
+              {/* Bottom row: Publish toggle */}
               <div className="flex items-center justify-between pt-2 sm:pt-3 border-t border-[#1E1E1E]">
                 <button onClick={() => duplicateCard(card)}
                   className="text-xs text-[#A0A0A0] hover:text-[#008001] flex items-center gap-1">
                   <Copy className="w-3 h-3" /> Duplicate
                 </button>
+
                 <div className="flex items-center gap-1.5 sm:gap-2">
-                  <span className="text-xs text-white">{card.status === 'active' ? 'Active' : 'Inactive'}</span>
-                  <Switch checked={card.status === 'active'} onCheckedChange={() => toggleStatus(card.id)}
-                    className="data-[state=checked]:bg-[#49B618] scale-90 sm:scale-100" />
+                  <span className="text-xs text-white">
+                    {card.status === 'ACTIVE' ? 'Published' : 'Draft'}
+                  </span>
+                  <Switch
+                    checked={card.status === 'ACTIVE'}
+                    onCheckedChange={() => toggleStatus(card)}
+                    className="data-[state=checked]:bg-[#49B618] scale-90 sm:scale-100"
+                  />
                 </div>
+
                 <button onClick={() => setConfirmDelete(card.id)}
                   className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1">
                   <Trash2 className="w-3 h-3" /> Delete
@@ -431,40 +478,20 @@ export function MyCardsNew() {
 
       {/* ── MODALS ────────────────────────────────────────────────── */}
 
-      {previewCard && (
-        <Modal onClose={() => setPreviewCard(null)} title="Card Preview">
-          <div className={`rounded-2xl overflow-hidden aspect-[16/9] bg-gradient-to-br ${previewCard.gradient} mb-4`}>
-            <div className="h-full flex flex-col items-center justify-center gap-2 sm:gap-3">
-              <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-full bg-white/20 flex items-center justify-center">
-                <Users className="w-7 h-7 sm:w-10 sm:h-10 text-white" />
-              </div>
-              <p className="text-white font-bold text-base sm:text-lg">{previewCard.title}</p>
-              <p className="text-white/60 text-xs sm:text-sm">john@company.com</p>
-              <div className="flex gap-2 sm:gap-3 mt-1 sm:mt-2 flex-wrap justify-center px-2">
-                {['LinkedIn','Instagram','Website'].map(l => (
-                  <span key={l} className="text-xs bg-white/10 text-white px-2 sm:px-3 py-1 rounded-full">{l}</span>
-                ))}
-              </div>
-            </div>
-          </div>
-          <div className="grid grid-cols-3 gap-2 sm:gap-3 text-center">
-            {[['Views', previewCard.views], ['Taps', previewCard.taps], ['Saves', previewCard.saves]].map(([k, v]) => (
-              <div key={k as string} className="bg-[#1E1E1E] rounded-xl p-2 sm:p-3">
-                <p className="text-white font-bold text-base sm:text-lg">{Number(v).toLocaleString()}</p>
-                <p className="text-[#A0A0A0] text-xs">{k}</p>
-              </div>
-            ))}
-          </div>
-        </Modal>
-      )}
-
       {shareCard && (
         <Modal onClose={() => setShareCard(null)} title="Share Card">
-          <p className="text-[#A0A0A0] text-sm mb-3">Share your card link</p>
+          <p className="text-[#A0A0A0] text-sm mb-1">
+            {shareCard.status !== 'ACTIVE' && (
+              <span className="text-yellow-400 block mb-2">
+                ⚠ This card is still a Draft. Publish it first so recipients can view it.
+              </span>
+            )}
+            Share your card link
+          </p>
           <div className="flex gap-2 mb-4">
             <Input
               readOnly
-              value={`https://samcard.app/${(shareCard.title || '').toLowerCase().replace(/ /g, '-')}`}
+              value={cardPublicUrl(shareCard)}
               className="bg-[#1E1E1E] border-[#008001]/30 text-white text-xs sm:text-sm"
             />
             <Button onClick={() => copyLink(shareCard)}
@@ -512,7 +539,7 @@ export function MyCardsNew() {
       )}
 
       {editCard && (
-        <Modal onClose={() => setEditCard(null)} title="Edit Card">
+        <Modal onClose={() => setEditCard(null)} title="Rename Card">
           <p className="text-[#A0A0A0] text-sm mb-2">Card name</p>
           <Input
             value={editTitle}

@@ -1,4 +1,7 @@
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
+export const BACKEND_URL =
+  process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "") ||
+  process.env.BACKEND_URL?.replace(/\/$/, "") ||
+  "";
 
 const jsonHeaders = {
   "Content-Type": "application/json",
@@ -19,7 +22,7 @@ async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
     (headers as Record<string, string>)["Authorization"] = `Bearer ${sessionToken}`;
   }
   
-  const fullUrl = `${BACKEND_URL}${path}`;
+  const fullUrl = BACKEND_URL ? `${BACKEND_URL}${path}` : path;
   console.log('→ API call:', fullUrl);
   
   const response = await fetch(fullUrl, {

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "motion/react";
 import { Mail, Lock, ArrowRight, Eye, EyeOff } from "lucide-react";
@@ -12,13 +11,16 @@ import { FirebaseError } from "firebase/app";
 import { auth } from "@/lib/firebase";
 
 export default function LoginPage() {
-  const router = useRouter();
-
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const persistSessionToken = (token: string) => {
+    localStorage.setItem("sessionToken", token);
+    document.cookie = `sessionToken=${token}; path=/; max-age=${60 * 60 * 24 * 5}; SameSite=Lax`;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,6 +50,10 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (response.ok) {
+        const data = await response.json();
+        if (data.sessionToken) {
+          persistSessionToken(data.sessionToken);
+        }
         if (data.sessionToken) {
           localStorage.removeItem("sessionToken");  // clear old session
           if (data.sessionToken) {
@@ -90,9 +96,10 @@ export default function LoginPage() {
 
     const data = await response.json();
 
-    // Save session token to localStorage so api.ts can use it as Bearer token
-    // This is needed because cross-origin cookies don't work in local dev
+    // Save session token to localStorage so api.ts can use it as Bearer token.
+    // Also set a readable cookie so Next.js middleware can fall back to it.
     if (data.sessionToken) {
+      persistSessionToken(data.sessionToken);
       localStorage.setItem("sessionToken", data.sessionToken);
       // Manually set cookie in case cross-origin Set-Cookie gets blocked in dev
       document.cookie = `session=${data.sessionToken}; path=/; max-age=${60 * 60 * 24 * 5}; SameSite=Lax`;

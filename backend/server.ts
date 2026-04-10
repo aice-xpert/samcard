@@ -31,7 +31,8 @@ const app = express();
 const PORT: number | string = process.env.PORT || 5001;
 
 const allowedOrigins = [
-  process.env.FRONTEND_URL || "http://localhost:3000",
+  "https://samcard.vercel.app",
+"http://localhost:3000",
   "http://localhost:3000",
   "http://localhost:3001",
 ];
