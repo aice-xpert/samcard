@@ -77,6 +77,7 @@ interface PublicCard {
     cardColor: string;
     textPrimary: string;
     textMuted: string;
+    phoneBgPreset?: string;
     phoneBgColor1: string;
     phoneBgColor2: string;
     phoneBgAngle: number;

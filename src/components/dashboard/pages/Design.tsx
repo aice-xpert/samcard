@@ -634,7 +634,7 @@ export function DesignNew({ onSettingsChange, cardId }: { onSettingsChange?: (se
     let payloadToSend = { ...draft };
     // If a named preset is active, resolve its colors so DB is in sync
     if (draft.phoneBgPreset !== 'custom') {
-      const presetStyle = PRESET_STYLES[draft.phoneBgPreset] ?? '';
+      const presetStyle = WALLPAPER_PRESETS.find((p) => p.id === draft.phoneBgPreset)?.style ?? '';
       payloadToSend = {
         ...payloadToSend,
         phoneBgColor1: presetStyle, // or leave colors as-is if backend ignores them when preset != custom
