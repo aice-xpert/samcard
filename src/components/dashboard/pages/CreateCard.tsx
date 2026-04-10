@@ -31,22 +31,7 @@ function CampaignNameModal({ onCancel, onSave }: { onCancel: () => void; onSave:
                     </button>
                 </div>
 
-                {/* URL */}
-                <div className="mb-4">
-                    <label className="block text-xs font-medium text-[#A0A0A0] mb-2 uppercase tracking-wide">
-                        URL <span className="normal-case text-[#666]">(Once saved, cannot be changed later)</span>
-                    </label>
-                    <div className="flex rounded-xl border border-[#008001]/25 overflow-hidden bg-[#111811]">
-                        <span className="px-3 py-2.5 bg-[#008001]/10 text-[#49B618] text-sm font-medium border-r border-[#008001]/25 whitespace-nowrap">
-                            linko.page/
-                        </span>
-                        <input
-                            type="text"
-                            defaultValue="tbouduf02tw5"
-                            className="flex-1 px-3 py-2.5 text-sm text-white bg-transparent outline-none placeholder-[#555]"
-                        />
-                    </div>
-                </div>
+         
 
                 {/* Campaign Name */}
                 <div className="mb-4">
@@ -111,9 +96,19 @@ const CheckIcon = () => (
     </svg>
 );
 
-function SavedSuccessModal({ onCancel, onDashboard }: { onCancel: () => void; onDashboard: () => void }) {
-    const url = "https://linko.page/tbouduf02tw5ds";
-    const embed = `<iframe src="https://linko.page/tbouduf02tw5" />`;
+function SavedSuccessModal({ onCancel, onDashboard, cardSlug }: { onCancel: () => void; onDashboard: () => void; cardSlug?: string }) {
+    const PUBLIC_BASE =
+        process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
+        "https://samcard.vercel.app";
+
+    const CARD_URL = cardSlug
+        ? `${PUBLIC_BASE}/${cardSlug}`
+        : typeof window !== "undefined"
+            ? `${PUBLIC_BASE}/...`
+            : PUBLIC_BASE;
+
+    const url = CARD_URL;
+    const embed = `<iframe src="${CARD_URL}" />`;
     const [copiedUrl, setCopiedUrl] = useState(false);
     const [copiedEmbed, setCopiedEmbed] = useState(false);
 
@@ -222,6 +217,7 @@ export function CreateCard({ cardId }: { cardId?: string }) {
     const [designSettings, setDesignSettings] = useState<any>(null);
     const [cardContent, setCardContent] = useState<CardContentPayload | null>(null);
     const [campaignName, setCampaignName] = useState("");
+    const [createdSlug, setCreatedSlug] = useState<string | undefined>(undefined);
 
     const handleSaveFinish = () => setShowCampaignModal(true);
     const handleCampaignSave = async (campaignName: string) => {
@@ -254,6 +250,7 @@ export function CreateCard({ cardId }: { cardId?: string }) {
 
         try {
             const card = await createCard(payload);
+            setCreatedSlug(card.slug);
 
         // If QR config, save it
         if (qrConfig && card.id) {
@@ -280,7 +277,7 @@ export function CreateCard({ cardId }: { cardId?: string }) {
 
             {/* Modals */}
             {showCampaignModal && <CampaignNameModal onCancel={handleClose} onSave={handleCampaignSave} />}
-            {showSuccessModal && <SavedSuccessModal onCancel={handleClose} onDashboard={handleDashboard} />}
+            {showSuccessModal && <SavedSuccessModal onCancel={handleClose} onDashboard={handleDashboard} cardSlug={createdSlug} />}
 
             {/* ── Stepper Header ── */}
             <div className="flex items-center justify-center gap-2 px-8 py-5 border-b border-[#008001]/20 bg-[#0a0f0a]">
