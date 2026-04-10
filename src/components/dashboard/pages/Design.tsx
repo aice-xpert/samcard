@@ -630,15 +630,20 @@ export function DesignNew({ onSettingsChange, cardId }: { onSettingsChange?: (se
     setIsSaved(true); showToast('Design saved!');
     setTimeout(() => setIsSaved(false), 2000);
 
-    if (resolvedCardId) {
-      try {
-        await updateCardDesign(resolvedCardId, draft);
-        window.dispatchEvent(new Event('cardDataUpdated'));
-      } catch (error) {
-        console.error('Failed to update card design:', error);
-      }
+  if (resolvedCardId) {
+    let payloadToSend = { ...draft };
+    // If a named preset is active, resolve its colors so DB is in sync
+    if (draft.phoneBgPreset !== 'custom') {
+      const presetStyle = PRESET_STYLES[draft.phoneBgPreset] ?? '';
+      payloadToSend = {
+        ...payloadToSend,
+        phoneBgColor1: presetStyle, // or leave colors as-is if backend ignores them when preset != custom
+        phoneBgType: 'gradient',
+      };
     }
-  }, [draft, resolvedCardId]);
+    await updateCardDesign(resolvedCardId, payloadToSend);
+  }
+}, [draft, resolvedCardId]);
 
   const handleReset = useCallback(() => { setDraft(saved); showToast('Reverted to last saved'); }, [saved]);
 
