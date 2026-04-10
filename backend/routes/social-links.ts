@@ -106,6 +106,7 @@ router.put("/", verifySession, async (req: AuthRequest, res: Response) => {
       .eq("businessProfileId", profile.id);
 
     if (links.length > 0) {
+      const { v4: uuidv4 } = await import("uuid");
       const invalidPlatforms: string[] = [];
 
       const linksToInsert = links.map((link: IncomingSocialLink, index: number) => {
@@ -116,6 +117,7 @@ router.put("/", verifySession, async (req: AuthRequest, res: Response) => {
         }
 
         return {
+          id: uuidv4(),
           businessProfileId: profile.id,
           platform: mappedPlatform,
           handle: link.handle || "",

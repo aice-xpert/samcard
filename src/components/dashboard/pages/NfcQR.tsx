@@ -12,7 +12,7 @@ import { QRWithShape, STICKER_DEFS } from '@/components/dashboard/pages/Qrrender
 import { LOGOS } from '@/components/dashboard/pages/constants';
 import { makeQRMatrix } from '@/components/dashboard/pages/qr-engine';
 import { useQrStore } from '@/components/dashboard/stores/Useqrstore';
-import { getCardQRConfig, updateCardQR, getCards } from '@/lib/api';
+import { getCardQRConfig, updateCardQR, getCards, BACKEND_URL } from '@/lib/api';
 
 // ─── Persistence helpers ──────────────────────────────────────────────────────
 
@@ -220,15 +220,24 @@ export function NfcQr({ onConfigChange, cardId }: { onConfigChange?: (config: QR
   const [copiedLink, setCopiedLink] = useState(false);
   const [customizerOpen, setCustomizerOpen] = useState(false);
   const [resolvedCardId, setResolvedCardId] = useState<string | undefined>(cardId);
+  const [cardSlug, setCardSlug] = useState<string | undefined>(undefined);
   
   useEffect(() => {
     if (cardId) {
       setResolvedCardId(cardId);
+      // Fetch the slug for this specific card
+      getCards().then(cards => {
+        const match = cards.find(c => c.id === cardId);
+        if (match?.slug) setCardSlug(match.slug);
+      }).catch(() => undefined);
       return;
     }
     if (!resolvedCardId) {
       getCards().then(cards => {
-        if (cards?.length) setResolvedCardId(cards[0].id);
+        if (cards?.length) {
+          setResolvedCardId(cards[0].id);
+          setCardSlug(cards[0].slug);
+        }
       }).catch(() => undefined);
     }
   }, [cardId, resolvedCardId]);
@@ -240,9 +249,16 @@ export function NfcQr({ onConfigChange, cardId }: { onConfigChange?: (config: QR
 
   const qrRef = useRef<HTMLDivElement>(null);
 
-  const CARD_URL = typeof window !== 'undefined'
-    ? window.location.href
-    : 'https://samcard.app/u/subaina';
+  const PUBLIC_BASE =
+    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') ||
+    'https://samcard.vercel.app';
+
+  // Use the card's real public URL — falls back gracefully while slug is loading
+  const CARD_URL = cardSlug
+    ? `${PUBLIC_BASE}/${cardSlug}`
+    : typeof window !== 'undefined'
+      ? `${PUBLIC_BASE}/...`
+      : PUBLIC_BASE;
 
   const { matrix: liveQrMatrix, N: liveQrN } = useMemo(() => makeQRMatrix(CARD_URL), [CARD_URL]);
   const setQr = useQrStore((s) => s.setQr);
@@ -409,7 +425,7 @@ export function NfcQr({ onConfigChange, cardId }: { onConfigChange?: (config: QR
                 cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 color: '#f0f0f0', fontSize: 16,
               }}>✕</button>
-            <QRCustomizer onApply={handleCustomizerApply} onClose={() => setCustomizerOpen(false)} initialConfig={qrConfig} />
+            <QRCustomizer onApply={handleCustomizerApply} onClose={() => setCustomizerOpen(false)} initialConfig={qrConfig} targetUrl={CARD_URL} />
           </div>
         </div>
       )}

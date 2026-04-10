@@ -5,7 +5,7 @@ import { AuthRequest, verifySession } from "../middleware/auth";
 const router = express.Router();
 
 const getErrorMessage = (error: any): string => {
-  if (error?.message) return error.message; 
+  if (error?.message) return error.message;
   if (error instanceof Error) return error.message;
   return "Internal server error";
 };
@@ -29,19 +29,19 @@ router.get("/", verifySession, async (req: AuthRequest, res: Response) => {
 });
 
 router.post("/", verifySession, async (req: AuthRequest, res: Response) => {
-  const { name, cardType, slug, ...otherFields } = req.body;
+  const { name, cardType, ...otherFields } = req.body;
 
   if (!name) {
     return res.status(400).json({ error: "Card name is required" });
   }
 
   try {
-    // 1. Ensure User exists - using email conflict to handle project/auth mismatches
+    // 1. Ensure User exists
     await supabase.from("User").upsert({
       id: req.user!.uid,
       email: req.user!.email ?? "",
       updatedAt: new Date().toISOString(),
-    }, { onConflict: "email" });
+    }, { onConflict: "id" });
 
     // 2. Resolve or Create Business Profile
     const { data: existingProfile } = await supabase
@@ -53,14 +53,13 @@ router.post("/", verifySession, async (req: AuthRequest, res: Response) => {
     let businessProfileId = existingProfile?.id;
 
     if (!businessProfileId) {
-      // Manually generate ID for Business Profile to satisfy NOT NULL constraint
       const profileId = `bp_${Math.random().toString(36).substring(2, 11)}`;
       const profileSlug = `profile-${req.user!.uid.slice(0, 5)}-${Date.now().toString(36)}`;
 
       const { data: createdProfile, error: createProfileError } = await supabase
         .from("BusinessProfile")
         .insert({
-          id: profileId, // FIXED: Manual ID
+          id: profileId,
           userId: req.user!.uid,
           name: name || "My Profile",
           slug: profileSlug,
@@ -73,25 +72,24 @@ router.post("/", verifySession, async (req: AuthRequest, res: Response) => {
       businessProfileId = createdProfile.id;
     }
 
-    // 3. Create the Card with a Manual ID
-    const cardId = `card_${Math.random().toString(36).substring(2, 11)}`; // Generate Card ID
-    const cardSlug = slug || `${name.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`;
-    const shareUrl = `/${req.user!.uid}/${cardSlug}`;
+    // 3. Create the Card — use the cardId itself as the slug
+    const cardId = `card_${Math.random().toString(36).substring(2, 11)}`;
+    const slug = cardId; // ← card ID IS the slug: samcard.vercel.app/{cardId}
+    const shareUrl = `/${slug}`;
 
     const cardData: Record<string, unknown> = {
-      id: cardId, // FIXED: Providing manual ID to satisfy constraint 23502
+      id: cardId,
       userId: req.user!.uid,
       businessProfileId,
       name,
       cardType: cardType || "QR",
-      slug: cardSlug,
+      slug,
       shareUrl,
-      status: "DRAFT",
+      status: "ACTIVE",
       updatedAt: new Date().toISOString(),
       createdAt: new Date().toISOString(),
     };
 
-    // Add other fields
     Object.assign(cardData, otherFields);
 
     const { data, error } = await supabase
@@ -113,7 +111,7 @@ router.post("/", verifySession, async (req: AuthRequest, res: Response) => {
 
 router.put("/:id", verifySession, async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
-  const { name, status, slug, themeOverride, designId, ...otherFields } = req.body;
+  const { name, status, themeOverride, designId, ...otherFields } = req.body;
 
   try {
     const { data: existing } = await supabase
@@ -132,7 +130,6 @@ router.put("/:id", verifySession, async (req: AuthRequest, res: Response) => {
 
     if (name) updateData.name = name;
     if (status) updateData.status = status;
-    if (slug) updateData.slug = slug;
     if (themeOverride) updateData.themeOverride = themeOverride;
     if (designId) updateData.designId = designId;
     Object.assign(updateData, otherFields);

@@ -6,6 +6,11 @@ const router = express.Router();
 const getErrorMessage = (error: unknown): string =>
   error instanceof Error ? error.message : "Internal server error";
 
+const normalizePhoneBgType = (value: unknown): "solid" | "gradient" => {
+  if (typeof value !== "string") return "solid";
+  return value.toLowerCase() === "gradient" ? "gradient" : "solid";
+};
+
 interface PublicCardResponse {
   id: string;
   name: string;
@@ -115,8 +120,12 @@ interface PublicCardResponse {
 router.get("/:slug", async (req, res: Response) => {
   const { slug } = req.params;
 
+  // ?preview=true allows DRAFT cards to be viewed (e.g. from dashboard preview button)
+  // Without it, only ACTIVE cards are publicly accessible
+  const isPreview = req.query.preview === "true";
+
   try {
-    const { data: card, error: cardError } = await supabase
+    let query = supabase
       .from("Card")
       .select(`
         id, name, slug, cardType, status, shareUrl, headingText, headingBodyText,
@@ -127,9 +136,14 @@ router.get("/:slug", async (req, res: Response) => {
         showSocial, showLinks, showAppointment, showBusinessDetails, showExtraSections,
         businessProfileId
       `)
-      .eq("slug", slug)
-      .eq("status", "ACTIVE")
-      .single();
+      .eq("slug", slug);
+
+    // Only enforce ACTIVE status for public (non-preview) visits
+    if (!isPreview) {
+      query = query.eq("status", "ACTIVE");
+    }
+
+    const { data: card, error: cardError } = await query.single();
 
     if (cardError || !card) {
       return res.status(404).json({ error: "Card not found" });
@@ -166,6 +180,27 @@ router.get("/:slug", async (req, res: Response) => {
       .eq("id", card.businessProfileId)
       .single();
 
+    console.log("[public-card] background source", {
+      slug,
+      cardId: card.id,
+      cardBackground: {
+        backgroundColor: card.backgroundColor,
+        phoneBgType: card.phoneBgType,
+        phoneBgColor1: card.phoneBgColor1,
+        phoneBgColor2: card.phoneBgColor2,
+        phoneBgAngle: card.phoneBgAngle,
+      },
+      designBackground: design
+        ? {
+            bgColor: design.bgColor,
+            phoneBgType: design.phoneBgType,
+            phoneBgColor1: design.phoneBgColor1,
+            phoneBgColor2: design.phoneBgColor2,
+            phoneBgAngle: design.phoneBgAngle,
+          }
+        : null,
+    });
+
     const defaultSections = {
       profile: card.showProfile ?? true,
       headingText: card.showHeading ?? true,
@@ -197,7 +232,7 @@ router.get("/:slug", async (req, res: Response) => {
         phoneBgColor1: design?.phoneBgColor1 ?? card.phoneBgColor1,
         phoneBgColor2: design?.phoneBgColor2 ?? card.phoneBgColor2,
         phoneBgAngle: design?.phoneBgAngle ?? card.phoneBgAngle,
-        phoneBgType: design?.phoneBgType ?? card.phoneBgType,
+        phoneBgType: normalizePhoneBgType(design?.phoneBgType ?? card.phoneBgType),
         font: design?.font ?? card.fontFamily?.toLowerCase() ?? "inter",
         bodyFontSize: design?.bodyFontSize ?? card.bodyFontSize ?? 14,
         nameFontSize: design?.nameFontSize ?? card.nameFontSize ?? 24,
@@ -260,6 +295,18 @@ router.get("/:slug", async (req, res: Response) => {
         country: businessProfile?.country,
       },
     };
+
+    console.log("[public-card] background response", {
+      slug,
+      cardId: response.id,
+      design: {
+        bgColor: response.design.bgColor,
+        phoneBgType: response.design.phoneBgType,
+        phoneBgColor1: response.design.phoneBgColor1,
+        phoneBgColor2: response.design.phoneBgColor2,
+        phoneBgAngle: response.design.phoneBgAngle,
+      },
+    });
 
     return res.json(response);
   } catch (error) {
