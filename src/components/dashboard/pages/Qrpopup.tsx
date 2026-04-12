@@ -19,30 +19,55 @@ interface QrPopupProps {
   onClose: () => void;
   cardUrl: string;
   cardId?: string;
+  allowFallbackToFirstCard?: boolean;
 }
 
-export function QrPopup({ isOpen, onClose, cardUrl, cardId }: QrPopupProps) {
-  const { qrConfig, qrMatrix, qrN, setQr } = useQrStore();
+export function QrPopup({ isOpen, onClose, cardUrl, cardId, allowFallbackToFirstCard = true }: QrPopupProps) {
+  const { qrConfig, qrMatrix, qrN } = useQrStore();
   const [resolvedCardId, setResolvedCardId] = useState<string | undefined>(cardId);
   const [popupQrConfig, setPopupQrConfig] = useState<QRCustomConfig | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
-  const { matrix: cardMatrix, N: cardN } = useMemo(() => makeQRMatrix(cardUrl), [cardUrl]);
+  const popupMatrixResult = useMemo(() => {
+    if (!isOpen) return null;
+    return makeQRMatrix(cardUrl);
+  }, [isOpen, cardUrl]);
+
+  const activeMatrix = popupMatrixResult?.matrix ?? qrMatrix;
+  const activeN = popupMatrixResult?.N ?? qrN;
 
   useEffect(() => {
+    let active = true;
+
     if (cardId) {
       setResolvedCardId(cardId);
-      return;
+      return () => {
+        active = false;
+      };
     }
-    if (!resolvedCardId) {
-      getCards()
-        .then(cards => { if (cards?.length) setResolvedCardId(cards[0].id); })
-        .catch(() => undefined);
+
+    if (!allowFallbackToFirstCard) {
+      setResolvedCardId(undefined);
+      setPopupQrConfig(null);
+      return () => {
+        active = false;
+      };
     }
-  }, [cardId, resolvedCardId]);
+
+    getCards()
+      .then(cards => {
+        if (!active) return;
+        if (cards?.length) setResolvedCardId(cards[0].id);
+      })
+      .catch(() => undefined);
+
+    return () => {
+      active = false;
+    };
+  }, [cardId, allowFallbackToFirstCard]);
 
   // Sync QR config from DB into store whenever the card ID is resolved.
   useEffect(() => {
-    if (!resolvedCardId) return;
+    if (!isOpen || !resolvedCardId) return;
 
     const fetchQrConfig = async () => {
       try {
@@ -80,7 +105,6 @@ export function QrPopup({ isOpen, onClose, cardUrl, cardId }: QrPopupProps) {
         };
 
         setPopupQrConfig(qrFromDb);
-        setQr(qrFromDb, cardMatrix, cardN);
       } catch {
         // If fetch fails, maintain current store state.
       }
@@ -91,7 +115,7 @@ export function QrPopup({ isOpen, onClose, cardUrl, cardId }: QrPopupProps) {
     const onCardUpdated = () => fetchQrConfig();
     window.addEventListener('cardDataUpdated', onCardUpdated);
     return () => window.removeEventListener('cardDataUpdated', onCardUpdated);
-  }, [resolvedCardId, cardMatrix, cardN, setQr]);
+  }, [isOpen, resolvedCardId]);
 
   // Close on Escape
   useEffect(() => {
@@ -198,8 +222,8 @@ export function QrPopup({ isOpen, onClose, cardUrl, cardId }: QrPopupProps) {
           {/* Live QR — reflect DB-loaded config when available */}
           <LiveQrDisplay
             config={popupQrConfig ?? qrConfig}
-            qrMatrix={cardMatrix}
-            qrN={cardN}
+            qrMatrix={activeMatrix ?? undefined}
+            qrN={activeN ?? undefined}
           />
 
           {/* URL pill */}

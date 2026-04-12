@@ -1,6 +1,7 @@
 import express, { Response } from "express";
 import { supabase } from "../config/supabase";
 import { AuthRequest, verifySession } from "../middleware/auth";
+import { randomUUID } from "crypto";
 
 const router = express.Router();
 
@@ -9,6 +10,37 @@ const getErrorMessage = (error: any): string => {
   if (error instanceof Error) return error.message;
   return "Internal server error";
 };
+
+const normalizeFontFamily = (value: unknown): string | null => {
+  if (typeof value !== "string") return null;
+  const normalized = value.trim().toUpperCase().replace(/[-\s]+/g, "_");
+  const allowed = new Set([
+    "INTER",
+    "SORA",
+    "DM_SANS",
+    "POPPINS",
+    "RALEEWAY",
+    "PLAYFAIR_DISPLAY",
+    "FIRA_CODE",
+    "SYSTEM",
+  ]);
+  if (normalized === "MONO") return "FIRA_CODE";
+  return allowed.has(normalized) ? normalized : null;
+};
+
+const normalizeCardStatus = (value: unknown): string | null => {
+  if (typeof value !== "string") return null;
+  const normalized = value.trim().toUpperCase();
+  const allowed = new Set(["ACTIVE", "INACTIVE", "DRAFT", "ARCHIVED", "SUSPENDED"]);
+  if (normalized === "LIVE") return "ACTIVE";
+  return allowed.has(normalized) ? normalized : null;
+};
+
+const createBusinessProfileId = (): string =>
+  `bp_${randomUUID().replace(/-/g, "")}`;
+
+const createCardId = (): string =>
+  `card_${randomUUID().replace(/-/g, "")}`;
 
 router.get("/", verifySession, async (req: AuthRequest, res: Response) => {
   try {
@@ -53,7 +85,7 @@ router.post("/", verifySession, async (req: AuthRequest, res: Response) => {
     let businessProfileId = existingProfile?.id;
 
     if (!businessProfileId) {
-      const profileId = `bp_${Math.random().toString(36).substring(2, 11)}`;
+      const profileId = createBusinessProfileId();
       const profileSlug = `profile-${req.user!.uid.slice(0, 5)}-${Date.now().toString(36)}`;
 
       const { data: createdProfile, error: createProfileError } = await supabase
@@ -73,7 +105,7 @@ router.post("/", verifySession, async (req: AuthRequest, res: Response) => {
     }
 
     // 3. Create the Card — use the cardId itself as the slug
-    const cardId = `card_${Math.random().toString(36).substring(2, 11)}`;
+    const cardId = createCardId();
     const slug = cardId; // ← card ID IS the slug: samcard.vercel.app/{cardId}
     const shareUrl = `/${slug}`;
 
@@ -90,7 +122,22 @@ router.post("/", verifySession, async (req: AuthRequest, res: Response) => {
       createdAt: new Date().toISOString(),
     };
 
-    Object.assign(cardData, otherFields);
+    const normalizedFields = { ...otherFields } as Record<string, unknown>;
+    if (normalizedFields.fontFamily !== undefined) {
+      const normalizedFont = normalizeFontFamily(normalizedFields.fontFamily);
+      if (!normalizedFont) {
+        return res.status(400).json({ error: "Invalid fontFamily value" });
+      }
+      normalizedFields.fontFamily = normalizedFont;
+    }
+    if (normalizedFields.status !== undefined) {
+      const normalizedStatus = normalizeCardStatus(normalizedFields.status);
+      if (!normalizedStatus) {
+        return res.status(400).json({ error: "Invalid status value" });
+      }
+      normalizedFields.status = normalizedStatus;
+    }
+    Object.assign(cardData, normalizedFields);
 
     const { data, error } = await supabase
       .from("Card")
@@ -129,10 +176,37 @@ router.put("/:id", verifySession, async (req: AuthRequest, res: Response) => {
     };
 
     if (name) updateData.name = name;
-    if (status) updateData.status = status;
+    if (status) {
+      const normalizedStatus = normalizeCardStatus(status);
+      if (!normalizedStatus) {
+        return res.status(400).json({ error: "Invalid status value" });
+      }
+      updateData.status = normalizedStatus;
+      if (normalizedStatus === "ACTIVE") {
+        updateData.publishedAt = new Date().toISOString();
+      }
+    }
     if (themeOverride) updateData.themeOverride = themeOverride;
     if (designId) updateData.designId = designId;
-    Object.assign(updateData, otherFields);
+    const normalizedFields = { ...otherFields } as Record<string, unknown>;
+    if (normalizedFields.fontFamily !== undefined) {
+      const normalizedFont = normalizeFontFamily(normalizedFields.fontFamily);
+      if (!normalizedFont) {
+        return res.status(400).json({ error: "Invalid fontFamily value" });
+      }
+      normalizedFields.fontFamily = normalizedFont;
+    }
+    if (normalizedFields.status !== undefined) {
+      const normalizedStatus = normalizeCardStatus(normalizedFields.status);
+      if (!normalizedStatus) {
+        return res.status(400).json({ error: "Invalid status value" });
+      }
+      normalizedFields.status = normalizedStatus;
+      if (normalizedStatus === "ACTIVE") {
+        normalizedFields.publishedAt = new Date().toISOString();
+      }
+    }
+    Object.assign(updateData, normalizedFields);
 
     const { data, error } = await supabase
       .from("Card")

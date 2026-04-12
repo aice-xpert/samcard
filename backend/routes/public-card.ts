@@ -1,5 +1,6 @@
 import express, { Response } from "express";
 import { supabase } from "../config/supabase";
+import { randomUUID } from "crypto";
 
 const router = express.Router();
 
@@ -10,6 +11,26 @@ const normalizePhoneBgType = (value: unknown): "solid" | "gradient" => {
   if (typeof value !== "string") return "solid";
   return value.toLowerCase() === "gradient" ? "gradient" : "solid";
 };
+
+const LEAD_SOURCES = new Set([
+  "NFC",
+  "QR",
+  "LINK_CLICK",
+  "DIRECT",
+  "SEARCH",
+  "REFERRAL",
+  "SOCIAL",
+  "ORGANIC",
+]);
+
+const normalizeLeadSource = (value: unknown): string => {
+  if (typeof value !== "string") return "DIRECT";
+  const normalized = value.trim().toUpperCase();
+  return LEAD_SOURCES.has(normalized) ? normalized : "DIRECT";
+};
+
+const createLeadId = (): string =>
+  `lead_${randomUUID().replace(/-/g, "")}`;
 
 interface PublicCardResponse {
   id: string;
@@ -320,35 +341,51 @@ router.post("/:slug/leads", async (req, res: Response) => {
   const { name, email, phone, company, jobTitle, notes, source, utmSource, utmCampaign, marketingConsent, gdprConsent } = req.body;
 
   try {
+    const isPreview = req.query.preview === "true";
+
     const { data: card, error: cardError } = await supabase
       .from("Card")
-      .select("id, userId, businessProfileId, name")
+      .select("id, userId, businessProfileId, name, totalSaves, status")
       .eq("slug", slug)
-      .eq("status", "ACTIVE")
-      .single();
+      .maybeSingle();
 
-    if (cardError || !card) {
+    if (cardError) {
+      return res.status(500).json({ error: cardError.message });
+    }
+
+    if (!card) {
       return res.status(404).json({ error: "Card not found" });
+    }
+
+    if (card.status !== "ACTIVE" && !isPreview) {
+      return res.status(409).json({
+        error: "Card exists but is not published yet. Publish the card to accept public leads.",
+      });
     }
 
     if (!name && !email && !phone) {
       return res.status(400).json({ error: "At least name, email, or phone is required" });
     }
 
-    const { data: existingLead } = await supabase
-      .from("Lead")
-      .select("id")
-      .eq("businessProfileId", card.businessProfileId)
-      .eq("email", email || "")
-      .maybeSingle();
+    if (email) {
+      const { data: existingLead } = await supabase
+        .from("Lead")
+        .select("id")
+        .eq("businessProfileId", card.businessProfileId)
+        .eq("email", email)
+        .maybeSingle();
 
-    if (existingLead) {
-      return res.status(409).json({ error: "Lead with this email already exists", leadId: existingLead.id });
+      if (existingLead) {
+        return res.status(409).json({ error: "Lead with this email already exists", leadId: existingLead.id });
+      }
     }
+
+    const now = new Date().toISOString();
 
     const { data: lead, error: leadError } = await supabase
       .from("Lead")
       .insert({
+        id: createLeadId(),
         userId: card.userId,
         businessProfileId: card.businessProfileId,
         cardId: card.id,
@@ -358,7 +395,7 @@ router.post("/:slug/leads", async (req, res: Response) => {
         company: company || null,
         jobTitle: jobTitle || null,
         notes: notes || null,
-        source: source || "DIRECT",
+        source: normalizeLeadSource(source),
         utmSource: utmSource || null,
         utmCampaign: utmCampaign || null,
         marketingConsent: marketingConsent ?? false,
@@ -366,13 +403,15 @@ router.post("/:slug/leads", async (req, res: Response) => {
         status: "NEW",
         engagementScore: 0,
         tags: [],
+        createdAt: now,
+        updatedAt: now,
       })
       .select()
       .single();
 
     if (leadError) {
       console.error("Lead creation error:", leadError);
-      return res.status(500).json({ error: "Failed to create lead" });
+      return res.status(500).json({ error: leadError.message || "Failed to create lead" });
     }
 
     await supabase

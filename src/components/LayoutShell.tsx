@@ -23,11 +23,19 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
 
   const showChrome = !isDashboardRoute && !isPublicCardPage;
 
+  if (isDashboardRoute) {
+    return (
+      <UserProvider>
+        <main>{children}</main>
+      </UserProvider>
+    );
+  }
+
   return (
-    <UserProvider>
+    <>
       {showChrome && <Navigation />}
       <main>{children}</main>
       {showChrome && <Footer />}
-    </UserProvider>
+    </>
   );
 }

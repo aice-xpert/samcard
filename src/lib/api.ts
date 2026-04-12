@@ -191,6 +191,15 @@ export interface ApiCard {
   slug: string;
   shareUrl: string;
   thumbnailUrl: string | null;
+  accentColor?: string;
+  accentLight?: string;
+  cardColor?: string;
+  textColor?: string;
+  backgroundColor?: string;
+  phoneBgType?: string;
+  phoneBgColor1?: string;
+  phoneBgColor2?: string;
+  phoneBgAngle?: number;
   totalViews: number;
   totalTaps: number;
   totalSaves: number;
@@ -227,6 +236,12 @@ export async function updateCard(id: string, payload: Partial<ApiCard>) {
 export async function deleteCard(id: string) {
   return apiRequest<{ success: boolean }>(`/api/user/cards/${id}`, {
     method: "DELETE",
+  });
+}
+
+export async function duplicateCard(id: string) {
+  return apiRequest<ApiCard>(`/api/user/cards/duplicate/${id}`, {
+    method: "POST",
   });
 }
 

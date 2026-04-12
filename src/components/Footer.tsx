@@ -19,11 +19,13 @@ export default function Footer() {
           <div className="space-y-4 text-center sm:text-left">
             <div className="flex items-center justify-center sm:justify-start gap-2">
               <Image
-                className="w-10 h-10 rounded-lg"
+                className="rounded-lg"
                 src="/logo.png"
                 alt="SamCard logo"
                 width={40}
                 height={40}
+                sizes="40px"
+                style={{ width: "40px", height: "auto" }}
               />
               <h3 className="text-xl font-bold">SamCard</h3>
             </div>
