@@ -67,6 +67,40 @@ const verifyIdTokenSafely = async (token: string) => {
   }
 };
 
+const decodeJwtPayload = (token: string): Record<string, unknown> | null => {
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+
+    const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, "=");
+    const decoded = Buffer.from(padded, "base64").toString("utf8");
+    const payload = JSON.parse(decoded);
+
+    return typeof payload === "object" && payload !== null
+      ? (payload as Record<string, unknown>)
+      : null;
+  } catch {
+    return null;
+  }
+};
+
+const getJwtIssuer = (token: string): string | null => {
+  const payload = decodeJwtPayload(token);
+  const issuer = payload?.iss;
+  return typeof issuer === "string" ? issuer : null;
+};
+
+const isSessionCookieToken = (token: string): boolean => {
+  const issuer = getJwtIssuer(token);
+  return issuer?.startsWith("https://session.firebase.google.com/") === true;
+};
+
+const isIdToken = (token: string): boolean => {
+  const issuer = getJwtIssuer(token);
+  return issuer?.startsWith("https://securetoken.google.com/") === true;
+};
+
 const verifyUserExists = async (uid: string): Promise<boolean> => {
   try {
     await admin.auth().getUser(uid);
@@ -104,10 +138,17 @@ export const verifySession = async (
     }
 
     if (!decodedClaims && bearerToken) {
-      try {
+      if (isSessionCookieToken(bearerToken)) {
         decodedClaims = await verifySessionCookieSafely(bearerToken);
-      } catch {
+      } else if (isIdToken(bearerToken)) {
         decodedClaims = await verifyIdTokenSafely(bearerToken);
+      } else {
+        // Unknown token shape: try both in a safe order.
+        try {
+          decodedClaims = await verifySessionCookieSafely(bearerToken);
+        } catch {
+          decodedClaims = await verifyIdTokenSafely(bearerToken);
+        }
       }
     }
 

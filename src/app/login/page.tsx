@@ -50,16 +50,8 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (response.ok) {
-        const data = await response.json();
         if (data.sessionToken) {
           persistSessionToken(data.sessionToken);
-        }
-        if (data.sessionToken) {
-          localStorage.removeItem("sessionToken");  // clear old session
-          if (data.sessionToken) {
-            localStorage.setItem("sessionToken", data.sessionToken);
-          }
-
           // Manually set cookie in case cross-origin Set-Cookie gets blocked in dev
           document.cookie = `session=${data.sessionToken}; path=/; max-age=${60 * 60 * 24 * 5}; SameSite=Lax`;
         }
@@ -100,7 +92,6 @@ export default function LoginPage() {
     // Also set a readable cookie so Next.js middleware can fall back to it.
     if (data.sessionToken) {
       persistSessionToken(data.sessionToken);
-      localStorage.setItem("sessionToken", data.sessionToken);
       // Manually set cookie in case cross-origin Set-Cookie gets blocked in dev
       document.cookie = `session=${data.sessionToken}; path=/; max-age=${60 * 60 * 24 * 5}; SameSite=Lax`;
     }

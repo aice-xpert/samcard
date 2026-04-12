@@ -19,6 +19,34 @@ import type { LogoPosition } from '@/components/dashboard/pages/PhonePreview';
 const PROFILE_KEY = 'businessProfile_v1';
 const DESIGN_KEY = 'cardDesign_v1';
 
+const profileCacheKeyForCard = (cardId?: string): string =>
+  cardId ? `${PROFILE_KEY}:${cardId}` : PROFILE_KEY;
+
+const profileCacheKeyForEditor = (
+  explicitCardId?: string,
+  resolvedCardId?: string,
+  allowFallbackToFirstCard: boolean = true,
+): string => {
+  if (explicitCardId) return profileCacheKeyForCard(explicitCardId);
+  if (resolvedCardId) return profileCacheKeyForCard(resolvedCardId);
+  if (!allowFallbackToFirstCard) return `${PROFILE_KEY}:draft`;
+  return PROFILE_KEY;
+};
+
+const designCacheKeyForCard = (cardId?: string): string =>
+  cardId ? `${DESIGN_KEY}:${cardId}` : DESIGN_KEY;
+
+const designCacheKeyForEditor = (
+  explicitCardId?: string,
+  resolvedCardId?: string,
+  allowFallbackToFirstCard: boolean = true,
+): string => {
+  if (explicitCardId) return designCacheKeyForCard(explicitCardId);
+  if (resolvedCardId) return designCacheKeyForCard(resolvedCardId);
+  if (!allowFallbackToFirstCard) return `${DESIGN_KEY}:draft`;
+  return DESIGN_KEY;
+};
+
 // ── Profile cache shape ───────────────────────────────────────────
 interface ProfileCache {
   profileImage?: string;
@@ -197,15 +225,15 @@ function getPhoneBgStyle(d: DesignSettings): string {
 }
 
 // ── Storage helpers ───────────────────────────────────────────────
-function loadDesign(): DesignSettings {
+function loadDesign(cacheKey: string = DESIGN_KEY): DesignSettings {
   try {
-    const raw = localStorage.getItem(DESIGN_KEY);
+    const raw = localStorage.getItem(cacheKey);
     if (!raw) return { ...DEFAULT_DESIGN };
     return { ...DEFAULT_DESIGN, ...JSON.parse(raw) };
   } catch { return { ...DEFAULT_DESIGN }; }
 }
 
-function saveDesign(d: DesignSettings) {
+function saveDesign(d: DesignSettings, cacheKey: string = DESIGN_KEY) {
   try {
     const phoneBgStyle = getPhoneBgStyle(d);
     const payload = {
@@ -226,17 +254,78 @@ function saveDesign(d: DesignSettings) {
       cardRadius: d.cardRadius,
       phoneBgStyle,
     };
-    localStorage.setItem(DESIGN_KEY, JSON.stringify(payload));
-    window.dispatchEvent(new StorageEvent('storage', { key: DESIGN_KEY }));
-    window.dispatchEvent(new CustomEvent('designSaved'));
+    localStorage.setItem(cacheKey, JSON.stringify(payload));
+    window.dispatchEvent(new StorageEvent('storage', { key: cacheKey }));
+    window.dispatchEvent(new CustomEvent('designSaved', { detail: { key: cacheKey } }));
   } catch { /* quota */ }
 }
 
-function loadProfile(): ProfileCache {
+function loadProfile(cacheKey: string = PROFILE_KEY): ProfileCache {
   try {
-    const raw = localStorage.getItem(PROFILE_KEY);
+    const raw = localStorage.getItem(cacheKey);
     return raw ? JSON.parse(raw) : {};
   } catch { return {}; }
+}
+
+function asColor(value: unknown, fallback: string): string {
+  if (typeof value !== 'string') return fallback;
+  const normalized = value.trim();
+  if (!normalized || normalized.includes('gradient(')) return fallback;
+  return normalized;
+}
+
+function asNumber(value: unknown, fallback: number): number {
+  const num = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(num) ? num : fallback;
+}
+
+function normalizeFontKey(value: unknown): DesignSettings['font'] {
+  const raw = typeof value === 'string' ? value.trim().toLowerCase().replace(/_/g, '-') : '';
+  if (raw === 'playfair-display' || raw === 'playfair display') return 'playfair';
+  if (raw === 'fira-code' || raw === 'fira code') return 'mono';
+  if (raw in FONTS) return raw as DesignSettings['font'];
+  return DEFAULT_DESIGN.font;
+}
+
+function normalizeDesignSettings(value: Partial<DesignSettings> | null | undefined): DesignSettings {
+  const source = (value ?? {}) as Record<string, unknown>;
+  const phoneBgTypeRaw = typeof source.phoneBgType === 'string' ? source.phoneBgType.toLowerCase() : '';
+  const shadowRaw = typeof source.shadowIntensity === 'string' ? source.shadowIntensity.toLowerCase() : '';
+  const paletteRaw = typeof source.palette === 'string' ? source.palette.toLowerCase() : '';
+
+  const phoneBgType: DesignSettings['phoneBgType'] =
+    phoneBgTypeRaw === 'solid' || phoneBgTypeRaw === 'gradient'
+      ? phoneBgTypeRaw
+      : DEFAULT_DESIGN.phoneBgType;
+
+  const shadowIntensity: DesignSettings['shadowIntensity'] =
+    shadowRaw === 'none' || shadowRaw === 'soft' || shadowRaw === 'medium' || shadowRaw === 'strong'
+      ? shadowRaw
+      : DEFAULT_DESIGN.shadowIntensity;
+
+  return {
+    ...DEFAULT_DESIGN,
+    ...value,
+    palette: PALETTES[paletteRaw] ? paletteRaw : (paletteRaw || DEFAULT_DESIGN.palette),
+    accentColor: asColor(source.accentColor ?? source.green, DEFAULT_DESIGN.accentColor),
+    accentLight: asColor(source.accentLight ?? source.greenLight, DEFAULT_DESIGN.accentLight),
+    bgColor: asColor(source.bgColor ?? source.backgroundColor ?? source.bg, DEFAULT_DESIGN.bgColor),
+    cardColor: asColor(source.cardColor ?? source.card, DEFAULT_DESIGN.cardColor),
+    textPrimary: asColor(source.textPrimary ?? source.textColor, DEFAULT_DESIGN.textPrimary),
+    textMuted: asColor(source.textMuted, DEFAULT_DESIGN.textMuted),
+    phoneBgPreset: typeof source.phoneBgPreset === 'string' ? source.phoneBgPreset : DEFAULT_DESIGN.phoneBgPreset,
+    phoneBgColor1: asColor(source.phoneBgColor1, DEFAULT_DESIGN.phoneBgColor1),
+    phoneBgColor2: asColor(source.phoneBgColor2, DEFAULT_DESIGN.phoneBgColor2),
+    phoneBgAngle: asNumber(source.phoneBgAngle, DEFAULT_DESIGN.phoneBgAngle),
+    phoneBgType,
+    font: normalizeFontKey(source.font ?? source.fontFamily),
+    bodyFontSize: asNumber(source.bodyFontSize, DEFAULT_DESIGN.bodyFontSize),
+    nameFontSize: asNumber(source.nameFontSize, DEFAULT_DESIGN.nameFontSize),
+    boldHeadings: typeof source.boldHeadings === 'boolean' ? source.boldHeadings : DEFAULT_DESIGN.boldHeadings,
+    cardRadius: asNumber(source.cardRadius, DEFAULT_DESIGN.cardRadius),
+    shadowIntensity,
+    glowEffect: typeof source.glowEffect === 'boolean' ? source.glowEffect : DEFAULT_DESIGN.glowEffect,
+  };
 }
 
 function buildThemeOverride(d: DesignSettings): Partial<ThemeOverride> {
@@ -479,24 +568,55 @@ function WallpaperPicker({ draft, set }: {
 // ══════════════════════════════════════════════════════════════════
 // Main component
 // ══════════════════════════════════════════════════════════════════
-export function DesignNew({ onSettingsChange, cardId }: { onSettingsChange?: (settings: DesignSettings) => void; cardId?: string }) {
+export function DesignNew({
+  onSettingsChange,
+  cardId,
+  allowFallbackToFirstCard = true,
+}: {
+  onSettingsChange?: (settings: DesignSettings) => void;
+  cardId?: string;
+  allowFallbackToFirstCard?: boolean;
+}) {
   const [resolvedCardId, setResolvedCardId] = useState<string | undefined>(cardId);
   useEffect(() => {
+    let active = true;
+
     if (cardId) {
       setResolvedCardId(cardId);
-      return;
+      return () => {
+        active = false;
+      };
     }
-    if (!resolvedCardId) {
-      getCards().then(cards => {
-        console.log('Cards fetched:', cards); // add this
-        if (cards?.length) setResolvedCardId(cards[0].id);
-      }).catch((err) => console.error('getCards failed:', err)); // add this
-    }
-  }, [cardId, resolvedCardId]);
 
-  const [saved, setSaved] = useState<DesignSettings>(() => loadDesign());
-  const [draft, setDraft] = useState<DesignSettings>(() => loadDesign());
-  const [profile, setProfile] = useState<ProfileCache>(() => loadProfile());
+    if (!allowFallbackToFirstCard) {
+      setResolvedCardId(undefined);
+      return () => {
+        active = false;
+      };
+    }
+
+    getCards().then(cards => {
+      if (!active) return;
+      if (cards?.length) setResolvedCardId(cards[0].id);
+    }).catch(() => undefined);
+
+    return () => {
+      active = false;
+    };
+  }, [cardId, allowFallbackToFirstCard]);
+
+  const activeProfileCacheKey = profileCacheKeyForEditor(cardId, resolvedCardId, allowFallbackToFirstCard);
+  const activeDesignCacheKey = designCacheKeyForEditor(cardId, resolvedCardId, allowFallbackToFirstCard);
+
+  const [saved, setSaved] = useState<DesignSettings>(() =>
+    loadDesign(designCacheKeyForEditor(cardId, cardId, allowFallbackToFirstCard)),
+  );
+  const [draft, setDraft] = useState<DesignSettings>(() =>
+    loadDesign(designCacheKeyForEditor(cardId, cardId, allowFallbackToFirstCard)),
+  );
+  const [profile, setProfile] = useState<ProfileCache>(() =>
+    loadProfile(profileCacheKeyForEditor(cardId, cardId, allowFallbackToFirstCard)),
+  );
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSaved, setIsSaved] = useState(false);
   const [toast, setToast] = useState('');
@@ -511,8 +631,22 @@ export function DesignNew({ onSettingsChange, cardId }: { onSettingsChange?: (se
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   useEffect(() => {
-    const onStorage = (e: StorageEvent) => { if (e.key === PROFILE_KEY || e.key === null) setProfile(loadProfile()); };
-    const onFocus = () => setProfile(loadProfile());
+    setProfile(loadProfile(activeProfileCacheKey));
+  }, [activeProfileCacheKey]);
+
+  useEffect(() => {
+    const cachedDesign = loadDesign(activeDesignCacheKey);
+    setDraft(cachedDesign);
+    setSaved(cachedDesign);
+  }, [activeDesignCacheKey]);
+
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === activeProfileCacheKey || e.key === null) {
+        setProfile(loadProfile(activeProfileCacheKey));
+      }
+    };
+    const onFocus = () => setProfile(loadProfile(activeProfileCacheKey));
     window.addEventListener('storage', onStorage);
     window.addEventListener('focus', onFocus);
 
@@ -522,8 +656,14 @@ export function DesignNew({ onSettingsChange, cardId }: { onSettingsChange?: (se
         Promise.all([getCardDesign(resolvedCardId), getCardContent(resolvedCardId), getBusinessProfile()])
           .then(([designData, contentData, profileData]) => {
             if (designData) {
-              setDraft(designData as DesignSettings);
-              setSaved(designData as DesignSettings);
+              const normalizedDesign = normalizeDesignSettings(designData as Partial<DesignSettings>);
+              setDraft(normalizedDesign);
+              setSaved(normalizedDesign);
+              saveDesign(normalizedDesign, activeDesignCacheKey);
+            }
+            if (!allowFallbackToFirstCard) {
+              setProfile(loadProfile(activeProfileCacheKey));
+              return;
             }
             if (contentData) {
               setProfile(prev => ({
@@ -569,7 +709,7 @@ export function DesignNew({ onSettingsChange, cardId }: { onSettingsChange?: (se
       window.removeEventListener('focus', onFocus);
       window.removeEventListener('cardDataUpdated', onCardUpdate as EventListener);
     };
-  }, [resolvedCardId]);
+  }, [resolvedCardId, allowFallbackToFirstCard, activeProfileCacheKey, activeDesignCacheKey]);
 
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 2500); };
 
@@ -580,8 +720,42 @@ export function DesignNew({ onSettingsChange, cardId }: { onSettingsChange?: (se
     Promise.all([getCardDesign(resolvedCardId), getCardContent(resolvedCardId), getBusinessProfile()])
       .then(([designData, contentData, profileData]) => {
         if (designData) {
-          setDraft(designData as DesignSettings);
-          setSaved(designData as DesignSettings);
+          const normalizedDesign = normalizeDesignSettings(designData as Partial<DesignSettings>);
+          setDraft(normalizedDesign);
+          setSaved(normalizedDesign);
+          saveDesign(normalizedDesign, activeDesignCacheKey);
+        } else {
+          getCards()
+            .then((cards) => {
+              const selected = cards.find((c) => c.id === resolvedCardId);
+              const fallback: DesignSettings = {
+                ...DEFAULT_DESIGN,
+                accentColor: selected?.accentColor || DEFAULT_DESIGN.accentColor,
+                accentLight: selected?.accentLight || DEFAULT_DESIGN.accentLight,
+                bgColor: selected?.backgroundColor || DEFAULT_DESIGN.bgColor,
+                cardColor: selected?.cardColor || DEFAULT_DESIGN.cardColor,
+                phoneBgType:
+                  String(selected?.phoneBgType || '').toLowerCase() === 'gradient'
+                    ? 'gradient'
+                    : 'solid',
+                phoneBgColor1: selected?.phoneBgColor1 || DEFAULT_DESIGN.phoneBgColor1,
+                phoneBgColor2: selected?.phoneBgColor2 || DEFAULT_DESIGN.phoneBgColor2,
+                phoneBgAngle: selected?.phoneBgAngle ?? DEFAULT_DESIGN.phoneBgAngle,
+              };
+              setDraft(fallback);
+              setSaved(fallback);
+              saveDesign(fallback, activeDesignCacheKey);
+            })
+            .catch(() => {
+              setDraft(DEFAULT_DESIGN);
+              setSaved(DEFAULT_DESIGN);
+              saveDesign(DEFAULT_DESIGN, activeDesignCacheKey);
+            });
+        }
+
+        if (!allowFallbackToFirstCard) {
+          setProfile(loadProfile(activeProfileCacheKey));
+          return;
         }
 
         if (contentData) {
@@ -620,31 +794,21 @@ export function DesignNew({ onSettingsChange, cardId }: { onSettingsChange?: (se
       })
       .catch(() => { /* ignore load error */ })
       .finally(() => setIsLoading(false));
-  }, [cardId]);
+  }, [resolvedCardId, allowFallbackToFirstCard, activeProfileCacheKey, activeDesignCacheKey]);
 
   const set = useCallback(<K extends keyof DesignSettings>(key: K, val: DesignSettings[K]) =>
     setDraft(prev => ({ ...prev, [key]: val })), []);
 
   const handleSave = useCallback(async () => {
-    saveDesign(draft);
+    saveDesign(draft, activeDesignCacheKey);
     setSaved(draft);
     setIsSaved(true); showToast('Design saved!');
     setTimeout(() => setIsSaved(false), 2000);
 
   if (resolvedCardId) {
-    let payloadToSend = { ...draft };
-    // If a named preset is active, resolve its colors so DB is in sync
-    if (draft.phoneBgPreset !== 'custom') {
-      const presetStyle = WALLPAPER_PRESETS.find((p) => p.id === draft.phoneBgPreset)?.style ?? '';
-      payloadToSend = {
-        ...payloadToSend,
-        phoneBgColor1: presetStyle, // or leave colors as-is if backend ignores them when preset != custom
-        phoneBgType: 'gradient',
-      };
-    }
-    await updateCardDesign(resolvedCardId, payloadToSend);
+    await updateCardDesign(resolvedCardId, draft);
   }
-}, [draft, resolvedCardId]);
+}, [draft, resolvedCardId, activeDesignCacheKey]);
 
   const handleReset = useCallback(() => { setDraft(saved); showToast('Reverted to last saved'); }, [saved]);
 
@@ -715,7 +879,7 @@ export function DesignNew({ onSettingsChange, cardId }: { onSettingsChange?: (se
   const shadowMap = { none: 'none', soft: `0 4px 24px ${draft.accentColor}25`, medium: `0 8px 48px ${draft.accentColor}45`, strong: `0 12px 72px ${draft.accentColor}70` };
   const wrapperShadow = draft.glowEffect ? `${shadowMap[draft.shadowIntensity]}, 0 0 40px ${draft.accentColor}22` : shadowMap[draft.shadowIntensity];
 
-  const sharedPreviewProps = { cardId, profileImage, brandLogo, logoPosition, formData, socialLinks, customLinks, extraSections, sections, savedContact, copied, themeOverride };
+  const sharedPreviewProps = { cardId: resolvedCardId, profileImage, brandLogo, logoPosition, formData, socialLinks, customLinks, extraSections, sections, savedContact, copied, themeOverride };
 
   // ── Controls ──────────────────────────────────────────────────────
   const ControlsPanel = (

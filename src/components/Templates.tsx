@@ -1,6 +1,8 @@
 "use client";
 import { useRef } from "react";
 import { motion } from "motion/react";
+import "swiper/css";
+import "swiper/css/navigation";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Navigation, Pagination } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";

@@ -12,6 +12,12 @@ const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
 });
 
+const normalizeBucketName = (value: unknown): string | undefined => {
+  if (typeof value !== 'string') return undefined;
+  const trimmed = value.trim();
+  return trimmed || undefined;
+};
+
 router.post('/', verifySession, upload.single('file'), async (req: AuthRequest, res: Response) => {
   try {
     if (!req.file) {
@@ -21,9 +27,14 @@ router.post('/', verifySession, upload.single('file'), async (req: AuthRequest, 
     const file = req.file;
     const ext = path.extname(file.originalname);
     const filename = `${uuidv4()}${ext}`;
-    
-    // We allow passing standard bucket or default to env var or 'avatars'
-    const bucket = process.env.STORAGE_BUCKET || req.body.bucket || 'samcard-profiles';
+
+    // Resolve bucket in strict priority: explicit request bucket -> env bucket -> fallback.
+    const bucket =
+      normalizeBucketName(req.body?.bucket) ||
+      normalizeBucketName(process.env.STORAGE_BUCKET) ||
+      normalizeBucketName(process.env.SUPABASE_BUCKET) ||
+      'samcard-profiles';
+
     const filePath = `${req.user!.uid}/${filename}`;
 
     const { data: uploadData, error: uploadError } = await supabase.storage
@@ -41,7 +52,11 @@ router.post('/', verifySession, upload.single('file'), async (req: AuthRequest, 
       .from(bucket)
       .getPublicUrl(uploadData.path);
 
-    return res.json({ url: publicUrl });
+    return res.json({
+      url: publicUrl,
+      bucket,
+      path: uploadData.path,
+    });
   } catch (error: any) {
     console.error('Upload error:', error);
     return res.status(500).json({ error: error.message || 'Internal server error' });

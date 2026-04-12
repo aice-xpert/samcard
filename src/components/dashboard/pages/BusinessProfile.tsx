@@ -1,7 +1,7 @@
 "use client";
 
 import Image from 'next/image';
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useDeferredValue, useMemo } from 'react';
 import { Card, CardContent } from '@/components/dashboard/ui/card';
 import { Button } from '@/components/dashboard/ui/button';
 import { Input } from '@/components/dashboard/ui/input';
@@ -31,6 +31,8 @@ import {
   getBusinessProfile,
   getCustomLinks,
   getSocialLinks,
+  getCardDesign,
+  CardDesignResponse,
   updateBusinessProfile,
   updateCustomLinks,
   updateSocialLinks,
@@ -79,6 +81,55 @@ interface CacheShape {
 // ─────────────────────────────────────────────────────────────────────────────
 const CACHE_KEY = 'businessProfile_v1';
 const DESIGN_KEY = 'cardDesign_v1';
+
+const cacheKeyForCard = (cardId?: string): string =>
+  cardId ? `${CACHE_KEY}:${cardId}` : CACHE_KEY;
+
+const cacheKeyForEditor = (
+  explicitCardId?: string,
+  resolvedCardId?: string,
+  allowFallbackToFirstCard: boolean = true,
+): string => {
+  if (explicitCardId) return cacheKeyForCard(explicitCardId);
+  if (resolvedCardId) return cacheKeyForCard(resolvedCardId);
+  if (!allowFallbackToFirstCard) return `${CACHE_KEY}:draft`;
+  return CACHE_KEY;
+};
+
+const designCacheKeyForCard = (cardId?: string): string =>
+  cardId ? `${DESIGN_KEY}:${cardId}` : DESIGN_KEY;
+
+const designCacheKeyForEditor = (
+  explicitCardId?: string,
+  resolvedCardId?: string,
+  allowFallbackToFirstCard: boolean = true,
+): string => {
+  if (explicitCardId) return designCacheKeyForCard(explicitCardId);
+  if (resolvedCardId) return designCacheKeyForCard(resolvedCardId);
+  if (!allowFallbackToFirstCard) return `${DESIGN_KEY}:draft`;
+  return DESIGN_KEY;
+};
+
+const DESIGN_WALLPAPER_STYLES: Record<string, string> = {
+  'deep-space': 'radial-gradient(ellipse at 20% 80%, #0f2027 0%, #203a43 45%, #2c5364 100%)',
+  aurora: 'linear-gradient(160deg, #0a0a0a 0%, #003322 25%, #006644 50%, #004422 70%, #001133 85%, #0a0a0a 100%)',
+  'midnight-purple': 'radial-gradient(ellipse at 60% 10%, #2d0855 0%, #1a0533 40%, #0d0118 70%, #050010 100%)',
+  'sunset-dusk': 'linear-gradient(170deg, #1a0500 0%, #3d1000 30%, #2a0a00 55%, #1a0800 75%, #000 100%)',
+  'ocean-depth': 'radial-gradient(ellipse at 30% 20%, #003366 0%, #001f3f 40%, #000d1a 75%, #000510 100%)',
+  volcanic: 'radial-gradient(ellipse at 50% 90%, #3d0000 0%, #2d0000 30%, #1a0000 60%, #050000 100%)',
+};
+
+const DESIGN_FONT_FAMILY: Record<string, string> = {
+  inter: 'Inter, sans-serif',
+  sora: 'Sora, sans-serif',
+  'dm-sans': '"DM Sans", sans-serif',
+  poppins: 'Poppins, sans-serif',
+  raleway: 'Raleway, sans-serif',
+  playfair: '"Playfair Display", serif',
+  mono: '"Fira Code", monospace',
+  'fira-code': '"Fira Code", monospace',
+  system: 'system-ui, sans-serif',
+};
 
 const SOCIAL_OPTIONS = [
   { icon: Linkedin, name: 'LinkedIn', color: '#008001', placeholder: 'https://linkedin.com/in/username', baseUrl: 'https://linkedin.com/in/' },
@@ -199,9 +250,9 @@ function normalizeLogoPositionForBusinessProfile(value: unknown): 'TOP_LEFT' | '
 // ─────────────────────────────────────────────────────────────────────────────
 // Cache helpers
 // ─────────────────────────────────────────────────────────────────────────────
-function loadCache(): CacheShape {
+function loadCache(cacheKey: string = CACHE_KEY): CacheShape {
   try {
-    const raw = localStorage.getItem(CACHE_KEY);
+    const raw = localStorage.getItem(cacheKey);
     if (!raw) return DEFAULT_STATE;
     const p = JSON.parse(raw) as Partial<CacheShape>;
     return {
@@ -219,16 +270,16 @@ function loadCache(): CacheShape {
   } catch { return DEFAULT_STATE; }
 }
 
-function saveCache(data: CacheShape): void {
+function saveCacheForKey(data: CacheShape, cacheKey: string): void {
   try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(data));
-    window.dispatchEvent(new StorageEvent('storage', { key: CACHE_KEY }));
+    localStorage.setItem(cacheKey, JSON.stringify(data));
+    window.dispatchEvent(new StorageEvent('storage', { key: cacheKey }));
   } catch { /* quota */ }
 }
 
-function loadThemeOverride(): Partial<ThemeOverride> {
+function loadThemeOverride(cacheKey: string = DESIGN_KEY): Partial<ThemeOverride> {
   try {
-    const raw = localStorage.getItem(DESIGN_KEY);
+    const raw = localStorage.getItem(cacheKey);
     if (!raw) return {};
     const p = JSON.parse(raw) as Record<string, unknown>;
 
@@ -261,6 +312,75 @@ function loadThemeOverride(): Partial<ThemeOverride> {
   } catch {
     return {};
   }
+}
+
+function saveThemeOverride(cacheKey: string, override: Partial<ThemeOverride>): void {
+  try {
+    localStorage.setItem(cacheKey, JSON.stringify(override));
+    window.dispatchEvent(new StorageEvent('storage', { key: cacheKey }));
+    window.dispatchEvent(new CustomEvent('designSaved', { detail: { key: cacheKey } }));
+  } catch {
+    // ignore local storage failures
+  }
+}
+
+function pickString(source: Record<string, unknown>, keys: string[], fallback: string): string {
+  for (const key of keys) {
+    const value = source[key];
+    if (typeof value === 'string' && value.trim()) {
+      return value;
+    }
+  }
+  return fallback;
+}
+
+function pickNumber(source: Record<string, unknown>, keys: string[], fallback: number): number {
+  for (const key of keys) {
+    const value = source[key];
+    const parsed = typeof value === 'number' ? value : Number(value);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+  return fallback;
+}
+
+function buildThemeOverrideFromCardDesign(design: Partial<CardDesignResponse>): Partial<ThemeOverride> {
+  const source = design as Record<string, unknown>;
+  const accent = pickString(source, ['accentColor', 'green'], '#008001');
+  const accentLight = pickString(source, ['accentLight', 'greenLight'], '#49B618');
+  const preset = pickString(source, ['phoneBgPreset'], 'aurora');
+  const bgTypeRaw = pickString(source, ['phoneBgType'], 'gradient').toLowerCase();
+  const bgType = bgTypeRaw === 'solid' ? 'solid' : 'gradient';
+  const bgColor1 = pickString(source, ['phoneBgColor1'], '#0a0f0a');
+  const bgColor2 = pickString(source, ['phoneBgColor2'], '#003322');
+  const bgAngle = pickNumber(source, ['phoneBgAngle'], 135);
+  const normalizedFont = pickString(source, ['font', 'fontFamily'], 'inter').toLowerCase();
+
+  const phoneBgStyle =
+    preset === 'custom'
+      ? (bgType === 'gradient'
+        ? `linear-gradient(${bgAngle}deg, ${bgColor1} 0%, ${bgColor2} 100%)`
+        : bgColor1)
+      : (DESIGN_WALLPAPER_STYLES[preset] || undefined);
+
+  return {
+    green: accent,
+    greenLight: accentLight,
+    bg: pickString(source, ['bgColor', 'backgroundColor', 'bg'], '#0a0f0a'),
+    card: pickString(source, ['cardColor', 'card'], '#111a11'),
+    cardBorder: `${accent}33`,
+    textPrimary: pickString(source, ['textPrimary', 'textColor'], '#f0f0f0'),
+    textMuted: pickString(source, ['textMuted', 'muted'], '#7a9a7a'),
+    divider: `${accent}1f`,
+    muted: `${accent}55`,
+    fontFamily: DESIGN_FONT_FAMILY[normalizedFont] || DESIGN_FONT_FAMILY.inter,
+    nameFontSize: pickNumber(source, ['nameFontSize'], 22),
+    bodyFontSize: pickNumber(source, ['bodyFontSize'], 11),
+    boldHeadings: typeof source.boldHeadings === 'boolean' ? source.boldHeadings : true,
+    cardRadius: pickNumber(source, ['cardRadius'], 16),
+    phoneBgStyle,
+  };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -398,6 +518,16 @@ function ImageUploader({ value, onChange, label, ratio, roundedClass = 'rounded-
     if (onFileSelect) {
       onFileSelect(file);
     }
+
+    // Push a local preview to parent state immediately so live card preview updates before save.
+    const reader = new FileReader();
+    reader.onload = e => {
+      const result = e.target?.result;
+      if (typeof result === 'string') {
+        onChange(result);
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   const displaySrc = preview || value;
@@ -596,25 +726,43 @@ function ExtraSectionBlock({ section, onToggle, onRemove, onUpdateData }: ExtraS
 export default function BusinessProfile({
   cardId,
   onContentChange,
+  allowFallbackToFirstCard = true,
 }: {
   cardId?: string;
   onContentChange?: (content: CardContentPayload) => void;
+  allowFallbackToFirstCard?: boolean;
 }) {
-  const initial = loadCache();
+  const initial = loadCache(cacheKeyForEditor(cardId, undefined, allowFallbackToFirstCard));
   const [resolvedCardId, setResolvedCardId] = useState<string | undefined>(cardId);
+  const activeDesignCacheKey = designCacheKeyForEditor(cardId, resolvedCardId, allowFallbackToFirstCard);
+  const shouldPersistGlobalProfile = !cardId && allowFallbackToFirstCard;
 
   useEffect(() => {
+    let active = true;
+
     if (cardId) {
       setResolvedCardId(cardId);
-      return;
+      return () => {
+        active = false;
+      };
     }
 
-    if (!resolvedCardId) {
-      getCards().then(cards => {
-        if (cards?.length) setResolvedCardId(cards[0].id);
-      }).catch(() => undefined);
+    if (!allowFallbackToFirstCard) {
+      setResolvedCardId(undefined);
+      return () => {
+        active = false;
+      };
     }
-  }, [cardId, resolvedCardId]);
+
+    getCards().then(cards => {
+      if (!active) return;
+      if (cards?.length) setResolvedCardId(cards[0].id);
+    }).catch(() => undefined);
+
+    return () => {
+      active = false;
+    };
+  }, [cardId, allowFallbackToFirstCard]);
 
   const [profileImage, setProfileImage] = useState<string>(initial.profileImage);
   const [brandLogo, setBrandLogo] = useState<string>(initial.brandLogo);
@@ -629,7 +777,9 @@ export default function BusinessProfile({
   const [customLinks, setCustomLinks] = useState<CustomLink[]>(initial.customLinks);
   const [extraSections, setExtraSections] = useState<ExtraSection[]>(initial.extraSections);
 
-  const [themeOverride, setThemeOverride] = useState<Partial<ThemeOverride>>(loadThemeOverride);
+  const [themeOverride, setThemeOverride] = useState<Partial<ThemeOverride>>(() =>
+    loadThemeOverride(designCacheKeyForEditor(cardId, cardId, allowFallbackToFirstCard)),
+  );
 
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -642,15 +792,56 @@ export default function BusinessProfile({
   const [profileShareUrl, setProfileShareUrl] = useState('');
   const [reloadTrigger, setReloadTrigger] = useState(0);
 
+  const formDataRef = useRef(formData);
+  const profileImageRef = useRef(profileImage);
+
+  useEffect(() => {
+    formDataRef.current = formData;
+  }, [formData]);
+
+  useEffect(() => {
+    profileImageRef.current = profileImage;
+  }, [profileImage]);
+
+  const previewResolvedCardId = useDeferredValue(resolvedCardId);
+  const previewProfileImage = useDeferredValue(profileImage);
+  const previewBrandLogo = useDeferredValue(brandLogo);
+  const previewLogoPosition = useDeferredValue(logoPosition);
+  const previewFormData = useDeferredValue(formData);
+  const previewSocialLinks = useDeferredValue(socialLinks);
+  const previewCustomLinks = useDeferredValue(customLinks);
+  const previewExtraSections = useDeferredValue(extraSections);
+  const previewSections = useDeferredValue(sections);
+  const previewSavedContact = useDeferredValue(savedContact);
+  const previewCopied = useDeferredValue(copied);
+  const previewThemeOverride = useDeferredValue(themeOverride);
+
+  useEffect(() => {
+    const cached = loadCache(cacheKeyForEditor(cardId, resolvedCardId, allowFallbackToFirstCard));
+    setProfileImage(cached.profileImage);
+    setBrandLogo(cached.brandLogo);
+    setLogoPosition(cached.logoPosition);
+    setFormData(cached.formData);
+    setSocialLinks(cached.socialLinks);
+    setSections(cached.sections);
+    setExpanded(cached.expanded);
+    setCustomLinks(cached.customLinks);
+    setExtraSections(cached.extraSections);
+  }, [cardId, resolvedCardId, allowFallbackToFirstCard]);
+
+  useEffect(() => {
+    setThemeOverride(loadThemeOverride(activeDesignCacheKey));
+  }, [activeDesignCacheKey]);
+
   const setQr = useQrStore(state => state.setQr);
 
-  const qrCardUrl = (() => {
-    const raw = formData.website.trim() || profileShareUrl.trim() || (typeof window !== 'undefined' ? window.location.href : 'https://samcard.app');
+  const qrCardUrl = useMemo(() => {
+    const raw = previewFormData.website.trim() || profileShareUrl.trim() || (typeof window !== 'undefined' ? window.location.href : 'https://samcard.app');
     if (!raw.startsWith('http://') && !raw.startsWith('https://')) {
       return `https://${raw}`;
     }
     return raw;
-  })();
+  }, [previewFormData.website, profileShareUrl]);
 
   useEffect(() => {
     const { matrix, N } = makeQRMatrix(qrCardUrl);
@@ -667,24 +858,30 @@ export default function BusinessProfile({
 
     if (profileResult.status === 'fulfilled' && profileResult.value) {
       const profile = profileResult.value;
-      setProfileImage(profile.profileImageUrl || initial.profileImage);
-      setBrandLogo(profile.brandLogoUrl || initial.brandLogo);
-      setLogoPosition(normalizeLogoPositionFromApi(profile.logoPosition));
       setProfileShareUrl(profile.shareUrl || '');
+
+      if (shouldPersistGlobalProfile) {
+        setProfileImage(profile.profileImageUrl || initial.profileImage);
+        setBrandLogo(profile.brandLogoUrl || initial.brandLogo);
+        setLogoPosition(normalizeLogoPositionFromApi(profile.logoPosition));
+      }
+
       setFormData(prev => ({
         ...prev,
-        name: profile.name || prev.name,
-        title: profile.title || '',
-        company: profile.company || '',
-        tagline: profile.tagline || '',
-        email: profile.primaryEmail || '',
-        phone: profile.primaryPhone || '',
-        website: profile.website || '',
-        location: [profile.city, profile.state, profile.country].filter(Boolean).join(', '),
+        name: shouldPersistGlobalProfile ? (profile.name || prev.name) : (prev.name || profile.name || ''),
+        title: shouldPersistGlobalProfile ? (profile.title || '') : (prev.title || profile.title || ''),
+        company: shouldPersistGlobalProfile ? (profile.company || '') : (prev.company || profile.company || ''),
+        tagline: shouldPersistGlobalProfile ? (profile.tagline || '') : (prev.tagline || profile.tagline || ''),
+        email: shouldPersistGlobalProfile ? (profile.primaryEmail || '') : (prev.email || profile.primaryEmail || ''),
+        phone: shouldPersistGlobalProfile ? (profile.primaryPhone || '') : (prev.phone || profile.primaryPhone || ''),
+        website: shouldPersistGlobalProfile ? (profile.website || '') : (prev.website || profile.website || ''),
+        location: shouldPersistGlobalProfile
+          ? [profile.city, profile.state, profile.country].filter(Boolean).join(', ')
+          : (prev.location || [profile.city, profile.state, profile.country].filter(Boolean).join(', ')),
       }));
     }
 
-    if (socialResult.status === 'fulfilled') {
+    if (socialResult.status === 'fulfilled' && shouldPersistGlobalProfile) {
       const mappedSocials = socialResult.value.map(link => {
         const platformIndex = SOCIAL_OPTIONS.findIndex(
           option => option.name.toLowerCase() === (link.platform || '').toLowerCase(),
@@ -701,7 +898,7 @@ export default function BusinessProfile({
       }
     }
 
-    if (customResult.status === 'fulfilled') {
+    if (customResult.status === 'fulfilled' && shouldPersistGlobalProfile) {
       const mappedLinks = customResult.value.map(link => ({
         label: link.label || '',
         url: link.url || '',
@@ -711,7 +908,7 @@ export default function BusinessProfile({
         setCustomLinks(mappedLinks);
       }
     }
-  }, [initial.brandLogo, initial.logoPosition, initial.profileImage]);
+  }, [initial.brandLogo, initial.logoPosition, initial.profileImage, shouldPersistGlobalProfile]);
 
   useEffect(() => {
     loadFromApi().catch(() => null);
@@ -721,7 +918,18 @@ export default function BusinessProfile({
     if (!resolvedCardId) return;
     try {
       const content = await getCardContent(resolvedCardId);
-      if (!content) return;
+      if (!content) {
+        const fallback = loadCache(cacheKeyForEditor(cardId, resolvedCardId, allowFallbackToFirstCard));
+        setProfileImage(fallback.profileImage);
+        setBrandLogo(fallback.brandLogo);
+        setLogoPosition(fallback.logoPosition);
+        setFormData(fallback.formData);
+        setSocialLinks(fallback.socialLinks);
+        setSections(fallback.sections);
+        setCustomLinks(fallback.customLinks);
+        setExtraSections(fallback.extraSections);
+        return;
+      }
 
       setProfileImage(content.profileImage || initial.profileImage);
       setBrandLogo(content.brandLogo || initial.brandLogo);
@@ -759,17 +967,44 @@ export default function BusinessProfile({
     } catch {
       // ignore load errors
     }
-  }, [cardId, initial.brandLogo, initial.logoPosition, initial.profileImage]);
+  }, [resolvedCardId, initial.brandLogo, initial.logoPosition, initial.profileImage, cardId, allowFallbackToFirstCard]);
 
   useEffect(() => {
     loadCardContent();
   }, [loadCardContent, reloadTrigger]);
 
+  const loadCardDesign = useCallback(async () => {
+    if (!resolvedCardId) return;
+
+    try {
+      const design = await getCardDesign(resolvedCardId);
+      if (!design) return;
+
+      const override = buildThemeOverrideFromCardDesign(design);
+      setThemeOverride(override);
+      saveThemeOverride(activeDesignCacheKey, override);
+    } catch {
+      // ignore load errors
+    }
+  }, [resolvedCardId, activeDesignCacheKey]);
+
   useEffect(() => {
-    const refresh = () => setThemeOverride(loadThemeOverride());
-    const onStorage = (e: StorageEvent) => { if (e.key === DESIGN_KEY || e.key === null) refresh(); };
+    loadCardDesign();
+  }, [loadCardDesign, reloadTrigger]);
+
+  useEffect(() => {
+    const refresh = () => setThemeOverride(loadThemeOverride(activeDesignCacheKey));
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === activeDesignCacheKey || e.key === null) refresh();
+    };
     const onFocus = () => refresh();
-    const onDesignSaved = () => refresh();
+    const onDesignSaved = (event: Event) => {
+      const designEvent = event as CustomEvent<{ key?: string }>;
+      const eventKey = designEvent.detail?.key;
+      if (!eventKey || eventKey === activeDesignCacheKey) {
+        refresh();
+      }
+    };
     const onCardUpdated = () => setReloadTrigger(prev => prev + 1);
     window.addEventListener('storage', onStorage);
     window.addEventListener('focus', onFocus);
@@ -781,7 +1016,7 @@ export default function BusinessProfile({
       window.removeEventListener('designSaved', onDesignSaved);
       window.removeEventListener('cardDataUpdated', onCardUpdated);
     };
-  }, []);
+  }, [activeDesignCacheKey]);
 
   useEffect(() => {
     if (!onContentChange) return;
@@ -791,12 +1026,18 @@ export default function BusinessProfile({
       brandLogo,
       logoPosition,
       formData,
+      socialLinks: socialLinks
+        .filter(link => Boolean(link.value.trim()))
+        .map(link => ({
+          platform: SOCIAL_OPTIONS[link.platform]?.name || SOCIAL_OPTIONS[0].name,
+          url: link.value.trim(),
+        })),
       connectFields,
       sections,
       customLinks,
       extraSections,
     });
-  }, [onContentChange, profileImage, brandLogo, logoPosition, formData, connectFields, sections, customLinks, extraSections]);
+  }, [onContentChange, profileImage, brandLogo, logoPosition, formData, socialLinks, connectFields, sections, customLinks, extraSections]);
 
   const handleSaveChanges = useCallback(async () => {
     setSaveError(null);
@@ -831,7 +1072,10 @@ export default function BusinessProfile({
       }
     }
 
-    saveCache({ profileImage: updatedProfileImage, brandLogo: updatedBrandLogo, logoPosition, formData, socialLinks, connectFields, sections, expanded, customLinks, extraSections });
+    saveCacheForKey(
+      { profileImage: updatedProfileImage, brandLogo: updatedBrandLogo, logoPosition, formData, socialLinks, connectFields, sections, expanded, customLinks, extraSections },
+      cacheKeyForEditor(cardId, resolvedCardId, allowFallbackToFirstCard),
+    );
 
     const normalizedSocialLinks: ApiSocialLinkPayload[] = socialLinks
       .filter(link => Boolean(link.value.trim()))
@@ -860,32 +1104,34 @@ export default function BusinessProfile({
       const normalizedLogoPosition = normalizeLogoPositionForBusinessProfile(logoPosition);
       const contentLogoPosition = normalizeLogoPositionForCardContent(logoPosition);
 
-      const savedProfile = await updateBusinessProfile({
-        name: formData.name,
-        title: formData.title,
-        company: formData.company,
-        tagline: formData.tagline,
-        profileImageUrl: updatedProfileImage,
-        brandLogoUrl: updatedBrandLogo,
-        logoPosition: normalizedLogoPosition,
-        primaryEmail: formData.email,
-        primaryPhone: formData.phone,
-        website: formData.website,
-        address: formData.location,
-        city: locationParts[0] || '',
-        state: locationParts[1] || '',
-        country: locationParts[2] || '',
-      });
+      if (shouldPersistGlobalProfile) {
+        const savedProfile = await updateBusinessProfile({
+          name: formData.name,
+          title: formData.title,
+          company: formData.company,
+          tagline: formData.tagline,
+          profileImageUrl: updatedProfileImage,
+          brandLogoUrl: updatedBrandLogo,
+          logoPosition: normalizedLogoPosition,
+          primaryEmail: formData.email,
+          primaryPhone: formData.phone,
+          website: formData.website,
+          address: formData.location,
+          city: locationParts[0] || '',
+          state: locationParts[1] || '',
+          country: locationParts[2] || '',
+        });
 
-      setProfileShareUrl(savedProfile.shareUrl || '');
+        setProfileShareUrl(savedProfile.shareUrl || '');
 
-      await Promise.all([
-        updateSocialLinks(normalizedSocialLinks),
-        updateCustomLinks(normalizedCustomLinks),
-      ]);
+        await Promise.all([
+          updateSocialLinks(normalizedSocialLinks),
+          updateCustomLinks(normalizedCustomLinks),
+        ]);
+      }
 
-      if (resolvedCardId) {
-        await updateCardContent(resolvedCardId, {
+      if (cardId) {
+        await updateCardContent(cardId, {
           profileImage: updatedProfileImage,
           brandLogo: updatedBrandLogo,
           logoPosition: contentLogoPosition,
@@ -905,7 +1151,7 @@ export default function BusinessProfile({
     } finally {
       setIsSaving(false);
     }
-  }, [profileImage, brandLogo, pendingProfileImage, pendingBrandLogo, logoPosition, formData, socialLinks, connectFields, sections, expanded, customLinks, extraSections]);
+  }, [profileImage, brandLogo, pendingProfileImage, pendingBrandLogo, logoPosition, formData, socialLinks, connectFields, sections, expanded, customLinks, extraSections, cardId, resolvedCardId, allowFallbackToFirstCard, shouldPersistGlobalProfile]);
 
   const updateField = useCallback(<K extends keyof FormData>(key: K, value: FormData[K]) => setFormData(prev => ({ ...prev, [key]: value })), []);
   const toggleSection = useCallback((key: keyof Sections) => setSections(prev => ({ ...prev, [key]: !prev[key] })), []);
@@ -919,22 +1165,28 @@ export default function BusinessProfile({
 
   const handleProfileFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]; if (!file) return;
+    setPendingProfileImage(file);
     const reader = new FileReader();
     reader.onload = ev => { if (ev.target?.result) setProfileImage(ev.target.result as string); };
     reader.readAsDataURL(file); e.target.value = '';
   }, []);
 
   const handleShareLink = useCallback(async () => {
-    const url = formData.website || window.location.href;
+    const url = formDataRef.current.website || window.location.href;
     try { await navigator.clipboard.writeText(url); }
     catch { const el = document.createElement('input'); el.value = url; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el); }
     setCopied(true); setTimeout(() => setCopied(false), 2500);
-  }, [formData.website]);
+  }, []);
 
   const handleSaveContact = useCallback(() => {
-    downloadVCard(formData, profileImage);
+    downloadVCard(formDataRef.current, profileImageRef.current);
     setSavedContact(true); setTimeout(() => setSavedContact(false), 2500);
-  }, [formData, profileImage]);
+  }, []);
+
+  const openPreview = useCallback(() => setIsPreviewOpen(true), []);
+  const closePreview = useCallback(() => setIsPreviewOpen(false), []);
+  const openQrPopup = useCallback(() => setShowQrPopup(true), []);
+  const closeQrPopup = useCallback(() => setShowQrPopup(false), []);
 
   const handleAddComponent = useCallback((key: string) => {
     if (key.startsWith('extra-')) {
@@ -953,28 +1205,41 @@ export default function BusinessProfile({
   const toggleExtra = useCallback((id: string, field: 'enabled' | 'expanded') => setExtraSections(prev => prev.map(s => s.id === id ? { ...s, [field]: !s[field] } : s)), []);
   const removeExtra = useCallback((id: string) => setExtraSections(prev => prev.filter(s => s.id !== id)), []);
 
-  const sharedPreviewProps = {
-    cardId: resolvedCardId,
-    profileImage,
-    brandLogo,
-    logoPosition,
-    formData,
-    socialLinks,
-    customLinks,
-    extraSections,
-    sections,
-    savedContact,
-    copied,
-    themeOverride,
-  };
+  const sharedPreviewProps = useMemo(() => ({
+    cardId: previewResolvedCardId,
+    profileImage: previewProfileImage,
+    brandLogo: previewBrandLogo,
+    logoPosition: previewLogoPosition,
+    formData: previewFormData,
+    socialLinks: previewSocialLinks,
+    customLinks: previewCustomLinks,
+    extraSections: previewExtraSections,
+    sections: previewSections,
+    savedContact: previewSavedContact,
+    copied: previewCopied,
+    themeOverride: previewThemeOverride,
+  }), [
+    previewResolvedCardId,
+    previewProfileImage,
+    previewBrandLogo,
+    previewLogoPosition,
+    previewFormData,
+    previewSocialLinks,
+    previewCustomLinks,
+    previewExtraSections,
+    previewSections,
+    previewSavedContact,
+    previewCopied,
+    previewThemeOverride,
+  ]);
 
   const PhonePreviewPanel = (
     <PhonePreview
       {...sharedPreviewProps}
-      onPreviewOpen={() => setIsPreviewOpen(true)}
+      onPreviewOpen={openPreview}
       onShareLink={handleShareLink}
       onSaveContact={handleSaveContact}
-      onShowQR={() => setShowQrPopup(true)}
+      onShowQR={openQrPopup}
     />
   );
 
@@ -1011,14 +1276,14 @@ export default function BusinessProfile({
                 <Badge className="bg-gradient-to-r from-[#008001] to-[#49B618] text-white border-0 flex-shrink-0 text-xs">Active</Badge>
               </div>
               <div className="flex gap-2 flex-wrap">
-                <Button size="sm" className="bg-gradient-to-r from-[#008001] to-[#49B618] hover:from-[#006312] hover:to-[#008001] text-white text-xs h-8" onClick={() => setIsPreviewOpen(true)}>
+                <Button size="sm" className="bg-gradient-to-r from-[#008001] to-[#49B618] hover:from-[#006312] hover:to-[#008001] text-white text-xs h-8" onClick={openPreview}>
                   <Eye className="w-3.5 h-3.5 mr-1.5" />Preview
                 </Button>
                 <Button variant="outline" size="sm" className="border-[#008001]/30 text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20 text-xs h-8" onClick={handleShareLink}>
                   {copied ? <Check className="w-3.5 h-3.5 mr-1.5 text-[#49B618]" /> : <Share2 className="w-3.5 h-3.5 mr-1.5" />}
                   {copied ? 'Copied!' : 'Share'}
                 </Button>
-                <Button variant="outline" size="sm" className="border-[#008001]/30 text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20 text-xs h-8" onClick={() => setShowQrPopup(true)}>
+                <Button variant="outline" size="sm" className="border-[#008001]/30 text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20 text-xs h-8" onClick={openQrPopup}>
                   <QrCode className="w-3.5 h-3.5 mr-1.5" />QR Code
                 </Button>
               </div>
@@ -1244,15 +1509,25 @@ export default function BusinessProfile({
 
   return (
     <>
-      <CardPreviewModal
-        isOpen={isPreviewOpen}
-        onClose={() => setIsPreviewOpen(false)}
-        {...sharedPreviewProps}
-        onShareLink={handleShareLink}
-        onSaveContact={handleSaveContact}
-        onShowQR={() => setShowQrPopup(true)}
-      />
-      <QrPopup isOpen={showQrPopup} onClose={() => setShowQrPopup(false)} cardUrl={qrCardUrl} cardId={resolvedCardId} />
+      {isPreviewOpen && (
+        <CardPreviewModal
+          isOpen={isPreviewOpen}
+          onClose={closePreview}
+          {...sharedPreviewProps}
+          onShareLink={handleShareLink}
+          onSaveContact={handleSaveContact}
+          onShowQR={openQrPopup}
+        />
+      )}
+      {showQrPopup && (
+        <QrPopup
+          isOpen={showQrPopup}
+          onClose={closeQrPopup}
+          cardUrl={qrCardUrl}
+          cardId={resolvedCardId}
+          allowFallbackToFirstCard={allowFallbackToFirstCard}
+        />
+      )}
       {/* QR modal can be restored by wiring a dedicated state and callback again. */}
 
       <div className="xl:hidden flex rounded-xl overflow-hidden border border-[#008001]/30 mb-4">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState, useEffect } from 'react';
+import { memo, useId, useState, useEffect } from 'react';
 import { useQrStore } from '@/components/dashboard/stores/Useqrstore';
 import { getCardQRConfig } from '@/lib/api';
 import { makeQRMatrix } from '@/components/dashboard/pages/qr-engine';
@@ -162,7 +162,7 @@ function Divider({ T }: { T: ThemeOverride }) {
 // ═══════════════════════════════════════════════════════════════════
 // Main PhonePreview
 // ═══════════════════════════════════════════════════════════════════
-export function PhonePreview({
+function PhonePreviewComponent({
   cardId,
   profileImage, brandLogo, logoPosition,
   formData, socialLinks, customLinks, extraSections, sections,
@@ -220,7 +220,8 @@ export function PhonePreview({
           shapeLabel: savedConfig.shapeLabel,
         };
 
-        setQr(qrFromBackend, makeQRMatrix(cardUrl).matrix, makeQRMatrix(cardUrl).N);
+        const qrForCard = makeQRMatrix(cardUrl);
+        setQr(qrFromBackend, qrForCard.matrix, qrForCard.N);
       })
       .catch(() => {
         // ignore
@@ -635,6 +636,9 @@ export function PhonePreview({
     </>
   );
 }
+
+export const PhonePreview = memo(PhonePreviewComponent);
+PhonePreview.displayName = 'PhonePreview';
 
 // ── Extra Section Renderers ────────────────────────────────────────
 function ExtraSectionPreview({ section, T }: { section: ExtraSection; T: ThemeOverride }) {

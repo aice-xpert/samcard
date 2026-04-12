@@ -89,21 +89,6 @@ router.post("/", async (req, res) => {
       console.log(`[signup] User ${userRecord.uid} synced to Supabase`);
     }
 
-    // 3. Create session cookie for the new user
-    const customToken = await admin.auth().createCustomToken(userRecord.uid);
-    const expiresIn = 60 * 60 * 24 * 5 * 1000;
-    const sessionCookie = await admin.auth().createSessionCookie(customToken, { expiresIn });
-
-    const cookieOptions = {
-      maxAge: expiresIn,
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" as const : "lax" as const,
-      path: "/",
-    };
-
-    res.cookie("session", sessionCookie, cookieOptions);
-
     return res.status(201).json({
       success: true,
       message: "User created successfully",
@@ -112,7 +97,6 @@ router.post("/", async (req, res) => {
         email: userRecord.email,
         displayName: userRecord.displayName,
       },
-      sessionToken: sessionCookie,
     });
   } catch (err: unknown) {
     console.error("Signup error:", err);

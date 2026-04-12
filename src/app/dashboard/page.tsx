@@ -20,6 +20,7 @@ import Analytics from '@/components/dashboard/pages/Analytics';
 
 export default function Home() {
   const [activePage, setActivePage] = useState('dashboard');
+  const [editingCardId, setEditingCardId] = useState<string | undefined>(undefined);
   const [dateRange, setDateRange] = useState('30');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -53,9 +54,30 @@ export default function Home() {
     switch (activePage) {
       case 'dashboard': return <ComprehensiveDashboard />;
       case 'business-profile': return <BusinessProfile />;
-      case 'my-cards': return <MyCardsNew />;
+      case 'my-cards':
+        return (
+          <MyCardsNew
+            onEditCard={(cardId) => {
+              setEditingCardId(cardId);
+              setActivePage('create-card');
+            }}
+            onCreateBusinessCard={() => {
+              setEditingCardId(undefined);
+              setActivePage('create-card');
+            }}
+          />
+        );
       case 'analytics': return <Analytics />;
-      case 'create-card': return <CreateCard />;
+      case 'create-card':
+        return (
+          <CreateCard
+            cardId={editingCardId}
+            onDone={() => {
+              setEditingCardId(undefined);
+              setActivePage('my-cards');
+            }}
+          />
+        );
 
       case 'orders': return <Orders />;
       case 'billing': return <Billing />;

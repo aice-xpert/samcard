@@ -1,11 +1,6 @@
-"use client";
-
 import Link from "next/link";
-import {motion} from "motion/react";
 import { ArrowRight, Sparkles, CheckCircle } from "lucide-react";
 import { CTA_TRUST_BADGES } from "@/constant";
-
-const VIEWPORT = { once: true };
 
 export function CTABanner() {
   return (
@@ -14,34 +9,16 @@ export function CTABanner() {
       className="py-24 bg-gradient-to-b from-[#031103] to-black border-white/5"
     >
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={VIEWPORT}
-          transition={{ duration: 0.6 }}
-          className="text-center space-y-8"
-        >
+        <div className="text-center space-y-8">
           {/* Icon */}
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.8 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={VIEWPORT}
-            transition={{ duration: 0.5 }}
-            className="flex justify-center"
-          >
+          <div className="flex justify-center">
             <div className="w-20 h-20 bg-[#006312] backdrop-blur-sm rounded-full flex items-center justify-center border border-[#49B618]/30">
               <Sparkles className="text-[#49B618]" size={40} />
             </div>
-          </motion.div>
+          </div>
 
           {/* Heading */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={VIEWPORT}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="space-y-4"
-          >
+          <div className="space-y-4">
             <h2 className="text-4xl lg:text-5xl font-bold text-white">
               Ready to Transform Your Networking?
             </h2>
@@ -50,16 +27,10 @@ export function CTABanner() {
               SamCard. Create your first digital business card in under 2
               minutes.
             </p>
-          </motion.div>
+          </div>
 
           {/* CTA Buttons */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={VIEWPORT}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
-          >
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link
               href="/#"
               className="group px-10 py-5 bg-gradient-to-r from-[#008001] to-[#009200] text-white rounded-xl hover:shadow-2xl hover:shadow-[#49B618]/20 hover:scale-105 transition-all flex items-center gap-3 text-lg font-semibold"
@@ -75,25 +46,21 @@ export function CTABanner() {
             >
               View Dashboard Demo
             </Link>
-          </motion.div>
+          </div>
 
           {/* Trust Badges */}
           <div className="flex flex-wrap justify-center items-center gap-8 pt-8 text-white">
-            {CTA_TRUST_BADGES.map((text, index) => (
-              <motion.div 
+            {CTA_TRUST_BADGES.map((text) => (
+              <div 
                 key={text} 
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={VIEWPORT}
-                transition={{ duration: 0.5, delay: 0.1 + index * 0.05 }}
                 className="flex items-center gap-2"
               >
                 <CheckCircle className="w-5 h-5 shrink-0" />
                 <span>{text}</span>
-              </motion.div>
+              </div>
             ))}
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

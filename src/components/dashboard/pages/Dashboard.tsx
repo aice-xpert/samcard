@@ -395,7 +395,7 @@ export function ComprehensiveDashboard() {
             </CardHeader>
             <CardContent className="pt-4 sm:pt-6">
               <div className="h-56 sm:h-80 min-w-0 min-h-[224px] sm:min-h-[320px]">
-                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={1}>
+                <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                   <AreaChart data={tapActivityData}>
                     <defs>
                       <linearGradient id="colorTaps"  x1="0" y1="0" x2="0" y2="1">
@@ -508,7 +508,7 @@ export function ComprehensiveDashboard() {
             </CardHeader>
             <CardContent className="pt-4 sm:pt-6">
               <div className="h-40 sm:h-48 min-w-0 min-h-[160px] sm:min-h-[192px]">
-                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={1}>
+                <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                   <PieChart>
                     <Pie data={deviceDistributionData} cx="50%" cy="50%" innerRadius={45} outerRadius={65} paddingAngle={3} dataKey="value">
                       {deviceDistributionData.map((entry, index) => (<Cell key={`cell-${index}`} fill={entry.color} />))}

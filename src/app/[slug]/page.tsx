@@ -534,6 +534,12 @@ export default function PublicCardPage() {
   const [copied, setCopied] = useState(false);
   const [contactSaved, setContactSaved] = useState(false);
   const [qrModalOpen, setQrModalOpen] = useState(false);
+  const [leadForm, setLeadForm] = useState({ name: "", email: "", phone: "" });
+  const [leadSubmitting, setLeadSubmitting] = useState(false);
+  const [leadSubmitFeedback, setLeadSubmitFeedback] = useState<{
+    type: "success" | "error" | null;
+    message: string;
+  }>({ type: null, message: "" });
 
   useEffect(() => {
     if (!slug) return;
@@ -639,6 +645,78 @@ export default function PublicCardPage() {
     setContactSaved(true);
     track(slug, "save");
   }, [card, slug]);
+
+  const submitLead = useCallback(async () => {
+    if (!slug || leadSubmitting) return;
+
+    const name = leadForm.name.trim();
+    const email = leadForm.email.trim();
+    const phone = leadForm.phone.trim();
+
+    if (!name && !email && !phone) {
+      setLeadSubmitFeedback({
+        type: "error",
+        message: "Please provide at least name, email, or phone.",
+      });
+      return;
+    }
+
+    setLeadSubmitting(true);
+    setLeadSubmitFeedback({ type: null, message: "" });
+
+    try {
+      const searchParams =
+        typeof window !== "undefined"
+          ? new URLSearchParams(window.location.search)
+          : null;
+      const isPreview = searchParams?.get("preview") === "true";
+      const leadsUrl = `${BACKEND_URL}/api/public/cards/${slug}/leads${isPreview ? "?preview=true" : ""}`;
+
+      const response = await fetch(leadsUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          email: email || null,
+          phone: phone || null,
+          source: "DIRECT",
+          utmSource: searchParams?.get("utm_source") || null,
+          utmCampaign: searchParams?.get("utm_campaign") || null,
+        }),
+      });
+
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        if (response.status === 409) {
+          setLeadSubmitFeedback({
+            type: "success",
+            message: "This contact was already submitted.",
+          });
+          track(slug, "contact_submit");
+          return;
+        }
+        throw new Error(payload?.error || `Failed to submit (${response.status})`);
+      }
+
+      setLeadForm({ name: "", email: "", phone: "" });
+      setLeadSubmitFeedback({
+        type: "success",
+        message: "Successfully submitted!",
+      });
+      track(slug, "contact_submit");
+    } catch (error) {
+      setLeadSubmitFeedback({
+        type: "error",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to submit contact details.",
+      });
+    } finally {
+      setLeadSubmitting(false);
+    }
+  }, [leadForm, leadSubmitting, slug]);
 
   if (loading) return <LoadingScreen />;
   if (notFound || !card) return <NotFoundScreen />;
@@ -1364,10 +1442,22 @@ const pageBg = (() => {
                   gap: 8,
                 }}
               >
-                {["Your name", "Email address", "Phone number"].map((ph, i) => (
+                {[
+                  { key: "name" as const, placeholder: "Your name", type: "text" },
+                  { key: "email" as const, placeholder: "Email address", type: "email" },
+                  { key: "phone" as const, placeholder: "Phone number", type: "tel" },
+                ].map((field) => (
                   <input
-                    key={i}
-                    placeholder={ph}
+                    key={field.key}
+                    type={field.type}
+                    value={leadForm[field.key]}
+                    placeholder={field.placeholder}
+                    onChange={(e) =>
+                      setLeadForm((prev) => ({
+                        ...prev,
+                        [field.key]: e.target.value,
+                      }))
+                    }
                     style={{
                       width: "100%",
                       padding: "9px 12px",
@@ -1382,7 +1472,8 @@ const pageBg = (() => {
                   />
                 ))}
                 <button
-                  onClick={() => track(slug, "contact_submit")}
+                  onClick={submitLead}
+                  disabled={leadSubmitting}
                   style={{
                     width: "100%",
                     padding: "10px",
@@ -1392,12 +1483,27 @@ const pageBg = (() => {
                     color: "#fff",
                     fontWeight: 700,
                     fontSize: T.bodyFontSize,
-                    cursor: "pointer",
+                    cursor: leadSubmitting ? "not-allowed" : "pointer",
+                    opacity: leadSubmitting ? 0.8 : 1,
                     fontFamily: T.fontFamily,
                   }}
                 >
-                  Submit
+                  {leadSubmitting ? "Submitting..." : "Submit"}
                 </button>
+                {leadSubmitFeedback.type && (
+                  <p
+                    style={{
+                      marginTop: 4,
+                      fontSize: T.bodyFontSize - 1,
+                      color:
+                        leadSubmitFeedback.type === "success"
+                          ? T.greenLight
+                          : "#ff7a7a",
+                    }}
+                  >
+                    {leadSubmitFeedback.message}
+                  </p>
+                )}
               </div>
             </CardBlock>
           )}

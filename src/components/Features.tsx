@@ -1,5 +1,3 @@
-"use client";
-import { motion } from "motion/react";
 import { QrCode, Share2, Layout } from "lucide-react";
 
 const features = [
@@ -23,8 +21,6 @@ const features = [
   },
 ];
 
-const VIEWPORT = { once: true };
-
 export function Features() {
   return (
     <section
@@ -34,13 +30,7 @@ export function Features() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Heading */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={VIEWPORT}
-          transition={{ duration: 0.6 }}
-          className="text-center space-y-4 mb-20"
-        >
+        <div className="text-center space-y-4 mb-20">
           <h2 className="text-4xl lg:text-5xl font-bold text-white">
             Everything You Need to Network Smarter
           </h2>
@@ -48,18 +38,13 @@ export function Features() {
             Powerful features designed to help you make meaningful connections
             and grow your professional network.
           </p>
-        </motion.div>
+        </div>
 
         {/* Feature Cards */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, index) => (
-            <motion.div
+            <div
               key={feature.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={VIEWPORT}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              whileHover={{ y: -5 }}
               className="group bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10
                          hover:border-theme-digital-green/50 transition-all"
             >
@@ -74,16 +59,12 @@ export function Features() {
               <p className="text-gray-400 leading-relaxed">
                 {feature.description}
               </p>
-            </motion.div>
+            </div>
           ))}
         </div>
 
         {/* Feature Highlight Banner */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={VIEWPORT}
-          transition={{ duration: 0.6, delay: 0.3 }}
+        <div
           className="mt-20 bg-gradient-to-br from-theme-digital-green/10 to-theme-devil-green/5
                      border border-theme-digital-green/20 rounded-3xl p-12
                      text-white text-center backdrop-blur-sm"
@@ -102,7 +83,7 @@ export function Features() {
           >
             Explore All Features
           </button>
-        </motion.div>
+        </div>
 
       </div>
     </section>

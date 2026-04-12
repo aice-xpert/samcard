@@ -18,12 +18,26 @@ import { getCardQRConfig, updateCardQR, getCards, BACKEND_URL } from '@/lib/api'
 
 const STORAGE_KEY = 'samcard_qr_config_v1';
 
+const qrStorageKeyForCard = (cardId?: string): string =>
+  cardId ? `${STORAGE_KEY}:${cardId}` : STORAGE_KEY;
+
+const qrStorageKeyForEditor = (
+  explicitCardId?: string,
+  resolvedCardId?: string,
+  allowFallbackToFirstCard: boolean = true,
+): string => {
+  if (explicitCardId) return qrStorageKeyForCard(explicitCardId);
+  if (resolvedCardId) return qrStorageKeyForCard(resolvedCardId);
+  if (!allowFallbackToFirstCard) return `${STORAGE_KEY}:draft`;
+  return STORAGE_KEY;
+};
+
 type PersistedConfig = Omit<QRCustomConfig, 'logoNode' | 'selectedSticker'> & {
   logoIndex: number | null;
   stickerId: string | null;
 };
 
-function saveConfig(cfg: QRCustomConfig): void {
+function saveConfig(cfg: QRCustomConfig, storageKey: string = STORAGE_KEY): void {
   try {
     let logoIndex: number | null = null;
     if (cfg.selectedLogo?.startsWith('logo-')) {
@@ -38,13 +52,13 @@ function saveConfig(cfg: QRCustomConfig): void {
       logoBg: cfg.logoBg, designLabel: cfg.designLabel, shapeLabel: cfg.shapeLabel,
       logoIndex, stickerId: cfg.selectedSticker?.id ?? null,
     };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(persisted));
+    localStorage.setItem(storageKey, JSON.stringify(persisted));
   } catch { /* ignore */ }
 }
 
-function loadConfig(): QRCustomConfig | null {
+function loadConfig(storageKey: string = STORAGE_KEY): QRCustomConfig | null {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(storageKey);
     if (!raw) return null;
     const p: PersistedConfig = JSON.parse(raw);
     const logoEntry = p.logoIndex !== null ? LOGOS[p.logoIndex] : null;
@@ -61,8 +75,8 @@ function loadConfig(): QRCustomConfig | null {
   } catch { return null; }
 }
 
-function clearConfig(): void {
-  try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+function clearConfig(storageKey: string = STORAGE_KEY): void {
+  try { localStorage.removeItem(storageKey); } catch { /* ignore */ }
 }
 
 // ─── QR Display ───────────────────────────────────────────────────────────────
@@ -216,36 +230,67 @@ function ActionBtn({ icon: Icon, label, onClick, variant = 'ghost' }: {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export function NfcQr({ onConfigChange, cardId }: { onConfigChange?: (config: QRCustomConfig) => void; cardId?: string; }) {
+export function NfcQr({
+  onConfigChange,
+  cardId,
+  allowFallbackToFirstCard = true,
+}: {
+  onConfigChange?: (config: QRCustomConfig) => void;
+  cardId?: string;
+  allowFallbackToFirstCard?: boolean;
+}) {
   const [copiedLink, setCopiedLink] = useState(false);
   const [customizerOpen, setCustomizerOpen] = useState(false);
   const [resolvedCardId, setResolvedCardId] = useState<string | undefined>(cardId);
   const [cardSlug, setCardSlug] = useState<string | undefined>(undefined);
   
   useEffect(() => {
+    let active = true;
+
     if (cardId) {
       setResolvedCardId(cardId);
       // Fetch the slug for this specific card
       getCards().then(cards => {
+        if (!active) return;
         const match = cards.find(c => c.id === cardId);
         if (match?.slug) setCardSlug(match.slug);
       }).catch(() => undefined);
-      return;
+      return () => {
+        active = false;
+      };
     }
-    if (!resolvedCardId) {
-      getCards().then(cards => {
-        if (cards?.length) {
-          setResolvedCardId(cards[0].id);
-          setCardSlug(cards[0].slug);
-        }
-      }).catch(() => undefined);
+
+    if (!allowFallbackToFirstCard) {
+      setResolvedCardId(undefined);
+      setCardSlug(undefined);
+      return () => {
+        active = false;
+      };
     }
-  }, [cardId, resolvedCardId]);
+
+    getCards().then(cards => {
+      if (!active) return;
+      if (cards?.length) {
+        setResolvedCardId(cards[0].id);
+        setCardSlug(cards[0].slug);
+      }
+    }).catch(() => undefined);
+
+    return () => {
+      active = false;
+    };
+  }, [cardId, allowFallbackToFirstCard]);
+
+  const activeQrStorageKey = qrStorageKeyForEditor(cardId, resolvedCardId, allowFallbackToFirstCard);
 
   const [qrConfig, setQrConfig] = useState<QRCustomConfig | null>(() => {
     if (typeof window === 'undefined') return null;
-    return loadConfig();
+    return loadConfig(qrStorageKeyForEditor(cardId, cardId, allowFallbackToFirstCard));
   });
+
+  useEffect(() => {
+    setQrConfig(loadConfig(activeQrStorageKey));
+  }, [activeQrStorageKey]);
 
   const qrRef = useRef<HTMLDivElement>(null);
 
@@ -300,11 +345,12 @@ export function NfcQr({ onConfigChange, cardId }: { onConfigChange?: (config: QR
 
         setQrConfig(qrFromBackend);
         setQr(qrFromBackend, liveQrMatrix, liveQrN);
+        saveConfig(qrFromBackend, activeQrStorageKey);
       })
       .catch(() => {
         // ignore missing config
       });
-  }, [cardId, liveQrMatrix, liveQrN, setQr]);
+  }, [resolvedCardId, liveQrMatrix, liveQrN, setQr, activeQrStorageKey]);
 
   useEffect(() => {
     setQr(qrConfig, liveQrMatrix, liveQrN);
@@ -348,7 +394,7 @@ export function NfcQr({ onConfigChange, cardId }: { onConfigChange?: (config: QR
 
   const handleCustomizerApply = useCallback(async (cfg: QRCustomConfig) => {
     setQrConfig(cfg);
-    saveConfig(cfg);
+    saveConfig(cfg, activeQrStorageKey);
     onConfigChange?.(cfg);
 
     const idToUse = resolvedCardId || cardId;
@@ -384,13 +430,13 @@ export function NfcQr({ onConfigChange, cardId }: { onConfigChange?: (config: QR
     }
 
     setCustomizerOpen(false);
-  }, [cardId, resolvedCardId, onConfigChange]);
+  }, [cardId, resolvedCardId, onConfigChange, activeQrStorageKey]);
 
   const handleReset = useCallback(() => {
     setQrConfig(null);
-    clearConfig();
+    clearConfig(activeQrStorageKey);
     setQr(null, liveQrMatrix, liveQrN);
-  }, [setQr, liveQrMatrix, liveQrN]);
+  }, [setQr, liveQrMatrix, liveQrN, activeQrStorageKey]);
 
   useEffect(() => {
     if (customizerOpen) {

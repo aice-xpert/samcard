@@ -1,5 +1,3 @@
-"use client";
-import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
@@ -13,12 +11,7 @@ export function Hero() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left Column */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="space-y-8"
-          >
+          <div className="space-y-8">
             <div className="space-y-4">
               <h1 className="text-5xl lg:text-6xl font-bold text-white leading-tight">
                 Your Business Card,
@@ -71,28 +64,24 @@ export function Hero() {
                 <div className="text-sm text-gray-400">Uptime</div>
               </div>
             </div>
-          </motion.div>
+          </div>
 
           
-<motion.div
-  initial={{ opacity: 0, x: 30 }}
-  animate={{ opacity: 1, x: 0 }}
-  transition={{ duration: 0.6, delay: 0.3 }}
-  className="relative"
->
+<div className="relative">
   <Image
     src="/images/hero2.png"
     alt="Digital business cards"
     width={800}
     height={600}
-    className="w-full mix-blend-screen opacity-95 [mask-image:radial-gradient(ellipse_70%_70%_at_center,white,transparent)]"
+    sizes="(max-width: 1024px) 100vw, 50vw"
+    className="w-full h-auto opacity-95"
     priority
   />
 
   {/* Glow effects */}
   <div className="absolute -top-8 -right-8 w-64 h-64 bg-gradient-to-br from-theme-kelly-green/30 to-theme-digital-green/30 rounded-full blur-3xl -z-10" />
   <div className="absolute -bottom-8 -left-8 w-48 h-48 bg-gradient-to-br from-theme-devil-green/50 to-theme-digital-green/20 rounded-full blur-3xl -z-10" />
-</motion.div>
+</div>
         </div>
       </div>
     </section>

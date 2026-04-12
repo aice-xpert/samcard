@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/dashboard/ui/card';
 import { Button } from '@/components/dashboard/ui/button';
 import { Badge } from '@/components/dashboard/ui/badge';
@@ -9,21 +9,26 @@ import { Switch } from '@/components/dashboard/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/dashboard/ui/select';
 import {
   Search, Sparkles, Edit, Eye, Share2, BarChart3,
-  Copy, MoreVertical, QrCode, Users, Trash2, Plus, X, Check, SlidersHorizontal,
+  Copy, MoreVertical, QrCode, Users, Trash2, Plus, X, Check, SlidersHorizontal, Download,
 } from 'lucide-react';
-import { LineChart, Line, ResponsiveContainer } from 'recharts';
-import { getCards, createCard as apiCreateCard, deleteCard as apiDeleteCard, updateCard, BACKEND_URL, ApiCard } from '@/lib/api';
+import {
+  getCards,
+  createCard as apiCreateCard,
+  deleteCard as apiDeleteCard,
+  duplicateCard as apiDuplicateCard,
+  updateCard,
+  getCardContent,
+  getCardQRConfig,
+  ApiCard,
+  CardQRConfigPayload,
+} from '@/lib/api';
+import { QRWithShape, STICKER_DEFS } from '@/components/dashboard/pages/Qrrenderers';
+import { makeQRMatrix } from '@/components/dashboard/pages/qr-engine';
+import { LOGOS } from '@/components/dashboard/pages/constants';
 
 const sparklineData = [
   { value: 12 }, { value: 19 }, { value: 15 },
   { value: 25 }, { value: 22 }, { value: 30 }, { value: 28 },
-];
-
-const gradients = [
-  'from-[#006312] to-[#000000]',
-  'from-[#1E1E1E] to-[#000000]',
-  'from-[#008001] to-[#000000]',
-  'from-[#004d00] to-[#000000]',
 ];
 
 // Derive the public base URL from the backend env or fall back to samcard.vercel.app
@@ -32,7 +37,6 @@ const PUBLIC_BASE =
   "https://samcard.vercel.app";
 
 type CardType = ApiCard & {
-  gradient?: string;
   trend?: typeof sparklineData;
   completion?: number;
   title?: string;
@@ -41,14 +45,325 @@ type CardType = ApiCard & {
   saves?: number;
 };
 
-export function MyCardsNew() {
+type CardPreviewData = {
+  name?: string;
+  title?: string;
+  profileImage?: string;
+};
+
+type CardTheme = {
+  accent: string;
+  accentLight: string;
+  panel: string;
+  previewBg: string;
+};
+
+const resolveCardTheme = (card: CardType): CardTheme => {
+  const accent = card.accentColor || '#008001';
+  const accentLight = card.accentLight || '#49B618';
+  const panel = card.cardColor || '#1E1E1E';
+  const wallpaperType = String(card.phoneBgType || '').toLowerCase();
+  const bg1 = card.phoneBgColor1 || card.backgroundColor || panel;
+  const bg2 = card.phoneBgColor2 || card.backgroundColor || '#000000';
+  const angle = typeof card.phoneBgAngle === 'number' ? card.phoneBgAngle : 135;
+  const previewBg =
+    wallpaperType === 'gradient'
+      ? `linear-gradient(${angle}deg, ${bg1}, ${bg2})`
+      : bg1;
+
+  return { accent, accentLight, panel, previewBg };
+};
+
+function Sparkline({ data, color }: { data: Array<{ value: number }>; color: string }) {
+  if (!data?.length) return null;
+
+  const w = 120;
+  const h = 28;
+  const min = Math.min(...data.map(d => d.value));
+  const max = Math.max(...data.map(d => d.value));
+  const range = max - min || 1;
+
+  const points = data
+    .map((d, i) => {
+      const x = (i / Math.max(data.length - 1, 1)) * w;
+      const y = h - ((d.value - min) / range) * (h - 4) - 2;
+      return `${x},${y}`;
+    })
+    .join(' ');
+
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} width="100%" height={h} preserveAspectRatio="none" aria-hidden="true">
+      <polyline
+        fill="none"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+        points={points}
+      />
+    </svg>
+  );
+}
+
+const normalizeHexForQrApi = (value: string | undefined, fallback: string): string => {
+  if (!value) return fallback;
+  const cleaned = value.trim().replace('#', '');
+  if (/^[0-9a-fA-F]{6}$/.test(cleaned)) return cleaned.toLowerCase();
+  return fallback;
+};
+
+const ensureSvgNamespaces = (svgText: string): string => {
+  let normalized = svgText;
+  if (!/xmlns=/.test(normalized)) {
+    normalized = normalized.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
+  }
+  if (!/xmlns:xlink=/.test(normalized)) {
+    normalized = normalized.replace('<svg', '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
+  }
+  return normalized;
+};
+
+const sanitizeHiddenSvgRootStyles = (styleValue: string): string => {
+  const hiddenKeys = new Set([
+    'position',
+    'width',
+    'height',
+    'opacity',
+    'pointer-events',
+    'display',
+    'visibility',
+    'left',
+    'top',
+  ]);
+
+  return styleValue
+    .split(';')
+    .map((rule) => rule.trim())
+    .filter(Boolean)
+    .filter((rule) => {
+      const separatorIndex = rule.indexOf(':');
+      if (separatorIndex === -1) return true;
+      const key = rule.slice(0, separatorIndex).trim().toLowerCase();
+      return !hiddenKeys.has(key);
+    })
+    .join('; ');
+};
+
+const sanitizeExportSvg = (svgText: string): string => {
+  try {
+    const parser = new DOMParser();
+    const documentNode = parser.parseFromString(svgText, 'image/svg+xml');
+    if (documentNode.querySelector('parsererror')) {
+      return svgText;
+    }
+
+    const svgRoot = documentNode.documentElement;
+    if (svgRoot.tagName.toLowerCase() !== 'svg') {
+      return svgText;
+    }
+
+    svgRoot.removeAttribute('aria-hidden');
+    svgRoot.removeAttribute('focusable');
+
+    const rootStyle = svgRoot.getAttribute('style');
+    if (rootStyle) {
+      const cleanedStyle = sanitizeHiddenSvgRootStyles(rootStyle);
+      if (cleanedStyle) {
+        svgRoot.setAttribute('style', cleanedStyle);
+      } else {
+        svgRoot.removeAttribute('style');
+      }
+    }
+
+    const width = svgRoot.getAttribute('width');
+    if (!width || width === '0' || width === '0px') {
+      svgRoot.setAttribute('width', '360');
+    }
+
+    const height = svgRoot.getAttribute('height');
+    if (!height || height === '0' || height === '0px') {
+      svgRoot.setAttribute('height', '360');
+    }
+
+    if (!svgRoot.getAttribute('preserveAspectRatio')) {
+      svgRoot.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    }
+
+    return new XMLSerializer().serializeToString(svgRoot);
+  } catch {
+    return svgText;
+  }
+};
+
+const stripExternalSvgImages = (svgText: string): string => {
+  try {
+    const parser = new DOMParser();
+    const documentNode = parser.parseFromString(svgText, 'image/svg+xml');
+    if (documentNode.querySelector('parsererror')) {
+      return svgText;
+    }
+
+    documentNode.querySelectorAll('image').forEach((node) => {
+      const href = node.getAttribute('href') || node.getAttribute('xlink:href') || '';
+      const normalizedHref = href.trim().toLowerCase();
+
+      if (!normalizedHref) {
+        node.remove();
+        return;
+      }
+
+      if (
+        normalizedHref.startsWith('http://') ||
+        normalizedHref.startsWith('https://') ||
+        normalizedHref.startsWith('//')
+      ) {
+        node.remove();
+      }
+    });
+
+    return new XMLSerializer().serializeToString(documentNode.documentElement);
+  } catch {
+    return svgText;
+  }
+};
+
+const blobToDataUrl = (blob: Blob): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === 'string') {
+        resolve(reader.result);
+        return;
+      }
+      reject(new Error('Failed to encode image blob'));
+    };
+    reader.onerror = () => reject(new Error('Failed to read image blob'));
+    reader.readAsDataURL(blob);
+  });
+
+const inlineExternalSvgImages = async (svgText: string): Promise<string> => {
+  try {
+    const parser = new DOMParser();
+    const documentNode = parser.parseFromString(svgText, 'image/svg+xml');
+    if (documentNode.querySelector('parsererror')) {
+      return svgText;
+    }
+
+    const imageNodes = Array.from(documentNode.querySelectorAll('image'));
+    if (!imageNodes.length) {
+      return svgText;
+    }
+
+    await Promise.all(
+      imageNodes.map(async (node) => {
+        const href = node.getAttribute('href') || node.getAttribute('xlink:href') || '';
+        const normalizedHref = href.trim().toLowerCase();
+
+        if (!normalizedHref) return;
+        if (normalizedHref.startsWith('data:')) return;
+        if (
+          !normalizedHref.startsWith('http://') &&
+          !normalizedHref.startsWith('https://') &&
+          !normalizedHref.startsWith('//')
+        ) {
+          return;
+        }
+
+        try {
+          const response = await fetch(href);
+          if (!response.ok) return;
+          const imageBlob = await response.blob();
+          const dataUrl = await blobToDataUrl(imageBlob);
+          node.setAttribute('href', dataUrl);
+          node.setAttribute('xlink:href', dataUrl);
+        } catch {
+          // keep original href if we cannot inline
+        }
+      }),
+    );
+
+    return new XMLSerializer().serializeToString(documentNode.documentElement);
+  } catch {
+    return svgText;
+  }
+};
+
+const triggerBlobDownload = (blob: Blob, fileName: string): void => {
+  const downloadUrl = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = downloadUrl;
+  anchor.download = fileName;
+  anchor.click();
+  URL.revokeObjectURL(downloadUrl);
+};
+
+const imageUrlToJpegBlob = async (imageUrl: string, size = 1400): Promise<Blob> => {
+  const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const instance = new Image();
+    instance.onload = () => resolve(instance);
+    instance.onerror = () => reject(new Error('Failed to load QR image for JPG conversion'));
+    instance.src = imageUrl;
+  });
+
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+
+  const context = canvas.getContext('2d');
+  if (!context) {
+    throw new Error('Failed to initialize canvas context');
+  }
+
+  context.fillStyle = '#ffffff';
+  context.fillRect(0, 0, size, size);
+  context.drawImage(image, 0, 0, size, size);
+
+  return await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        reject(new Error('Failed to export JPG file'));
+        return;
+      }
+      resolve(blob);
+    }, 'image/jpeg', 0.96);
+  });
+};
+
+const svgTextToJpegBlob = async (svgText: string, size = 1400): Promise<Blob> => {
+  const exportSvgAsJpeg = async (inputSvgText: string): Promise<Blob> => {
+    const sanitizedSvg = sanitizeExportSvg(inputSvgText);
+    const normalizedSvg = ensureSvgNamespaces(sanitizedSvg);
+    const svgBlob = new Blob([normalizedSvg], { type: 'image/svg+xml;charset=utf-8' });
+    const svgUrl = URL.createObjectURL(svgBlob);
+
+    try {
+      return await imageUrlToJpegBlob(svgUrl, size);
+    } finally {
+      URL.revokeObjectURL(svgUrl);
+    }
+  };
+
+  try {
+    const inlinedSvg = await inlineExternalSvgImages(svgText);
+    return await exportSvgAsJpeg(inlinedSvg);
+  } catch {
+    const strippedSvg = stripExternalSvgImages(svgText);
+    return await exportSvgAsJpeg(strippedSvg);
+  }
+};
+
+interface MyCardsNewProps {
+  onEditCard?: (cardId: string) => void;
+  onCreateBusinessCard?: () => void;
+}
+
+export function MyCardsNew({ onEditCard, onCreateBusinessCard }: MyCardsNewProps = {}) {
   const [cards, setCards]                   = useState<CardType[]>([]);
   const [, setLoading]                      = useState(true);
   const [search, setSearch]                 = useState('');
   const [filter, setFilter]                 = useState('all');
   const [sort, setSort]                     = useState('recent');
   const [openMenu, setOpenMenu]             = useState<string | null>(null);
-  const [previewCard, setPreviewCard]       = useState<CardType | null>(null);
   const [shareCard, setShareCard]           = useState<CardType | null>(null);
   const [statsCard, setStatsCard]           = useState<CardType | null>(null);
   const [editCard, setEditCard]             = useState<CardType | null>(null);
@@ -57,27 +372,79 @@ export function MyCardsNew() {
   const [confirmDelete, setConfirmDelete]   = useState<string | null>(null);
   const [showCreate, setShowCreate]         = useState(false);
   const [newTitle, setNewTitle]             = useState('');
+  const [newCardType, setNewCardType]       = useState<'QR' | 'NFC' | 'HYBRID' | 'LINK'>('QR');
   const [showFilters, setShowFilters]       = useState(false);
-  const nextId = useRef(1000);
+  const [cardPreviewById, setCardPreviewById] = useState<Record<string, CardPreviewData>>({});
+  const [cardQrById, setCardQrById] = useState<Record<string, CardQRConfigPayload | null>>({});
+  const [downloadingQrId, setDownloadingQrId] = useState<string | null>(null);
+  const qrSvgRefs = useRef<Record<string, SVGSVGElement | null>>({});
+
+  const setQrSvgRef = useCallback((cardId: string, element: SVGSVGElement | null) => {
+    qrSvgRefs.current[cardId] = element;
+  }, []);
+
+  const loadCardAssets = useCallback(async (cardIds: string[]) => {
+    if (!cardIds.length) return;
+
+    const settled = await Promise.all(
+      cardIds.map(async (id) => {
+        const [content, qrConfig] = await Promise.all([
+          getCardContent(id).catch(() => null),
+          getCardQRConfig(id).catch(() => null),
+        ]);
+
+        return { id, content, qrConfig };
+      }),
+    );
+
+    setCardPreviewById((prev) => {
+      const next = { ...prev };
+      settled.forEach(({ id, content }) => {
+        if (!content) return;
+        next[id] = {
+          name: content.formData?.name || '',
+          title: content.formData?.title || '',
+          profileImage: content.profileImage || '',
+        };
+      });
+      return next;
+    });
+
+    setCardQrById((prev) => {
+      const next = { ...prev };
+      settled.forEach(({ id, qrConfig }) => {
+        next[id] = qrConfig;
+      });
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
+    let active = true;
+
+    setLoading(true);
     getCards()
       .then((data) => {
+        if (!active) return;
         const mapped = data.map((c, i) => ({
           ...c,
           title: c.name,
           views: c.totalViews,
           taps: c.totalTaps,
           saves: c.totalSaves,
-          gradient: gradients[i % gradients.length],
           trend: sparklineData,
           completion: c.completionScore || 0,
         }));
         setCards(mapped);
+        void loadCardAssets(mapped.map((card) => card.id));
       })
       .catch(() => setCards([]))
       .finally(() => setLoading(false));
-  }, []);
+
+    return () => {
+      active = false;
+    };
+  }, [loadCardAssets]);
 
   // ── helpers ──────────────────────────────────────────────────────
   const showToast = (msg: string) => {
@@ -136,6 +503,17 @@ export function MyCardsNew() {
     try {
       await apiDeleteCard(id);
       setCards(prev => prev.filter(c => c.id !== id));
+      setCardPreviewById(prev => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+      setCardQrById(prev => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+      delete qrSvgRefs.current[id];
       setConfirmDelete(null);
       showToast('Card deleted');
     } catch (error) {
@@ -143,22 +521,26 @@ export function MyCardsNew() {
     }
   };
 
-  const duplicateCard = (card: CardType) => {
-    const now = new Date().toISOString();
-    const newCard: CardType = {
-      ...card,
-      id: String(nextId.current++),
-      title: `${card.title} (Copy)`,
-      name: `${card.name} (Copy)`,
-      status: 'DRAFT',
-      createdAt: now,
-      updatedAt: now,
-      views: 0, taps: 0, saves: 0,
-      gradient: gradients[card.id.charCodeAt(0) % gradients.length],
-    };
-    setCards(prev => [...prev, newCard]);
-    showToast('Card duplicated!');
-    setOpenMenu(null);
+  const duplicateCard = async (card: CardType) => {
+    try {
+      const duplicated = await apiDuplicateCard(card.id);
+      const mapped: CardType = {
+        ...duplicated,
+        title: duplicated.name,
+        views: duplicated.totalViews,
+        taps: duplicated.totalTaps,
+        saves: duplicated.totalSaves,
+        completion: duplicated.completionScore,
+        trend: sparklineData,
+      };
+      setCards(prev => [mapped, ...prev]);
+      void loadCardAssets([mapped.id]);
+      showToast('Card duplicated!');
+    } catch (error) {
+      showToast(`Error duplicating card: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setOpenMenu(null);
+    }
   };
 
   const saveEdit = async () => {
@@ -178,7 +560,7 @@ export function MyCardsNew() {
   const createCard = async () => {
     if (!newTitle.trim()) return;
     try {
-      const response = await apiCreateCard({ name: newTitle, cardType: 'QR' });
+      const response = await apiCreateCard({ name: newTitle, cardType: newCardType });
       const newCard: CardType = {
         ...response,
         title: response.name,
@@ -186,12 +568,13 @@ export function MyCardsNew() {
         taps: response.totalTaps,
         saves: response.totalSaves,
         completion: response.completionScore,
-        gradient: gradients[Math.floor(Math.random() * gradients.length)],
         trend: sparklineData,
       };
       setCards(prev => [...prev, newCard]);
+      void loadCardAssets([newCard.id]);
       setShowCreate(false);
       setNewTitle('');
+      setNewCardType('QR');
       showToast('New card created!');
     } catch (error) {
       showToast(`Error creating card: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -207,6 +590,49 @@ export function MyCardsNew() {
   const openPreview = (card: CardType) => {
     window.open(cardPreviewUrl(card), '_blank');
   };
+
+  const downloadVariantQr = useCallback(async (card: CardType) => {
+    setDownloadingQrId(card.id);
+
+    try {
+      const svgElement = qrSvgRefs.current[card.id];
+
+      if (svgElement) {
+        const svgText = new XMLSerializer().serializeToString(svgElement);
+        const jpgBlob = await svgTextToJpegBlob(svgText);
+        triggerBlobDownload(jpgBlob, `${card.slug}-qr.jpg`);
+        showToast('Custom QR downloaded (.jpg)');
+        return;
+      }
+
+      const qrConfig = cardQrById[card.id];
+      const fg = normalizeHexForQrApi(qrConfig?.fg, '000000');
+      const bg = normalizeHexForQrApi(qrConfig?.bg, 'ffffff');
+      const safeFg = fg === bg ? '000000' : fg;
+      const fallbackUrl = `https://api.qrserver.com/v1/create-qr-code/?size=1200x1200&margin=40&data=${encodeURIComponent(cardPublicUrl(card))}&color=${safeFg}&bgcolor=${bg}`;
+
+      const response = await fetch(fallbackUrl);
+      if (!response.ok) {
+        throw new Error(`QR generation failed (${response.status})`);
+      }
+
+      const pngBlob = await response.blob();
+      const pngUrl = URL.createObjectURL(pngBlob);
+
+      try {
+        const jpgBlob = await imageUrlToJpegBlob(pngUrl);
+        triggerBlobDownload(jpgBlob, `${card.slug}-qr.jpg`);
+      } finally {
+        URL.revokeObjectURL(pngUrl);
+      }
+
+      showToast('QR downloaded (.jpg)');
+    } catch (error) {
+      showToast(`Failed to download QR: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setDownloadingQrId(null);
+    }
+  }, [cardQrById]);
 
   // ─────────────────────────────────────────────────────────────────
   return (
@@ -240,7 +666,7 @@ export function MyCardsNew() {
             </button>
 
             <Button
-              onClick={() => setShowCreate(true)}
+              onClick={() => (onCreateBusinessCard ? onCreateBusinessCard() : setShowCreate(true))}
               className="bg-gradient-to-r from-[#49B618] to-[#008001] hover:from-[#009200] hover:to-[#006312] text-white rounded-full px-3 sm:px-6 h-9 sm:h-10 shadow-lg shadow-[#49B618]/35 text-sm"
             >
               <Sparkles className="w-4 h-4 sm:mr-2" />
@@ -295,10 +721,46 @@ export function MyCardsNew() {
 
       {/* ── Cards Grid ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-        {visible.map((card) => (
+        {visible.map((card) => {
+          const theme = resolveCardTheme(card);
+          const preview = cardPreviewById[card.id];
+          const previewName = preview?.name?.trim() || card.title || card.name;
+          const previewTitle = preview?.title?.trim() || '';
+          const previewImage = preview?.profileImage?.trim() || '';
+
+          const qrConfig = cardQrById[card.id] || null;
+          const qrMatrixData = makeQRMatrix(cardPublicUrl(card));
+          const qrGradientId = `mycards-qr-grad-${card.id}`;
+          const gradientStops = qrConfig?.gradStops ?? [];
+          const qrBg = qrConfig?.bg || '#ffffff';
+          const qrSolidFg = qrConfig?.fg || '#000000';
+          const safeQrSolidFg =
+            qrSolidFg.toLowerCase() === qrBg.toLowerCase() ? '#000000' : qrSolidFg;
+          const qrFill = qrConfig?.gradEnabled && gradientStops.length >= 2
+            ? `url(#${qrGradientId})`
+            : safeQrSolidFg;
+          const gradAngle = typeof qrConfig?.gradAngle === 'number' ? qrConfig.gradAngle : 135;
+          const selectedSticker = qrConfig?.stickerId
+            ? STICKER_DEFS.find((sticker) => sticker.id === qrConfig.stickerId) ?? null
+            : null;
+          const qrRenderSize = selectedSticker ? 260 : 320;
+          const qrRenderOffset = (320 - qrRenderSize) / 2;
+
+          const logoIndex = qrConfig?.selectedLogo?.startsWith('logo-')
+            ? Number.parseInt(qrConfig.selectedLogo.replace('logo-', ''), 10)
+            : -1;
+          const logoPreset = Number.isInteger(logoIndex) && logoIndex >= 0 && logoIndex < LOGOS.length
+            ? LOGOS[logoIndex]
+            : null;
+
+          return (
           <Card
             key={card.id}
-            className="bg-[#000000] rounded-2xl border border-[#008001]/30 shadow-lg shadow-[#008001]/10 hover:border-[#49B618]/60 hover:shadow-xl hover:shadow-[#008001]/20 hover:-translate-y-1 transition-all duration-300"
+            className="bg-[#000000] rounded-2xl border shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+            style={{
+              borderColor: `${theme.accent}4d`,
+              boxShadow: `0 8px 24px ${theme.accent}1a`,
+            }}
           >
             <CardHeader className="p-3 sm:p-4">
               <div className="flex items-center justify-between gap-2">
@@ -306,9 +768,16 @@ export function MyCardsNew() {
                 <div className="flex items-center gap-1.5 flex-shrink-0">
                   <Badge className={`rounded-full px-2 sm:px-3 text-xs font-bold ${
                     card.status === 'ACTIVE'
-                      ? 'bg-[#49B618]/15 text-[#49B618] hover:bg-[#49B618]/15'
+                      ? 'hover:opacity-95'
                       : 'bg-[#A0A0A0]/15 text-[#A0A0A0] hover:bg-[#A0A0A0]/15'
-                  }`}>
+                  }`}
+                  style={card.status === 'ACTIVE'
+                    ? {
+                        backgroundColor: `${theme.accent}26`,
+                        color: theme.accentLight,
+                      }
+                    : undefined
+                  }>
                     {card.status === 'ACTIVE' ? 'Active' : 'Draft'}
                   </Badge>
 
@@ -347,16 +816,24 @@ export function MyCardsNew() {
 
             <CardContent className="p-3 sm:p-4 space-y-3 sm:space-y-4">
               {/* Card thumbnail */}
-              <div className={`relative rounded-xl overflow-hidden aspect-[16/9] bg-gradient-to-br ${card.gradient}`}>
+              <div className="relative rounded-xl overflow-hidden aspect-[16/9]"
+                style={{ background: theme.previewBg }}>
                 <div className="absolute inset-0 opacity-[0.08]" style={{
-                  backgroundImage: 'radial-gradient(circle, #49B618 1px, transparent 1px)',
+                  backgroundImage: `radial-gradient(circle, ${theme.accentLight} 1px, transparent 1px)`,
                   backgroundSize: '20px 20px',
                 }} />
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
                   <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-white/20 flex items-center justify-center mx-auto">
-                    <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                    {previewImage ? (
+                      <img src={previewImage} alt={previewName} className="w-full h-full object-cover" />
+                    ) : (
+                      <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                    )}
                   </div>
-                  <p className="mt-1.5 text-xs sm:text-sm font-semibold text-white truncate max-w-[140px]">{card.title}</p>
+                  <p className="mt-1.5 text-xs sm:text-sm font-semibold text-white truncate max-w-[170px]">{previewName}</p>
+                  {previewTitle && (
+                    <p className="text-[10px] sm:text-xs text-white/80 truncate max-w-[170px] mt-0.5">{previewTitle}</p>
+                  )}
                 </div>
                 <div className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 px-2 sm:px-3 py-1 rounded-full bg-black/35 backdrop-blur-md flex items-center gap-1">
                   <Eye className="w-3 h-3 text-white" />
@@ -378,17 +855,17 @@ export function MyCardsNew() {
                   { label: 'Views', value: (card.views ?? 0).toLocaleString() },
                   { label: 'Saves', value: String(card.saves ?? 0) },
                 ].map(({ label, value }) => (
-                  <div key={label} className="bg-[#1E1E1E] rounded-xl p-2 sm:p-3 text-center">
+                  <div
+                    key={label}
+                    className="rounded-xl p-2 sm:p-3 text-center"
+                    style={{ backgroundColor: theme.panel }}
+                  >
                     <p className="text-sm sm:text-lg font-bold text-white">{value}</p>
                     <p className="text-[10px] sm:text-xs text-[#A0A0A0]">{label}</p>
                   </div>
                 ))}
-                <div className="bg-[#1E1E1E] rounded-xl p-2 sm:p-3 min-w-0">
-                  <ResponsiveContainer width="100%" height={28} minWidth={0} minHeight={1}>
-                    <LineChart data={card.trend}>
-                      <Line type="monotone" dataKey="value" stroke="#49B618" strokeWidth={2} dot={false} />
-                    </LineChart>
-                  </ResponsiveContainer>
+                <div className="rounded-xl p-2 sm:p-3 min-w-0" style={{ backgroundColor: theme.panel }}>
+                  <Sparkline data={card.trend ?? sparklineData} color={theme.accentLight} />
                   <p className="text-[10px] sm:text-xs text-[#A0A0A0] text-center mt-1">7-day</p>
                 </div>
               </div>
@@ -397,23 +874,44 @@ export function MyCardsNew() {
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-white">Profile Completion</span>
-                  <span className="text-xs font-bold text-[#49B618]">{card.completion}%</span>
+                  <span className="text-xs font-bold" style={{ color: theme.accentLight }}>{card.completion}%</span>
                 </div>
                 <div className="relative h-1.5 bg-[#1E1E1E] rounded-full overflow-hidden">
                   <div className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#49B618] to-[#008001] rounded-full transition-all"
-                    style={{ width: `${card.completion}%` }} />
+                    style={{
+                      width: `${card.completion}%`,
+                      backgroundImage: `linear-gradient(to right, ${theme.accentLight}, ${theme.accent})`,
+                    }} />
                 </div>
               </div>
 
               {/* Action buttons */}
               <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
                 {[
-                  { icon: Edit,      label: 'Edit',    onClick: () => { setEditCard(card); setEditTitle(card.title || ''); } },
+                  {
+                    icon: Edit,
+                    label: 'Edit',
+                    onClick: () => {
+                      if (onEditCard) {
+                        onEditCard(card.id);
+                        return;
+                      }
+                      setEditCard(card);
+                      setEditTitle(card.title || '');
+                    },
+                  },
                   { icon: Eye,       label: 'Preview', onClick: () => openPreview(card) },
                   { icon: Share2,    label: 'Share',   onClick: () => setShareCard(card)   },
                   { icon: BarChart3, label: 'Stats',   onClick: () => setStatsCard(card)   },
-                ].map(({ icon: Icon, label, onClick }) => (
+                  {
+                    icon: Download,
+                    label: downloadingQrId === card.id ? 'Downloading...' : 'Download QR',
+                    onClick: () => { void downloadVariantQr(card); },
+                    disabled: downloadingQrId === card.id,
+                  },
+                ].map(({ icon: Icon, label, onClick, disabled }) => (
                   <Button key={label} onClick={onClick}
+                    disabled={Boolean(disabled)}
                     variant="outline"
                     className="border-[#008001]/30 text-white hover:bg-[#008001] hover:text-white h-8 sm:h-9 text-xs gap-1">
                     <Icon className="w-3 h-3" /> {label}
@@ -421,10 +919,66 @@ export function MyCardsNew() {
                 ))}
               </div>
 
+              {/* Hidden SVG used for per-variant custom QR downloads */}
+              <svg
+                ref={(element) => setQrSvgRef(card.id, element)}
+                viewBox="0 0 360 360"
+                width="360"
+                height="360"
+                aria-hidden="true"
+                style={{ position: 'absolute', width: 0, height: 0, opacity: 0, pointerEvents: 'none' }}
+              >
+                {qrConfig?.gradEnabled && gradientStops.length >= 2 && (
+                  <defs>
+                    <linearGradient
+                      id={qrGradientId}
+                      x1={`${50 - 50 * Math.cos((gradAngle * Math.PI) / 180)}%`}
+                      y1={`${50 - 50 * Math.sin((gradAngle * Math.PI) / 180)}%`}
+                      x2={`${50 + 50 * Math.cos((gradAngle * Math.PI) / 180)}%`}
+                      y2={`${50 + 50 * Math.sin((gradAngle * Math.PI) / 180)}%`}
+                    >
+                      {gradientStops.map((stop, index) => (
+                        <stop key={`${card.id}-grad-${index}`} offset={`${Math.max(0, Math.min(1, stop.offset)) * 100}%`} stopColor={stop.color} />
+                      ))}
+                    </linearGradient>
+                  </defs>
+                )}
+                <rect width="360" height="360" fill={qrBg} rx="20" />
+                <g transform="translate(20,20)">
+                  <g transform={`translate(${qrRenderOffset},${qrRenderOffset})`}>
+                    <QRWithShape
+                      shapeId={qrConfig?.shapeId || 'square'}
+                      dotShape={qrConfig?.dotShape || 'square'}
+                      finderStyle={qrConfig?.finderStyle || 'square'}
+                      eyeBall={qrConfig?.eyeBall || 'square'}
+                      fg={qrFill}
+                      bg={qrBg}
+                      accentFg={qrConfig?.accentFg || safeQrSolidFg}
+                      accentBg={qrConfig?.accentBg || qrBg}
+                      scale={typeof qrConfig?.bodyScale === 'number' ? qrConfig.bodyScale : 1}
+                      strokeEnabled={Boolean(qrConfig?.strokeEnabled)}
+                      strokeColor={qrConfig?.strokeColor || '#000000'}
+                      selectedLogo={qrConfig?.selectedLogo || null}
+                      customLogoUrl={qrConfig?.customLogoUrl || null}
+                      logoNode={logoPreset?.icon ?? null}
+                      logoBg={logoPreset?.bg ?? qrConfig?.logoBg ?? '#ffffff'}
+                      size={qrRenderSize}
+                      clipId={`mycards-qr-clip-${card.id}`}
+                      qrMatrix={qrMatrixData.matrix}
+                      qrN={qrMatrixData.N}
+                    />
+                  </g>
+                  {selectedSticker && selectedSticker.render(320, qrRenderSize)}
+                </g>
+              </svg>
+
               {/* Bottom row: Publish toggle */}
               <div className="flex items-center justify-between pt-2 sm:pt-3 border-t border-[#1E1E1E]">
                 <button onClick={() => duplicateCard(card)}
-                  className="text-xs text-[#A0A0A0] hover:text-[#008001] flex items-center gap-1">
+                  className="text-xs text-[#A0A0A0] flex items-center gap-1"
+                  style={{ color: '#A0A0A0' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = theme.accent; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = '#A0A0A0'; }}>
                   <Copy className="w-3 h-3" /> Duplicate
                 </button>
 
@@ -435,7 +989,8 @@ export function MyCardsNew() {
                   <Switch
                     checked={card.status === 'ACTIVE'}
                     onCheckedChange={() => toggleStatus(card)}
-                    className="data-[state=checked]:bg-[#49B618] scale-90 sm:scale-100"
+                    className="scale-90 sm:scale-100"
+                    style={card.status === 'ACTIVE' ? { backgroundColor: theme.accentLight } : undefined}
                   />
                 </div>
 
@@ -446,11 +1001,11 @@ export function MyCardsNew() {
               </div>
             </CardContent>
           </Card>
-        ))}
+        );})}
 
         {/* Create new tile */}
         <Card
-          onClick={() => setShowCreate(true)}
+          onClick={() => (onCreateBusinessCard ? onCreateBusinessCard() : setShowCreate(true))}
           className="bg-[#000000] rounded-2xl border-2 border-dashed border-[#008001]/40 hover:border-[#49B618] hover:bg-[#1E1E1E] hover:shadow-lg hover:shadow-[#49B618]/10 transition-all duration-300 cursor-pointer group min-h-[200px] sm:min-h-[300px]"
         >
           <CardContent className="p-6 sm:p-8 flex flex-col items-center justify-center h-full">
@@ -539,7 +1094,7 @@ export function MyCardsNew() {
       )}
 
       {editCard && (
-        <Modal onClose={() => setEditCard(null)} title="Rename Card">
+        <Modal onClose={() => setEditCard(null)} title="Edit Card">
           <p className="text-[#A0A0A0] text-sm mb-2">Card name</p>
           <Input
             value={editTitle}
@@ -548,6 +1103,32 @@ export function MyCardsNew() {
             className="bg-[#1E1E1E] border-[#008001]/30 text-white mb-4"
             autoFocus
           />
+          <div className="mb-4">
+            <p className="text-[#A0A0A0] text-xs mb-2">Card links</p>
+            <div className="space-y-2">
+              <Input
+                readOnly
+                value={cardPublicUrl(editCard)}
+                className="bg-[#1E1E1E] border-[#008001]/30 text-white text-xs"
+              />
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => navigator.clipboard.writeText(cardPublicUrl(editCard))}
+                  variant="outline"
+                  className="flex-1 border-[#008001]/30 text-white hover:bg-[#1E1E1E]"
+                >
+                  <Copy className="w-4 h-4 mr-1" /> Copy Public Link
+                </Button>
+                <Button
+                  onClick={() => openPreview(editCard)}
+                  variant="outline"
+                  className="flex-1 border-[#008001]/30 text-white hover:bg-[#1E1E1E]"
+                >
+                  <Eye className="w-4 h-4 mr-1" /> Preview
+                </Button>
+              </div>
+            </div>
+          </div>
           <Button onClick={saveEdit} className="w-full bg-[#008001] hover:bg-[#006312] text-white">
             Save Changes
           </Button>
@@ -581,6 +1162,18 @@ export function MyCardsNew() {
             className="bg-[#1E1E1E] border-[#008001]/30 text-white mb-4"
             autoFocus
           />
+          <p className="text-[#A0A0A0] text-sm mb-2">Card type</p>
+          <Select value={newCardType} onValueChange={(value) => setNewCardType(value as 'QR' | 'NFC' | 'HYBRID' | 'LINK')}>
+            <SelectTrigger className="w-full bg-[#1E1E1E] border-[#008001]/30 text-white mb-4">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-[#000000] border-[#008001]/30">
+              <SelectItem value="QR">QR</SelectItem>
+              <SelectItem value="NFC">NFC</SelectItem>
+              <SelectItem value="HYBRID">Hybrid</SelectItem>
+              <SelectItem value="LINK">Link</SelectItem>
+            </SelectContent>
+          </Select>
           <Button onClick={createCard}
             className="w-full bg-gradient-to-r from-[#49B618] to-[#008001] hover:from-[#009200] hover:to-[#006312] text-white">
             <Sparkles className="w-4 h-4 mr-2" /> Create Card

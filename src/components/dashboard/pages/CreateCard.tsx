@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import BusinessProfile from "./BusinessProfile";
 import { DesignNew } from "./Design";
 import { NfcQr } from "./NfcQR";
-import { createCard, updateCard, updateCardQR, updateCardContent, CardContentPayload } from "@/lib/api";
+import { createCard, updateCard, updateCardQR, updateCardContent, updateCardDesign, CardContentPayload, getCards } from "@/lib/api";
 
 const STEPS = [
     { id: 1, label: "Content" },
@@ -209,7 +209,7 @@ function SavedSuccessModal({ onCancel, onDashboard, cardSlug }: { onCancel: () =
         </div>
     );
 }
-export function CreateCard({ cardId }: { cardId?: string }) {
+export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () => void }) {
     const [step, setStep] = useState(1);
     const [showCampaignModal, setShowCampaignModal] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -218,10 +218,94 @@ export function CreateCard({ cardId }: { cardId?: string }) {
     const [cardContent, setCardContent] = useState<CardContentPayload | null>(null);
     const [campaignName, setCampaignName] = useState("");
     const [createdSlug, setCreatedSlug] = useState<string | undefined>(undefined);
+    const [activeCardId, setActiveCardId] = useState<string | undefined>(cardId);
+
+    useEffect(() => {
+        setStep(1);
+        setActiveCardId(cardId);
+    }, [cardId]);
+
+    useEffect(() => {
+        if (!activeCardId) return;
+
+        let cancelled = false;
+
+        getCards()
+            .then((cards) => {
+                if (cancelled) return;
+                const exists = cards.some((c) => c.id === activeCardId);
+                if (!exists) {
+                    setActiveCardId(undefined);
+                    setCreatedSlug(undefined);
+                }
+            })
+            .catch(() => undefined);
+
+        return () => {
+            cancelled = true;
+        };
+    }, [activeCardId]);
+
+    const toDbFontFamily = (font: unknown): string => {
+        if (typeof font !== "string") return "INTER";
+        const normalized = font.trim().toLowerCase();
+        const map: Record<string, string> = {
+            inter: "INTER",
+            sora: "SORA",
+            "dm-sans": "DM_SANS",
+            poppins: "POPPINS",
+            raleway: "RALEEWAY",
+            playfair: "PLAYFAIR_DISPLAY",
+            mono: "FIRA_CODE",
+            "fira-code": "FIRA_CODE",
+            system: "SYSTEM",
+        };
+        return map[normalized] ?? "INTER";
+    };
+
+    const toNumber = (value: unknown, fallback: number): number => {
+        const parsed = typeof value === "number" ? value : Number(value);
+        return Number.isFinite(parsed) ? parsed : fallback;
+    };
+
+    const toPhoneBgType = (value: unknown): "solid" | "gradient" => {
+        const normalized = typeof value === "string" ? value.trim().toLowerCase() : "";
+        return normalized === "solid" ? "solid" : "gradient";
+    };
+
+    const toShadowIntensity = (value: unknown): "none" | "soft" | "medium" | "strong" => {
+        const normalized = typeof value === "string" ? value.trim().toLowerCase() : "";
+        if (normalized === "none" || normalized === "soft" || normalized === "medium" || normalized === "strong") {
+            return normalized;
+        }
+        return "soft";
+    };
+
+    const buildCardDesignPayload = (settings: any) => ({
+        palette: typeof settings?.palette === "string" ? settings.palette : "green",
+        accentColor: typeof settings?.accentColor === "string" ? settings.accentColor : "#008001",
+        accentLight: typeof settings?.accentLight === "string" ? settings.accentLight : "#49B618",
+        bgColor: typeof settings?.bgColor === "string" ? settings.bgColor : "#0a0f0a",
+        cardColor: typeof settings?.cardColor === "string" ? settings.cardColor : "#111a11",
+        textPrimary: typeof settings?.textPrimary === "string" ? settings.textPrimary : "#f0f0f0",
+        textMuted: typeof settings?.textMuted === "string" ? settings.textMuted : "#7a9a7a",
+        phoneBgPreset: typeof settings?.phoneBgPreset === "string" ? settings.phoneBgPreset : "aurora",
+        phoneBgColor1: typeof settings?.phoneBgColor1 === "string" ? settings.phoneBgColor1 : "#0a0f0a",
+        phoneBgColor2: typeof settings?.phoneBgColor2 === "string" ? settings.phoneBgColor2 : "#003322",
+        phoneBgAngle: toNumber(settings?.phoneBgAngle, 135),
+        phoneBgType: toPhoneBgType(settings?.phoneBgType),
+        font: typeof settings?.font === "string" ? settings.font : "inter",
+        bodyFontSize: toNumber(settings?.bodyFontSize, 11),
+        nameFontSize: toNumber(settings?.nameFontSize, 22),
+        boldHeadings: typeof settings?.boldHeadings === "boolean" ? settings.boldHeadings : true,
+        cardRadius: toNumber(settings?.cardRadius, 16),
+        shadowIntensity: toShadowIntensity(settings?.shadowIntensity),
+        glowEffect: typeof settings?.glowEffect === "boolean" ? settings.glowEffect : true,
+    });
 
     const handleSaveFinish = () => setShowCampaignModal(true);
     const handleCampaignSave = async (campaignName: string) => {
-        // Create the card with settings
+        // Build payload for both create and edit flows
         const payload: any = {
             name: campaignName || "My Card",
             cardType: "QR",
@@ -235,7 +319,7 @@ export function CreateCard({ cardId }: { cardId?: string }) {
             payload.textColor = designSettings.textPrimary;
             payload.cardColor = designSettings.cardColor;
             payload.cardRadius = designSettings.cardRadius;
-            payload.fontFamily = designSettings.font ? designSettings.font.toUpperCase().replace("-", "_") : "INTER";
+            payload.fontFamily = toDbFontFamily(designSettings.font);
             payload.nameFontSize = designSettings.nameFontSize;
             payload.bodyFontSize = designSettings.bodyFontSize;
             payload.boldHeadings = designSettings.boldHeadings;
@@ -249,28 +333,46 @@ export function CreateCard({ cardId }: { cardId?: string }) {
         }
 
         try {
-            const card = await createCard(payload);
-            setCreatedSlug(card.slug);
+            let targetCardId = activeCardId;
 
-        // If QR config, save it
-        if (qrConfig && card.id) {
-            await updateCardQR(card.id, qrConfig);
-        }
+            if (targetCardId) {
+                await updateCard(targetCardId, payload);
+                const cards = await getCards();
+                const edited = cards.find((c) => c.id === targetCardId);
+                setCreatedSlug(edited?.slug);
+            } else {
+                const card = await createCard(payload);
+                targetCardId = card.id;
+                setActiveCardId(card.id);
+                setCreatedSlug(card.slug);
+            }
 
-        // If contents from step 1 exist, save them to CardContent
-        if (cardContent && card.id) {
-            await updateCardContent(card.id, cardContent);
-        }
+            if (designSettings && targetCardId) {
+                await updateCardDesign(targetCardId, buildCardDesignPayload(designSettings));
+            }
 
-        setShowCampaignModal(false);
-        setShowSuccessModal(true);
+            // If QR config exists, persist it for the selected card.
+            if (qrConfig && targetCardId) {
+                await updateCardQR(targetCardId, qrConfig);
+            }
+
+            // If contents from step 1 exist, persist them for the selected card.
+            if (cardContent && targetCardId) {
+                await updateCardContent(targetCardId, cardContent);
+            }
+
+            setShowCampaignModal(false);
+            setShowSuccessModal(true);
         } catch (error) {
-            console.error("Error creating card:", error);
+            console.error("Error saving card:", error);
             // Handle error
         }
     };
     const handleClose = () => { setShowCampaignModal(false); setShowSuccessModal(false); };
-    const handleDashboard = () => { setShowSuccessModal(false); /* navigate to dashboard */ };
+    const handleDashboard = () => {
+        setShowSuccessModal(false);
+        onDone?.();
+    };
 
     return (
         <div className="flex flex-col">
@@ -308,9 +410,27 @@ export function CreateCard({ cardId }: { cardId?: string }) {
 
             {/* ── Step Content ── */}
             <div className="flex-1">
-                {step === 1 && <BusinessProfile cardId={cardId} />}
-                {step === 2 && <DesignNew cardId={cardId} onSettingsChange={setDesignSettings} />}
-                {step === 3 && <NfcQr onConfigChange={setQrConfig} cardId={cardId} />}
+                {step === 1 && (
+                    <BusinessProfile
+                        cardId={activeCardId}
+                        allowFallbackToFirstCard={false}
+                        onContentChange={setCardContent}
+                    />
+                )}
+                {step === 2 && (
+                    <DesignNew
+                        cardId={activeCardId}
+                        allowFallbackToFirstCard={false}
+                        onSettingsChange={setDesignSettings}
+                    />
+                )}
+                {step === 3 && (
+                    <NfcQr
+                        onConfigChange={setQrConfig}
+                        cardId={activeCardId}
+                        allowFallbackToFirstCard={false}
+                    />
+                )}
             </div>
 
             {/* ── Navigation Buttons ── */}

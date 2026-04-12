@@ -1,5 +1,3 @@
-"use client";
-import { motion } from "motion/react";
 import { Check, Sparkles, Crown, Building2 } from "lucide-react";
 
 const pricingPlans = [
@@ -67,8 +65,6 @@ const pricingPlans = [
   },
 ];
 
-const VIEWPORT = { once: true };
-
 export function Pricing() {
   return (
     <section
@@ -78,30 +74,20 @@ export function Pricing() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Heading */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={VIEWPORT}
-          transition={{ duration: 0.6 }}
-          className="text-center space-y-4 mb-16"
-        >
+        <div className="text-center space-y-4 mb-16">
           <h2 className="text-4xl lg:text-5xl font-bold text-white">
             Simple, Transparent Pricing
           </h2>
           <p className="text-xl text-gray-400 max-w-2xl mx-auto">
             Choose the perfect plan for your needs. All plans include a 14-day free trial.
           </p>
-        </motion.div>
+        </div>
 
         {/* Plans */}
         <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {pricingPlans.map((plan, index) => (
-            <motion.div
+            <div
               key={plan.name}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={VIEWPORT}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
               className={`relative bg-white/5 backdrop-blur-sm rounded-3xl border-2 overflow-hidden transition-all
                 ${plan.popular
                   ? "border-theme-digital-green scale-105 z-10 shadow-2xl shadow-theme-digital-green/20 hover:border-theme-digital-green"
@@ -155,15 +141,12 @@ export function Pricing() {
                   {plan.buttonText}
                 </button>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
 
         {/* Money-back Guarantee */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={VIEWPORT}
+        <div
           className="text-center mt-16 p-8 bg-gradient-to-br from-theme-digital-green/10 to-transparent
                      rounded-2xl max-w-3xl mx-auto border border-theme-digital-green/20"
         >
@@ -175,7 +158,7 @@ export function Pricing() {
             Try SamCard risk-free. If you are not completely satisfied within 30 days,
             we will refund you in full—no questions asked.
           </p>
-        </motion.div>
+        </div>
 
       </div>
     </section>

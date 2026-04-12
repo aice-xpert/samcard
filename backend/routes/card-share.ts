@@ -1,11 +1,15 @@
 import express, { Response } from "express";
 import { supabase } from "../config/supabase";
 import { AuthRequest, verifySession } from "../middleware/auth";
+import { randomUUID } from "crypto";
 
 const router = express.Router();
 
 const getErrorMessage = (error: unknown): string =>
   error instanceof Error ? error.message : "Internal server error";
+
+const createCardId = (): string =>
+  `card_${randomUUID().replace(/-/g, "")}`;
 
 router.post("/duplicate/:cardId", verifySession, async (req: AuthRequest, res: Response) => {
   const { cardId } = req.params;
@@ -22,12 +26,14 @@ router.post("/duplicate/:cardId", verifySession, async (req: AuthRequest, res: R
       return res.status(404).json({ error: "Card not found" });
     }
 
-    const newSlug = `${originalCard.slug}-copy-${Date.now()}`;
-    const newShareUrl = `/${req.user!.uid}/${newSlug}`;
+    const newCardId = createCardId();
+    const newSlug = newCardId;
+    const newShareUrl = `/${newSlug}`;
 
     const { data: newCard, error: createError } = await supabase
       .from("Card")
       .insert({
+        id: newCardId,
         userId: req.user!.uid,
         businessProfileId: originalCard.businessProfileId,
         name: `${originalCard.name} (Copy)`,
