@@ -1,18 +1,17 @@
 "use client";
 
-import { memo, useId, useState, useEffect } from 'react';
+import { useId, useState, useEffect, useMemo, memo } from 'react';
 import { useQrStore } from '@/components/dashboard/stores/Useqrstore';
 import { getCardQRConfig } from '@/lib/api';
 import { makeQRMatrix } from '@/components/dashboard/pages/qr-engine';
 import {
   Linkedin, Instagram, Facebook, Twitter, Youtube,
   Mail, Phone, Globe, MapPin, Calendar, Link2,
-  Share2, QrCode, Check, Copy, Eye,
+  Share2, Check, Copy, Eye,
   Video as VideoIcon, ChevronRight, Upload,
   MessageSquare, Briefcase, Layout, Smartphone, ChevronDown,
 } from 'lucide-react';
 import { STICKER_DEFS } from '@/components/dashboard/pages/Qrrenderers';
-// import { QrPopup } from '@/components/dashboard/pages/Qrpopup';
 
 // ── Types ──────────────────────────────────────────────────────────
 export type LogoPosition = 'top-left' | 'top-right' | 'below-photo' | 'below-name';
@@ -70,7 +69,6 @@ export interface PhonePreviewProps {
   onPreviewOpen: () => void;
   onShareLink: () => void;
   onSaveContact: () => void;
-  onShowQR: () => void;
   themeOverride?: Partial<ThemeOverride>;
 }
 
@@ -175,10 +173,6 @@ function PhonePreviewComponent({
   const ff = { fontFamily: T.fontFamily };
   const uid = `pp-${useId().replace(/:/g, '')}`;
 
-  // ── QR popup state ─────────────────────────────────────────────
-  const [qrPopupOpen, setQrPopupOpen] = useState(false);
-  const cardUrl = typeof window !== 'undefined' ? window.location.href : 'https://samcard.app/u/card';
-
   const scrollCss = `
     [data-scrollid="${uid}"]::-webkit-scrollbar { width: 2px; }
     [data-scrollid="${uid}"]::-webkit-scrollbar-track { background: transparent; }
@@ -188,6 +182,13 @@ function PhonePreviewComponent({
   `;
 
   const setQr = useQrStore((s) => s.setQr);
+
+  const cardUrl = useMemo(() => {
+    const base =
+      (process.env.NEXT_PUBLIC_APP_URL ?? '').replace(/\/$/, '') ||
+      (typeof window !== 'undefined' ? window.location.origin : 'https://samcard.app');
+    return cardId ? `${base}/${cardId}` : base;
+  }, [cardId]);
 
   useEffect(() => {
     if (!cardId) return;
@@ -243,14 +244,6 @@ function PhonePreviewComponent({
   return (
     <>
       <style>{scrollCss}</style>
-
-      {/* ── QR Popup ── */}
-      {/* <QrPopup
-        isOpen={qrPopupOpen}
-        onClose={() => setQrPopupOpen(false)}
-        cardUrl={cardUrl}
-        cardId={cardId}
-      /> */}
 
       {/* Panel wrapper */}
       <div className="rounded-2xl p-4" style={{ background: '#000', border: `1px solid ${T.green}4d` }}>
@@ -566,13 +559,6 @@ function PhonePreviewComponent({
                 <div className="flex items-center justify-between px-3 py-2"
                   style={{ background: T.card, borderTop: `1px solid ${T.cardBorder}` }}>
                   <div className="flex items-center gap-2">
-                    {/* ── QR button — opens our popup only, does NOT call onShowQR ── */}
-                    <button
-                      onClick={e => { e.stopPropagation(); setQrPopupOpen(true); }}
-                      className="w-9 h-9 rounded-full flex items-center justify-center"
-                      style={{ background: '#1a1a1a', border: `1px solid ${T.green}4d` }}>
-                      <QrCode className="w-4 h-4" style={{ color: T.textMuted }} />
-                    </button>
                     <button onClick={e => { e.stopPropagation(); onShareLink(); }}
                       className="w-9 h-9 rounded-full flex items-center justify-center"
                       style={{ background: '#1a1a1a', border: `1px solid ${T.green}4d` }}>
@@ -611,14 +597,7 @@ function PhonePreviewComponent({
         {/* Share panel */}
         <div className="mt-4 p-3 rounded-xl" style={{ background: `${T.green}0f`, border: `1px solid ${T.green}2e` }}>
           <p className="text-[10px] uppercase tracking-wider font-semibold mb-2" style={{ color: '#555', ...ff }}>Share Your Card</p>
-          <div className="grid grid-cols-2 gap-2">
-            {/* ── QR button — opens our popup only, does NOT call onShowQR ── */}
-            <button
-              onClick={() => setQrPopupOpen(true)}
-              className="flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-medium"
-              style={{ border: `1px solid ${T.green}33`, color: '#888', ...ff }}>
-              <QrCode className="w-3.5 h-3.5" />QR Code
-            </button>
+          <div className="grid grid-cols-1 gap-2">
             <button onClick={onShareLink}
               className="flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-medium"
               style={{
@@ -739,6 +718,20 @@ function ExtraSectionPreview({ section, T }: { section: ExtraSection; T: ThemeOv
               {body && <p style={{ fontSize: T.bodyFontSize, lineHeight: 1.5, color: T.textMuted, ...ff }}>{body}</p>}
             </div>
           )}
+        </div>
+      ) : null;
+    }
+    case 'extra-customer':
+    case 'extra-team': {
+      // Editor stores these as 'title' + 'desc'
+      const title = str(d, 'title'), desc = str(d, 'desc');
+      return title || desc ? (
+        <div className="mx-3 mb-2.5 overflow-hidden"
+          style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: T.cardRadius }}>
+          <div className="px-4 py-3">
+            {title && <p style={{ fontWeight: T.boldHeadings ? 700 : 500, fontSize: T.bodyFontSize, marginBottom: 4, color: T.textPrimary, ...ff }}>{title}</p>}
+            {desc && <p style={{ fontSize: T.bodyFontSize, lineHeight: 1.5, color: T.textMuted, ...ff }}>{desc}</p>}
+          </div>
         </div>
       ) : null;
     }

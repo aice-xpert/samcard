@@ -3,20 +3,87 @@
 import { useState } from 'react';
 import { Sidebar } from '@/components/dashboard/pages/Sidebar';
 import { EnhancedHeader } from '@/components/dashboard/pages/Header';
-;
-import BusinessProfile from '@/components/dashboard/pages/BusinessProfile';
-import { MyCardsNew } from '@/components/dashboard/pages/MyCards';
-import { CreateCard } from '@/components/dashboard/pages/CreateCard';
 import dynamic from "next/dynamic";
+
+function PageSkeleton() {
+  return (
+    <div className="space-y-4 animate-pulse">
+      <div className="h-40 rounded-2xl bg-[#0d1a0d]/60 border border-[#008001]/10" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="h-28 rounded-2xl bg-[#0d1a0d]/60 border border-[#008001]/10" />
+        ))}
+      </div>
+      <div className="h-64 rounded-2xl bg-[#0d1a0d]/60 border border-[#008001]/10" />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="h-48 rounded-2xl bg-[#0d1a0d]/60 border border-[#008001]/10" />
+        <div className="h-48 rounded-2xl bg-[#0d1a0d]/60 border border-[#008001]/10" />
+      </div>
+    </div>
+  );
+}
+
+function CardEditorSkeleton() {
+  return (
+    <div className="flex flex-col lg:flex-row gap-6 animate-pulse">
+      <div className="flex-1 space-y-4">
+        <div className="h-12 rounded-xl bg-[#0d1a0d]/60 border border-[#008001]/10" />
+        <div className="h-64 rounded-2xl bg-[#0d1a0d]/60 border border-[#008001]/10" />
+        <div className="h-48 rounded-2xl bg-[#0d1a0d]/60 border border-[#008001]/10" />
+        <div className="h-48 rounded-2xl bg-[#0d1a0d]/60 border border-[#008001]/10" />
+      </div>
+      <div className="w-full lg:w-80">
+        <div className="h-[560px] rounded-3xl bg-[#0d1a0d]/60 border border-[#008001]/10" />
+      </div>
+    </div>
+  );
+}
+
+function ListSkeleton() {
+  return (
+    <div className="space-y-3 animate-pulse">
+      <div className="h-10 w-48 rounded-xl bg-[#0d1a0d]/60 border border-[#008001]/10" />
+      {[...Array(5)].map((_, i) => (
+        <div key={i} className="h-20 rounded-2xl bg-[#0d1a0d]/60 border border-[#008001]/10" />
+      ))}
+    </div>
+  );
+}
+
+// Load every page lazily — only one is ever visible at a time so there's no
+// reason to bundle or render all of them up-front.
 const ComprehensiveDashboard = dynamic(
   () => import('@/components/dashboard/pages/Dashboard').then(mod => mod.ComprehensiveDashboard),
-  { ssr: false }
+  { ssr: false, loading: () => <PageSkeleton /> }
 );
-import { Orders } from '@/components/dashboard/pages/Orders';
-import { Billing } from '@/components/dashboard/pages/Billing';
-import { Settings } from '@/components/dashboard/pages/Settings';
-import Analytics from '@/components/dashboard/pages/Analytics';
-
+const BusinessProfile = dynamic(
+  () => import('@/components/dashboard/pages/BusinessProfile'),
+  { ssr: false, loading: () => <CardEditorSkeleton /> }
+);
+const MyCardsNew = dynamic(
+  () => import('@/components/dashboard/pages/MyCards').then(mod => mod.MyCardsNew),
+  { ssr: false, loading: () => <ListSkeleton /> }
+);
+const CreateCard = dynamic(
+  () => import('@/components/dashboard/pages/CreateCard').then(mod => mod.CreateCard),
+  { ssr: false, loading: () => <CardEditorSkeleton /> }
+);
+const Analytics = dynamic(
+  () => import('@/components/dashboard/pages/Analytics'),
+  { ssr: false, loading: () => <PageSkeleton /> }
+);
+const Orders = dynamic(
+  () => import('@/components/dashboard/pages/Orders').then(mod => mod.Orders),
+  { ssr: false, loading: () => <ListSkeleton /> }
+);
+const Billing = dynamic(
+  () => import('@/components/dashboard/pages/Billing').then(mod => mod.Billing),
+  { ssr: false, loading: () => <ListSkeleton /> }
+);
+const Settings = dynamic(
+  () => import('@/components/dashboard/pages/Settings').then(mod => mod.Settings),
+  { ssr: false, loading: () => <ListSkeleton /> }
+);
 
 export default function Home() {
   const [activePage, setActivePage] = useState('dashboard');
@@ -78,7 +145,6 @@ export default function Home() {
             }}
           />
         );
-
       case 'orders': return <Orders />;
       case 'billing': return <Billing />;
       case 'settings': return <Settings />;
@@ -103,9 +169,7 @@ export default function Home() {
         />
       )}
 
-      {/* ── Sidebar ──
-          • Desktop (lg+): always visible, fixed left
-          • Mobile: slides in from left as a drawer                    */}
+      {/* ── Sidebar ── */}
       <div
         className={`
           fixed top-0 left-0 h-screen z-40 transition-transform duration-300 ease-in-out
@@ -126,13 +190,11 @@ export default function Home() {
             className="p-2 rounded-lg text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20 transition-colors"
             aria-label="Open menu"
           >
-            {/* Hamburger */}
             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
 
-          {/* Mini logo */}
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg overflow-hidden flex-shrink-0">
               <svg width="28" height="28" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -151,7 +213,7 @@ export default function Home() {
           <div className="ml-auto text-sm font-semibold text-white truncate">{getPageTitle()}</div>
         </div>
 
-        {/* Desktop header  */}
+        {/* Desktop header */}
         {activePage !== 'design' && (
           <div className="hidden lg:block">
             <EnhancedHeader
@@ -164,7 +226,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* ── Mobile header for non-design pages ── */}
+        {/* Mobile header for non-design pages */}
         {activePage !== 'design' && (
           <div className="lg:hidden px-4 pt-4 pb-2">
             <p className="text-xs text-[#A0A0A0]">{getPageSubtitle()}</p>
@@ -172,6 +234,7 @@ export default function Home() {
         )}
 
         <main className={activePage === 'design' ? '' : 'p-4 lg:p-8'}>
+          {/* Wrap in Suspense-like fallback supplied by dynamic() loading prop */}
           {renderPage()}
         </main>
       </div>

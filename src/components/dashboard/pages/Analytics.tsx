@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import {
   AreaChart, Area, PieChart, Pie, Cell,
   BarChart, Bar,
@@ -72,6 +72,29 @@ const changeIcon = (v: number) =>
 
 const PAGE_SIZE = 6;
 
+// ── useInView ──────────────────────────────────────────────────────────
+// Fires once when the sentinel element enters the viewport.
+function useInView(rootMargin = "200px") {
+  const ref = useRef<HTMLDivElement>(null);
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true);
+          obs.disconnect();
+        }
+      },
+      { rootMargin },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [rootMargin]);
+  return [ref, inView] as const;
+}
+
 // ── Skeleton ───────────────────────────────────────────────────────────
 function Skeleton({ className = "" }: { className?: string }) {
   return (
@@ -123,6 +146,8 @@ function StatCard({
 export default function Analytics() {
   const [period, setPeriod] = useState<Period>("7");
   const [loading, setLoading] = useState(true);
+  const [momLoading, setMomLoading] = useState(true);
+  const [goalsLoading, setGoalsLoading] = useState(true);
   const [leadsLoading, setLeadsLoading] = useState(true);
 
   // API data
@@ -132,6 +157,11 @@ export default function Analytics() {
   const [weeklyChallenge, setWeeklyChallenge] = useState<GoalProgressData | null>(null);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [leadsTotal, setLeadsTotal] = useState(0);
+
+  // Intersection sentinels — each fires once when it enters viewport
+  const [momRef, momInView] = useInView("150px");
+  const [goalsRef, goalsInView] = useInView("150px");
+  const [leadsRef, leadsInView] = useInView("150px");
 
   // UI state
   const [search, setSearch] = useState("");
@@ -147,25 +177,46 @@ export default function Analytics() {
     setTimeout(() => setToast(null), 2800);
   };
 
-  // ── Fetch analytics (re-runs on period change) ──
+  // ── Phase 1: stat cards + chart + funnel + device + sources + locations + top links ──
   useEffect(() => {
     setLoading(true);
-    Promise.all([
-      getAnalytics(period).catch(() => null),
-      getMonthOverMonthPerformance().catch(() => []),
-      getMonthlyGoal().catch(() => null),
-      getWeeklyChallenge().catch(() => null),
-    ]).then(([a, mom, goal, challenge]) => {
-      setAnalytics(a);
-      setMonthOverMonth(mom);
-      setMonthlyGoal(goal);
-      setWeeklyChallenge(challenge);
-      setLoading(false);
-    });
+    getAnalytics(period)
+      .catch(() => null)
+      .then((a) => {
+        setAnalytics(a);
+        setLoading(false);
+      });
   }, [period]);
 
-  // ── Fetch leads ──
+  // ── Phase 2: Month-over-Month (deferred until row scrolls into view) ──
   useEffect(() => {
+    if (!momInView) return;
+    setMomLoading(true);
+    getMonthOverMonthPerformance()
+      .catch(() => [])
+      .then((mom) => {
+        setMonthOverMonth(mom);
+        setMomLoading(false);
+      });
+  }, [momInView]);
+
+  // ── Phase 3: Goals (deferred until row scrolls into view) ──
+  useEffect(() => {
+    if (!goalsInView) return;
+    setGoalsLoading(true);
+    Promise.all([
+      getMonthlyGoal().catch(() => null),
+      getWeeklyChallenge().catch(() => null),
+    ]).then(([goal, challenge]) => {
+      setMonthlyGoal(goal);
+      setWeeklyChallenge(challenge);
+      setGoalsLoading(false);
+    });
+  }, [goalsInView]);
+
+  // ── Phase 4: Leads (deferred until section scrolls into view) ──
+  useEffect(() => {
+    if (!leadsInView) return;
     setLeadsLoading(true);
     getLeads(undefined, leadsPage)
       .then((res) => {
@@ -174,7 +225,7 @@ export default function Analytics() {
         setLeadsLoading(false);
       })
       .catch(() => setLeadsLoading(false));
-  }, [leadsPage]);
+  }, [leadsInView, leadsPage]);
 
   // ── Client-side lead search ──
   const filteredLeads = useMemo(
@@ -637,6 +688,9 @@ export default function Analytics() {
         </div>
       </div>
 
+      {/* ── Row 3 sentinel: triggers MOM + Locations fetch on scroll ── */}
+      <div ref={momRef} />
+
       {/* ── Row 3: Month-over-Month + Top Locations ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Month-over-Month */}
@@ -645,7 +699,7 @@ export default function Analytics() {
             <span className="text-base font-semibold text-white">Month-over-Month</span>
             <TrendingUp className="w-4 h-4 text-[#49B618]" />
           </div>
-          {loading ? (
+          {momLoading ? (
             <Skeleton className="h-48 w-full" />
           ) : (
             <ResponsiveContainer width="100%" height={180} minWidth={1} minHeight={1}>
@@ -678,7 +732,7 @@ export default function Analytics() {
               </BarChart>
             </ResponsiveContainer>
           )}
-          {!loading && (
+          {!momLoading && (
             <div className="grid grid-cols-2 gap-3 mt-4">
               {monthOverMonth.map((m, i) => (
                 <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-[#1E1E1E]">
@@ -702,7 +756,7 @@ export default function Analytics() {
             <span className="text-base font-semibold text-white">Top Locations</span>
             <MapPin className="w-4 h-4 text-[#49B618]" />
           </div>
-          {loading ? (
+          {momLoading ? (
             <div className="space-y-3">
               {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
             </div>
@@ -735,6 +789,9 @@ export default function Analytics() {
         </div>
       </div>
 
+      {/* ── Row 4 sentinel: triggers Goals fetch on scroll ── */}
+      <div ref={goalsRef} />
+
       {/* ── Row 4: Goals + Top Links ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Monthly Goal */}
@@ -743,7 +800,7 @@ export default function Analytics() {
             <span className="text-base font-semibold text-white">Monthly Goal</span>
             <Target className="w-4 h-4 text-[#49B618]" />
           </div>
-          {loading || !monthlyGoal ? (
+          {goalsLoading || !monthlyGoal ? (
             <Skeleton className="h-32 w-full" />
           ) : (
             <>
@@ -774,7 +831,7 @@ export default function Analytics() {
             <span className="text-base font-semibold text-white">Weekly Challenge</span>
             <Zap className="w-4 h-4 text-[#49B618]" />
           </div>
-          {loading || !weeklyChallenge ? (
+          {goalsLoading || !weeklyChallenge ? (
             <Skeleton className="h-32 w-full" />
           ) : (
             <>
@@ -836,6 +893,9 @@ export default function Analytics() {
           )}
         </div>
       </div>
+
+      {/* ── Leads sentinel: triggers Leads fetch on scroll ── */}
+      <div ref={leadsRef} />
 
       {/* ── Recent Leads ── */}
       <div className="rounded-2xl border border-[#008001]/30 bg-[#000000] p-6">

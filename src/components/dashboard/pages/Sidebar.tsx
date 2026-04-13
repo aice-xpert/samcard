@@ -74,6 +74,7 @@ export function Sidebar({ activePage, onNavigate, onClose, profile }: SidebarPro
   const [completionScore, setCompletionScore] = useState(0);
   const [weeklyTrendChange, setWeeklyTrendChange] = useState(0);
   const [planLabel, setPlanLabel] = useState("Pro");
+  const [loggingOut, setLoggingOut] = useState(false);
   const router = useRouter();
 
   const normalizePlanLabel = (tier: string | null | undefined) => {
@@ -111,24 +112,19 @@ export function Sidebar({ activePage, onNavigate, onClose, profile }: SidebarPro
   }, []);
 
   const handleLogout = async () => {
+    setLoggingOut(true);
     try {
-      // Sign out from Firebase
       await signOut(auth);
-      
-      // Clear session cookie on backend
       try {
         const logoutUrl = BACKEND_URL ? `${BACKEND_URL}/api/auth/logout` : "/api/auth/logout";
-        await fetch(logoutUrl, {
-          method: "POST",
-          credentials: "include",
-        });
-      } catch (error) {
-        console.warn("Failed to clear backend session:", error);
+        await fetch(logoutUrl, { method: "POST", credentials: "include" });
+      } catch {
+        // ignore backend errors
       }
-      
       router.push("/login");
     } catch (error) {
       console.error("Logout failed:", error);
+      setLoggingOut(false);
     }
   };
 
@@ -224,12 +220,8 @@ export function Sidebar({ activePage, onNavigate, onClose, profile }: SidebarPro
               transform="rotate(-90 40 40)" />
             <foreignObject x="14" y="14" width="52" height="52">
               <Avatar className="w-full h-full border-2 border-[#008001]/30">
-                {displayProfile.avatar ? (
-                  <AvatarImage src={displayProfile.avatar} />
-                ) : (
-                  <AvatarImage src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop" />
-                )}
-                <AvatarFallback>{initials}</AvatarFallback>
+                {displayProfile.avatar && <AvatarImage src={displayProfile.avatar} />}
+                <AvatarFallback className="bg-[#008001]/30 text-white text-sm font-bold">{initials}</AvatarFallback>
               </Avatar>
             </foreignObject>
             <text x="90" y="30" fill="white" fontSize="14" fontWeight="600">{displayProfile.name}</text>
@@ -252,10 +244,18 @@ export function Sidebar({ activePage, onNavigate, onClose, profile }: SidebarPro
 
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[#A0A0A0] hover:text-white hover:bg-[#008001]/10 transition-all"
+          disabled={loggingOut}
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[#A0A0A0] hover:text-white hover:bg-[#008001]/10 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          <LogOut className="w-4 h-4" />
-          <span className="text-sm font-medium">Logout</span>
+          {loggingOut ? (
+            <svg className="animate-spin w-4 h-4 text-red-400 flex-shrink-0" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+            </svg>
+          ) : (
+            <LogOut className="w-4 h-4 flex-shrink-0" />
+          )}
+          <span className="text-sm font-medium">{loggingOut ? 'Logging out…' : 'Logout'}</span>
         </button>
       </div>
 
