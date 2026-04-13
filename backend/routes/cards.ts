@@ -75,6 +75,7 @@ router.post("/", verifySession, async (req: AuthRequest, res: Response) => {
       updatedAt: new Date().toISOString(),
     }, { onConflict: "id" });
 
+
     // 2. Resolve or Create Business Profile
     const { data: existingProfile } = await supabase
       .from("BusinessProfile")
