@@ -1,4 +1,5 @@
 import express, { Response } from "express";
+import { v4 as uuidv4 } from "uuid";
 import { supabase } from "../config/supabase";
 import { AuthRequest, verifySession } from "../middleware/auth";
 
@@ -106,7 +107,6 @@ router.put("/", verifySession, async (req: AuthRequest, res: Response) => {
       .eq("businessProfileId", profile.id);
 
     if (links.length > 0) {
-      const { v4: uuidv4 } = await import("uuid");
       const invalidPlatforms: string[] = [];
 
       const linksToInsert = links.map((link: IncomingSocialLink, index: number) => {

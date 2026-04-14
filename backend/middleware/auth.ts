@@ -42,7 +42,7 @@ const verifySessionCookieSafely = async (token: string) => {
         );
         return admin.auth().verifySessionCookie(token, false);
       }
-      
+
       // If the error is a revocation or clock skew issue that just happened because the user was created newly:
       if (error?.code === 'auth/user-token-expired' || error?.code === 'auth/session-cookie-expired' || error?.code === 'auth/session-cookie-revoked') {
         console.warn("Possible clock skew or revocation issue detecting newly created session! Retrying without revocation check...");

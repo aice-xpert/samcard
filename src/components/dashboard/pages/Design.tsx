@@ -1041,7 +1041,7 @@ export function DesignNew({
     <div className="lg:sticky lg:top-8">
       <div className="rounded-2xl p-4 sm:p-6 transition-all duration-500"
         style={{ background: 'linear-gradient(135deg,#0a0a0a 0%,#000 100%)', boxShadow: wrapperShadow, border: `1px solid ${draft.accentColor}22` }}>
-        <PhonePreview {...sharedPreviewProps} onPreviewOpen={() => setIsPreviewOpen(true)} onShareLink={handleShareLink} onSaveContact={handleSaveContact} onShowQR={() => setShowQR(true)} />
+        <PhonePreview {...sharedPreviewProps} onPreviewOpen={() => setIsPreviewOpen(true)} onShareLink={handleShareLink} onSaveContact={handleSaveContact} />
       </div>
       <div className="mt-3 grid grid-cols-3 gap-1.5">
         {[
@@ -1063,7 +1063,7 @@ export function DesignNew({
 
   return (
     <div className="min-h-screen p-4 sm:p-8" style={{ background: 'linear-gradient(135deg,#0a0a0a 0%,#000 100%)' }}>
-      <CardPreviewModal isOpen={isPreviewOpen} onClose={() => setIsPreviewOpen(false)} {...sharedPreviewProps} onShareLink={handleShareLink} onSaveContact={handleSaveContact} onShowQR={() => setShowQR(true)} />
+      <CardPreviewModal isOpen={isPreviewOpen} onClose={() => setIsPreviewOpen(false)} {...sharedPreviewProps} onShareLink={handleShareLink} onSaveContact={handleSaveContact} />
       {showQR && <QRModal text={formData.website || window.location.href} onClose={() => setShowQR(false)} />}
       {toast && (
         <div className="fixed top-5 right-4 sm:right-6 z-50 flex items-center gap-2 px-5 py-3 rounded-xl shadow-2xl text-sm font-medium text-white" style={{ background: '#008001' }}>

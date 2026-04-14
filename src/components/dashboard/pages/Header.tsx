@@ -18,9 +18,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/dashboard/ui/dropdown-menu';
-import { getUserProfile } from '@/lib/api';
+import { getUserProfile, BACKEND_URL } from '@/lib/api';
 import { useUser } from '@/contexts/UserContext';
 import { useState, useCallback, useEffect } from 'react';
+import { signOut } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
+import { useRouter } from 'next/navigation';
 
 interface Notification {
   id: string;
@@ -56,6 +59,8 @@ export function EnhancedHeader({
   const { profile } = useUser();
   const [notifications, setNotifications] = useState<Notification[]>(defaultNotifications);
   const [membershipLabel, setMembershipLabel] = useState('Free');
+  const [loggingOut, setLoggingOut] = useState(false);
+  const router = useRouter();
   const initials = profile.name.split(" ").map(n => n[0]).join("").toUpperCase();
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -83,6 +88,23 @@ export function EnhancedHeader({
     };
   }, []);
 
+
+  const handleLogout = useCallback(async () => {
+    setLoggingOut(true);
+    try {
+      await signOut(auth);
+      try {
+        const logoutUrl = BACKEND_URL ? `${BACKEND_URL}/api/auth/logout` : '/api/auth/logout';
+        await fetch(logoutUrl, { method: 'POST', credentials: 'include' });
+      } catch {
+        // ignore backend errors — Firebase sign-out already happened
+      }
+      router.push('/login');
+    } catch (err) {
+      console.error('Logout failed:', err);
+      setLoggingOut(false);
+    }
+  }, [router]);
 
   const handleNavigate = useCallback((page: string) => {
     onNavigate?.(page);
@@ -203,12 +225,8 @@ export function EnhancedHeader({
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="gap-3 bg-[#1E1E1E] hover:bg-[#008001]/20 px-3 text-white">
               <Avatar className="w-8 h-8 ring-2 ring-[#008001]/30">
-                {profile.avatar ? (
-                  <AvatarImage src={profile.avatar} />
-                ) : (
-                  <AvatarImage src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop" />
-                )}
-                <AvatarFallback>{initials}</AvatarFallback>
+                {profile.avatar && <AvatarImage src={profile.avatar} />}
+                <AvatarFallback className="bg-[#008001]/30 text-white text-xs font-bold">{initials}</AvatarFallback>
               </Avatar>
               <div className="text-left hidden md:block">
                 <p className="text-sm text-white font-medium">{profile.name}</p>
@@ -252,8 +270,20 @@ export function EnhancedHeader({
               Order History
             </DropdownMenuItem>
             <DropdownMenuSeparator className="bg-[#008001]/30" />
-            <DropdownMenuItem className="text-red-400 focus:text-red-300 focus:bg-red-500/20 cursor-pointer">
-              Logout
+            <DropdownMenuItem
+              onClick={handleLogout}
+              disabled={loggingOut}
+              className="text-red-400 focus:text-red-300 focus:bg-red-500/20 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {loggingOut ? (
+                <span className="flex items-center gap-2">
+                  <svg className="animate-spin w-3.5 h-3.5 text-red-400" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                  </svg>
+                  Logging out…
+                </span>
+              ) : 'Logout'}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

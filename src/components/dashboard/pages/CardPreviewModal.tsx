@@ -3,11 +3,10 @@ import { useEffect, useId, useState } from 'react';
 import {
   X, Mail, Phone, Globe, MapPin,
   Linkedin, Instagram, Twitter, Facebook, Youtube,
-  QrCode, Share2, Link2, Calendar, Check,
+  Share2, Link2, Calendar, Check,
   Video as VideoIcon, ChevronRight, MessageSquare, Briefcase,
 } from 'lucide-react';
 import { Button } from '@/components/dashboard/ui/button';
-// import { QrPopup } from '@/components/dashboard/pages/Qrpopup';
 
 // ── Types ──────────────────────────────────────────────────────────
 export type LogoPosition = 'top-left' | 'top-right' | 'below-photo' | 'below-name';
@@ -66,7 +65,6 @@ export interface CardPreviewModalProps {
   copied?: boolean;
   onShareLink?: () => void;
   onSaveContact?: () => void;
-  onShowQR?: () => void;
   themeOverride?: Partial<ThemeOverride>;
 }
 
@@ -187,17 +185,13 @@ export function CardPreviewModal({
   socialLinks = [], customLinks = [], extraSections = [],
   sections,
   savedContact = false, copied = false,
-  onShareLink, onSaveContact, onShowQR,
+  onShareLink, onSaveContact,
   themeOverride,
 }: CardPreviewModalProps) {
 
   const T: ThemeOverride = { ...DEFAULT_T, ...themeOverride };
   const ff = { fontFamily: T.fontFamily };
   const uid = useId();
-
-  // ── QR popup state ─────────────────────────────────────────────
-  const [qrPopupOpen, setQrPopupOpen] = useState(false);
-  const cardUrl = typeof window !== 'undefined' ? window.location.href : 'https://samcard.app/u/card';
 
   const sec: Sections = sections ?? {
     profile: true, headingText: true, contactUs: true,
@@ -246,14 +240,6 @@ export function CardPreviewModal({
   return (
     <>
       <style>{dynamicStyles}</style>
-
-      {/* ── QR Popup — renders above everything, zIndex 999999 ── */}
-      {/* <QrPopup
-        isOpen={qrPopupOpen}
-        onClose={() => setQrPopupOpen(false)}
-        cardUrl={cardUrl}
-        cardId={cardId}
-      /> */}
 
       <div
         className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -533,7 +519,7 @@ export function CardPreviewModal({
                       <CardBlock T={T}>
                         <SectionHeader T={T} icon={<MessageSquare className="w-3.5 h-3.5 text-white" />} title="Get in Touch" />
                         <div className="px-4 py-3 space-y-2">
-                          {['', '', ''].map(ph => (
+                          {['Your name', 'Email address', 'Phone number'].map(ph => (
                             <input key={ph} readOnly placeholder={ph} className="w-full px-3 py-2 rounded-xl outline-none"
                               style={{ background: T.bg, border: `1px solid ${T.green}33`, color: T.textPrimary, fontSize: T.bodyFontSize, fontFamily: T.fontFamily }} />
                           ))}
@@ -559,15 +545,6 @@ export function CardPreviewModal({
                   <div className="flex items-center justify-between px-3 py-2 flex-shrink-0"
                     style={{ background: T.card, borderTop: `1px solid ${T.cardBorder}` }}>
                     <div className="flex items-center gap-2">
-                      {/* ── QR button — opens our popup only, does NOT call onShowQR ── */}
-                      {/* {onShowQR && (
-                        <button
-                          onClick={e => { e.stopPropagation(); setQrPopupOpen(true); }}
-                          className="modal-tap w-9 h-9 rounded-full flex items-center justify-center"
-                          style={{ background: T.bg, border: `1px solid ${T.green}4d` }}>
-                          <QrCode className="w-4 h-4" style={{ color: T.textMuted }} />
-                        </button>
-                      )} */}
                       {onShareLink && (
                         <button onClick={e => { e.stopPropagation(); onShareLink(); }}
                           className="modal-tap w-9 h-9 rounded-full flex items-center justify-center"
@@ -600,14 +577,6 @@ export function CardPreviewModal({
 
           {/* ── Bottom buttons (outside phone) ── */}
           <div className="flex gap-2 flex-shrink-0">
-            {/* ── QR button — opens our popup only, does NOT call onShowQR ── */}
-            {onShowQR && (
-              <Button variant="outline" size="sm" className="gap-2 text-xs"
-                style={{ borderColor: `${T.green}66`, color: '#A0A0A0' }}
-                onClick={() => setQrPopupOpen(true)}>
-                <QrCode className="w-3.5 h-3.5" />QR Code
-              </Button>
-            )}
             {onShareLink && (
               <Button variant="outline" size="sm" className="gap-2 text-xs"
                 style={{ borderColor: `${T.green}66`, color: copied ? T.greenLight : '#A0A0A0' }}
@@ -726,6 +695,20 @@ function ExtraModalSection({ section, T }: { section: ExtraSection; T: ThemeOver
           )}
         </div>
       );
+    }
+    case 'extra-customer':
+    case 'extra-team': {
+      // Editor stores these as 'title' + 'desc'
+      const title = str(d, 'title'), desc = str(d, 'desc');
+      return title || desc ? (
+        <div className="mx-3 mb-2.5 overflow-hidden"
+          style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: T.cardRadius }}>
+          <div className="px-4 py-3">
+            {title && <p style={{ fontWeight: T.boldHeadings ? 700 : 500, fontSize: T.bodyFontSize, marginBottom: 4, color: T.textPrimary, ...ff }}>{title}</p>}
+            {desc && <p style={{ fontSize: T.bodyFontSize, lineHeight: 1.5, color: T.textMuted, ...ff }}>{desc}</p>}
+          </div>
+        </div>
+      ) : null;
     }
     default: {
       const title = str(d, 'title'), content = str(d, 'content');
