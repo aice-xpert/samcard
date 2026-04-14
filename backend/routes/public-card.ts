@@ -74,6 +74,9 @@ interface PublicCardResponse {
       phone: string;
       website: string;
       location: string;
+      industry: string;
+      yearFounded: string;
+      appointmentUrl: string;
     };
     connectFields: { type: string; label: string; value: string }[];
     sections: {
@@ -240,8 +243,8 @@ router.get("/:slug", async (req, res: Response) => {
       cardType: card.cardType,
       status: card.status,
       shareUrl: card.shareUrl,
-      headingText: card.headingText,
-      headingBodyText: card.headingBodyText,
+      headingText: card.headingText ?? content?.formData?.headingText ?? "",
+      headingBodyText: card.headingBodyText ?? content?.formData?.bodyText ?? "",
       design: {
         accentColor: design?.accentColor ?? card.accentColor,
         accentLight: design?.accentLight ?? card.accentLight,
@@ -275,6 +278,9 @@ router.get("/:slug", async (req, res: Response) => {
           phone: content?.formData?.phone ?? businessProfile?.primaryPhone ?? "",
           website: content?.formData?.website ?? businessProfile?.website ?? "",
           location: content?.formData?.location ?? ([businessProfile?.city, businessProfile?.country].filter(Boolean).join(", ") || ""),
+          industry: content?.formData?.industry ?? "",
+          yearFounded: content?.formData?.yearFounded ?? "",
+          appointmentUrl: content?.formData?.appointmentUrl ?? "",
         },
         connectFields: content?.connectFields ?? [],
         sections: content?.sections ?? defaultSections,

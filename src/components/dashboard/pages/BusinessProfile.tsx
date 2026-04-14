@@ -1123,12 +1123,13 @@ export default function BusinessProfile({
         });
 
         setProfileShareUrl(savedProfile.shareUrl || '');
-
-        await Promise.all([
-          updateSocialLinks(normalizedSocialLinks),
-          updateCustomLinks(normalizedCustomLinks),
-        ]);
       }
+
+      // Always persist social and custom links regardless of card vs global mode
+      await Promise.all([
+        updateSocialLinks(normalizedSocialLinks),
+        updateCustomLinks(normalizedCustomLinks),
+      ]);
 
       if (cardId) {
         await updateCardContent(cardId, {
@@ -1136,6 +1137,7 @@ export default function BusinessProfile({
           brandLogo: updatedBrandLogo,
           logoPosition: contentLogoPosition,
           formData,
+          socialLinks: normalizedSocialLinks.map(sl => ({ platform: sl.platform, url: sl.url })),
           connectFields,
           sections,
           customLinks,

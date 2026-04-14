@@ -20,6 +20,8 @@ import {
   Twitter,
   Facebook,
   Youtube,
+  Calendar,
+  Video as VideoIcon,
 } from "lucide-react";
 import {
   QRWithShape,
@@ -103,6 +105,11 @@ interface PublicCard {
       phone: string;
       website: string;
       location: string;
+      industry?: string;
+      yearFounded?: string;
+      appointmentUrl?: string;
+      headingText?: string;
+      bodyText?: string;
     };
     connectFields: { type: string; label: string; value: string }[];
     sections: {
@@ -348,6 +355,369 @@ function CardBlock({
       {children}
     </div>
   );
+}
+
+// ── Extra Section Block ────────────────────────────────────────────
+
+function ExtraSectionBlock({
+  section,
+  T,
+  onLinkClick,
+}: {
+  section: {
+    id: string;
+    type: string;
+    label: string;
+    enabled: boolean;
+    data: Record<string, unknown>;
+  };
+  T: {
+    card: string;
+    cardBorder: string;
+    cardRadius: number;
+    green: string;
+    greenLight: string;
+    textPrimary: string;
+    textMuted: string;
+    divider: string;
+    bodyFontSize: number;
+    boldHeadings: boolean;
+    fontFamily: string;
+  };
+  onLinkClick: () => void;
+}) {
+  const d = section.data;
+
+  function str(key: string): string {
+    const v = d[key];
+    return typeof v === "string" ? v : "";
+  }
+
+  switch (section.type) {
+    case "extra-button": {
+      const btnLabel = str("btnLabel");
+      const btnUrl = str("btnUrl");
+      if (!btnLabel && !btnUrl) return null;
+      return (
+        <div style={{ margin: "0 12px 10px" }}>
+          <button
+            onClick={() => { onLinkClick(); openLink(btnUrl); }}
+            style={{
+              width: "100%",
+              padding: "12px",
+              fontWeight: 700,
+              color: "#fff",
+              background: `linear-gradient(135deg, ${T.green}, ${T.greenLight})`,
+              border: "none",
+              borderRadius: T.cardRadius,
+              fontSize: T.bodyFontSize,
+              fontFamily: T.fontFamily,
+              cursor: "pointer",
+            }}
+          >
+            {btnLabel || "Click Here"}
+          </button>
+        </div>
+      );
+    }
+    case "extra-video": {
+      const videoUrl = str("videoUrl");
+      if (!videoUrl) return null;
+      return (
+        <div
+          style={{
+            margin: "0 12px 10px",
+            background: T.card,
+            border: `1px solid ${T.cardBorder}`,
+            borderRadius: T.cardRadius,
+            overflow: "hidden",
+          }}
+        >
+          <button
+            onClick={() => { onLinkClick(); openLink(videoUrl); }}
+            style={{
+              width: "100%",
+              height: 96,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            <div
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: "50%",
+                background: `linear-gradient(135deg, ${T.green}, ${T.greenLight})`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <VideoIcon size={20} color="#fff" />
+            </div>
+            <span style={{ fontSize: T.bodyFontSize, color: T.textMuted, fontFamily: T.fontFamily }}>
+              Watch Video
+            </span>
+          </button>
+        </div>
+      );
+    }
+    case "extra-hours": {
+      const days = ["Monday–Friday", "Saturday", "Sunday"];
+      const hasAny = days.some((day) => str(day));
+      if (!hasAny) return null;
+      return (
+        <div
+          style={{
+            margin: "0 12px 10px",
+            background: T.card,
+            border: `1px solid ${T.cardBorder}`,
+            borderRadius: T.cardRadius,
+            overflow: "hidden",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              padding: "10px 16px",
+              borderBottom: `1px solid ${T.divider}`,
+            }}
+          >
+            <div
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: 8,
+                flexShrink: 0,
+                background: `linear-gradient(135deg, ${T.green}, ${T.greenLight})`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 14,
+              }}
+            >
+              🕐
+            </div>
+            <span
+              style={{
+                fontWeight: T.boldHeadings ? 700 : 500,
+                fontSize: T.bodyFontSize + 1,
+                color: T.textPrimary,
+                fontFamily: T.fontFamily,
+              }}
+            >
+              Business Hours
+            </span>
+          </div>
+          {days.map((day) => {
+            const val = str(day);
+            return val ? (
+              <div
+                key={day}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  padding: "8px 16px",
+                }}
+              >
+                <span style={{ fontSize: T.bodyFontSize, color: T.textMuted, fontFamily: T.fontFamily }}>
+                  {day}
+                </span>
+                <span
+                  style={{
+                    fontWeight: T.boldHeadings ? 500 : 400,
+                    fontSize: T.bodyFontSize,
+                    color: T.textPrimary,
+                    fontFamily: T.fontFamily,
+                  }}
+                >
+                  {val}
+                </span>
+              </div>
+            ) : null;
+          })}
+        </div>
+      );
+    }
+    case "extra-products": {
+      const productName = str("productName");
+      const price = str("price");
+      const buyUrl = str("buyUrl");
+      if (!productName) return null;
+      return (
+        <div
+          style={{
+            margin: "0 12px 10px",
+            background: T.card,
+            border: `1px solid ${T.cardBorder}`,
+            borderRadius: T.cardRadius,
+            overflow: "hidden",
+          }}
+        >
+          <div style={{ padding: "12px 16px" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: 8,
+              }}
+            >
+              <span
+                style={{
+                  fontWeight: T.boldHeadings ? 700 : 500,
+                  fontSize: T.bodyFontSize,
+                  color: T.textPrimary,
+                  fontFamily: T.fontFamily,
+                }}
+              >
+                {productName}
+              </span>
+              {price && (
+                <span
+                  style={{
+                    fontWeight: 700,
+                    fontSize: T.bodyFontSize + 2,
+                    color: T.greenLight,
+                    fontFamily: T.fontFamily,
+                  }}
+                >
+                  {price}
+                </span>
+              )}
+            </div>
+            {buyUrl && (
+              <button
+                onClick={() => { onLinkClick(); openLink(buyUrl); }}
+                style={{
+                  width: "100%",
+                  padding: "8px",
+                  borderRadius: 999,
+                  border: "none",
+                  background: `linear-gradient(135deg, ${T.green}, ${T.greenLight})`,
+                  color: "#fff",
+                  fontWeight: 700,
+                  fontSize: T.bodyFontSize,
+                  fontFamily: T.fontFamily,
+                  cursor: "pointer",
+                }}
+              >
+                Buy Now
+              </button>
+            )}
+          </div>
+        </div>
+      );
+    }
+    case "extra-imagetext": {
+      const heading = str("heading");
+      const body = str("body");
+      const imgUrl = str("imgUrl");
+      if (!heading && !body && !imgUrl) return null;
+      return (
+        <div
+          style={{
+            margin: "0 12px 10px",
+            background: T.card,
+            border: `1px solid ${T.cardBorder}`,
+            borderRadius: T.cardRadius,
+            overflow: "hidden",
+          }}
+        >
+          {imgUrl && (
+            <div style={{ width: "100%", maxHeight: 140, overflow: "hidden" }}>
+              <img
+                src={imgUrl}
+                alt={heading || ""}
+                style={{ width: "100%", maxHeight: 140, objectFit: "cover", display: "block" }}
+              />
+            </div>
+          )}
+          {(heading || body) && (
+            <div style={{ padding: "12px 16px" }}>
+              {heading && (
+                <p
+                  style={{
+                    fontWeight: T.boldHeadings ? 700 : 500,
+                    fontSize: T.bodyFontSize,
+                    marginBottom: 4,
+                    color: T.textPrimary,
+                    fontFamily: T.fontFamily,
+                  }}
+                >
+                  {heading}
+                </p>
+              )}
+              {body && (
+                <p
+                  style={{
+                    fontSize: T.bodyFontSize,
+                    lineHeight: 1.5,
+                    color: T.textMuted,
+                    fontFamily: T.fontFamily,
+                  }}
+                >
+                  {body}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      );
+    }
+    default: {
+      const title = str("title");
+      const bodyText = str("content");
+      if (!title && !bodyText) return null;
+      return (
+        <div
+          style={{
+            margin: "0 12px 10px",
+            background: T.card,
+            border: `1px solid ${T.cardBorder}`,
+            borderRadius: T.cardRadius,
+            overflow: "hidden",
+          }}
+        >
+          <div style={{ padding: "12px 16px" }}>
+            {title && (
+              <p
+                style={{
+                  fontWeight: T.boldHeadings ? 700 : 500,
+                  fontSize: T.bodyFontSize,
+                  marginBottom: 4,
+                  color: T.textPrimary,
+                  fontFamily: T.fontFamily,
+                }}
+              >
+                {title}
+              </p>
+            )}
+            {bodyText && (
+              <p
+                style={{
+                  fontSize: T.bodyFontSize,
+                  lineHeight: 1.5,
+                  color: T.textMuted,
+                  fontFamily: T.fontFamily,
+                }}
+              >
+                {bodyText}
+              </p>
+            )}
+          </div>
+        </div>
+      );
+    }
+  }
 }
 
 // ── QR Modal ────────────────────────────────────────────────────────
@@ -736,10 +1106,10 @@ export default function PublicCardPage() {
     textMuted: D.textMuted || "#7a9a7a",
     divider: `${D.accentColor}20`,
     fontFamily: D.font === "inter" ? "Inter, sans-serif" : D.font || "inherit",
-    nameFontSize: D.nameFontSize || 22,
-    bodyFontSize: D.bodyFontSize || 13,
+    nameFontSize: D.nameFontSize ?? 22,
+    bodyFontSize: D.bodyFontSize ?? 13,
     boldHeadings: D.boldHeadings ?? true,
-    cardRadius: D.cardRadius || 16,
+    cardRadius: D.cardRadius ?? 16,
   };
 
 // In [slug]/page.tsx — add this lookup before pageBg computation
@@ -1117,10 +1487,10 @@ const pageBg = (() => {
             </div>
           )}
 
-          {S.headingText && (card.headingText || card.headingBodyText) && (
+          {S.headingText && (card.headingText || card.headingBodyText || fd.headingText || fd.bodyText) && (
             <CardBlock T={T}>
               <div style={{ padding: "12px 16px" }}>
-                {card.headingText && (
+                {(card.headingText || fd.headingText) && (
                   <p
                     style={{
                       fontWeight: T.boldHeadings ? 700 : 500,
@@ -1129,10 +1499,10 @@ const pageBg = (() => {
                       marginBottom: 4,
                     }}
                   >
-                    {card.headingText}
+                    {card.headingText || fd.headingText}
                   </p>
                 )}
-                {card.headingBodyText && (
+                {(card.headingBodyText || fd.bodyText) && (
                   <p
                     style={{
                       fontSize: T.bodyFontSize,
@@ -1140,7 +1510,7 @@ const pageBg = (() => {
                       color: T.textMuted,
                     }}
                   >
-                    {card.headingBodyText}
+                    {card.headingBodyText || fd.bodyText}
                   </p>
                 )}
               </div>
@@ -1216,7 +1586,7 @@ const pageBg = (() => {
             </CardBlock>
           )}
 
-          {S.businessDetails && (fd.company || businessProfile.company) && (
+          {S.businessDetails && (fd.company || businessProfile.company || fd.industry || fd.yearFounded || fd.location) && (
             <CardBlock T={T}>
               <SectionHeader
                 T={T}
@@ -1228,6 +1598,8 @@ const pageBg = (() => {
                   label: "Company",
                   val: fd.company || businessProfile.company!,
                 },
+                fd.industry && { label: "Industry", val: fd.industry },
+                fd.yearFounded && { label: "Year Founded", val: fd.yearFounded },
                 fd.location && { label: "Location", val: fd.location },
               ]
                 .filter(Boolean)
@@ -1269,14 +1641,14 @@ const pageBg = (() => {
             </CardBlock>
           )}
 
-          {S.socialLinks && socialLinks.length > 0 && (
+          {S.socialLinks && socialLinks.filter(sl => sl.enabled !== false).length > 0 && (
             <CardBlock T={T}>
               <SectionHeader
                 T={T}
                 icon={<Share2 size={14} color="#fff" />}
                 title="Social Links"
               />
-              {socialLinks.map((sl, i) => {
+              {socialLinks.filter(sl => sl.enabled !== false).map((sl, i, arr) => {
                 const meta = SOCIAL_META[sl.platform?.toLowerCase()] ?? {
                   Icon: Link2,
                   color: T.green,
@@ -1343,7 +1715,7 @@ const pageBg = (() => {
                       </div>
                       <ChevronRight size={14} color={T.muted} />
                     </button>
-                    {i < socialLinks.length - 1 && (
+                    {i < arr.length - 1 && (
                       <Divider color={T.divider} />
                     )}
                   </div>
@@ -1426,6 +1798,97 @@ const pageBg = (() => {
               ))}
             </CardBlock>
           )}
+
+          {S.appointment && fd.appointmentUrl && (
+            <CardBlock T={T}>
+              <div
+                style={{
+                  padding: "16px",
+                  textAlign: "center",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                <div
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: "50%",
+                    background: `linear-gradient(135deg, ${T.green}, ${T.greenLight})`,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Calendar size={20} color="#fff" />
+                </div>
+                <p
+                  style={{
+                    fontWeight: T.boldHeadings ? 700 : 500,
+                    fontSize: T.bodyFontSize + 1,
+                    color: T.textPrimary,
+                  }}
+                >
+                  Schedule Meeting
+                </p>
+                <p
+                  style={{
+                    fontSize: T.bodyFontSize,
+                    lineHeight: 1.5,
+                    color: T.textMuted,
+                    padding: "0 8px",
+                  }}
+                >
+                  Book a time to discuss potential opportunities
+                </p>
+              </div>
+              <div
+                style={{
+                  padding: "0 16px 16px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 8,
+                }}
+              >
+                {["Book on Calendly", "Add to Calendar"].map((label) => (
+                  <button
+                    key={label}
+                    onClick={() => {
+                      track(slug, "link_click");
+                      openLink(fd.appointmentUrl!);
+                    }}
+                    style={{
+                      width: "100%",
+                      padding: "10px",
+                      borderRadius: 999,
+                      border: `1px solid ${T.green}59`,
+                      color: T.greenLight,
+                      background: `${T.green}1a`,
+                      fontWeight: 600,
+                      fontSize: T.bodyFontSize,
+                      cursor: "pointer",
+                      fontFamily: T.fontFamily,
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </CardBlock>
+          )}
+
+          {content.extraSections
+            .filter((s) => s.enabled)
+            .map((section, index) => (
+              <ExtraSectionBlock
+                key={section.id || `extra-sec-${index}`}
+                section={section}
+                T={T}
+                onLinkClick={() => track(slug, "link_click")}
+              />
+            ))}
 
           {S.collectContacts && (
             <CardBlock T={T}>
