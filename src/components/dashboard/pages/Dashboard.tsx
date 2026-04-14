@@ -1,7 +1,7 @@
 "use client";
 
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/dashboard/ui/card';
 import { Button } from '@/components/dashboard/ui/button';
 import { Badge } from '@/components/dashboard/ui/badge';
@@ -121,6 +121,58 @@ const funnelSteps = [
 ];
 
 // ─────────────────────────────────────────────────────────────────
+// Skeleton used as placeholder while a section is off-screen
+// ─────────────────────────────────────────────────────────────────
+function SectionSkeleton({ height = 'h-64' }: { height?: string }) {
+  return (
+    <div className={`${height} rounded-2xl bg-[#0d1a0d]/60 border border-[#008001]/10 animate-pulse`} />
+  );
+}
+
+// Renders children only once the element scrolls within `rootMargin` of the
+// viewport. Until then a lightweight skeleton is shown so layout doesn't jump.
+function LazySection({
+  children,
+  skeleton,
+  rootMargin = '300px',
+}: {
+  children: React.ReactNode;
+  skeleton?: React.ReactNode;
+  rootMargin?: string;
+}) {
+  const [visible, setVisible] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    // Already in view on mount (e.g. short viewport / large screen)
+    const rect = el.getBoundingClientRect();
+    if (rect.top < window.innerHeight + 300) {
+      setVisible(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [rootMargin]);
+
+  return (
+    <div ref={ref}>
+      {visible ? children : (skeleton ?? <SectionSkeleton />)}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────
 export function ComprehensiveDashboard() {
   const { profile } = useUser();
   const [businessProfile, setBusinessProfile] = useState<ApiBusinessProfile | null>(null);
@@ -134,39 +186,101 @@ export function ComprehensiveDashboard() {
   const [weeklyChallenge, setWeeklyChallenge] = useState<GoalProgressData>(defaultWeeklyChallenge);
   const [loading, setLoading] = useState(true);
 
+  // ── Phase 1: Load the data that drives above-the-fold content immediately ──
   useEffect(() => {
     Promise.all([
       getBusinessProfile().catch(() => null),
       getCards().catch(() => []),
       getAnalytics("30").catch(() => null),
-      getDeviceDistribution("30").catch(() => [
-        { name: 'iOS', value: 0, count: 0 },
-        { name: 'Android', value: 0, count: 0 },
-        { name: 'Desktop', value: 0, count: 0 },
-      ]),
-      getConversionFunnel("30").catch(() => [
-        { label: 'NFC Tapped', value: 0, percentage: 0 },
-        { label: 'Link Clicked', value: 0, percentage: 0 },
-        { label: 'Contact Saved', value: 0, percentage: 0 },
-        { label: 'Card Shared', value: 0, percentage: 0 },
-      ]),
-      getTopLocations("30").catch(() => [{ country: 'No Data', visitors: 0, percentage: 0 }]),
-      getMonthOverMonthPerformance().catch(() => defaultPerformanceComparison),
-      getMonthlyGoal().catch(() => defaultMonthlyGoal),
-      getWeeklyChallenge().catch(() => defaultWeeklyChallenge),
-    ]).then(([bp, c, a, dd, funnel, locations, mom, monthly, weekly]) => {
+    ]).then(([bp, c, a]) => {
       setBusinessProfile(bp);
       setCards(c);
       setAnalytics(a);
-      setDeviceDistribution(dd);
-      setConversionFunnel(funnel);
-      setTopLocations(locations);
-      setMonthOverMonthPerformance(mom);
-      setMonthlyGoal(monthly);
-      setWeeklyChallenge(weekly);
       setLoading(false);
     });
   }, []);
+
+  // ── Phase 2a: charts + funnel + device + locations (on scroll past stats) ──
+  const [chartsLoaded, setChartsLoaded] = useState(false);
+  const deepTriggerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = deepTriggerRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting || chartsLoaded) return;
+        setChartsLoaded(true);
+        Promise.all([
+          getDeviceDistribution("30").catch(() => [
+            { name: 'iOS', value: 0, count: 0 },
+            { name: 'Android', value: 0, count: 0 },
+            { name: 'Desktop', value: 0, count: 0 },
+          ]),
+          getConversionFunnel("30").catch(() => [
+            { label: 'NFC Tapped', value: 0, percentage: 0 },
+            { label: 'Link Clicked', value: 0, percentage: 0 },
+            { label: 'Contact Saved', value: 0, percentage: 0 },
+            { label: 'Card Shared', value: 0, percentage: 0 },
+          ]),
+          getTopLocations("30").catch(() => [{ country: 'No Data', visitors: 0, percentage: 0 }]),
+        ]).then(([dd, funnel, locations]) => {
+          setDeviceDistribution(dd);
+          setConversionFunnel(funnel);
+          setTopLocations(locations);
+        });
+        observer.disconnect();
+      },
+      { rootMargin: '400px' },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [chartsLoaded]);
+
+  // ── Phase 2b: Month-over-Month (on scroll to that section) ──
+  const [momLoaded, setMomLoaded] = useState(false);
+  const momTriggerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = momTriggerRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting || momLoaded) return;
+        setMomLoaded(true);
+        getMonthOverMonthPerformance()
+          .catch(() => defaultPerformanceComparison)
+          .then(setMonthOverMonthPerformance);
+        observer.disconnect();
+      },
+      { rootMargin: '200px' },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [momLoaded]);
+
+  // ── Phase 2c: Goals (on scroll to that section) ──
+  const [goalsLoaded, setGoalsLoaded] = useState(false);
+  const goalsTriggerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = goalsTriggerRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting || goalsLoaded) return;
+        setGoalsLoaded(true);
+        Promise.all([
+          getMonthlyGoal().catch(() => defaultMonthlyGoal),
+          getWeeklyChallenge().catch(() => defaultWeeklyChallenge),
+        ]).then(([monthly, weekly]) => {
+          setMonthlyGoal(monthly);
+          setWeeklyChallenge(weekly);
+        });
+        observer.disconnect();
+      },
+      { rootMargin: '200px' },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [goalsLoaded]);
 
   const firstName = profile.name ? profile.name.split(" ")[0] : "";
   const profileCompletion = analytics?.profileCompletion ?? 0;
@@ -372,9 +486,13 @@ export function ComprehensiveDashboard() {
         })}
       </div>
 
+      {/* Invisible sentinel — Phase 2 data loading starts when this enters view */}
+      <div ref={deepTriggerRef} />
+
       {/* ── Chart + Funnel / Device + Locations ──
           Desktop: [chart+funnel col-2] [device+locations col-1]
           Mobile:  stacked single column                          */}
+      <LazySection skeleton={<SectionSkeleton height="h-96" />}>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
 
         {/* Left: chart + funnel */}
@@ -566,8 +684,10 @@ export function ComprehensiveDashboard() {
           </Card>
         </div>
       </div>
+      </LazySection>
 
       {/* ── Recent Card Taps — 1-col mobile, 2-col sm, 3-col lg ── */}
+      <LazySection skeleton={<SectionSkeleton height="h-48" />}>
       <Card className="bg-[#000000] border-[#008001]/30">
         <CardHeader className="border-b border-[#008001]/30">
           <div className="flex items-center justify-between">
@@ -624,8 +744,10 @@ export function ComprehensiveDashboard() {
           </div>
         </CardContent>
       </Card>
+      </LazySection>
 
       {/* ── Most Clicked Links + Smart Insights ── */}
+      <LazySection skeleton={<SectionSkeleton height="h-64" />}>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         <Card className="lg:col-span-2 bg-[#000000] border-[#008001]/30">
           <CardHeader className="border-b border-[#008001]/30">
@@ -695,8 +817,13 @@ export function ComprehensiveDashboard() {
           </CardContent>
         </Card>
       </div>
+      </LazySection>
+
+      {/* Sentinel: triggers Phase 2b (MOM) fetch */}
+      <div ref={momTriggerRef} />
 
       {/* ── Month-over-Month — 2-col mobile, 4-col desktop ── */}
+      <LazySection skeleton={<SectionSkeleton height="h-40" />}>
       <Card className="bg-[#000000] border-[#008001]/30">
         <CardHeader className="border-b border-[#008001]/30">
           <CardTitle className="text-white flex items-center gap-2 text-base sm:text-lg">
@@ -730,8 +857,13 @@ export function ComprehensiveDashboard() {
           </div>
         </CardContent>
       </Card>
+      </LazySection>
+
+      {/* Sentinel: triggers Phase 2c (Goals) fetch */}
+      <div ref={goalsTriggerRef} />
 
       {/* ── Goals — stack on mobile, side-by-side on sm+ ── */}
+      <LazySection skeleton={<SectionSkeleton height="h-40" />}>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         <Card className="bg-gradient-to-br from-[#008001] to-[#006312] text-white border-0 shadow-xl">
           <CardContent className="p-5 sm:p-8">
@@ -785,6 +917,7 @@ export function ComprehensiveDashboard() {
           </CardContent>
         </Card>
       </div>
+      </LazySection>
 
     </div>
   );

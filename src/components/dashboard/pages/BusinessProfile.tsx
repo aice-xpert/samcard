@@ -19,12 +19,12 @@ import {
   Link2, Calendar, MessageSquare, Check, X,
   AlignLeft, Users, ChevronDown, MousePointerClick,
   FileText, UserCheck,
-  ShoppingBag, LayoutTemplate, Megaphone, QrCode,
-  Smartphone, LayoutDashboard,
+  ShoppingBag, LayoutTemplate, Megaphone,
+  Smartphone, LayoutDashboard, QrCode,
 } from 'lucide-react';
 import { CardPreviewModal } from '@/components/dashboard/pages/CardPreviewModal';
-import { PhonePreview, ExtraSection, ThemeOverride } from '@/components/dashboard/pages/PhonePreview';
 import { QrPopup } from '@/components/dashboard/pages/Qrpopup';
+import { PhonePreview, ExtraSection, ThemeOverride } from '@/components/dashboard/pages/PhonePreview';
 import { makeQRMatrix } from '@/components/dashboard/pages/qr-engine';
 import { useQrStore } from '@/components/dashboard/stores/Useqrstore';
 import {
@@ -732,7 +732,7 @@ export default function BusinessProfile({
   onContentChange?: (content: CardContentPayload) => void;
   allowFallbackToFirstCard?: boolean;
 }) {
-  const initial = loadCache(cacheKeyForEditor(cardId, undefined, allowFallbackToFirstCard));
+  const [initial] = useState(() => loadCache(cacheKeyForEditor(cardId, undefined, allowFallbackToFirstCard)));
   const [resolvedCardId, setResolvedCardId] = useState<string | undefined>(cardId);
   const activeDesignCacheKey = designCacheKeyForEditor(cardId, resolvedCardId, allowFallbackToFirstCard);
   const shouldPersistGlobalProfile = !cardId && allowFallbackToFirstCard;
@@ -782,13 +782,13 @@ export default function BusinessProfile({
   );
 
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [showQrPopup, setShowQrPopup] = useState(false);
   const [copied, setCopied] = useState(false);
   const [savedContact, setSavedContact] = useState(false);
   const [saveFlash, setSaveFlash] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [mobileTab, setMobileTab] = useState<'edit' | 'preview'>('edit');
-  const [showQrPopup, setShowQrPopup] = useState(false);
   const [profileShareUrl, setProfileShareUrl] = useState('');
   const [reloadTrigger, setReloadTrigger] = useState(0);
 
@@ -1018,25 +1018,29 @@ export default function BusinessProfile({
     };
   }, [activeDesignCacheKey]);
 
+  // Debounce onContentChange so typing in any field doesn't trigger an
+  // expensive parent re-render on every keystroke (root cause of 1,520ms INP).
   useEffect(() => {
     if (!onContentChange) return;
-
-    onContentChange({
-      profileImage,
-      brandLogo,
-      logoPosition,
-      formData,
-      socialLinks: socialLinks
-        .filter(link => Boolean(link.value.trim()))
-        .map(link => ({
-          platform: SOCIAL_OPTIONS[link.platform]?.name || SOCIAL_OPTIONS[0].name,
-          url: link.value.trim(),
-        })),
-      connectFields,
-      sections,
-      customLinks,
-      extraSections,
-    });
+    const timer = setTimeout(() => {
+      onContentChange({
+        profileImage,
+        brandLogo,
+        logoPosition,
+        formData,
+        socialLinks: socialLinks
+          .filter(link => Boolean(link.value.trim()))
+          .map(link => ({
+            platform: SOCIAL_OPTIONS[link.platform]?.name || SOCIAL_OPTIONS[0].name,
+            url: link.value.trim(),
+          })),
+        connectFields,
+        sections,
+        customLinks,
+        extraSections,
+      });
+    }, 300);
+    return () => clearTimeout(timer);
   }, [onContentChange, profileImage, brandLogo, logoPosition, formData, socialLinks, connectFields, sections, customLinks, extraSections]);
 
   const handleSaveChanges = useCallback(async () => {
@@ -1186,7 +1190,6 @@ export default function BusinessProfile({
   }, []);
 
   const openPreview = useCallback(() => setIsPreviewOpen(true), []);
-  const closePreview = useCallback(() => setIsPreviewOpen(false), []);
   const openQrPopup = useCallback(() => setShowQrPopup(true), []);
   const closeQrPopup = useCallback(() => setShowQrPopup(false), []);
 
@@ -1241,7 +1244,6 @@ export default function BusinessProfile({
       onPreviewOpen={openPreview}
       onShareLink={handleShareLink}
       onSaveContact={handleSaveContact}
-      onShowQR={openQrPopup}
     />
   );
 
@@ -1254,7 +1256,6 @@ export default function BusinessProfile({
           <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
             <div className="relative group flex-shrink-0 self-center sm:self-start">
               <div className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-2xl overflow-hidden ring-4 ring-[#008001]/30 bg-[#1E1E1E] flex items-center justify-center">
-                {/* ── FIX: guard against empty src (line 669 error) ── */}
                 {profileImage
                   ? <Image src={profileImage} alt="Profile" fill className="object-cover" />
                   : <User className="w-10 h-10 text-[#333]" />
@@ -1288,180 +1289,181 @@ export default function BusinessProfile({
                 <Button variant="outline" size="sm" className="border-[#008001]/30 text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20 text-xs h-8" onClick={openQrPopup}>
                   <QrCode className="w-3.5 h-3.5 mr-1.5" />QR Code
                 </Button>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+              </div >
+            </div >
+          </div >
+        </CardContent >
+      </Card >
 
-      {/* PROFILE section */}
-      <SectionBlock id="section-profile" title="Profile" icon={User}
-        enabled={sections.profile} onToggle={() => toggleSection('profile')}
-        expanded={expanded.profile} onExpand={() => toggleExpand('profile')}>
-        <div className="space-y-4 sm:space-y-5">
-          <div className="p-3 sm:p-4 rounded-xl bg-[#0A0A0A] border border-[#008001]/20 space-y-4">
-            <ImageUploader value={profileImage} onChange={setProfileImage} label="Profile Photo" ratio="500×625px" roundedClass="rounded-xl" size="w-16 h-16 sm:w-20 sm:h-20" pendingFile={pendingProfileImage} onFileSelect={setPendingProfileImage} />
-            <div className="border-t border-[#008001]/10 pt-4">
-              <ImageUploader value={brandLogo} onChange={setBrandLogo} label="Brand Logo" ratio="160×80px" roundedClass="rounded-lg" size="w-20 h-12 sm:w-24 sm:h-14" pendingFile={pendingBrandLogo} onFileSelect={setPendingBrandLogo} />
-              {brandLogo && (
-                <div className="mt-3">
-                  <div className="flex items-center gap-2 mb-1">
-                    <LayoutDashboard className="w-3.5 h-3.5 text-[#49B618]" />
-                    <Label className="text-[#49B618] text-xs font-semibold">Logo Position on Card</Label>
-                  </div>
-                  <LogoPositionPicker value={logoPosition} onChange={setLogoPosition} />
-                </div>
-              )}
+    {/* PROFILE section */ }
+    < SectionBlock id = "section-profile" title = "Profile" icon = { User }
+  enabled = { sections.profile } onToggle = {() => toggleSection('profile')
+}
+expanded = { expanded.profile } onExpand = {() => toggleExpand('profile')}>
+  <div className="space-y-4 sm:space-y-5">
+    <div className="p-3 sm:p-4 rounded-xl bg-[#0A0A0A] border border-[#008001]/20 space-y-4">
+      <ImageUploader value={profileImage} onChange={setProfileImage} label="Profile Photo" ratio="500×625px" roundedClass="rounded-xl" size="w-16 h-16 sm:w-20 sm:h-20" pendingFile={pendingProfileImage} onFileSelect={setPendingProfileImage} />
+      <div className="border-t border-[#008001]/10 pt-4">
+        <ImageUploader value={brandLogo} onChange={setBrandLogo} label="Brand Logo" ratio="160×80px" roundedClass="rounded-lg" size="w-20 h-12 sm:w-24 sm:h-14" pendingFile={pendingBrandLogo} onFileSelect={setPendingBrandLogo} />
+        {brandLogo && (
+          <div className="mt-3">
+            <div className="flex items-center gap-2 mb-1">
+              <LayoutDashboard className="w-3.5 h-3.5 text-[#49B618]" />
+              <Label className="text-[#49B618] text-xs font-semibold">Logo Position on Card</Label>
             </div>
+            <LogoPositionPicker value={logoPosition} onChange={setLogoPosition} />
           </div>
-          <div>
-            <Label className="text-[#A0A0A0] text-xs">Name</Label>
-            <Input value={formData.name} onChange={e => updateField('name', e.target.value)} placeholder="Full name" className="mt-1 bg-[#1E1E1E] border-[#008001]/30 text-white" />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <Label className="text-[#A0A0A0] text-xs">Heading (Job Title)</Label>
-              <Input value={formData.title} onChange={e => updateField('title', e.target.value)} placeholder="Title" className="mt-1 bg-[#1E1E1E] border-[#008001]/30 text-white" />
-            </div>
-            <div>
-              <Label className="text-[#A0A0A0] text-xs">Subheading (Company)</Label>
-              <Input value={formData.company} onChange={e => updateField('company', e.target.value)} placeholder="Company" className="mt-1 bg-[#1E1E1E] border-[#008001]/30 text-white" />
-            </div>
-          </div>
-          <div>
-            <Label className="text-[#A0A0A0] text-xs">Tagline / Bio</Label>
-            <Textarea value={formData.tagline} onChange={e => updateField('tagline', e.target.value)} placeholder="A short bio..." className="mt-1 bg-[#1E1E1E] border-[#008001]/30 text-white" rows={3} />
-          </div>
+        )}
+      </div>
+    </div>
+    <div>
+      <Label className="text-[#A0A0A0] text-xs">Name</Label>
+      <Input value={formData.name} onChange={e => updateField('name', e.target.value)} placeholder="Full name" className="mt-1 bg-[#1E1E1E] border-[#008001]/30 text-white" />
+    </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div>
+        <Label className="text-[#A0A0A0] text-xs">Heading (Job Title)</Label>
+        <Input value={formData.title} onChange={e => updateField('title', e.target.value)} placeholder="Title" className="mt-1 bg-[#1E1E1E] border-[#008001]/30 text-white" />
+      </div>
+      <div>
+        <Label className="text-[#A0A0A0] text-xs">Subheading (Company)</Label>
+        <Input value={formData.company} onChange={e => updateField('company', e.target.value)} placeholder="Company" className="mt-1 bg-[#1E1E1E] border-[#008001]/30 text-white" />
+      </div>
+    </div>
+    <div>
+      <Label className="text-[#A0A0A0] text-xs">Tagline / Bio</Label>
+      <Textarea value={formData.tagline} onChange={e => updateField('tagline', e.target.value)} placeholder="A short bio..." className="mt-1 bg-[#1E1E1E] border-[#008001]/30 text-white" rows={3} />
+    </div>
+  </div>
+      </SectionBlock >
+
+  {/* HEADING + TEXT */ }
+  < SectionBlock id = "section-headingText" title = "Heading + Text" icon = { MessageSquare }
+enabled = { sections.headingText } onToggle = {() => toggleSection('headingText')}
+expanded = { expanded.headingText } onExpand = {() => toggleExpand('headingText')}>
+  <div className="space-y-4">
+    <div><Label className="text-[#A0A0A0] text-xs">Heading</Label><Input value={formData.headingText} onChange={e => updateField('headingText', e.target.value)} placeholder="Section heading..." className="mt-1 bg-[#1E1E1E] border-[#008001]/30 text-white" /></div>
+    <div><Label className="text-[#A0A0A0] text-xs">Text</Label><Textarea value={formData.bodyText} onChange={e => updateField('bodyText', e.target.value)} placeholder="Description or body text..." className="mt-1 bg-[#1E1E1E] border-[#008001]/30 text-white" rows={4} /></div>
+  </div>
+      </SectionBlock >
+
+  {/* CONTACT US */ }
+  < SectionBlock id = "section-contactUs" title = "Contact Us" icon = { Mail }
+enabled = { sections.contactUs } onToggle = {() => toggleSection('contactUs')}
+expanded = { expanded.contactUs } onExpand = {() => toggleExpand('contactUs')}>
+  <div className="space-y-4">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl bg-[#0D0D0D] border border-[#008001]/20 gap-3">
+      <div className="flex-1 min-w-0">
+        <p className="text-xs text-[#A0A0A0] mb-1">Floating Button Text</p>
+        <Input defaultValue="Add to Contact" className="bg-[#1E1E1E] border-[#008001]/30 text-white h-8 text-sm" />
+      </div>
+      <button type="button" onClick={() => downloadVCard(formData, profileImage)}
+        className="flex-shrink-0 flex items-center gap-2 bg-white text-[#008001] rounded-full px-4 py-2 text-sm font-semibold hover:bg-[#f0f0f0] transition-colors self-end sm:self-auto">
+        Add to Contact <Plus className="w-4 h-4" />
+      </button>
+    </div>
+    {([
+      { icon: Phone, label: 'Contact Number', field: 'phone' as const, color: '#49B618', placeholder: '+1 (555) 000-0000' },
+      { icon: Mail, label: 'Email Address', field: 'email' as const, color: '#008001', placeholder: 'contact@domain.com' },
+      { icon: MapPin, label: 'Address', field: 'location' as const, color: '#009200', placeholder: 'City, Country' },
+      { icon: Globe, label: 'Website', field: 'website' as const, color: '#006312', placeholder: 'https://...' },
+    ]).map(({ icon: Icon, label, field, color, placeholder }) => (
+      <div key={field} className="flex items-center gap-3 p-3 sm:p-4 rounded-xl bg-[#0D0D0D] border border-[#008001]/20">
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${color}18` }}>
+          <Icon className="w-4 h-4" style={{ color }} />
         </div>
-      </SectionBlock>
-
-      {/* HEADING + TEXT */}
-      <SectionBlock id="section-headingText" title="Heading + Text" icon={MessageSquare}
-        enabled={sections.headingText} onToggle={() => toggleSection('headingText')}
-        expanded={expanded.headingText} onExpand={() => toggleExpand('headingText')}>
-        <div className="space-y-4">
-          <div><Label className="text-[#A0A0A0] text-xs">Heading</Label><Input value={formData.headingText} onChange={e => updateField('headingText', e.target.value)} placeholder="Section heading..." className="mt-1 bg-[#1E1E1E] border-[#008001]/30 text-white" /></div>
-          <div><Label className="text-[#A0A0A0] text-xs">Text</Label><Textarea value={formData.bodyText} onChange={e => updateField('bodyText', e.target.value)} placeholder="Description or body text..." className="mt-1 bg-[#1E1E1E] border-[#008001]/30 text-white" rows={4} /></div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[10px] text-[#555] mb-1 uppercase tracking-wider font-medium">{label}</p>
+          <Input value={formData[field]} onChange={e => updateField(field, e.target.value)} placeholder={placeholder} className="bg-[#1E1E1E] border-[#008001]/30 text-white h-8 text-sm w-full" />
         </div>
-      </SectionBlock>
+      </div>
+    ))}
+  </div>
+      </SectionBlock >
 
-      {/* CONTACT US */}
-      <SectionBlock id="section-contactUs" title="Contact Us" icon={Mail}
-        enabled={sections.contactUs} onToggle={() => toggleSection('contactUs')}
-        expanded={expanded.contactUs} onExpand={() => toggleExpand('contactUs')}>
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl bg-[#0D0D0D] border border-[#008001]/20 gap-3">
-            <div className="flex-1 min-w-0">
-              <p className="text-xs text-[#A0A0A0] mb-1">Floating Button Text</p>
-              <Input defaultValue="Add to Contact" className="bg-[#1E1E1E] border-[#008001]/30 text-white h-8 text-sm" />
-            </div>
-            <button type="button" onClick={() => downloadVCard(formData, profileImage)}
-              className="flex-shrink-0 flex items-center gap-2 bg-white text-[#008001] rounded-full px-4 py-2 text-sm font-semibold hover:bg-[#f0f0f0] transition-colors self-end sm:self-auto">
-              Add to Contact <Plus className="w-4 h-4" />
-            </button>
-          </div>
-          {([
-            { icon: Phone, label: 'Contact Number', field: 'phone' as const, color: '#49B618', placeholder: '+1 (555) 000-0000' },
-            { icon: Mail, label: 'Email Address', field: 'email' as const, color: '#008001', placeholder: 'contact@domain.com' },
-            { icon: MapPin, label: 'Address', field: 'location' as const, color: '#009200', placeholder: 'City, Country' },
-            { icon: Globe, label: 'Website', field: 'website' as const, color: '#006312', placeholder: 'https://...' },
-          ]).map(({ icon: Icon, label, field, color, placeholder }) => (
-            <div key={field} className="flex items-center gap-3 p-3 sm:p-4 rounded-xl bg-[#0D0D0D] border border-[#008001]/20">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${color}18` }}>
-                <Icon className="w-4 h-4" style={{ color }} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[10px] text-[#555] mb-1 uppercase tracking-wider font-medium">{label}</p>
-                <Input value={formData[field]} onChange={e => updateField(field, e.target.value)} placeholder={placeholder} className="bg-[#1E1E1E] border-[#008001]/30 text-white h-8 text-sm w-full" />
-              </div>
-            </div>
-          ))}
-        </div>
-      </SectionBlock>
+  {/* BUSINESS DETAILS */ }
+  < SectionBlock id = "section-businessDetails" title = "Business Details" icon = { Briefcase }
+enabled = { sections.businessDetails } onToggle = {() => toggleSection('businessDetails')}
+expanded = { expanded.businessDetails } onExpand = {() => toggleExpand('businessDetails')}>
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div><Label className="text-[#A0A0A0] text-xs">Company Name</Label><Input value={formData.company} onChange={e => updateField('company', e.target.value)} className="mt-1 bg-[#1E1E1E] border-[#008001]/30 text-white" /></div>
+    <div>
+      <Label className="text-[#A0A0A0] text-xs">Industry</Label>
+      <Select value={formData.industry} onValueChange={v => updateField('industry', v)}>
+        <SelectTrigger className="mt-1 bg-[#1E1E1E] border-[#008001]/30 text-white"><SelectValue /></SelectTrigger>
+        <SelectContent className="bg-[#0D0D0D] border-[#008001]/30">
+          {INDUSTRIES.map(({ value, label }) => (<SelectItem key={value} value={value} className="text-white focus:bg-[#008001]/20 focus:text-white">{label}</SelectItem>))}
+        </SelectContent>
+      </Select>
+    </div>
+    <div><Label className="text-[#A0A0A0] text-xs">Year Founded</Label><Input type="number" value={formData.yearFounded} onChange={e => updateField('yearFounded', e.target.value)} className="mt-1 bg-[#1E1E1E] border-[#008001]/30 text-white" /></div>
+    <div><Label className="text-[#A0A0A0] text-xs">Location</Label><Input value={formData.location} onChange={e => updateField('location', e.target.value)} className="mt-1 bg-[#1E1E1E] border-[#008001]/30 text-white" /></div>
+  </div>
+      </SectionBlock >
 
-      {/* BUSINESS DETAILS */}
-      <SectionBlock id="section-businessDetails" title="Business Details" icon={Briefcase}
-        enabled={sections.businessDetails} onToggle={() => toggleSection('businessDetails')}
-        expanded={expanded.businessDetails} onExpand={() => toggleExpand('businessDetails')}>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div><Label className="text-[#A0A0A0] text-xs">Company Name</Label><Input value={formData.company} onChange={e => updateField('company', e.target.value)} className="mt-1 bg-[#1E1E1E] border-[#008001]/30 text-white" /></div>
-          <div>
-            <Label className="text-[#A0A0A0] text-xs">Industry</Label>
-            <Select value={formData.industry} onValueChange={v => updateField('industry', v)}>
-              <SelectTrigger className="mt-1 bg-[#1E1E1E] border-[#008001]/30 text-white"><SelectValue /></SelectTrigger>
+  {/* SOCIAL LINKS */ }
+  < SectionBlock id = "section-socialLinks" title = "Social Links" icon = { Share2 }
+enabled = { sections.socialLinks } onToggle = {() => toggleSection('socialLinks')}
+expanded = { expanded.socialLinks } onExpand = {() => toggleExpand('socialLinks')}>
+  <div className="space-y-3">
+    {socialLinks.map((s, i) => {
+      const opt = SOCIAL_OPTIONS[s.platform] ?? SOCIAL_OPTIONS[0]; const Icon = opt.icon;
+      return (
+        <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-2 p-3 rounded-xl bg-[#0D0D0D] border border-[#008001]/20">
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={() => openSocialLink(s.value, s.platform)} className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 transition-all ${s.value ? 'opacity-100 hover:scale-110 cursor-pointer' : 'opacity-40 cursor-not-allowed'}`} style={{ backgroundColor: `${opt.color}20` }}><Icon className="w-4 h-4" style={{ color: opt.color }} /></button>
+            <Select value={String(s.platform)} onValueChange={v => updateSocial(i, 'platform', Number(v))}>
+              <SelectTrigger className="w-28 bg-[#1E1E1E] border-[#008001]/30 text-white text-xs h-9 flex-shrink-0"><SelectValue /></SelectTrigger>
               <SelectContent className="bg-[#0D0D0D] border-[#008001]/30">
-                {INDUSTRIES.map(({ value, label }) => (<SelectItem key={value} value={value} className="text-white focus:bg-[#008001]/20 focus:text-white">{label}</SelectItem>))}
+                {SOCIAL_OPTIONS.map((o, idx) => (<SelectItem key={idx} value={String(idx)} className="text-white focus:bg-[#008001]/20 focus:text-white">{o.name}</SelectItem>))}
               </SelectContent>
             </Select>
           </div>
-          <div><Label className="text-[#A0A0A0] text-xs">Year Founded</Label><Input type="number" value={formData.yearFounded} onChange={e => updateField('yearFounded', e.target.value)} className="mt-1 bg-[#1E1E1E] border-[#008001]/30 text-white" /></div>
-          <div><Label className="text-[#A0A0A0] text-xs">Location</Label><Input value={formData.location} onChange={e => updateField('location', e.target.value)} className="mt-1 bg-[#1E1E1E] border-[#008001]/30 text-white" /></div>
-        </div>
-      </SectionBlock>
-
-      {/* SOCIAL LINKS */}
-      <SectionBlock id="section-socialLinks" title="Social Links" icon={Share2}
-        enabled={sections.socialLinks} onToggle={() => toggleSection('socialLinks')}
-        expanded={expanded.socialLinks} onExpand={() => toggleExpand('socialLinks')}>
-        <div className="space-y-3">
-          {socialLinks.map((s, i) => {
-            const opt = SOCIAL_OPTIONS[s.platform] ?? SOCIAL_OPTIONS[0]; const Icon = opt.icon;
-            return (
-              <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-2 p-3 rounded-xl bg-[#0D0D0D] border border-[#008001]/20">
-                <div className="flex items-center gap-2">
-                  <button type="button" onClick={() => openSocialLink(s.value, s.platform)} className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 transition-all ${s.value ? 'opacity-100 hover:scale-110 cursor-pointer' : 'opacity-40 cursor-not-allowed'}`} style={{ backgroundColor: `${opt.color}20` }}><Icon className="w-4 h-4" style={{ color: opt.color }} /></button>
-                  <Select value={String(s.platform)} onValueChange={v => updateSocial(i, 'platform', Number(v))}>
-                    <SelectTrigger className="w-28 bg-[#1E1E1E] border-[#008001]/30 text-white text-xs h-9 flex-shrink-0"><SelectValue /></SelectTrigger>
-                    <SelectContent className="bg-[#0D0D0D] border-[#008001]/30">
-                      {SOCIAL_OPTIONS.map((o, idx) => (<SelectItem key={idx} value={String(idx)} className="text-white focus:bg-[#008001]/20 focus:text-white">{o.name}</SelectItem>))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex items-center gap-2 flex-1">
-                  <Input value={s.value} onChange={e => updateSocial(i, 'value', e.target.value)} placeholder={opt.placeholder} className="flex-1 bg-[#1E1E1E] border-[#008001]/30 text-white h-9 text-sm" />
-                  <button type="button" onClick={() => removeSocial(i)} className="text-red-400 hover:text-red-300 p-1 flex-shrink-0"><Trash2 className="w-4 h-4" /></button>
-                </div>
-              </div>
-            );
-          })}
-          <Button type="button" variant="outline" size="sm" onClick={addSocial} className="border-dashed border-[#008001]/40 text-[#49B618] hover:bg-[#008001]/10 w-full"><Plus className="w-4 h-4 mr-2" />Add Social Link</Button>
-        </div>
-      </SectionBlock>
-
-      {/* LINKS */}
-      <SectionBlock id="section-links" title="Links" icon={Link2}
-        enabled={sections.links} onToggle={() => toggleSection('links')}
-        expanded={expanded.links} onExpand={() => toggleExpand('links')}>
-        <div className="space-y-3">
-          {customLinks.map((l, i) => (
-            <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-2 p-3 rounded-xl bg-[#0D0D0D] border border-[#008001]/20">
-              <Input value={l.label} onChange={e => updateLink(i, 'label', e.target.value)} placeholder="Label" className="w-full sm:w-32 bg-[#1E1E1E] border-[#008001]/30 text-white h-9 text-sm flex-shrink-0" />
-              <div className="flex items-center gap-2 flex-1">
-                <Input value={l.url} onChange={e => updateLink(i, 'url', e.target.value)} placeholder="https://..." className="flex-1 bg-[#1E1E1E] border-[#008001]/30 text-white h-9 text-sm" />
-                {l.url && (<button type="button" onClick={() => window.open(l.url, '_blank', 'noopener,noreferrer')} className="text-[#49B618] hover:text-white p-1 flex-shrink-0"><Globe className="w-4 h-4" /></button>)}
-                <button type="button" onClick={() => removeLink(i)} className="text-red-400 hover:text-red-300 p-1 flex-shrink-0"><Trash2 className="w-4 h-4" /></button>
-              </div>
-            </div>
-          ))}
-          <Button type="button" variant="outline" size="sm" onClick={addLink} className="border-dashed border-[#008001]/40 text-[#49B618] hover:bg-[#008001]/10 w-full"><Plus className="w-4 h-4 mr-2" />Add Link</Button>
-        </div>
-      </SectionBlock>
-
-      {/* APPOINTMENT */}
-      <SectionBlock id="section-appointment" title="Appointment / Calendar" icon={Calendar}
-        enabled={sections.appointment} onToggle={() => toggleSection('appointment')}
-        expanded={expanded.appointment} onExpand={() => toggleExpand('appointment')}>
-        <div>
-          <Label className="text-[#A0A0A0] text-xs">Booking URL (Calendly, Cal.com, etc.)</Label>
-          <div className="flex gap-2 mt-1">
-            <Input value={formData.appointmentUrl} onChange={e => updateField('appointmentUrl', e.target.value)} placeholder="https://calendly.com/username" className="flex-1 bg-[#1E1E1E] border-[#008001]/30 text-white" />
-            {formData.appointmentUrl && (<Button type="button" size="sm" variant="outline" className="border-[#008001]/30 text-[#49B618] hover:bg-[#008001]/20 flex-shrink-0" onClick={() => window.open(formData.appointmentUrl, '_blank', 'noopener,noreferrer')}><Globe className="w-4 h-4" /></Button>)}
+          <div className="flex items-center gap-2 flex-1">
+            <Input value={s.value} onChange={e => updateSocial(i, 'value', e.target.value)} placeholder={opt.placeholder} className="flex-1 bg-[#1E1E1E] border-[#008001]/30 text-white h-9 text-sm" />
+            <button type="button" onClick={() => removeSocial(i)} className="text-red-400 hover:text-red-300 p-1 flex-shrink-0"><Trash2 className="w-4 h-4" /></button>
           </div>
         </div>
-      </SectionBlock>
+      );
+    })}
+    <Button type="button" variant="outline" size="sm" onClick={addSocial} className="border-dashed border-[#008001]/40 text-[#49B618] hover:bg-[#008001]/10 w-full"><Plus className="w-4 h-4 mr-2" />Add Social Link</Button>
+  </div>
+      </SectionBlock >
 
-      {/* COLLECT CONTACTS */}
-      <Card id="section-collectContacts" className="bg-[#000000] border-[#008001]/30 overflow-hidden scroll-mt-4">
+  {/* LINKS */ }
+  < SectionBlock id = "section-links" title = "Links" icon = { Link2 }
+enabled = { sections.links } onToggle = {() => toggleSection('links')}
+expanded = { expanded.links } onExpand = {() => toggleExpand('links')}>
+  <div className="space-y-3">
+    {customLinks.map((l, i) => (
+      <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-2 p-3 rounded-xl bg-[#0D0D0D] border border-[#008001]/20">
+        <Input value={l.label} onChange={e => updateLink(i, 'label', e.target.value)} placeholder="Label" className="w-full sm:w-32 bg-[#1E1E1E] border-[#008001]/30 text-white h-9 text-sm flex-shrink-0" />
+        <div className="flex items-center gap-2 flex-1">
+          <Input value={l.url} onChange={e => updateLink(i, 'url', e.target.value)} placeholder="https://..." className="flex-1 bg-[#1E1E1E] border-[#008001]/30 text-white h-9 text-sm" />
+          {l.url && (<button type="button" onClick={() => window.open(l.url, '_blank', 'noopener,noreferrer')} className="text-[#49B618] hover:text-white p-1 flex-shrink-0"><Globe className="w-4 h-4" /></button>)}
+          <button type="button" onClick={() => removeLink(i)} className="text-red-400 hover:text-red-300 p-1 flex-shrink-0"><Trash2 className="w-4 h-4" /></button>
+        </div>
+      </div>
+    ))}
+    <Button type="button" variant="outline" size="sm" onClick={addLink} className="border-dashed border-[#008001]/40 text-[#49B618] hover:bg-[#008001]/10 w-full"><Plus className="w-4 h-4 mr-2" />Add Link</Button>
+  </div>
+      </SectionBlock >
+
+  {/* APPOINTMENT */ }
+  < SectionBlock id = "section-appointment" title = "Appointment / Calendar" icon = { Calendar }
+enabled = { sections.appointment } onToggle = {() => toggleSection('appointment')}
+expanded = { expanded.appointment } onExpand = {() => toggleExpand('appointment')}>
+  <div>
+    <Label className="text-[#A0A0A0] text-xs">Booking URL (Calendly, Cal.com, etc.)</Label>
+    <div className="flex gap-2 mt-1">
+      <Input value={formData.appointmentUrl} onChange={e => updateField('appointmentUrl', e.target.value)} placeholder="https://calendly.com/username" className="flex-1 bg-[#1E1E1E] border-[#008001]/30 text-white" />
+      {formData.appointmentUrl && (<Button type="button" size="sm" variant="outline" className="border-[#008001]/30 text-[#49B618] hover:bg-[#008001]/20 flex-shrink-0" onClick={() => window.open(formData.appointmentUrl, '_blank', 'noopener,noreferrer')}><Globe className="w-4 h-4" /></Button>)}
+    </div>
+  </div>
+      </SectionBlock >
+
+  {/* COLLECT CONTACTS */ }
+  < Card id = "section-collectContacts" className = "bg-[#000000] border-[#008001]/30 overflow-hidden scroll-mt-4" >
         <div className="flex items-center justify-between px-4 sm:px-6 py-4">
           <div className="flex items-center gap-2 min-w-0">
             <GripVertical className="w-4 h-4 text-[#555] cursor-grab flex-shrink-0" />
@@ -1481,16 +1483,18 @@ export default function BusinessProfile({
           </div>
         </div>
         <div className="px-4 sm:px-6 pb-4 -mt-1"><p className="text-xs text-[#555]">Enable this feature to collect your prospects contact details</p></div>
-      </Card>
+      </Card >
 
-      {extraSections.map((section, index) => (
-        <ExtraSectionBlock key={section.id || `extra-sec-${index}`} section={section} onToggle={toggleExtra} onRemove={removeExtra} onUpdateData={updateExtraData} />
-      ))}
+{
+  extraSections.map((section, index) => (
+    <ExtraSectionBlock key={section.id || `extra-sec-${index}`} section={section} onToggle={toggleExtra} onRemove={removeExtra} onUpdateData={updateExtraData} />
+  ))
+}
 
-      <AddComponentMenu onAdd={handleAddComponent} />
+  < AddComponentMenu onAdd = { handleAddComponent } />
 
-      {/* Action buttons */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pb-8">
+    {/* Action buttons */ }
+    < div className = "flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pb-8" >
         <Button variant="outline" className="text-red-400 border-red-500/30 hover:bg-red-500/10 text-sm">
           <Trash2 className="w-4 h-4 mr-2" />Delete Profile
         </Button>
@@ -1504,33 +1508,35 @@ export default function BusinessProfile({
             {isSaving ? 'Saving...' : saveFlash ? 'Saved!' : 'Save Changes'}
           </Button>
         </div>
-      </div>
-      {saveError && <p className="text-xs text-red-400 -mt-6 pb-6">{saveError}</p>}
-    </div>
+      </div >
+  { saveError && <p className="text-xs text-red-400 -mt-6 pb-6">{saveError}</p>}
+    </div >
   );
 
-  return (
-    <>
-      {isPreviewOpen && (
-        <CardPreviewModal
-          isOpen={isPreviewOpen}
-          onClose={closePreview}
-          {...sharedPreviewProps}
-          onShareLink={handleShareLink}
-          onSaveContact={handleSaveContact}
-          onShowQR={openQrPopup}
-        />
-      )}
-      {showQrPopup && (
-        <QrPopup
-          isOpen={showQrPopup}
-          onClose={closeQrPopup}
-          cardUrl={qrCardUrl}
-          cardId={resolvedCardId}
-          allowFallbackToFirstCard={allowFallbackToFirstCard}
-        />
-      )}
-      {/* QR modal can be restored by wiring a dedicated state and callback again. */}
+return (
+  <>
+{
+  isPreviewOpen && (
+    <CardPreviewModal
+      isOpen={isPreviewOpen}
+      onClose={() => setIsPreviewOpen(false)}
+      {...sharedPreviewProps}
+      onShareLink={handleShareLink}
+      onSaveContact={handleSaveContact}
+    />
+  )
+}
+{
+  showQrPopup && (
+    <QrPopup
+      isOpen={showQrPopup}
+      onClose={closeQrPopup}
+      cardUrl={qrCardUrl}
+      cardId={resolvedCardId}
+      allowFallbackToFirstCard={allowFallbackToFirstCard}
+    />
+  )
+}
 
       <div className="xl:hidden flex rounded-xl overflow-hidden border border-[#008001]/30 mb-4">
         <button onClick={() => setMobileTab('edit')} className={`flex-1 py-2.5 text-sm font-medium flex items-center justify-center gap-2 transition-all ${mobileTab === 'edit' ? 'bg-[#008001] text-white' : 'bg-[#000000] text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20'}`}>
