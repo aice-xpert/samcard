@@ -114,13 +114,14 @@ export function Sidebar({ activePage, onNavigate, onClose, profile }: SidebarPro
   const handleLogout = async () => {
     setLoggingOut(true);
     try {
-      await signOut(auth);
+      // Revoke the backend session cookie first (while it's still present)
       try {
         const logoutUrl = BACKEND_URL ? `${BACKEND_URL}/api/auth/logout` : "/api/auth/logout";
         await fetch(logoutUrl, { method: "POST", credentials: "include" });
       } catch {
         // ignore backend errors
       }
+      await signOut(auth);
       router.push("/login");
     } catch (error) {
       console.error("Logout failed:", error);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import BusinessProfile from "./BusinessProfile";
 import { DesignNew } from "./Design";
 import { NfcQr } from "./NfcQR";
@@ -374,6 +374,20 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
         onDone?.();
     };
 
+    // Pre-create the card before showing Step 3 so the QR encodes the real profile URL
+    const handleNext = useCallback(async () => {
+        if (step === 2 && !activeCardId) {
+            try {
+                const card = await createCard({ name: "My Card", cardType: "QR" });
+                setActiveCardId(card.id);
+                setCreatedSlug(card.slug ?? card.id);
+            } catch {
+                // creation failed — advance anyway, QR will use placeholder
+            }
+        }
+        setStep((prev) => Math.min(STEPS.length, prev + 1));
+    }, [step, activeCardId]);
+
     return (
         <div className="flex flex-col">
 
@@ -448,7 +462,7 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
 
                 {step < STEPS.length ? (
                     <button
-                        onClick={() => setStep((prev) => Math.min(STEPS.length, prev + 1))}
+                        onClick={handleNext}
                         className="px-5 py-2 rounded-lg bg-[#008001] text-white text-sm font-semibold hover:bg-[#49B618] transition-all"
                     >
                         Next →
