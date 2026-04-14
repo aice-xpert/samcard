@@ -461,6 +461,7 @@ router.post("/:slug/track", async (req, res: Response) => {
     const { error: interactionError } = await supabase
       .from("CardInteraction")
       .insert({
+        id: randomUUID(),
         cardId: card.id,
         type,
         visitorId: visitorId || null,

@@ -3,8 +3,8 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import {
   QrCode, Download, Share2, RefreshCw,
-  Printer, Clock, Copy, Check,
-  AlertCircle, Palette, TrendingUp, Activity, ChevronLeft,
+  Printer, Copy, Check,
+  Palette, ChevronLeft, ExternalLink,
 } from 'lucide-react';
 
 import QRCustomizer, { QRCustomConfig } from './Qrcustomizer';
@@ -176,30 +176,6 @@ function Globe2({ className, style }: { className?: string; style?: React.CSSPro
       <line x1="2" y1="12" x2="22" y2="12" />
       <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
     </svg>
-  );
-}
-
-// ─── Stat row ─────────────────────────────────────────────────────────────────
-
-function StatRow({ icon: Icon, label, value, accent }: {
-  icon: React.ElementType; label: string; value: React.ReactNode; accent?: boolean;
-}) {
-  return (
-    <div className="flex items-center justify-between py-3 px-4"
-      style={{ borderBottom: '1px solid rgba(0,128,1,0.08)' }}>
-      <div className="flex items-center gap-2.5">
-        <Icon className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#4a7a4a' }} />
-        <span className="text-xs" style={{ color: '#7a9a7a' }}>{label}</span>
-      </div>
-      {accent ? (
-        <div className="flex items-center gap-1.5">
-          <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#49B618', boxShadow: '0 0 5px #49B618' }} />
-          <span className="text-xs font-semibold" style={{ color: '#49B618' }}>{value}</span>
-        </div>
-      ) : (
-        <span className="text-xs" style={{ color: '#8aaa8a' }}>{value}</span>
-      )}
-    </div>
   );
 }
 
@@ -517,8 +493,8 @@ export function NfcQr({
               </div>
             </div>
 
-            {/* ── 3-column body ── */}
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_1fr] gap-0 divide-y lg:divide-y-0 lg:divide-x"
+            {/* ── 2-column body ── */}
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-0 divide-y lg:divide-y-0 lg:divide-x"
               style={{ '--tw-divide-color': 'rgba(0,128,1,0.1)' } as React.CSSProperties}>
 
               {/* ── Col 1: QR Preview ── */}
@@ -551,58 +527,35 @@ export function NfcQr({
                   )}
                 </div>
 
-                {/* URL bar */}
-                <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl"
-                  style={{ background: '#0c130c', border: '1px solid rgba(0,128,1,0.15)' }}>
-                  <Globe2 className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#2e5a2e' }} />
-                  <span className="text-xs flex-1 truncate" style={{ color: '#3a6a3a' }}>{CARD_URL}</span>
-                  <button onClick={copyLink}
-                    className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                    style={{
-                      background: copiedLink ? 'rgba(73,182,24,0.18)' : 'rgba(0,128,1,0.07)',
-                      border: '1px solid rgba(0,128,1,0.18)',
-                    }}>
-                    {copiedLink
-                      ? <Check className="w-3 h-3" style={{ color: '#49B618' }} />
-                      : <Copy className="w-3 h-3" style={{ color: '#3a6a3a' }} />}
-                  </button>
-                </div>
+                {/* URL bar — only shown when we have a real slug */}
+                {cardSlug && (
+                  <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl"
+                    style={{ background: '#0c130c', border: '1px solid rgba(0,128,1,0.15)' }}>
+                    <Globe2 className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#2e5a2e' }} />
+                    <span className="text-xs flex-1 truncate" style={{ color: '#3a6a3a' }}>{CARD_URL}</span>
+                    <a href={CARD_URL} target="_blank" rel="noopener noreferrer"
+                      className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                      style={{
+                        background: 'rgba(0,128,1,0.07)',
+                        border: '1px solid rgba(0,128,1,0.18)',
+                      }}>
+                      <ExternalLink className="w-3 h-3" style={{ color: '#3a6a3a' }} />
+                    </a>
+                    <button onClick={copyLink}
+                      className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                      style={{
+                        background: copiedLink ? 'rgba(73,182,24,0.18)' : 'rgba(0,128,1,0.07)',
+                        border: '1px solid rgba(0,128,1,0.18)',
+                      }}>
+                      {copiedLink
+                        ? <Check className="w-3 h-3" style={{ color: '#49B618' }} />
+                        : <Copy className="w-3 h-3" style={{ color: '#3a6a3a' }} />}
+                    </button>
+                  </div>
+                )}
               </div>
 
-              {/* ── Col 2: Statistics ── */}
-              <div className="flex flex-col gap-5 p-7">
-                <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#2e5a2e' }}>Scan Statistics</p>
-
-                {/* Hero stat */}
-                <div className="rounded-xl p-5 relative overflow-hidden"
-                  style={{ background: '#0c130c', border: '1px solid rgba(73,182,24,0.18)' }}>
-                  <div className="absolute -top-4 -right-4 w-28 h-28 pointer-events-none rounded-full"
-                    style={{ background: 'radial-gradient(ellipse, rgba(73,182,24,0.2), transparent 70%)', filter: 'blur(16px)' }} />
-                  <p className="text-xs mb-2" style={{ color: '#3a6a3a' }}>Total QR Scans</p>
-                  <p className="text-5xl font-black tracking-tight" style={{ color: '#e8f0e8' }}>892</p>
-                  <div className="flex items-center gap-1.5 mt-3">
-                    <TrendingUp className="w-3.5 h-3.5" style={{ color: '#49B618' }} />
-                    <span className="text-xs font-semibold" style={{ color: '#49B618' }}>+8.2% this month</span>
-                  </div>
-                </div>
-
-                {/* Detail rows */}
-                <div className="rounded-xl overflow-hidden"
-                  style={{ background: '#0c130c', border: '1px solid rgba(0,128,1,0.12)' }}>
-                  <StatRow icon={Clock} label="Last Scan" value="Feb 11, 2026 · 2:15 PM" />
-                  <StatRow icon={AlertCircle} label="Status" value="Active" accent />
-                  <StatRow icon={Activity} label="This Week" value="47 scans" />
-                  <div className="flex items-center justify-between py-3 px-4">
-                    <div className="flex items-center gap-2.5">
-                      <QrCode className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#4a7a4a' }} />
-                      <span className="text-xs" style={{ color: '#7a9a7a' }}>All-time peak</span>
-                    </div>
-                    <span className="text-xs" style={{ color: '#8aaa8a' }}>Dec 2025</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* ── Col 3: Actions ── */}
+              {/* ── Col 2: Actions ── */}
               <div className="flex flex-col gap-5 p-7">
                 <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#2e5a2e' }}>Actions</p>
 

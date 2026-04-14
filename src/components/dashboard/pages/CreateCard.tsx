@@ -225,26 +225,6 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
         setActiveCardId(cardId);
     }, [cardId]);
 
-    useEffect(() => {
-        if (!activeCardId) return;
-
-        let cancelled = false;
-
-        getCards()
-            .then((cards) => {
-                if (cancelled) return;
-                const exists = cards.some((c) => c.id === activeCardId);
-                if (!exists) {
-                    setActiveCardId(undefined);
-                    setCreatedSlug(undefined);
-                }
-            })
-            .catch(() => undefined);
-
-        return () => {
-            cancelled = true;
-        };
-    }, [activeCardId]);
 
     const toDbFontFamily = (font: unknown): string => {
         if (typeof font !== "string") return "INTER";
@@ -374,19 +354,30 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
         onDone?.();
     };
 
-    // Pre-create the card before showing Step 3 so the QR encodes the real profile URL
-    const handleNext = useCallback(async () => {
-        if (step === 2 && !activeCardId) {
-            try {
-                const card = await createCard({ name: "My Card", cardType: "QR" });
-                setActiveCardId(card.id);
-                setCreatedSlug(card.slug ?? card.id);
-            } catch {
-                // creation failed — advance anyway, QR will use placeholder
-            }
+    // Ensures a draft card exists before showing the QR step.
+    // Safe to call multiple times — no-ops if the card is already created.
+    const ensureCardExists = useCallback(async () => {
+        if (activeCardId) return;
+        try {
+            const card = await createCard({ name: "My Card", cardType: "QR" });
+            setActiveCardId(card.id);
+            setCreatedSlug(card.slug ?? card.id);
+        } catch {
+            // creation failed — QR will stay hidden until the card is saved
         }
+    }, [activeCardId]);
+
+    const handleNext = useCallback(async () => {
+        // Ensure the card exists whenever the user is about to see step 3
+        if (step === 2) await ensureCardExists();
         setStep((prev) => Math.min(STEPS.length, prev + 1));
-    }, [step, activeCardId]);
+    }, [step, ensureCardExists]);
+
+    const handleStepClick = useCallback(async (targetStep: number) => {
+        // If jumping directly to step 3 via the stepper, pre-create the card first
+        if (targetStep === 3) await ensureCardExists();
+        setStep(targetStep);
+    }, [ensureCardExists]);
 
     return (
         <div className="flex flex-col">
@@ -400,7 +391,7 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
                 {STEPS.map((s, i) => (
                     <div key={s.id} className="flex items-center gap-2">
                         <button
-                            onClick={() => setStep(s.id)}
+                            onClick={() => handleStepClick(s.id)}
                             className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold transition-all cursor-pointer
                 ${step === s.id
                                     ? "bg-[#008001] text-white"
