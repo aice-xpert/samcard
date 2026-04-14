@@ -30,8 +30,7 @@ const normalizeLeadSource = (value: unknown): string => {
   return LEAD_SOURCES.has(normalized) ? normalized : "DIRECT";
 };
 
-const createLeadId = (): string =>
-  `lead_${randomUUID().replace(/-/g, "")}`;
+const createLeadId = (): string => `lead_${randomUUID().replace(/-/g, "")}`;
 
 // ── Default section order (must match DEFAULT_SECTION_ORDER in the frontend) ──
 /**
@@ -40,25 +39,26 @@ const createLeadId = (): string =>
  * This helper unwraps that and always returns a plain array or null.
  */
 const parseJsonbArray = (value: unknown): string[] | null => {
-  if (Array.isArray(value)) return value.length > 0 ? (value as string[]) : null;
+  if (Array.isArray(value))
+    return value.length > 0 ? (value as string[]) : null;
 
-  if (typeof value !== 'string') return null;
+  if (typeof value !== "string") return null;
   const trimmed = value.trim();
   if (!trimmed) return null;
 
-  if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+  if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
     const inner = trimmed.slice(1, -1);
     if (!inner) return null;
     const items = inner
-      .split(',')
-      .map(item => item.replace(/^"(.*)"$/, '$1').trim())
+      .split(",")
+      .map((item) => item.replace(/^"(.*)"$/, "$1").trim())
       .filter(Boolean);
     return items.length > 0 ? items : null;
   }
 
   try {
     const parsed = JSON.parse(trimmed);
-    if (typeof parsed === 'string') {
+    if (typeof parsed === "string") {
       const inner = JSON.parse(parsed);
       if (Array.isArray(inner) && inner.length > 0) return inner as string[];
       return null;
@@ -230,8 +230,10 @@ router.get("/:slug", async (req, res: Response) => {
 
     let card = bySlug;
     if (!card) {
-      const { data: byCustomSlug, error: customSlugError } = await buildQuery("customSlug");
-      if (customSlugError) return res.status(500).json({ error: customSlugError.message });
+      const { data: byCustomSlug, error: customSlugError } =
+        await buildQuery("customSlug");
+      if (customSlugError)
+        return res.status(500).json({ error: customSlugError.message });
       card = byCustomSlug;
     }
 
@@ -266,7 +268,9 @@ router.get("/:slug", async (req, res: Response) => {
 
     const { data: businessProfile } = await supabase
       .from("BusinessProfile")
-      .select("name, title, company, tagline, profileImageUrl, primaryEmail, primaryPhone, website, address, city, country")
+      .select(
+        "name, title, company, tagline, profileImageUrl, primaryEmail, primaryPhone, website, address, city, country",
+      )
       .eq("id", card.businessProfileId)
       .single();
 
@@ -313,11 +317,17 @@ router.get("/:slug", async (req, res: Response) => {
       data: Record<string, unknown>;
     }[] = content?.extraSections ?? [];
 
-    const savedSectionOrder: string[] | null = parseJsonbArray(content?.sectionOrder);
+    const savedSectionOrder: string[] | null = parseJsonbArray(
+      content?.sectionOrder,
+    );
 
-    const sectionOrder: string[] = savedSectionOrder ?? [...DEFAULT_SECTION_ORDER];
+    const sectionOrder: string[] = savedSectionOrder ?? [
+      ...DEFAULT_SECTION_ORDER,
+    ];
 
-    const savedUnifiedOrder: string[] | null = parseJsonbArray(content?.unifiedOrder);
+    const savedUnifiedOrder: string[] | null = parseJsonbArray(
+      content?.unifiedOrder,
+    );
 
     // Reconstruct a valid unifiedOrder: start from what was saved, ensure every
     // known ID appears exactly once, append anything that is missing.
@@ -354,17 +364,19 @@ router.get("/:slug", async (req, res: Response) => {
     } else {
       const sections = content?.sections ?? defaultSections;
       unifiedOrder = [
-        ...sectionOrder.filter(key => sections[key as keyof typeof sections] !== false),
-        ...extraSections.filter(s => s.enabled).map(s => s.id),
+        ...sectionOrder.filter(
+          (key) => sections[key as keyof typeof sections] !== false,
+        ),
+        ...extraSections.filter((s) => s.enabled).map((s) => s.id),
       ];
     }
 
-    console.log('[public-card] Retrieved from DB:');
-    console.log('[public-card] content.sectionOrder:', content?.sectionOrder);
-    console.log('[public-card] content.unifiedOrder:', content?.unifiedOrder);
-    console.log('[public-card] Returning ordering:');
-    console.log('[public-card] response sectionOrder:', sectionOrder);
-    console.log('[public-card] response unifiedOrder:', unifiedOrder);
+    console.log("[public-card] Retrieved from DB:");
+    console.log("[public-card] content.sectionOrder:", content?.sectionOrder);
+    console.log("[public-card] content.unifiedOrder:", content?.unifiedOrder);
+    console.log("[public-card] Returning ordering:");
+    console.log("[public-card] response sectionOrder:", sectionOrder);
+    console.log("[public-card] response unifiedOrder:", unifiedOrder);
 
     const response: PublicCardResponse = {
       id: card.id,
@@ -374,7 +386,8 @@ router.get("/:slug", async (req, res: Response) => {
       status: card.status,
       shareUrl: card.shareUrl,
       headingText: card.headingText ?? content?.formData?.headingText ?? "",
-      headingBodyText: card.headingBodyText ?? content?.formData?.bodyText ?? "",
+      headingBodyText:
+        card.headingBodyText ?? content?.formData?.bodyText ?? "",
       design: {
         palette: design?.palette ?? "",
         accentColor: design?.accentColor ?? card.accentColor,
@@ -387,17 +400,21 @@ router.get("/:slug", async (req, res: Response) => {
         phoneBgColor1: design?.phoneBgColor1 ?? card.phoneBgColor1,
         phoneBgColor2: design?.phoneBgColor2 ?? card.phoneBgColor2,
         phoneBgAngle: design?.phoneBgAngle ?? card.phoneBgAngle,
-        phoneBgType: normalizePhoneBgType(design?.phoneBgType ?? card.phoneBgType),
+        phoneBgType: normalizePhoneBgType(
+          design?.phoneBgType ?? card.phoneBgType,
+        ),
         font: design?.font ?? card.fontFamily?.toLowerCase() ?? "inter",
         bodyFontSize: design?.bodyFontSize ?? card.bodyFontSize ?? 14,
         nameFontSize: design?.nameFontSize ?? card.nameFontSize ?? 24,
         boldHeadings: design?.boldHeadings ?? card.boldHeadings ?? false,
         cardRadius: design?.cardRadius ?? card.cardRadius ?? 16,
-        shadowIntensity: design?.shadowIntensity ?? card.shadowIntensity ?? "medium",
+        shadowIntensity:
+          design?.shadowIntensity ?? card.shadowIntensity ?? "medium",
         glowEffect: design?.glowEffect ?? card.glowEffect ?? false,
       },
       content: {
-        profileImage: content?.profileImage ?? businessProfile?.profileImageUrl ?? "",
+        profileImage:
+          content?.profileImage ?? businessProfile?.profileImageUrl ?? "",
         brandLogo: content?.brandLogo ?? "",
         logoPosition: content?.logoPosition ?? "top-right",
         formData: {
@@ -405,10 +422,17 @@ router.get("/:slug", async (req, res: Response) => {
           title: content?.formData?.title ?? businessProfile?.title ?? "",
           company: content?.formData?.company ?? businessProfile?.company ?? "",
           tagline: content?.formData?.tagline ?? businessProfile?.tagline ?? "",
-          email: content?.formData?.email ?? businessProfile?.primaryEmail ?? "",
-          phone: content?.formData?.phone ?? businessProfile?.primaryPhone ?? "",
+          email:
+            content?.formData?.email ?? businessProfile?.primaryEmail ?? "",
+          phone:
+            content?.formData?.phone ?? businessProfile?.primaryPhone ?? "",
           website: content?.formData?.website ?? businessProfile?.website ?? "",
-          location: content?.formData?.location ?? ([businessProfile?.city, businessProfile?.country].filter(Boolean).join(", ") || ""),
+          location:
+            content?.formData?.location ??
+            ([businessProfile?.city, businessProfile?.country]
+              .filter(Boolean)
+              .join(", ") ||
+              ""),
           industry: content?.formData?.industry ?? "",
           yearFounded: content?.formData?.yearFounded ?? "",
           appointmentUrl: content?.formData?.appointmentUrl ?? "",
@@ -421,27 +445,29 @@ router.get("/:slug", async (req, res: Response) => {
         sectionOrder,
         unifiedOrder,
       },
-      qrConfig: qrConfig ? {
-        shapeId: qrConfig.shapeId,
-        dotShape: qrConfig.dotShape,
-        finderStyle: qrConfig.finderStyle,
-        eyeBall: qrConfig.eyeBall,
-        bodyScale: qrConfig.bodyScale,
-        fg: qrConfig.fg,
-        bg: qrConfig.bg,
-        accentFg: qrConfig.accentFg,
-        accentBg: qrConfig.accentBg,
-        strokeEnabled: qrConfig.strokeEnabled,
-        strokeColor: qrConfig.strokeColor,
-        gradEnabled: qrConfig.gradEnabled,
-        gradStops: qrConfig.gradStops,
-        gradAngle: qrConfig.gradAngle,
-        selectedLogo: qrConfig.selectedLogo,
-        customLogoUrl: qrConfig.customLogoUrl,
-        logoBg: qrConfig.logoBg,
-        stickerId: qrConfig.stickerId,
-        decorateImageUrl: qrConfig.decorateImageUrl || null,
-      } : undefined,
+      qrConfig: qrConfig
+        ? {
+            shapeId: qrConfig.shapeId,
+            dotShape: qrConfig.dotShape,
+            finderStyle: qrConfig.finderStyle,
+            eyeBall: qrConfig.eyeBall,
+            bodyScale: qrConfig.bodyScale,
+            fg: qrConfig.fg,
+            bg: qrConfig.bg,
+            accentFg: qrConfig.accentFg,
+            accentBg: qrConfig.accentBg,
+            strokeEnabled: qrConfig.strokeEnabled,
+            strokeColor: qrConfig.strokeColor,
+            gradEnabled: qrConfig.gradEnabled,
+            gradStops: qrConfig.gradStops,
+            gradAngle: qrConfig.gradAngle,
+            selectedLogo: qrConfig.selectedLogo,
+            customLogoUrl: qrConfig.customLogoUrl,
+            logoBg: qrConfig.logoBg,
+            stickerId: qrConfig.stickerId,
+            decorateImageUrl: qrConfig.decorateImageUrl || null,
+          }
+        : undefined,
       socialLinks: socialLinks ?? [],
       businessProfile: {
         name: businessProfile?.name ?? "",
@@ -480,7 +506,19 @@ router.get("/:slug", async (req, res: Response) => {
 
 router.post("/:slug/leads", async (req, res: Response) => {
   const { slug } = req.params;
-  const { name, email, phone, company, jobTitle, notes, source, utmSource, utmCampaign, marketingConsent, gdprConsent } = req.body;
+  const {
+    name,
+    email,
+    phone,
+    company,
+    jobTitle,
+    notes,
+    source,
+    utmSource,
+    utmCampaign,
+    marketingConsent,
+    gdprConsent,
+  } = req.body;
 
   try {
     const isPreview = req.query.preview === "true";
@@ -501,12 +539,15 @@ router.post("/:slug/leads", async (req, res: Response) => {
 
     if (card.status !== "ACTIVE" && !isPreview) {
       return res.status(409).json({
-        error: "Card exists but is not published yet. Publish the card to accept public leads.",
+        error:
+          "Card exists but is not published yet. Publish the card to accept public leads.",
       });
     }
 
     if (!name && !email && !phone) {
-      return res.status(400).json({ error: "At least name, email, or phone is required" });
+      return res
+        .status(400)
+        .json({ error: "At least name, email, or phone is required" });
     }
 
     if (email) {
@@ -518,7 +559,12 @@ router.post("/:slug/leads", async (req, res: Response) => {
         .maybeSingle();
 
       if (existingLead) {
-        return res.status(409).json({ error: "Lead with this email already exists", leadId: existingLead.id });
+        return res
+          .status(409)
+          .json({
+            error: "Lead with this email already exists",
+            leadId: existingLead.id,
+          });
       }
     }
 
@@ -553,7 +599,9 @@ router.post("/:slug/leads", async (req, res: Response) => {
 
     if (leadError) {
       console.error("Lead creation error:", leadError);
-      return res.status(500).json({ error: leadError.message || "Failed to create lead" });
+      return res
+        .status(500)
+        .json({ error: leadError.message || "Failed to create lead" });
     }
 
     void createNotification(
@@ -561,7 +609,7 @@ router.post("/:slug/leads", async (req, res: Response) => {
       "LEAD",
       "New Lead Captured",
       `${name || email || "Someone"} just submitted their contact via your card "${card.name}".`,
-      { sourceId: lead.id, sourceType: "Lead" }
+      { sourceId: lead.id, sourceType: "Lead" },
     );
 
     return res.status(201).json({ success: true, lead });
@@ -573,9 +621,29 @@ router.post("/:slug/leads", async (req, res: Response) => {
 
 router.post("/:slug/track", async (req, res: Response) => {
   const { slug } = req.params;
-  const { type, linkId, linkLabel, visitorId, fingerprint, referrer, utmSource, utmMedium, utmCampaign, utmContent } = req.body;
+  const {
+    type,
+    linkId,
+    linkLabel,
+    visitorId,
+    fingerprint,
+    referrer,
+    utmSource,
+    utmMedium,
+    utmCampaign,
+    utmContent,
+  } = req.body;
 
-  const validTypes = ["view", "tap", "scan", "save", "share", "link_click", "contact_submit", "appointment_click"];
+  const validTypes = [
+    "view",
+    "tap",
+    "scan",
+    "save",
+    "share",
+    "link_click",
+    "contact_submit",
+    "appointment_click",
+  ];
   if (!validTypes.includes(type)) {
     return res.status(400).json({ error: "Invalid interaction type" });
   }
@@ -583,7 +651,9 @@ router.post("/:slug/track", async (req, res: Response) => {
   try {
     const { data: card, error: cardError } = await supabase
       .from("Card")
-      .select("id, userId, totalViews, totalTaps, totalScans, totalSaves, totalShares, totalLinkClicks")
+      .select(
+        "id, userId, totalViews, totalTaps, totalScans, totalSaves, totalShares, totalLinkClicks",
+      )
       .eq("slug", slug)
       .eq("status", "ACTIVE")
       .single();
@@ -593,11 +663,21 @@ router.post("/:slug/track", async (req, res: Response) => {
     }
 
     const ua = req.headers["user-agent"] || "";
-    const deviceType: "IOS" | "ANDROID" | "WEB" | "NFC_READER" | "QR_SCANNER" | "UNKNOWN" =
-      /iPhone|iPad|iPod/i.test(ua) ? "IOS" :
-      /Android/i.test(ua) ? "ANDROID" :
-      "WEB";
-    const country = req.headers["cf-ipcountry"] || req.headers["x-vercel-ip-country"] || "UNKNOWN";
+    const deviceType:
+      | "IOS"
+      | "ANDROID"
+      | "WEB"
+      | "NFC_READER"
+      | "QR_SCANNER"
+      | "UNKNOWN" = /iPhone|iPad|iPod/i.test(ua)
+      ? "IOS"
+      : /Android/i.test(ua)
+        ? "ANDROID"
+        : "WEB";
+    const country =
+      req.headers["cf-ipcountry"] ||
+      req.headers["x-vercel-ip-country"] ||
+      "UNKNOWN";
 
     const { error: interactionError } = await supabase
       .from("CardInteraction")
@@ -625,12 +705,24 @@ router.post("/:slug/track", async (req, res: Response) => {
     }
 
     const updateFields: Record<string, unknown> = {};
-    if (type === "view") updateFields.totalViews = ((card as { totalViews?: number }).totalViews || 0) + 1;
-    if (type === "tap" || type === "scan") updateFields.totalTaps = ((card as { totalTaps?: number }).totalTaps || 0) + 1;
-    if (type === "scan") updateFields.totalScans = ((card as { totalScans?: number }).totalScans || 0) + 1;
-    if (type === "save") updateFields.totalSaves = ((card as { totalSaves?: number }).totalSaves || 0) + 1;
-    if (type === "share") updateFields.totalShares = ((card as { totalShares?: number }).totalShares || 0) + 1;
-    if (type === "link_click") updateFields.totalLinkClicks = ((card as { totalLinkClicks?: number }).totalLinkClicks || 0) + 1;
+    if (type === "view")
+      updateFields.totalViews =
+        ((card as { totalViews?: number }).totalViews || 0) + 1;
+    if (type === "tap" || type === "scan")
+      updateFields.totalTaps =
+        ((card as { totalTaps?: number }).totalTaps || 0) + 1;
+    if (type === "scan")
+      updateFields.totalScans =
+        ((card as { totalScans?: number }).totalScans || 0) + 1;
+    if (type === "save")
+      updateFields.totalSaves =
+        ((card as { totalSaves?: number }).totalSaves || 0) + 1;
+    if (type === "share")
+      updateFields.totalShares =
+        ((card as { totalShares?: number }).totalShares || 0) + 1;
+    if (type === "link_click")
+      updateFields.totalLinkClicks =
+        ((card as { totalLinkClicks?: number }).totalLinkClicks || 0) + 1;
 
     if (Object.keys(updateFields).length > 0) {
       await supabase.from("Card").update(updateFields).eq("id", card.id);
