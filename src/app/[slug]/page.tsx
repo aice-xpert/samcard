@@ -673,6 +673,51 @@ function ExtraSectionBlock({
         </div>
       );
     }
+    case "extra-team":
+    case "extra-customer": {
+      const title = str("title");
+      const desc = str("desc");
+      if (!title && !desc) return null;
+      return (
+        <div
+          style={{
+            margin: "0 12px 10px",
+            background: T.card,
+            border: `1px solid ${T.cardBorder}`,
+            borderRadius: T.cardRadius,
+            overflow: "hidden",
+          }}
+        >
+          <div style={{ padding: "12px 16px" }}>
+            {title && (
+              <p
+                style={{
+                  fontWeight: T.boldHeadings ? 700 : 500,
+                  fontSize: T.bodyFontSize,
+                  marginBottom: 4,
+                  color: T.textPrimary,
+                  fontFamily: T.fontFamily,
+                }}
+              >
+                {title}
+              </p>
+            )}
+            {desc && (
+              <p
+                style={{
+                  fontSize: T.bodyFontSize,
+                  lineHeight: 1.5,
+                  color: T.textMuted,
+                  fontFamily: T.fontFamily,
+                }}
+              >
+                {desc}
+              </p>
+            )}
+          </div>
+        </div>
+      );
+    }
     default: {
       const title = str("title");
       const bodyText = str("content");
