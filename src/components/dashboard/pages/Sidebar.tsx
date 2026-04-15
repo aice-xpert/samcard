@@ -22,7 +22,6 @@ import { useUser } from '@/contexts/UserContext';
 import { signOut } from "firebase/auth";
 import { auth } from '@/lib/firebase';
 import { BACKEND_URL, getAnalytics, getUserProfile } from '@/lib/api';
-import { useRouter } from "next/navigation";
 
 interface SidebarProps {
   activePage: string;
@@ -75,7 +74,6 @@ export function Sidebar({ activePage, onNavigate, onClose, profile }: SidebarPro
   const [weeklyTrendChange, setWeeklyTrendChange] = useState(0);
   const [planLabel, setPlanLabel] = useState("Pro");
   const [loggingOut, setLoggingOut] = useState(false);
-  const router = useRouter();
 
   const normalizePlanLabel = (tier: string | null | undefined) => {
     const normalized = (tier ?? "").trim().toUpperCase();
@@ -121,8 +119,14 @@ export function Sidebar({ activePage, onNavigate, onClose, profile }: SidebarPro
       } catch {
         // ignore backend errors
       }
+      // Clear all client-side auth state so the middleware fallback cookie
+      // (sessionToken) doesn't keep the session alive and redirect back to /dashboard.
+      localStorage.removeItem("sessionToken");
+      document.cookie = "session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
+      document.cookie = "sessionToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
       await signOut(auth);
-      router.push("/login");
+      // Full page navigation so the browser sends no stale cookies to the middleware.
+      window.location.href = "/login";
     } catch (error) {
       console.error("Logout failed:", error);
       setLoggingOut(false);
