@@ -23,7 +23,6 @@ import { useUser } from '@/contexts/UserContext';
 import { useState, useCallback, useEffect } from 'react';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { useRouter } from 'next/navigation';
 
 interface Notification {
   id: string;
@@ -60,7 +59,6 @@ export function EnhancedHeader({
   const [notifications, setNotifications] = useState<Notification[]>(defaultNotifications);
   const [membershipLabel, setMembershipLabel] = useState('Free');
   const [loggingOut, setLoggingOut] = useState(false);
-  const router = useRouter();
   const initials = profile.name.split(" ").map(n => n[0]).join("").toUpperCase();
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -99,12 +97,18 @@ export function EnhancedHeader({
       } catch {
         // ignore backend errors — Firebase sign-out already happened
       }
-      router.push('/login');
+      // Clear all client-side auth state so the middleware fallback cookie
+      // (sessionToken) doesn't keep the session alive and redirect back to /dashboard.
+      localStorage.removeItem('sessionToken');
+      document.cookie = "session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
+      document.cookie = "sessionToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
+      // Full page navigation so the browser sends no stale cookies to the middleware.
+      window.location.href = '/login';
     } catch (err) {
       console.error('Logout failed:', err);
       setLoggingOut(false);
     }
-  }, [router]);
+  }, []);
 
   const handleNavigate = useCallback((page: string) => {
     onNavigate?.(page);

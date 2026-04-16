@@ -67,7 +67,7 @@ export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
     const isProtected = pathname.startsWith("/dashboard");
-    const isAuthPage = pathname === "/login" || pathname === "/signup";
+    const isAuthPage = pathname === "/login" || pathname === "/signup" || pathname === "/";
 
     const tokenToVerify = sessionCookie?.value ?? fallbackToken?.value;
 
@@ -101,5 +101,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-    matcher: ["/dashboard/:path*", "/login", "/signup"],
+    matcher: ["/dashboard/:path*", "/login", "/signup", "/"],
 };
