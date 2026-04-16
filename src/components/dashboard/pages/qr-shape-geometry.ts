@@ -209,12 +209,7 @@ export function pointInShape(nx: number, ny: number, shapeId: string): boolean {
       return (ax <= 0.17 && ay <= 0.47) || (ax <= 0.47 && ay <= 0.17);
     }
 
-    // ─── droplet / teardrop ──────────────────────────────────────────────
-    // path: M50,3 Q80,30 80,58 Q80,87 50,97 Q20,87 20,58 Q20,30 50,3
-    // Approximately: circle bottom half + tapering top half.
-    // Bottom circle approx centre: (50/100, (58+87)/2/100) = (0.5, 0.725) → dy=+0.225
-    // Bottom circle radius ≈ (80-20)/2/100 = 0.30
-    // Top taper: from y=58/100 (dy=+0.08) to tip at y=3/100 (dy=-0.47)
+ 
     case "droplet": {
       const botCy = 0.22;   // dy of bottom circle centre
       const botR  = 0.28;
@@ -227,59 +222,18 @@ export function pointInShape(nx: number, ny: number, shapeId: string): boolean {
       return false;
     }
 
-    // ─── leaf ────────────────────────────────────────────────────────────
-    // path: M50,97 Q6,78 6,34 Q6,3 50,3 Q94,3 94,34 Q94,78 50,97
-    // Symmetric vertically-oriented lens/leaf shape.
-    // Left edge: x=6/100=0.06 at widest → dx=-0.44
-    // Right edge: x=94/100=0.94 → dx=+0.44
-    // Top/bottom tips: y=3/100 → dy=-0.47, y=97/100 → dy=+0.47
-    // Widest at y=34/100 → dy=-0.16 and y=78/100... no, path says Q6,78 meaning
-    // the widest control point is around y=(3+97)/2=50 → dy=0.
-    // Approximate as tall ellipse with rx=0.43, ry=0.47
+
     case "leaf":
       return (dx / 0.43) ** 2 + (dy / 0.47) ** 2 <= 1;
 
-    // ─── pentagon ────────────────────────────────────────────────────────
-    // path: M50,3 L97,36 L79,93 L21,93 L3,36
-    // Vertices in dx,dy:
-    //   Top:         (0, -0.47)
-    //   Right:       (+0.47, -0.14)
-    //   Lower-right: (+0.29, +0.43)
-    //   Lower-left:  (-0.29, +0.43)
-    //   Left:        (-0.47, -0.14)
+
     case "pentagon": {
       const vx = [0,     0.47,  0.29, -0.29, -0.47];
       const vy = [-0.47, -0.14, 0.43,  0.43, -0.14];
       return polyContains(vx, vy, dx, dy);
     }
 
-    // ─── cloud ───────────────────────────────────────────────────────────
-    // path: M17,82 Q4,82 4,62 Q4,46 17,42 Q17,18 34,18 Q45,18 51,27
-    //        Q57,22 65,22 Q82,22 82,38 Q94,42 92,60 Q92,82 76,82 Z
-    // Reading the path: the cloud is in y=[18,82]/100 → dy=[-0.32,+0.32]
-    // Left lobe centre ≈ (17+34)/2/100=0.255 → dx=-0.245, y≈(18+42)/2/100=0.30 → dy=-0.20
-    // Left lobe radius ≈ (34-17)/2/100 ≈ 0.085... that seems too small.
-    //
-    // Let me re-read the path more carefully:
-    // M17,82 = start at left bottom (dx=-0.33, dy=+0.32)
-    // Q4,82 4,62 = left side, going up, control (4,82)→(4,62)
-    //   This arc goes from (17,82) to (4,62) with control (4,82)
-    //   Centre of arc approximately: x≈4, y≈(82+62)/2=72... 
-    // Q4,46 17,42 = from (4,62) to (17,42) with control (4,46)
-    // Q17,18 34,18 = from (17,42) to (34,18) with control (17,18)
-    //   → Left lobe top edge, passing through (17,30)
-    // Q45,18 51,27 = from (34,18) to (51,27) with control (45,18)
-    // Q57,22 65,22 = from (51,27) to (65,22) with control (57,22)
-    // Q82,22 82,38 = from (65,22) to (82,38) with control (82,22)
-    //   → Right lobe area
-    // Q94,42 92,60 = right side going down
-    // Q92,82 76,82 = to bottom-right
-    //
-    // Approximation with 4 circles:
-    //   Left lobe:   centre≈(20,30)/100→(dx=-0.30,dy=-0.20), r≈0.17
-    //   Centre lobe: centre≈(50,22)/100→(dx=0,    dy=-0.28), r≈0.15
-    //   Right lobe:  centre≈(73,30)/100→(dx=+0.23,dy=-0.20), r≈0.17
-    //   Body/base:   centre≈(50,62)/100→(dx=0,    dy=+0.12), r≈0.24
+  
     case "cloud": {
       const lobes: [number, number, number][] = [
         [-0.30, -0.20, 0.175],   // left lobe

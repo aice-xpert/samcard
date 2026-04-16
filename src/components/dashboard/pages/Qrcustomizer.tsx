@@ -4,7 +4,7 @@ import {
 } from "@/components/dashboard/pages/constants";
 import {
   QRWithShape, QRShapeThumbnail, StickerBadge, QRThumbnail,
-  QR_SHAPE_DEFS, STICKER_DEFS, StickerDef,
+  QR_SHAPE_DEFS, STICKER_DEFS, StickerDef, QRWithShapeCanvas,
 } from "@/components/dashboard/pages/Qrrenderers";
 import { makeQRMatrix } from "@/components/dashboard/pages/qr-engine";
 import { uploadFile } from "@/lib/api";
@@ -240,6 +240,7 @@ export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUr
   const [selectedDesign, setSelectedDesign] = useState<PreDesign | null>(null);
   const [selectedSticker, setSelectedSticker] = useState<StickerDef | null>(() => initialConfig?.selectedSticker ?? null);
   const [activeTab, setActiveTab] = useState("qr-shapes");
+  const [useCanvasRenderer, setUseCanvasRenderer] = useState(false);
 
   const [bodyType, setBodyType] = useState(() => initialConfig?.dotShape ?? "square");
   const [bodyScale, setBodyScale] = useState(() => initialConfig?.bodyScale ?? 1.0);
@@ -433,6 +434,17 @@ export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUr
       </svg>
     );
 
+    const qrCanvas = (size: number) => (
+      <QRWithShapeCanvas
+        url={targetUrl}
+        size={size}
+        dotColor={activeFg}
+        bgColor={activeBg}
+        dotShape={activeBodyType}
+        finderStyle={activeEyeFrame}
+      />
+    );
+
     if (selectedSticker) {
       return (
         <div style={{ position: "relative", width: PREVIEW_PX }}>
@@ -451,6 +463,19 @@ export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUr
       );
     }
 
+    // Canvas preview
+    if (useCanvasRenderer) {
+      return (
+        <div style={{ position: "relative", width: PREVIEW_PX, marginTop: selectedDesign?.sticker ? 18 : 0 }}>
+          {selectedDesign?.sticker && <StickerBadge sticker={selectedDesign.sticker} />}
+          <div style={{ borderRadius: 14, overflow: "hidden", boxShadow: "0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04)", background: activeBg }}>
+            {qrCanvas(PREVIEW_PX)}
+          </div>
+        </div>
+      );
+    }
+
+    // SVG preview (default)
     return (
       <div style={{ position: "relative", width: PREVIEW_PX, marginTop: selectedDesign?.sticker ? 18 : 0 }}>
         {selectedDesign?.sticker && <StickerBadge sticker={selectedDesign.sticker} />}
@@ -955,9 +980,33 @@ export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUr
 
             {/* Preview label */}
             <div style={{ padding: "14px 22px 10px", borderBottom: "1px solid rgba(34,197,94,0.06)", flexShrink: 0 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#22c55e", display: "inline-block", boxShadow: "0 0 8px rgba(34,197,94,0.6), 0 0 2px #22c55e", animation: "pulse-dot 2s ease-in-out infinite" }} />
-                <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase" as const, color: "rgba(74,222,128,0.45)" }}>Live Preview</span>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 7 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                  <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#22c55e", display: "inline-block", boxShadow: "0 0 8px rgba(34,197,94,0.6), 0 0 2px #22c55e", animation: "pulse-dot 2s ease-in-out infinite" }} />
+                  <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase" as const, color: "rgba(74,222,128,0.45)" }}>Live Preview</span>
+                </div>
+                <button
+                  onClick={() => setUseCanvasRenderer(!useCanvasRenderer)}
+                  title={useCanvasRenderer ? "Switch to SVG renderer" : "Switch to Canvas renderer (experimental)"}
+                  style={{
+                    padding: "4px 10px",
+                    border: "1px solid rgba(34,197,94,0.3)",
+                    borderRadius: 6,
+                    fontSize: 8,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    fontFamily: FONT,
+                    background: useCanvasRenderer ? "rgba(34,197,94,0.15)" : "rgba(255,255,255,0.02)",
+                    color: useCanvasRenderer ? "#4ade80" : "rgba(148,163,184,0.5)",
+                    transition: "all 0.2s",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                  }}
+                  onMouseOver={e => { e.currentTarget.style.borderColor = "rgba(34,197,94,0.6)"; e.currentTarget.style.background = "rgba(34,197,94,0.2)"; }}
+                  onMouseOut={e => { e.currentTarget.style.borderColor = useCanvasRenderer ? "rgba(34,197,94,0.3)" : "rgba(34,197,94,0.2)"; e.currentTarget.style.background = useCanvasRenderer ? "rgba(34,197,94,0.15)" : "rgba(255,255,255,0.02)"; }}
+                >
+                  {useCanvasRenderer ? "Canvas ✓" : "SVG"}
+                </button>
               </div>
               <style>{`@keyframes pulse-dot{0%,100%{opacity:1;box-shadow:0 0 8px rgba(34,197,94,0.6)}50%{opacity:0.6;box-shadow:0 0 4px rgba(34,197,94,0.3)}}`}</style>
             </div>
