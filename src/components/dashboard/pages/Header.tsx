@@ -41,11 +41,7 @@ interface EnhancedHeaderProps {
   onNavigate?: (page: string) => void;
 }
 
-const defaultNotifications: Notification[] = [
-  { id: '1', title: 'New Card Created', message: 'Your new business card "Marketing" was created successfully.', time: '2 min ago', read: false },
-  { id: '2', title: 'Profile Updated', message: 'Your profile information has been synced across all cards.', time: '1 hour ago', read: false },
-  { id: '3', title: 'Analytics Ready', message: 'Your weekly analytics report is now available.', time: '3 hours ago', read: true },
-];
+const defaultNotifications: Notification[] = [];
 
 export function EnhancedHeader({
   title,

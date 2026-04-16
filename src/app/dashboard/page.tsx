@@ -132,6 +132,7 @@ export default function Home() {
               setEditingCardId(undefined);
               setActivePage('create-card');
             }}
+            onNavigate={handleNavigate}
           />
         );
       case 'analytics': return <Analytics />;

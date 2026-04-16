@@ -67,7 +67,7 @@ export interface PhonePreviewProps {
   savedContact: boolean;
   copied: boolean;
   onPreviewOpen: () => void;
-  onShareLink: () => void;
+  onShareLink?: () => void;
   onSaveContact: () => void;
   themeOverride?: Partial<ThemeOverride>;
 }
@@ -260,9 +260,9 @@ function PhonePreviewComponent({
               style={{ background: '#1a1a1a', border: `1px solid ${T.green}33`, color: '#888' }}>
               <Eye className="w-3.5 h-3.5" />
             </button>
-            <button onClick={onShareLink}
+            <button onClick={onShareLink} disabled={!onShareLink}
               className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ background: '#1a1a1a', border: `1px solid ${T.green}33`, color: copied ? T.greenLight : '#888' }}>
+              style={{ background: '#1a1a1a', border: `1px solid ${T.green}33`, color: copied ? T.greenLight : '#888', opacity: onShareLink ? 1 : 0.35, cursor: onShareLink ? 'pointer' : 'not-allowed' }}>
               {copied ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
             </button>
           </div>
@@ -356,12 +356,14 @@ function PhonePreviewComponent({
                         {formData.title && (
                           <p style={{ fontSize: T.bodyFontSize, marginTop: 2, color: T.greenLight, fontFamily: T.fontFamily }}>{formData.title}</p>
                         )}
-                        {formData.company && (
+                        {(formData.company || (hasBrandLogo && logoPosition === 'below-name')) && (
                           <div className="flex items-center gap-1.5 mt-0.5">
                             {hasBrandLogo && logoPosition === 'below-name' && (
                               <BrandLogoBadge src={brandLogo} bg="rgba(0,0,0,0.45)" blur={false} maxSize={22} padding="2px 4px" borderRadius={5} />
                             )}
-                            <p style={{ fontSize: T.bodyFontSize, color: 'rgba(255,255,255,0.65)', fontFamily: T.fontFamily }}>{formData.company}</p>
+                            {formData.company && (
+                              <p style={{ fontSize: T.bodyFontSize, color: 'rgba(255,255,255,0.65)', fontFamily: T.fontFamily }}>{formData.company}</p>
+                            )}
                           </div>
                         )}
                       </div>
@@ -559,9 +561,9 @@ function PhonePreviewComponent({
                 <div className="flex items-center justify-between px-3 py-2"
                   style={{ background: T.card, borderTop: `1px solid ${T.cardBorder}` }}>
                   <div className="flex items-center gap-2">
-                    <button onClick={e => { e.stopPropagation(); onShareLink(); }}
+                    <button onClick={e => { e.stopPropagation(); onShareLink?.(); }} disabled={!onShareLink}
                       className="w-9 h-9 rounded-full flex items-center justify-center"
-                      style={{ background: '#1a1a1a', border: `1px solid ${T.green}4d` }}>
+                      style={{ background: '#1a1a1a', border: `1px solid ${T.green}4d`, opacity: onShareLink ? 1 : 0.35, cursor: onShareLink ? 'pointer' : 'not-allowed' }}>
                       {copied ? <Check className="w-4 h-4" style={{ color: T.greenLight }} /> : <Upload className="w-4 h-4" style={{ color: T.textMuted }} />}
                     </button>
                   </div>
@@ -598,12 +600,14 @@ function PhonePreviewComponent({
         <div className="mt-4 p-3 rounded-xl" style={{ background: `${T.green}0f`, border: `1px solid ${T.green}2e` }}>
           <p className="text-[10px] uppercase tracking-wider font-semibold mb-2" style={{ color: '#555', ...ff }}>Share Your Card</p>
           <div className="grid grid-cols-1 gap-2">
-            <button onClick={onShareLink}
+            <button onClick={onShareLink} disabled={!onShareLink}
               className="flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-medium"
               style={{
                 border: copied ? `1px solid ${T.greenLight}66` : `1px solid ${T.green}33`,
                 color: copied ? T.greenLight : '#888',
                 background: copied ? `${T.greenLight}14` : 'transparent',
+                opacity: onShareLink ? 1 : 0.35,
+                cursor: onShareLink ? 'pointer' : 'not-allowed',
                 ...ff,
               }}>
               {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
