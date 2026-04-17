@@ -98,6 +98,32 @@ export async function updateUserProfile(payload: UpdateUserPayload) {
   });
 }
 
+// ─── Payment Method ─────────────────────────────────────────────────
+export interface ApiPaymentMethod {
+  brand: string;
+  last4: string;
+  expiry: string;
+}
+
+export async function getPaymentMethod() {
+  return apiRequest<ApiPaymentMethod | null>("/api/user/payment-method", { method: "GET" });
+}
+
+export async function savePaymentMethod(data: ApiPaymentMethod) {
+  return apiRequest<ApiPaymentMethod>("/api/user/payment-method", {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
+// ─── Plan ────────────────────────────────────────────────────────────
+export async function updateUserPlan(tier: string) {
+  return apiRequest<{ planTier: string }>("/api/user/plan", {
+    method: "PUT",
+    body: JSON.stringify({ tier }),
+  });
+}
+
 // ─── Business Profile ───────────────────────────────────────────────
 export interface ApiBusinessProfile {
   id: string;

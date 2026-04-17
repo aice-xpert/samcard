@@ -1444,15 +1444,16 @@ const pageBg = (() => {
                       <div
                         style={{
                           background: "rgba(0,0,0,0.45)",
-                          borderRadius: 5,
                           padding: "2px 4px",
+                          borderRadius: 5,
                           lineHeight: 0,
+                          flexShrink: 0,
                         }}
                       >
                         <img
                           src={content.brandLogo}
                           alt="Brand"
-                          style={{ maxWidth: 22, maxHeight: 22, objectFit: "contain" }}
+                          style={{ maxWidth: 22, maxHeight: 22, objectFit: "contain", borderRadius: 3 }}
                         />
                       </div>
                     )}

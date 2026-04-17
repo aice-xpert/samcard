@@ -36,6 +36,9 @@ import {
     getInvoices,
     getPlans,
     getUserProfile,
+    getPaymentMethod,
+    savePaymentMethod,
+    updateUserPlan,
     Invoice as ApiInvoice,
 } from "@/lib/api";
 
@@ -530,11 +533,12 @@ export function Billing() {
 
         const loadData = async () => {
             try {
-                const [userData, planData, invoiceData, analyticsData] = await Promise.all([
+                const [userData, planData, invoiceData, analyticsData, savedPayment] = await Promise.all([
                     getUserProfile(),
                     getPlans(),
                     getInvoices("all", 1),
                     getAnalytics("30"),
+                    getPaymentMethod().catch(() => null),
                 ]);
 
                 if (cancelled) return;
@@ -551,12 +555,10 @@ export function Billing() {
 
                 setUser(userData);
                 setPlans(mappedPlans);
-                // Use saved local plan if API returns no active plan, otherwise prefer API result
-                const savedPlanName = localStorage.getItem('samcard_selected_plan_name');
-                const savedPlanIdx = savedPlanName ? mappedPlans.findIndex(p => p.name === savedPlanName) : -1;
-                setCurrentPlanIdx(activePlanIdx >= 0 ? activePlanIdx : savedPlanIdx >= 0 ? savedPlanIdx : 0);
+                setCurrentPlanIdx(activePlanIdx >= 0 ? activePlanIdx : 0);
                 setAllInvoices(invoiceData.invoices);
                 setMonthlyTaps(analyticsData.totalTaps ?? 0);
+                if (savedPayment) setPaymentMethod(savedPayment);
             } catch (error) {
                 console.error("Failed to load billing data:", error);
             }
@@ -602,31 +604,47 @@ export function Billing() {
             return;
         }
         setModalLoading(true);
-        setCurrentPlanIdx(targetPlanIdx);
-        localStorage.setItem('samcard_selected_plan_name', target.name);
-        setModalLoading(false);
-        setModal(null);
-        addToast(`Successfully switched to ${target.name} plan!`);
-        setTargetPlanIdx(null);
+        try {
+            await updateUserPlan(target.tier);
+            setCurrentPlanIdx(targetPlanIdx);
+            addToast(`Successfully switched to ${target.name} plan!`);
+        } catch {
+            addToast("Failed to update plan. Please try again.", "info");
+        } finally {
+            setModalLoading(false);
+            setModal(null);
+            setTargetPlanIdx(null);
+        }
     };
 
     const confirmCancel = async () => {
         setModalLoading(true);
-        setCurrentPlanIdx(0); // go to Free
-        localStorage.setItem('samcard_selected_plan_name', plans[0]?.name ?? 'Free');
-        setModalLoading(false);
-        setModal(null);
-        addToast("Plan cancelled. You're now on the Free plan.", "info");
+        try {
+            await updateUserPlan(plans[0]?.tier ?? "FREE");
+            setCurrentPlanIdx(0);
+            addToast("Plan cancelled. You're now on the Free plan.", "info");
+        } catch {
+            addToast("Failed to cancel plan. Please try again.", "info");
+        } finally {
+            setModalLoading(false);
+            setModal(null);
+        }
     };
 
     const handleUpdatePayment = () => setModal("payment");
 
     const handleSavePayment = async (m: PaymentMethod) => {
         setModalLoading(true);
-        setPaymentMethod(m);
-        setModalLoading(false);
-        setModal(null);
-        addToast(`Payment updated to ${m.brand} •••• ${m.last4}`);
+        try {
+            await savePaymentMethod(m);
+            setPaymentMethod(m);
+            addToast(`Payment updated to ${m.brand} •••• ${m.last4}`);
+        } catch {
+            addToast("Failed to save payment method. Please try again.", "info");
+        } finally {
+            setModalLoading(false);
+            setModal(null);
+        }
     };
 
     const handleDownload = async (invoice: Invoice) => {

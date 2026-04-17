@@ -11,8 +11,8 @@ const getErrorMessage = (error: any): string => {
 };
 
 router.get("/", verifySession, async (req: AuthRequest, res: Response) => {
-  const { status, page = "1", limit = "20" } = req.query;
-  
+  const { status, page = "1", limit = "20", cardId } = req.query;
+
   try {
     const { data: profile } = await supabase
       .from("BusinessProfile")
@@ -32,6 +32,10 @@ router.get("/", verifySession, async (req: AuthRequest, res: Response) => {
 
     if (status && status !== "all") {
       query = query.eq("status", status);
+    }
+
+    if (cardId && typeof cardId === "string") {
+      query = query.eq("cardId", cardId);
     }
 
     const pageNum = Math.max(1, Number.parseInt(String(page), 10) || 1);

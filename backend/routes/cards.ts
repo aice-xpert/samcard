@@ -2,6 +2,7 @@ import express, { Response } from "express";
 import { supabase } from "../config/supabase";
 import { AuthRequest, verifySession } from "../middleware/auth";
 import { randomUUID } from "crypto";
+import { createNotification } from "../lib/notifications";
 
 const router = express.Router();
 
@@ -151,6 +152,14 @@ router.post("/", verifySession, async (req: AuthRequest, res: Response) => {
       return res.status(500).json({ error: error.message });
     }
 
+    void createNotification(
+      req.user!.uid,
+      "CARD",
+      "New Card Created",
+      `Your card "${name}" has been created and is ready to customize.`,
+      { sourceId: data.id, sourceType: "Card" }
+    );
+
     return res.status(201).json(data);
   } catch (error: unknown) {
     return res.status(500).json({ error: getErrorMessage(error) });
@@ -247,6 +256,24 @@ router.put("/:id", verifySession, async (req: AuthRequest, res: Response) => {
       return res.status(500).json({ error: error.message });
     }
 
+    if (status && normalizeCardStatus(status) === "ACTIVE") {
+      void createNotification(
+        req.user!.uid,
+        "CARD",
+        "Card Published",
+        `Your card "${data.name}" is now live and visible to everyone.`,
+        { sourceId: data.id, sourceType: "Card" }
+      );
+    } else if (name) {
+      void createNotification(
+        req.user!.uid,
+        "CARD",
+        "Card Updated",
+        `Your card "${data.name}" has been updated successfully.`,
+        { sourceId: data.id, sourceType: "Card" }
+      );
+    }
+
     return res.json(data);
   } catch (error: unknown) {
     return res.status(500).json({ error: getErrorMessage(error) });
@@ -288,6 +315,13 @@ router.delete("/:id", verifySession, async (req: AuthRequest, res: Response) => 
   const { id } = req.params;
 
   try {
+    const { data: cardToDelete } = await supabase
+      .from("Card")
+      .select("name")
+      .eq("id", id)
+      .eq("userId", req.user!.uid)
+      .maybeSingle();
+
     const { error } = await supabase
       .from("Card")
       .delete()
@@ -296,6 +330,16 @@ router.delete("/:id", verifySession, async (req: AuthRequest, res: Response) => 
 
     if (error) {
       return res.status(500).json({ error: error.message });
+    }
+
+    if (cardToDelete) {
+      void createNotification(
+        req.user!.uid,
+        "CARD",
+        "Card Deleted",
+        `Your card "${cardToDelete.name}" has been permanently deleted.`,
+        { sourceId: String(id), sourceType: "Card" }
+      );
     }
 
     return res.json({ success: true });

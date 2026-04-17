@@ -61,7 +61,7 @@ const getDaysFromPeriod = (period: "7" | "30" | "90"): number => {
   return 7;
 };
 
-async function buildAnalyticsPayload(uid: string, periodQuery: unknown) {
+async function buildAnalyticsPayload(uid: string, periodQuery: unknown, cardId?: string) {
   const period = parsePeriod(periodQuery);
   const days = getDaysFromPeriod(period);
 
@@ -101,7 +101,8 @@ async function buildAnalyticsPayload(uid: string, periodQuery: unknown) {
     .select("id")
     .eq("businessProfileId", profile.id);
 
-  const cardIds = cards?.map((c: { id: string }) => c.id) || [];
+  const allCardIds = cards?.map((c: { id: string }) => c.id) || [];
+  const cardIds = cardId && allCardIds.includes(cardId) ? [cardId] : allCardIds;
 
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - days);
@@ -507,7 +508,8 @@ async function buildWeeklyChallenge(uid: string) {
 
 router.get("/", verifySession, async (req: AuthRequest, res: Response) => {
   try {
-    const data = await buildAnalyticsPayload(req.user!.uid, req.query.period);
+    const cardId = typeof req.query.cardId === "string" ? req.query.cardId : undefined;
+    const data = await buildAnalyticsPayload(req.user!.uid, req.query.period, cardId);
     return res.json(data);
   } catch (error: unknown) {
     return res.status(500).json({ error: getErrorMessage(error) });
@@ -516,7 +518,8 @@ router.get("/", verifySession, async (req: AuthRequest, res: Response) => {
 
 router.get("/device-distribution", verifySession, async (req: AuthRequest, res: Response) => {
   try {
-    const data = await buildAnalyticsPayload(req.user!.uid, req.query.period);
+    const cardId = typeof req.query.cardId === "string" ? req.query.cardId : undefined;
+    const data = await buildAnalyticsPayload(req.user!.uid, req.query.period, cardId);
     return res.json(data.deviceDistribution.length > 0 ? data.deviceDistribution : ZERO_DEVICE_DISTRIBUTION);
   } catch (error: unknown) {
     return res.status(500).json({ error: getErrorMessage(error) });
@@ -525,7 +528,8 @@ router.get("/device-distribution", verifySession, async (req: AuthRequest, res: 
 
 router.get("/conversion-funnel", verifySession, async (req: AuthRequest, res: Response) => {
   try {
-    const data = await buildAnalyticsPayload(req.user!.uid, req.query.period);
+    const cardId = typeof req.query.cardId === "string" ? req.query.cardId : undefined;
+    const data = await buildAnalyticsPayload(req.user!.uid, req.query.period, cardId);
     return res.json(data.funnelSteps.length > 0 ? data.funnelSteps : ZERO_FUNNEL_STEPS);
   } catch (error: unknown) {
     return res.status(500).json({ error: getErrorMessage(error) });
@@ -534,7 +538,8 @@ router.get("/conversion-funnel", verifySession, async (req: AuthRequest, res: Re
 
 router.get("/top-locations", verifySession, async (req: AuthRequest, res: Response) => {
   try {
-    const data = await buildAnalyticsPayload(req.user!.uid, req.query.period);
+    const cardId = typeof req.query.cardId === "string" ? req.query.cardId : undefined;
+    const data = await buildAnalyticsPayload(req.user!.uid, req.query.period, cardId);
     return res.json(data.topLocations.length > 0 ? data.topLocations : ZERO_TOP_LOCATIONS);
   } catch (error: unknown) {
     return res.status(500).json({ error: getErrorMessage(error) });

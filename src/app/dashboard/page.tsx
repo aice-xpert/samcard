@@ -166,6 +166,14 @@ export default function Home() {
       setAnalyticsCardId(undefined);
       setAnalyticsCardTitle(undefined);
     }
+    // Sidebar navigation to create-card always starts a fresh card
+    if (page === 'create-card') {
+      setEditingCardId(undefined);
+    }
+    // Navigating away from create-card clears any stale editing context
+    if (activePage === 'create-card' && page !== 'create-card') {
+      setEditingCardId(undefined);
+    }
     setActivePage(page);
     setSidebarOpen(false);
   };

@@ -15,6 +15,12 @@ const STEPS = [
 function CampaignNameModal({ onCancel, onSave }: { onCancel: () => void; onSave: (campaignName: string) => void }) {
     const [campaignName, setCampaignName] = useState("");
     const [folder, setFolder] = useState("");
+    const [isSaving, setIsSaving] = useState(false);
+
+    const handleSave = async () => {
+        setIsSaving(true);
+        await onSave(campaignName);
+    };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
@@ -72,10 +78,11 @@ function CampaignNameModal({ onCancel, onSave }: { onCancel: () => void; onSave:
                         Cancel
                     </button>
                     <button
-                        onClick={() => onSave(campaignName)}
-                        className="px-6 py-2.5 rounded-xl bg-[#008001] text-white text-sm font-semibold hover:bg-[#49B618] transition-all"
+                        onClick={handleSave}
+                        disabled={isSaving}
+                        className="px-6 py-2.5 rounded-xl bg-[#008001] text-white text-sm font-semibold hover:bg-[#49B618] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                        Save
+                        {isSaving ? "Saving..." : "Save"}
                     </button>
                 </div>
             </div>
@@ -219,6 +226,7 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
     const [campaignName, setCampaignName] = useState("");
     const [createdSlug, setCreatedSlug] = useState<string | undefined>(undefined);
     const [activeCardId, setActiveCardId] = useState<string | undefined>(cardId);
+    const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
         setStep(1);
@@ -294,13 +302,24 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
         glowEffect: typeof settings?.glowEffect === "boolean" ? settings.glowEffect : true,
     });
 
-    const handleSaveFinish = () => setShowCampaignModal(true);
+    const handleSaveFinish = () => {
+        if (activeCardId) {
+            // Editing existing card — save directly, no name prompt
+            void handleSaveCard(undefined);
+        } else {
+            // Creating new card — ask for campaign name first
+            setShowCampaignModal(true);
+        }
+    };
     const handleCampaignSave = async (campaignName: string) => {
+        await handleSaveCard(campaignName);
+    };
+    const handleSaveCard = async (campaignName: string | undefined) => {
+        setIsSaving(true);
         // Build payload for both create and edit flows
-        const payload: any = {
-            name: campaignName || "My Card",
-            cardType: "QR",
-        };
+        const payload: any = { cardType: "QR" };
+        // Only set name when explicitly provided (new card flow); editing preserves the existing name
+        if (campaignName) payload.name = campaignName;
 
         // Add design settings
         if (designSettings) {
@@ -332,7 +351,7 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
                 const edited = cards.find((c) => c.id === targetCardId);
                 setCreatedSlug(edited?.slug);
             } else {
-                const card = await createCard(payload);
+                const card = await createCard({ ...payload, name: campaignName || "My Card" });
                 targetCardId = card.id;
                 setActiveCardId(card.id);
                 setCreatedSlug(card.slug);
@@ -356,7 +375,8 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
             setShowSuccessModal(true);
         } catch (error) {
             console.error("Error saving card:", error);
-            // Handle error
+        } finally {
+            setIsSaving(false);
         }
     };
     const handleClose = () => { setShowCampaignModal(false); setShowSuccessModal(false); };
@@ -365,30 +385,13 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
         onDone?.();
     };
 
-    // Ensures a draft card exists before showing the QR step.
-    // Safe to call multiple times — no-ops if the card is already created.
-    const ensureCardExists = useCallback(async () => {
-        if (activeCardId) return;
-        try {
-            const card = await createCard({ name: "My Card", cardType: "QR" });
-            setActiveCardId(card.id);
-            setCreatedSlug(card.slug ?? card.id);
-        } catch {
-            // creation failed — QR will stay hidden until the card is saved
-        }
-    }, [activeCardId]);
-
-    const handleNext = useCallback(async () => {
-        // Ensure the card exists whenever the user is about to see step 3
-        if (step === 2) await ensureCardExists();
+    const handleNext = useCallback(() => {
         setStep((prev) => Math.min(STEPS.length, prev + 1));
-    }, [step, ensureCardExists]);
+    }, []);
 
-    const handleStepClick = useCallback(async (targetStep: number) => {
-        // If jumping directly to step 3 via the stepper, pre-create the card first
-        if (targetStep === 3) await ensureCardExists();
+    const handleStepClick = useCallback((targetStep: number) => {
         setStep(targetStep);
-    }, [ensureCardExists]);
+    }, []);
 
     return (
         <div className="flex flex-col">
@@ -472,9 +475,10 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
                 ) : (
                     <button
                         onClick={handleSaveFinish}
-                        className="px-5 py-2 rounded-lg bg-[#49B618] text-white text-sm font-semibold hover:bg-[#008001] transition-all"
+                        disabled={isSaving}
+                        className="px-5 py-2 rounded-lg bg-[#49B618] text-white text-sm font-semibold hover:bg-[#008001] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                        Save & Finish ✓
+                        {isSaving ? "Saving..." : "Save & Finish ✓"}
                     </button>
                 )}
             </div>
