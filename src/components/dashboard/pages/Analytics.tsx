@@ -143,7 +143,12 @@ function StatCard({
 }
 
 // ── Main Component ─────────────────────────────────────────────────────
-export default function Analytics() {
+interface AnalyticsProps {
+  cardId?: string;
+  cardTitle?: string;
+}
+
+export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
   const [period, setPeriod] = useState<Period>("7");
   const [loading, setLoading] = useState(true);
   const [momLoading, setMomLoading] = useState(true);
@@ -180,13 +185,13 @@ export default function Analytics() {
   // ── Phase 1: stat cards + chart + funnel + device + sources + locations + top links ──
   useEffect(() => {
     setLoading(true);
-    getAnalytics(period)
+    getAnalytics(period, cardId)
       .catch(() => null)
       .then((a) => {
         setAnalytics(a);
         setLoading(false);
       });
-  }, [period]);
+  }, [period, cardId]);
 
   // ── Phase 2: Month-over-Month (deferred until row scrolls into view) ──
   useEffect(() => {
@@ -218,14 +223,14 @@ export default function Analytics() {
   useEffect(() => {
     if (!leadsInView) return;
     setLeadsLoading(true);
-    getLeads(undefined, leadsPage)
+    getLeads(undefined, leadsPage, cardId)
       .then((res) => {
         setLeads(res.leads ?? []);
         setLeadsTotal(res.total ?? 0);
         setLeadsLoading(false);
       })
       .catch(() => setLeadsLoading(false));
-  }, [leadsInView, leadsPage]);
+  }, [leadsInView, leadsPage, cardId]);
 
   // ── Client-side lead search ──
   const filteredLeads = useMemo(
@@ -358,7 +363,9 @@ export default function Analytics() {
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight">Analytics</h1>
           <p className="text-sm text-[#A0A0A0] mt-1">
-            Comprehensive insights into your digital card performance
+            {cardTitle
+              ? <>Showing analytics for <span className="text-[#49B618] font-medium">{cardTitle}</span></>
+              : "Comprehensive insights into your digital card performance"}
           </p>
         </div>
         <div className="flex items-center gap-3">

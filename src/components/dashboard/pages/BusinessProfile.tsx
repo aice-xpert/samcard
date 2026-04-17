@@ -872,19 +872,23 @@ export default function BusinessProfile({
         setLogoPosition(normalizeLogoPositionFromApi(profile.logoPosition));
       }
 
-      setFormData(prev => ({
-        ...prev,
-        name: shouldPersistGlobalProfile ? (profile.name || prev.name) : (prev.name || profile.name || ''),
-        title: shouldPersistGlobalProfile ? (profile.title || '') : (prev.title || profile.title || ''),
-        company: shouldPersistGlobalProfile ? (profile.company || '') : (prev.company || profile.company || ''),
-        tagline: shouldPersistGlobalProfile ? (profile.tagline || '') : (prev.tagline || profile.tagline || ''),
-        email: shouldPersistGlobalProfile ? (profile.primaryEmail || '') : (prev.email || profile.primaryEmail || ''),
-        phone: shouldPersistGlobalProfile ? (profile.primaryPhone || '') : (prev.phone || profile.primaryPhone || ''),
-        website: shouldPersistGlobalProfile ? (profile.website || '') : (prev.website || profile.website || ''),
-        location: shouldPersistGlobalProfile
-          ? [profile.city, profile.state, profile.country].filter(Boolean).join(', ')
-          : (prev.location || [profile.city, profile.state, profile.country].filter(Boolean).join(', ')),
-      }));
+      // For a new card (!cardId && !allowFallbackToFirstCard), never pre-fill from the global profile.
+      const isNewCard = !cardId && !allowFallbackToFirstCard;
+      if (!isNewCard) {
+        setFormData(prev => ({
+          ...prev,
+          name: shouldPersistGlobalProfile ? (profile.name || prev.name) : (prev.name || profile.name || ''),
+          title: shouldPersistGlobalProfile ? (profile.title || '') : (prev.title || profile.title || ''),
+          company: shouldPersistGlobalProfile ? (profile.company || '') : (prev.company || profile.company || ''),
+          tagline: shouldPersistGlobalProfile ? (profile.tagline || '') : (prev.tagline || profile.tagline || ''),
+          email: shouldPersistGlobalProfile ? (profile.primaryEmail || '') : (prev.email || profile.primaryEmail || ''),
+          phone: shouldPersistGlobalProfile ? (profile.primaryPhone || '') : (prev.phone || profile.primaryPhone || ''),
+          website: shouldPersistGlobalProfile ? (profile.website || '') : (prev.website || profile.website || ''),
+          location: shouldPersistGlobalProfile
+            ? [profile.city, profile.state, profile.country].filter(Boolean).join(', ')
+            : (prev.location || [profile.city, profile.state, profile.country].filter(Boolean).join(', ')),
+        }));
+      }
     }
 
     if (socialResult.status === 'fulfilled' && shouldPersistGlobalProfile) {
@@ -914,7 +918,7 @@ export default function BusinessProfile({
         setCustomLinks(mappedLinks);
       }
     }
-  }, [initial.brandLogo, initial.logoPosition, initial.profileImage, shouldPersistGlobalProfile]);
+  }, [initial.brandLogo, initial.logoPosition, initial.profileImage, shouldPersistGlobalProfile, cardId, allowFallbackToFirstCard]);
 
   useEffect(() => {
     loadFromApi().catch(() => null);
