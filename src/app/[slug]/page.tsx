@@ -218,7 +218,8 @@ function DynamicQR({
     return isNaN(idx) ? null : LOGOS[idx];
   }, [qrConfig?.selectedLogo]);
 
-  const RING_PAD = sticker ? 32 : 0;
+  const isSquareShape = !qrConfig?.shapeId || qrConfig.shapeId === 'square' || qrConfig.shapeId === 'rounded-square';
+  const RING_PAD = sticker ? (isSquareShape ? 60 : 32) : 0;
   const OUTER = size + RING_PAD * 2;
   const gradId = "pub-qr-grad";
   const clipId = "pub-qr-clip";

@@ -10,8 +10,6 @@ import { makeQRMatrix } from "@/components/dashboard/pages/qr-engine";
 import { uploadFile } from "@/lib/api";
 
 const PREVIEW_PX = 240;
-const STICKER_RING_PAD = 44;
-const OUTER_PX = PREVIEW_PX + STICKER_RING_PAD * 2;
 const FONT = "'Sora','DM Sans','Segoe UI',system-ui,sans-serif";
 const IC = "#22c55e";
 
@@ -290,6 +288,9 @@ export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUr
   const activeBodyType = (shapesOverridden || !selectedDesign) ? bodyType : (selectedDesign.dotShape ?? bodyType);
   const activeEyeFrame = (shapesOverridden || !selectedDesign) ? eyeFrameType : (selectedDesign.finderStyle ?? eyeFrameType);
   const activeShapeId = resolveShapeId(selectedShape.id);
+  const isSquareShape = activeShapeId === 'square' || activeShapeId === 'rounded-square';
+  const STICKER_RING_PAD = isSquareShape ? 70 : 30;
+  const OUTER_PX = PREVIEW_PX + STICKER_RING_PAD * 2;
 
   const [clipKey] = useState(() => Math.random().toString(36).slice(2, 6));
   const previewClipId = `qrc-${activeShapeId}-${clipKey}`;
