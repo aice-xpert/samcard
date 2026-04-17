@@ -482,37 +482,44 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onVie
 
   // ── actions ──────────────────────────────────────────────────────
 
-  // Toggle ACTIVE ↔ DRAFT and persist to backend
-  const toggleStatus = async (card: CardType) => {
-    // BUG-21: Prevent multiple simultaneous toggles on the same card
-    if (togglingIds.has(card.id)) return;
+const toggleStatus = useCallback(async (cardId: string) => {
+  // Bail immediately if already in-flight for this card
+  if (togglingIds.has(cardId)) return;
 
-    const newStatus = card.status === 'ACTIVE' ? 'DRAFT' : 'ACTIVE';
+  // Read current card status from state (avoids stale closure bug)
+  let currentStatus: string | undefined;
+  setCards(prev => {
+    currentStatus = prev.find(c => c.id === cardId)?.status;
+    return prev; // no-op read
+  });
+  if (!currentStatus) return;
 
-    setTogglingIds(prev => new Set(prev).add(card.id));
+  const newStatus = currentStatus === 'ACTIVE' ? 'DRAFT' : 'ACTIVE';
 
-    // Optimistic update
+  setTogglingIds(prev => new Set(prev).add(cardId));
+
+  // Optimistic update
+  setCards(prev =>
+    prev.map(c => c.id === cardId ? { ...c, status: newStatus } : c)
+  );
+
+  try {
+    await updateCard(cardId, { status: newStatus });
+    showToast(newStatus === 'ACTIVE' ? 'Card published!' : 'Card set to draft.');
+  } catch (err) {
+    // Rollback
     setCards(prev =>
-      prev.map(c => c.id === card.id ? { ...c, status: newStatus } : c)
+      prev.map(c => c.id === cardId ? { ...c, status: currentStatus! } : c)
     );
-
-    try {
-      await updateCard(card.id, { status: newStatus });
-      showToast(newStatus === 'ACTIVE' ? 'Card published!' : 'Card set to draft.');
-    } catch (err) {
-      // Rollback on failure
-      setCards(prev =>
-        prev.map(c => c.id === card.id ? { ...c, status: card.status } : c)
-      );
-      showToast(`Failed to update status: ${err instanceof Error ? err.message : 'Unknown error'}`);
-    } finally {
-      setTogglingIds(prev => {
-        const next = new Set(prev);
-        next.delete(card.id);
-        return next;
-      });
-    }
-  };
+    showToast(`Failed to update status: ${err instanceof Error ? err.message : 'Unknown error'}`);
+  } finally {
+    setTogglingIds(prev => {
+      const next = new Set(prev);
+      next.delete(cardId);
+      return next;
+    });
+  }
+}, [togglingIds, showToast]);
 
   const deleteCard = async (id: string) => {
     try {
@@ -1029,10 +1036,13 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onVie
                   </span>
                   <Switch
                     checked={card.status === 'ACTIVE'}
-                    onCheckedChange={() => toggleStatus(card)}
+                    onCheckedChange={() => toggleStatus(card.id)}
                     disabled={togglingIds.has(card.id)}
                     className="scale-90 sm:scale-100"
-                    style={card.status === 'ACTIVE' ? { backgroundColor: theme.accentLight } : undefined}
+                    style={{
+                      ...(card.status === 'ACTIVE' ? { backgroundColor: theme.accentLight } : {}),
+                      pointerEvents: togglingIds.has(card.id) ? 'none' : undefined,
+                    }}
                   />
                 </div>
 

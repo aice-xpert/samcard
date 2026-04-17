@@ -182,6 +182,33 @@ router.put("/:id", verifySession, async (req: AuthRequest, res: Response) => {
       if (!normalizedStatus) {
         return res.status(400).json({ error: "Invalid status value" });
       }
+
+      // If already in requested status, return current state without writing
+      // to prevent redundant updates from rapid/concurrent toggles.
+      const { data: currentCard, error: currentCardError } = await supabase
+        .from("Card")
+        .select("status")
+        .eq("id", id)
+        .single();
+
+      if (currentCardError) {
+        return res.status(500).json({ error: currentCardError.message });
+      }
+
+      if (currentCard?.status === normalizedStatus) {
+        const { data: unchanged, error: unchangedError } = await supabase
+          .from("Card")
+          .select("*")
+          .eq("id", id)
+          .single();
+
+        if (unchangedError) {
+          return res.status(500).json({ error: unchangedError.message });
+        }
+
+        return res.json(unchanged);
+      }
+
       updateData.status = normalizedStatus;
       if (normalizedStatus === "ACTIVE") {
         updateData.publishedAt = new Date().toISOString();
