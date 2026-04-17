@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { flushSync } from 'react-dom';
+import { useState, useEffect, useCallback } from 'react';
+import React from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { Card, CardContent, CardHeader } from '@/components/dashboard/ui/card';
 import { Button } from '@/components/dashboard/ui/button';
 import { Badge } from '@/components/dashboard/ui/badge';
@@ -23,8 +24,8 @@ import {
   ApiCard,
   CardQRConfigPayload,
 } from '@/lib/api';
-import { QRWithShape, STICKER_DEFS } from '@/components/dashboard/pages/Qrrenderers';
 import { makeQRMatrix } from '@/components/dashboard/pages/qr-engine';
+import { QRWithShape, STICKER_DEFS } from '@/components/dashboard/pages/Qrrenderers';
 import { LOGOS } from '@/components/dashboard/pages/constants';
 
 const sparklineData = [
@@ -113,6 +114,127 @@ const normalizeHexForQrApi = (value: string | undefined, fallback: string): stri
   return fallback;
 };
 
+const buildQrSvgString = (
+  matrix: boolean[][],
+  N: number,
+  fg: string,
+  bg: string,
+  outputSize = 1200,
+  margin = 40,
+): string => {
+  const innerSize = outputSize - margin * 2;
+  const cs = innerSize / N;
+  const rects: string[] = [];
+  for (let r = 0; r < N; r++) {
+    for (let c = 0; c < N; c++) {
+      if (matrix[r][c]) {
+        const x = (margin + c * cs).toFixed(2);
+        const y = (margin + r * cs).toFixed(2);
+        const s = cs.toFixed(2);
+        rects.push(`<rect x="${x}" y="${y}" width="${s}" height="${s}" fill="${fg}"/>`);
+      }
+    }
+  }
+  return [
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${outputSize}" height="${outputSize}" viewBox="0 0 ${outputSize} ${outputSize}">`,
+    `<rect width="${outputSize}" height="${outputSize}" fill="${bg}"/>`,
+    ...rects,
+    `</svg>`,
+  ].join('');
+};
+
+const buildCustomizedQrSvgString = (
+  qrConfig: CardQRConfigPayload,
+  matrix: boolean[][],
+  N: number,
+  outputSize = 1200,
+): string => {
+  const fg = `#${normalizeHexForQrApi(qrConfig.fg, '000000')}`;
+  const bg = `#${normalizeHexForQrApi(qrConfig.bg, 'ffffff')}`;
+  const safeFg = fg.toLowerCase() === bg.toLowerCase() ? '#000000' : fg;
+
+  const gradEnabled = qrConfig.gradEnabled && (qrConfig.gradStops?.length ?? 0) >= 2;
+  const gradId = 'qr-dl-grad';
+  const clipId = 'qr-dl-clip';
+
+  const sticker = qrConfig.stickerId
+    ? STICKER_DEFS.find(s => s.id === qrConfig.stickerId) ?? null
+    : null;
+
+  const isSquareShape = !qrConfig.shapeId || qrConfig.shapeId === 'square' || qrConfig.shapeId === 'rounded-square';
+  const RING_PAD = isSquareShape ? 60 : 36;
+  const QR_SIZE = sticker ? outputSize - RING_PAD * 2 : outputSize;
+  const OUTER = outputSize;
+
+  const logoIndex = qrConfig.selectedLogo?.startsWith('logo-')
+    ? parseInt(qrConfig.selectedLogo.replace('logo-', ''), 10)
+    : null;
+  const logoEntry = logoIndex !== null ? LOGOS[logoIndex] : null;
+  const logoNode: React.ReactNode = logoEntry?.icon ?? null;
+  const logoBg = logoEntry?.bg ?? qrConfig.logoBg ?? '#ffffff';
+
+  const gradAngle = qrConfig.gradAngle ?? 135;
+  const gradStops = qrConfig.gradStops ?? [];
+
+  const svgEl = React.createElement(
+    'svg',
+    {
+      xmlns: 'http://www.w3.org/2000/svg',
+      width: OUTER,
+      height: OUTER,
+      viewBox: `0 0 ${OUTER} ${OUTER}`,
+    },
+    gradEnabled
+      ? React.createElement(
+          'defs',
+          null,
+          React.createElement(
+            'linearGradient',
+            {
+              id: gradId,
+              x1: `${50 - 50 * Math.cos((gradAngle * Math.PI) / 180)}%`,
+              y1: `${50 - 50 * Math.sin((gradAngle * Math.PI) / 180)}%`,
+              x2: `${50 + 50 * Math.cos((gradAngle * Math.PI) / 180)}%`,
+              y2: `${50 + 50 * Math.sin((gradAngle * Math.PI) / 180)}%`,
+            },
+            ...gradStops.map((s, i) =>
+              React.createElement('stop', { key: i, offset: `${s.offset * 100}%`, stopColor: s.color }),
+            ),
+          ),
+        )
+      : null,
+    React.createElement('rect', { width: OUTER, height: OUTER, fill: bg }),
+    React.createElement(
+      'g',
+      sticker ? { transform: `translate(${RING_PAD},${RING_PAD})` } : null,
+      React.createElement(QRWithShape, {
+        shapeId: qrConfig.shapeId ?? 'square',
+        dotShape: qrConfig.dotShape ?? 'square',
+        finderStyle: qrConfig.finderStyle ?? 'square',
+        fg: gradEnabled ? `url(#${gradId})` : safeFg,
+        bg,
+        accentFg: qrConfig.accentFg,
+        accentBg: qrConfig.accentBg,
+        scale: qrConfig.bodyScale ?? 1.0,
+        eyeBall: qrConfig.eyeBall ?? 'square',
+        size: QR_SIZE,
+        strokeEnabled: qrConfig.strokeEnabled ?? false,
+        strokeColor: qrConfig.strokeColor ?? '#000000',
+        selectedLogo: qrConfig.selectedLogo ?? null,
+        customLogoUrl: qrConfig.customLogoUrl ?? null,
+        logoNode,
+        logoBg,
+        clipId,
+        qrMatrix: matrix,
+        qrN: N,
+      }),
+    ),
+    sticker ? sticker.render(OUTER, QR_SIZE) : null,
+  );
+
+  return renderToStaticMarkup(svgEl);
+};
+
 const ensureSvgNamespaces = (svgText: string): string => {
   let normalized = svgText;
   if (!/xmlns=/.test(normalized)) {
@@ -188,6 +310,21 @@ const sanitizeExportSvg = (svgText: string): string => {
 
     if (!svgRoot.getAttribute('preserveAspectRatio')) {
       svgRoot.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    }
+
+    // Hoist all nested <defs> to a single root-level <defs> so clipPath
+    // references resolve correctly when the SVG is loaded as a blob image.
+    const nestedDefs = Array.from(svgRoot.querySelectorAll(':scope > * > defs, :scope > * > * > defs'));
+    if (nestedDefs.length > 0) {
+      let rootDefs = svgRoot.querySelector(':scope > defs');
+      if (!rootDefs) {
+        rootDefs = documentNode.createElementNS('http://www.w3.org/2000/svg', 'defs');
+        svgRoot.insertBefore(rootDefs, svgRoot.firstChild);
+      }
+      nestedDefs.forEach(defsNode => {
+        while (defsNode.firstChild) rootDefs!.appendChild(defsNode.firstChild);
+        defsNode.parentNode?.removeChild(defsNode);
+      });
     }
 
     return new XMLSerializer().serializeToString(svgRoot);
@@ -382,12 +519,6 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onVie
   const [downloadingQrId, setDownloadingQrId] = useState<string | null>(null);
   const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
   const [togglingIds, setTogglingIds] = useState<Set<string>>(new Set());
-  const qrSvgRefs = useRef<Record<string, SVGSVGElement | null>>({});
-
-  const setQrSvgRef = useCallback((cardId: string, element: SVGSVGElement | null) => {
-    qrSvgRefs.current[cardId] = element;
-  }, []);
-
   const loadCardAssets = useCallback(async (cardIds: string[]) => {
     if (!cardIds.length) return;
 
@@ -536,7 +667,6 @@ const toggleStatus = useCallback(async (cardId: string) => {
         delete next[id];
         return next;
       });
-      delete qrSvgRefs.current[id];
       setConfirmDelete(null);
       showToast('Card deleted');
     } catch (error) {
@@ -636,45 +766,21 @@ const toggleStatus = useCallback(async (cardId: string) => {
     setDownloadingQrId(card.id);
 
     try {
-      // Fetch fresh config to ensure the hidden SVG reflects saved customizations
       const freshConfig = await getCardQRConfig(card.id).catch(() => null);
-      if (freshConfig) {
-        flushSync(() => {
-          setCardQrById(prev => ({ ...prev, [card.id]: freshConfig }));
-        });
+      const qrConfig = freshConfig || cardQrById[card.id];
+      const { matrix, N } = makeQRMatrix(cardPublicUrl(card));
+
+      let svgText: string;
+      if (qrConfig) {
+        svgText = buildCustomizedQrSvgString(qrConfig, matrix, N, 1200);
+      } else {
+        const fg = '#000000';
+        const bg = '#ffffff';
+        svgText = buildQrSvgString(matrix, N, fg, bg, 1200, 40);
       }
 
-      const svgElement = qrSvgRefs.current[card.id];
-
-      if (svgElement) {
-        const svgText = new XMLSerializer().serializeToString(svgElement);
-        const jpgBlob = await svgTextToJpegBlob(svgText);
-        triggerBlobDownload(jpgBlob, `${card.slug}-qr.jpg`);
-        showToast('Custom QR downloaded (.jpg)');
-        return;
-      }
-
-      const qrConfig = cardQrById[card.id];
-      const fg = normalizeHexForQrApi(qrConfig?.fg, '000000');
-      const bg = normalizeHexForQrApi(qrConfig?.bg, 'ffffff');
-      const safeFg = fg === bg ? '000000' : fg;
-      const fallbackUrl = `https://api.qrserver.com/v1/create-qr-code/?size=1200x1200&margin=40&data=${encodeURIComponent(cardPublicUrl(card))}&color=${safeFg}&bgcolor=${bg}`;
-
-      const response = await fetch(fallbackUrl);
-      if (!response.ok) {
-        throw new Error(`QR generation failed (${response.status})`);
-      }
-
-      const pngBlob = await response.blob();
-      const pngUrl = URL.createObjectURL(pngBlob);
-
-      try {
-        const jpgBlob = await imageUrlToJpegBlob(pngUrl);
-        triggerBlobDownload(jpgBlob, `${card.slug}-qr.jpg`);
-      } finally {
-        URL.revokeObjectURL(pngUrl);
-      }
-
+      const jpgBlob = await svgTextToJpegBlob(svgText, 1200);
+      triggerBlobDownload(jpgBlob, `${card.slug}-qr.jpg`);
       showToast('QR downloaded (.jpg)');
     } catch (error) {
       showToast(`Failed to download QR: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -776,31 +882,6 @@ const toggleStatus = useCallback(async (cardId: string) => {
           const previewName = preview?.name?.trim() || card.title || card.name;
           const previewTitle = preview?.title?.trim() || '';
           const previewImage = preview?.profileImage?.trim() || '';
-
-          const qrConfig = cardQrById[card.id] || null;
-          const qrMatrixData = makeQRMatrix(cardPublicUrl(card));
-          const qrGradientId = `mycards-qr-grad-${card.id}`;
-          const gradientStops = qrConfig?.gradStops ?? [];
-          const qrBg = qrConfig?.bg || '#ffffff';
-          const qrSolidFg = qrConfig?.fg || '#000000';
-          const safeQrSolidFg =
-            qrSolidFg.toLowerCase() === qrBg.toLowerCase() ? '#000000' : qrSolidFg;
-          const qrFill = qrConfig?.gradEnabled && gradientStops.length >= 2
-            ? `url(#${qrGradientId})`
-            : safeQrSolidFg;
-          const gradAngle = typeof qrConfig?.gradAngle === 'number' ? qrConfig.gradAngle : 135;
-          const selectedSticker = qrConfig?.stickerId
-            ? STICKER_DEFS.find((sticker) => sticker.id === qrConfig.stickerId) ?? null
-            : null;
-          const qrRenderSize = selectedSticker ? 260 : 320;
-          const qrRenderOffset = (320 - qrRenderSize) / 2;
-
-          const logoIndex = qrConfig?.selectedLogo?.startsWith('logo-')
-            ? Number.parseInt(qrConfig.selectedLogo.replace('logo-', ''), 10)
-            : -1;
-          const logoPreset = Number.isInteger(logoIndex) && logoIndex >= 0 && logoIndex < LOGOS.length
-            ? LOGOS[logoIndex]
-            : null;
 
           return (
           <Card
@@ -975,59 +1056,6 @@ const toggleStatus = useCallback(async (cardId: string) => {
                   </Button>
                 ))}
               </div>
-
-              {/* Hidden SVG used for per-variant custom QR downloads */}
-              <svg
-                ref={(element) => setQrSvgRef(card.id, element)}
-                viewBox="0 0 360 360"
-                width="360"
-                height="360"
-                aria-hidden="true"
-                style={{ position: 'absolute', width: 0, height: 0, opacity: 0, pointerEvents: 'none' }}
-              >
-                {qrConfig?.gradEnabled && gradientStops.length >= 2 && (
-                  <defs>
-                    <linearGradient
-                      id={qrGradientId}
-                      x1={`${50 - 50 * Math.cos((gradAngle * Math.PI) / 180)}%`}
-                      y1={`${50 - 50 * Math.sin((gradAngle * Math.PI) / 180)}%`}
-                      x2={`${50 + 50 * Math.cos((gradAngle * Math.PI) / 180)}%`}
-                      y2={`${50 + 50 * Math.sin((gradAngle * Math.PI) / 180)}%`}
-                    >
-                      {gradientStops.map((stop, index) => (
-                        <stop key={`${card.id}-grad-${index}`} offset={`${Math.max(0, Math.min(1, stop.offset)) * 100}%`} stopColor={stop.color} />
-                      ))}
-                    </linearGradient>
-                  </defs>
-                )}
-                <rect width="360" height="360" fill={qrBg} rx="20" />
-                <g transform="translate(20,20)">
-                  <g transform={`translate(${qrRenderOffset},${qrRenderOffset})`}>
-                    <QRWithShape
-                      shapeId={qrConfig?.shapeId || 'square'}
-                      dotShape={qrConfig?.dotShape || 'square'}
-                      finderStyle={qrConfig?.finderStyle || 'square'}
-                      eyeBall={qrConfig?.eyeBall || 'square'}
-                      fg={qrFill}
-                      bg={qrBg}
-                      accentFg={qrConfig?.accentFg || safeQrSolidFg}
-                      accentBg={qrConfig?.accentBg || qrBg}
-                      scale={typeof qrConfig?.bodyScale === 'number' ? qrConfig.bodyScale : 1}
-                      strokeEnabled={Boolean(qrConfig?.strokeEnabled)}
-                      strokeColor={qrConfig?.strokeColor || '#000000'}
-                      selectedLogo={qrConfig?.selectedLogo || null}
-                      customLogoUrl={qrConfig?.customLogoUrl || null}
-                      logoNode={logoPreset?.icon ?? null}
-                      logoBg={logoPreset?.bg ?? qrConfig?.logoBg ?? '#ffffff'}
-                      size={qrRenderSize}
-                      clipId={`mycards-qr-clip-${card.id}`}
-                      qrMatrix={qrMatrixData.matrix}
-                      qrN={qrMatrixData.N}
-                    />
-                  </g>
-                  {selectedSticker && selectedSticker.render(320, qrRenderSize)}
-                </g>
-              </svg>
 
               {/* Bottom row: Publish toggle */}
               <div className="flex items-center justify-between pt-2 sm:pt-3 border-t border-[#1E1E1E]">
