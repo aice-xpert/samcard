@@ -832,12 +832,19 @@ export function DesignNew({
     setDraft(prev => ({ ...prev, palette: 'custom', accentColor: color, accentLight: lightenHex(color, 35) }));
   }, []);
 
+  const publicBase =
+    (process.env.NEXT_PUBLIC_APP_URL ?? '').replace(/\/$/, '') ||
+    (typeof window !== 'undefined' ? window.location.origin : '');
+  const publishedShareUrl = resolvedCardId && publicBase ? `${publicBase}/${resolvedCardId}` : '';
+  const hasPublishedUrl = !!(resolvedCardId && publishedShareUrl);
+
   const handleShareLink = useCallback(async () => {
-    const url = profile.formData?.website || window.location.href;
+    if (!publishedShareUrl) return;
+    const url = publishedShareUrl;
     try { await navigator.clipboard.writeText(url); }
     catch { const el = document.createElement('input'); el.value = url; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el); }
     setCopied(true); setTimeout(() => setCopied(false), 2500);
-  }, [profile.formData?.website]);
+  }, [publishedShareUrl]);
 
   const handleSaveContact = useCallback(() => {
     const fd = {
@@ -879,7 +886,7 @@ export function DesignNew({
   const shadowMap = { none: 'none', soft: `0 4px 24px ${draft.accentColor}25`, medium: `0 8px 48px ${draft.accentColor}45`, strong: `0 12px 72px ${draft.accentColor}70` };
   const wrapperShadow = draft.glowEffect ? `${shadowMap[draft.shadowIntensity]}, 0 0 40px ${draft.accentColor}22` : shadowMap[draft.shadowIntensity];
 
-  const sharedPreviewProps = { cardId: resolvedCardId, profileImage, brandLogo, logoPosition, formData, socialLinks, customLinks, extraSections, sections, savedContact, copied, themeOverride };
+  const sharedPreviewProps = { cardId: resolvedCardId, publishedLink: publishedShareUrl, profileImage, brandLogo, logoPosition, formData, socialLinks, customLinks, extraSections, sections, savedContact, copied, themeOverride };
 
   // ── Controls ──────────────────────────────────────────────────────
   const ControlsPanel = (
@@ -1041,7 +1048,7 @@ export function DesignNew({
     <div className="lg:sticky lg:top-8">
       <div className="rounded-2xl p-4 sm:p-6 transition-all duration-500"
         style={{ background: 'linear-gradient(135deg,#0a0a0a 0%,#000 100%)', boxShadow: wrapperShadow, border: `1px solid ${draft.accentColor}22` }}>
-        <PhonePreview {...sharedPreviewProps} onPreviewOpen={() => setIsPreviewOpen(true)} onShareLink={handleShareLink} onSaveContact={handleSaveContact} />
+        <PhonePreview {...sharedPreviewProps} onPreviewOpen={() => setIsPreviewOpen(true)} onShareLink={hasPublishedUrl ? handleShareLink : undefined} onSaveContact={handleSaveContact} />
       </div>
       <div className="mt-3 grid grid-cols-3 gap-1.5">
         {[
@@ -1063,7 +1070,7 @@ export function DesignNew({
 
   return (
     <div className="min-h-screen p-4 sm:p-8" style={{ background: 'linear-gradient(135deg,#0a0a0a 0%,#000 100%)' }}>
-      <CardPreviewModal isOpen={isPreviewOpen} onClose={() => setIsPreviewOpen(false)} {...sharedPreviewProps} onShareLink={handleShareLink} onSaveContact={handleSaveContact} />
+      <CardPreviewModal isOpen={isPreviewOpen} onClose={() => setIsPreviewOpen(false)} {...sharedPreviewProps} onShareLink={hasPublishedUrl ? handleShareLink : undefined} onSaveContact={handleSaveContact} />
       {showQR && <QRModal text={formData.website || window.location.href} onClose={() => setShowQR(false)} />}
       {toast && (
         <div className="fixed top-5 right-4 sm:right-6 z-50 flex items-center gap-2 px-5 py-3 rounded-xl shadow-2xl text-sm font-medium text-white" style={{ background: '#008001' }}>
