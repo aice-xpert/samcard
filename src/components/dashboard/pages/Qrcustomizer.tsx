@@ -357,7 +357,7 @@ export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUr
     activeFg, activeBg, activeAccentFg, activeAccentBg, strokeEnabled, strokeColor,
     fgGradEnabled, fgGradStops, fgGradAngle, logoIdStr, customLogoUrl, logoNode, logoBg,
     selectedSticker, selectedDesign, selectedShape, previewMatrix, previewN,
-    decoratePicUrl, qrOverlay,
+    decoratePicUrl, qrOverlay, onApply, onClose,
   ]);
 
   const hasCustomisation = !!(selectedDesign || selectedSticker || selectedLogoIdx !== null || fgOverride || bgOverride || shapesOverridden || fgGradEnabled);
@@ -777,7 +777,7 @@ export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUr
                     const res = await uploadFile(f);
                     setCustomLogoUrl(res.url);
                     setSelectedLogoIdx(null);
-                  } catch (err) { alert("Failed to upload logo."); }
+                  } catch { alert("Failed to upload logo."); }
                 }} />
               </label>
               <span style={{ fontSize: 10, color: "rgba(148,163,184,0.35)" }}>Min 512px · 1:1 ratio</span>
@@ -844,7 +844,7 @@ export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUr
                         const res = await uploadFile(f);
                         setDecoratePicUrl(res.url);
                         setQrOverlay({ x: 5, y: 5, size: 100 });
-                      } catch (err) { alert("Failed to upload picture."); }
+                      } catch { alert("Failed to upload picture."); }
                     }} />
                   </label>
                   <p style={{ margin: 0, fontSize: 10, color: "rgba(148,163,184,0.35)", textAlign: "center" }}>PNG, JPG, GIF supported</p>
@@ -861,7 +861,7 @@ export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUr
                       const res = await uploadFile(f);
                       setDecoratePicUrl(res.url);
                       setQrOverlay({ x: 5, y: 5, size: 100 });
-                    } catch (err) { alert("Failed to upload picture."); }
+                    } catch { alert("Failed to upload picture."); }
                   }} />
                 </label>
                 <button onClick={() => { setDecoratePicUrl(null); setQrOverlay({ x: 5, y: 5, size: 100 }); }} style={{ padding: "7px 12px", borderRadius: 9, border: "1px solid rgba(239,68,68,0.2)", background: "rgba(239,68,68,0.06)", color: "#f87171", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: FONT }}>✕ Remove</button>
