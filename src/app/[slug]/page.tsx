@@ -1431,8 +1431,15 @@ const pageBg = (() => {
                     {fd.title || businessProfile.title}
                   </p>
                 )}
-                {((fd.company || businessProfile.company) || (hasBrandLogo && content.logoPosition === "below-name")) && (
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
+                {(fd.company || businessProfile.company || (hasBrandLogo && content.logoPosition === "below-name")) && (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      marginTop: 2,
+                    }}
+                  >
                     {hasBrandLogo && content.logoPosition === "below-name" && (
                       <div
                         style={{
