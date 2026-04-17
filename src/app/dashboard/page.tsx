@@ -88,6 +88,8 @@ const Settings = dynamic(
 export default function Home() {
   const [activePage, setActivePage] = useState('dashboard');
   const [editingCardId, setEditingCardId] = useState<string | undefined>(undefined);
+  const [analyticsCardId, setAnalyticsCardId] = useState<string | undefined>(undefined);
+  const [analyticsCardTitle, setAnalyticsCardTitle] = useState<string | undefined>(undefined);
   const [dateRange, setDateRange] = useState('30');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -133,9 +135,14 @@ export default function Home() {
               setActivePage('create-card');
             }}
             onNavigate={handleNavigate}
+            onViewAnalytics={(cardId, cardTitle) => {
+              setAnalyticsCardId(cardId);
+              setAnalyticsCardTitle(cardTitle);
+              setActivePage('analytics');
+            }}
           />
         );
-      case 'analytics': return <Analytics />;
+      case 'analytics': return <Analytics cardId={analyticsCardId} cardTitle={analyticsCardTitle} />;
       case 'create-card':
         return (
           <CreateCard
@@ -155,6 +162,10 @@ export default function Home() {
 
   /* Navigate and close drawer on mobile */
   const handleNavigate = (page: string) => {
+    if (page === 'analytics') {
+      setAnalyticsCardId(undefined);
+      setAnalyticsCardTitle(undefined);
+    }
     setActivePage(page);
     setSidebarOpen(false);
   };

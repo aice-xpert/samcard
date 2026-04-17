@@ -356,9 +356,10 @@ interface MyCardsNewProps {
   onEditCard?: (cardId: string) => void;
   onCreateBusinessCard?: () => void;
   onNavigate?: (page: string) => void;
+  onViewAnalytics?: (cardId: string, cardTitle: string) => void;
 }
 
-export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate }: MyCardsNewProps = {}) {
+export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onViewAnalytics }: MyCardsNewProps = {}) {
   const [cards, setCards]                   = useState<CardType[]>([]);
   const [, setLoading]                      = useState(true);
   const [search, setSearch]                 = useState('');
@@ -885,7 +886,7 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate }: MyC
                 {[
                   { label: 'Taps',  value: (card.taps ?? 0).toLocaleString(), onClick: undefined },
                   { label: 'Views', value: (card.views ?? 0).toLocaleString(), onClick: undefined },
-                  { label: 'Leads', value: String(card.saves ?? 0), onClick: () => onNavigate?.('analytics') },
+                  { label: 'Leads', value: String(card.saves ?? 0), onClick: undefined },
                 ].map(({ label, value, onClick }) => (
                   <div
                     key={label}
@@ -941,6 +942,13 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate }: MyC
                     label: downloadingQrId === card.id ? 'Downloading...' : 'Download QR',
                     onClick: () => { void downloadVariantQr(card); },
                     disabled: downloadingQrId === card.id,
+                  },
+                  {
+                    icon: Users,
+                    label: 'Leads',
+                    onClick: () => {
+                      onViewAnalytics?.(card.id, card.title ?? card.id);
+                    },
                   },
                 ].map(({ icon: Icon, label, onClick, disabled }) => (
                   <Button key={label} onClick={onClick}
@@ -1126,6 +1134,7 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate }: MyC
           </div>
         </Modal>
       )}
+
 
       {editCard && (
         <Modal onClose={() => setEditCard(null)} title="Edit Card">
