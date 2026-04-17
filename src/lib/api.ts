@@ -479,8 +479,10 @@ export interface GoalProgressData {
   statusText: string;
 }
 
-export async function getAnalytics(period: string = "7") {
-  return apiRequest<AnalyticsData>(`${ANALYTICS_API_ROUTES.overview}?period=${period}`, { method: "GET" });
+export async function getAnalytics(period: string = "7", cardId?: string) {
+  const params = new URLSearchParams({ period });
+  if (cardId) params.set("cardId", cardId);
+  return apiRequest<AnalyticsData>(`${ANALYTICS_API_ROUTES.overview}?${params}`, { method: "GET" });
 }
 
 export async function getDeviceDistribution(period: string = "7") {
@@ -546,10 +548,11 @@ export interface LeadsResponse {
   limit: number;
 }
 
-export async function getLeads(status?: string, page?: number) {
+export async function getLeads(status?: string, page?: number, cardId?: string) {
   const params = new URLSearchParams();
   if (status) params.set("status", status);
   if (page) params.set("page", page.toString());
+  if (cardId) params.set("cardId", cardId);
   return apiRequest<LeadsResponse>(`/api/user/leads?${params}`, { method: "GET" });
 }
 

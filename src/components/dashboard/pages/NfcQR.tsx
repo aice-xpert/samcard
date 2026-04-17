@@ -93,7 +93,8 @@ function LiveQrDisplay({ config, qrMatrix, qrN }: {
   const fg = config?.fg ?? "#000000";
   const bg = config?.bg ?? "#ffffff";
   const sticker = config?.selectedSticker ?? null;
-  const RING_PAD = 36;
+  const isSquareShape = !config?.shapeId || config.shapeId === 'square' || config.shapeId === 'rounded-square';
+  const RING_PAD = isSquareShape ? 60 : 36;
   const OUTER = sticker ? QR_SIZE + RING_PAD * 2 : QR_SIZE;
 
   if (config?.decorateCompositeDataUrl) {
@@ -291,6 +292,11 @@ export function NfcQr({
       .then((savedConfig) => {
         if (!savedConfig) return;
 
+        const logoIdx = savedConfig.selectedLogo?.startsWith('logo-')
+          ? parseInt(savedConfig.selectedLogo.replace('logo-', ''), 10)
+          : null;
+        const logoEntry = (logoIdx !== null && !isNaN(logoIdx)) ? LOGOS[logoIdx] : null;
+
         const qrFromBackend: QRCustomConfig = {
           shapeId: savedConfig.shapeId,
           dotShape: savedConfig.dotShape,
@@ -308,8 +314,8 @@ export function NfcQr({
           gradAngle: savedConfig.gradAngle,
           selectedLogo: savedConfig.selectedLogo,
           customLogoUrl: savedConfig.customLogoUrl,
-          logoNode: null,
-          logoBg: savedConfig.logoBg,
+          logoNode: logoEntry?.icon ?? null,
+          logoBg: logoEntry?.bg ?? savedConfig.logoBg,
           selectedSticker: savedConfig.stickerId ? STICKER_DEFS.find(s => s.id === savedConfig.stickerId) ?? null : null,
           designLabel: savedConfig.designLabel,
           shapeLabel: savedConfig.shapeLabel,

@@ -355,9 +355,11 @@ const svgTextToJpegBlob = async (svgText: string, size = 1400): Promise<Blob> =>
 interface MyCardsNewProps {
   onEditCard?: (cardId: string) => void;
   onCreateBusinessCard?: () => void;
+  onNavigate?: (page: string) => void;
+  onViewAnalytics?: (cardId: string, cardTitle: string) => void;
 }
 
-export function MyCardsNew({ onEditCard, onCreateBusinessCard }: MyCardsNewProps = {}) {
+export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onViewAnalytics }: MyCardsNewProps = {}) {
   const [cards, setCards]                   = useState<CardType[]>([]);
   const [, setLoading]                      = useState(true);
   const [search, setSearch]                 = useState('');
@@ -377,6 +379,8 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard }: MyCardsNewProps
   const [cardPreviewById, setCardPreviewById] = useState<Record<string, CardPreviewData>>({});
   const [cardQrById, setCardQrById] = useState<Record<string, CardQRConfigPayload | null>>({});
   const [downloadingQrId, setDownloadingQrId] = useState<string | null>(null);
+  const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
+  const [togglingIds, setTogglingIds] = useState<Set<string>>(new Set());
   const qrSvgRefs = useRef<Record<string, SVGSVGElement | null>>({});
 
   const setQrSvgRef = useCallback((cardId: string, element: SVGSVGElement | null) => {
@@ -480,7 +484,12 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard }: MyCardsNewProps
 
   // Toggle ACTIVE ↔ DRAFT and persist to backend
   const toggleStatus = async (card: CardType) => {
+    // BUG-21: Prevent multiple simultaneous toggles on the same card
+    if (togglingIds.has(card.id)) return;
+
     const newStatus = card.status === 'ACTIVE' ? 'DRAFT' : 'ACTIVE';
+
+    setTogglingIds(prev => new Set(prev).add(card.id));
 
     // Optimistic update
     setCards(prev =>
@@ -496,6 +505,12 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard }: MyCardsNewProps
         prev.map(c => c.id === card.id ? { ...c, status: card.status } : c)
       );
       showToast(`Failed to update status: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } finally {
+      setTogglingIds(prev => {
+        const next = new Set(prev);
+        next.delete(card.id);
+        return next;
+      });
     }
   };
 
@@ -522,6 +537,7 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard }: MyCardsNewProps
   };
 
   const duplicateCard = async (card: CardType) => {
+    setDuplicatingId(card.id);
     try {
       const duplicated = await apiDuplicateCard(card.id);
       const mapped: CardType = {
@@ -539,12 +555,21 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard }: MyCardsNewProps
     } catch (error) {
       showToast(`Error duplicating card: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
+      setDuplicatingId(null);
       setOpenMenu(null);
     }
   };
 
   const saveEdit = async () => {
     if (!editCard || !editTitle.trim()) return;
+    // BUG-20: Prevent renaming to an existing card's name
+    const duplicate = cards.find(
+      c => c.id !== editCard.id && c.name.toLowerCase() === editTitle.trim().toLowerCase()
+    );
+    if (duplicate) {
+      showToast('A card with this name already exists. Please choose a unique name.');
+      return;
+    }
     try {
       await updateCard(editCard.id, { name: editTitle } as any);
       setCards(prev =>
@@ -559,6 +584,14 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard }: MyCardsNewProps
 
   const createCard = async () => {
     if (!newTitle.trim()) return;
+    // BUG-20: Prevent creating a card with a duplicate name
+    const duplicate = cards.find(
+      c => c.name.toLowerCase() === newTitle.trim().toLowerCase()
+    );
+    if (duplicate) {
+      showToast('A card with this name already exists. Please choose a unique name.');
+      return;
+    }
     try {
       const response = await apiCreateCard({ name: newTitle, cardType: newCardType });
       const newCard: CardType = {
@@ -795,9 +828,9 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard }: MyCardsNewProps
                           className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#008001]/20 flex items-center gap-2">
                           <Edit className="w-3 h-3" /> Rename
                         </button>
-                        <button onClick={() => duplicateCard(card)}
-                          className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#008001]/20 flex items-center gap-2">
-                          <Copy className="w-3 h-3" /> Duplicate
+                        <button onClick={() => duplicateCard(card)} disabled={duplicatingId === card.id}
+                          className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#008001]/20 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                          <Copy className="w-3 h-3" /> {duplicatingId === card.id ? 'Duplicating…' : 'Duplicate'}
                         </button>
                         <button onClick={() => { openPreview(card); setOpenMenu(null); }}
                           className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#008001]/20 flex items-center gap-2">
@@ -851,13 +884,14 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard }: MyCardsNewProps
               {/* Stats row */}
               <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
                 {[
-                  { label: 'Taps',  value: (card.taps ?? 0).toLocaleString() },
-                  { label: 'Views', value: (card.views ?? 0).toLocaleString() },
-                  { label: 'Saves', value: String(card.saves ?? 0) },
-                ].map(({ label, value }) => (
+                  { label: 'Taps',  value: (card.taps ?? 0).toLocaleString(), onClick: undefined },
+                  { label: 'Views', value: (card.views ?? 0).toLocaleString(), onClick: undefined },
+                  { label: 'Leads', value: String(card.saves ?? 0), onClick: undefined },
+                ].map(({ label, value, onClick }) => (
                   <div
                     key={label}
-                    className="rounded-xl p-2 sm:p-3 text-center"
+                    onClick={onClick}
+                    className={`rounded-xl p-2 sm:p-3 text-center${onClick ? ' cursor-pointer hover:ring-1 hover:ring-[#008001]/40 transition-all' : ''}`}
                     style={{ backgroundColor: theme.panel }}
                   >
                     <p className="text-sm sm:text-lg font-bold text-white">{value}</p>
@@ -908,6 +942,13 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard }: MyCardsNewProps
                     label: downloadingQrId === card.id ? 'Downloading...' : 'Download QR',
                     onClick: () => { void downloadVariantQr(card); },
                     disabled: downloadingQrId === card.id,
+                  },
+                  {
+                    icon: Users,
+                    label: 'Leads',
+                    onClick: () => {
+                      onViewAnalytics?.(card.id, card.title ?? card.id);
+                    },
                   },
                 ].map(({ icon: Icon, label, onClick, disabled }) => (
                   <Button key={label} onClick={onClick}
@@ -974,12 +1015,12 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard }: MyCardsNewProps
 
               {/* Bottom row: Publish toggle */}
               <div className="flex items-center justify-between pt-2 sm:pt-3 border-t border-[#1E1E1E]">
-                <button onClick={() => duplicateCard(card)}
-                  className="text-xs text-[#A0A0A0] flex items-center gap-1"
-                  style={{ color: '#A0A0A0' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = theme.accent; }}
+                <button onClick={() => duplicateCard(card)} disabled={duplicatingId === card.id}
+                  className="text-xs text-[#A0A0A0] flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ color: duplicatingId === card.id ? '#A0A0A0' : undefined }}
+                  onMouseEnter={(e) => { if (duplicatingId !== card.id) e.currentTarget.style.color = theme.accent; }}
                   onMouseLeave={(e) => { e.currentTarget.style.color = '#A0A0A0'; }}>
-                  <Copy className="w-3 h-3" /> Duplicate
+                  <Copy className="w-3 h-3" /> {duplicatingId === card.id ? 'Duplicating…' : 'Duplicate'}
                 </button>
 
                 <div className="flex items-center gap-1.5 sm:gap-2">
@@ -989,6 +1030,7 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard }: MyCardsNewProps
                   <Switch
                     checked={card.status === 'ACTIVE'}
                     onCheckedChange={() => toggleStatus(card)}
+                    disabled={togglingIds.has(card.id)}
                     className="scale-90 sm:scale-100"
                     style={card.status === 'ACTIVE' ? { backgroundColor: theme.accentLight } : undefined}
                   />
@@ -1092,6 +1134,7 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard }: MyCardsNewProps
           </div>
         </Modal>
       )}
+
 
       {editCard && (
         <Modal onClose={() => setEditCard(null)} title="Edit Card">

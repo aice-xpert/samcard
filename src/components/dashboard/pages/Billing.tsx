@@ -551,7 +551,10 @@ export function Billing() {
 
                 setUser(userData);
                 setPlans(mappedPlans);
-                setCurrentPlanIdx(activePlanIdx >= 0 ? activePlanIdx : 0);
+                // Use saved local plan if API returns no active plan, otherwise prefer API result
+                const savedPlanName = localStorage.getItem('samcard_selected_plan_name');
+                const savedPlanIdx = savedPlanName ? mappedPlans.findIndex(p => p.name === savedPlanName) : -1;
+                setCurrentPlanIdx(activePlanIdx >= 0 ? activePlanIdx : savedPlanIdx >= 0 ? savedPlanIdx : 0);
                 setAllInvoices(invoiceData.invoices);
                 setMonthlyTaps(analyticsData.totalTaps ?? 0);
             } catch (error) {
@@ -600,6 +603,7 @@ export function Billing() {
         }
         setModalLoading(true);
         setCurrentPlanIdx(targetPlanIdx);
+        localStorage.setItem('samcard_selected_plan_name', target.name);
         setModalLoading(false);
         setModal(null);
         addToast(`Successfully switched to ${target.name} plan!`);
@@ -609,6 +613,7 @@ export function Billing() {
     const confirmCancel = async () => {
         setModalLoading(true);
         setCurrentPlanIdx(0); // go to Free
+        localStorage.setItem('samcard_selected_plan_name', plans[0]?.name ?? 'Free');
         setModalLoading(false);
         setModal(null);
         addToast("Plan cancelled. You're now on the Free plan.", "info");

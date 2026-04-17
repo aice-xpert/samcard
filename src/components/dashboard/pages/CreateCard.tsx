@@ -223,6 +223,17 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
     useEffect(() => {
         setStep(1);
         setActiveCardId(cardId);
+
+        // BUG-19: When starting a new card (no cardId), clear the draft cache keys so
+        // the form always opens with default/empty state instead of previous card data.
+        if (!cardId) {
+            try {
+                localStorage.removeItem('businessProfile_v1:draft');
+                localStorage.removeItem('cardDesign_v1:draft');
+            } catch {
+                // ignore storage errors
+            }
+        }
     }, [cardId]);
 
 

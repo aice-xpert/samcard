@@ -12,10 +12,13 @@ import {
   pointInShape,
   computeFinderSafeScale,
 } from "@/components/dashboard/pages/qr-shape-geometry";
+import { QRCanvasRenderer } from "./QRCanvasRenderer";
+import { QRWithShapeCanvas } from "./QRWithShapeCanvas";
 
 export { makeQRMatrix, isFinderCell, getFinderOrigins };
 export type { QRMatrix } from "@/components/dashboard/pages/qr-engine";
 export { computeFinderSafeScale };
+export { QRCanvasRenderer, QRWithShapeCanvas };
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SHAPE DEFINITIONS
@@ -47,6 +50,14 @@ export const QR_SHAPE_DEFS: Record<string, { pathIn100: string; insetFrac: numbe
 
 interface GhostDot { x: number; y: number; cs: number; }
 
+// Sin-based hash — visually indistinguishable from real QR noise, ~45 % density,
+// zero periodicity. Safe only outside the real QR matrix boundary.
+function fakeDark(r: number, c: number): boolean {
+  const v = Math.sin(r * 127.1 + c * 311.7 + r * c * 74.3) * 43758.5453;
+  return (v - Math.floor(v)) < 0.45;
+}
+
+// Faint 28 % texture for light cells inside the real QR grid.
 function buildGhostDots(
   gridOriginX: number, gridOriginY: number, cs: number,
   matrix: boolean[][], N: number, shapeId: string, size: number,
@@ -57,9 +68,30 @@ function buildGhostDots(
       if (matrix[r][c] || isFinderCell(r, c, N)) continue;
       const nx = (gridOriginX + (c + 0.5) * cs) / size;
       const ny = (gridOriginY + (r + 0.5) * cs) / size;
-      if (pointInShape(nx, ny, shapeId)) {
+      if (pointInShape(nx, ny, shapeId))
         dots.push({ x: gridOriginX + c * cs, y: gridOriginY + r * cs, cs });
-      }
+    }
+  }
+  return dots;
+}
+
+// Full-opacity fake QR fill for the padding zone between the inset QR grid
+// and the shape edge. Uses fakeDark() so it looks like genuine QR data.
+function buildPaddingDots(
+  gridOriginX: number, gridOriginY: number, cs: number,
+  N: number, shapeId: string, size: number,
+): GhostDot[] {
+  if (gridOriginX < cs * 0.5) return [];
+  const dots: GhostDot[] = [];
+  const pad = Math.ceil(gridOriginX / cs) + 2;
+  for (let r = -pad; r < N + pad; r++) {
+    for (let c = -pad; c < N + pad; c++) {
+      if (r >= 0 && r < N && c >= 0 && c < N) continue; // leave real QR untouched
+      if (!fakeDark(r, c)) continue;
+      const nx = (gridOriginX + (c + 0.5) * cs) / size;
+      const ny = (gridOriginY + (r + 0.5) * cs) / size;
+      if (pointInShape(nx, ny, shapeId))
+        dots.push({ x: gridOriginX + c * cs, y: gridOriginY + r * cs, cs });
     }
   }
   return dots;
@@ -191,7 +223,7 @@ export function QRStyled({ dotShape, finderStyle, fg, bg, accentFg, accentBg, si
 // ═══════════════════════════════════════════════════════════════════════════
 
 export function renderLogoCenter(size: number, logoNode: React.ReactNode, logoBg: string, fg: string, bg: string) {
-  const cx = size / 2, cy = size / 2, radius = size * 0.115;
+  const cx = size / 2, cy = size / 2, radius = size * 0.07;
   return (
     <g>
       <circle cx={cx} cy={cy} r={radius * 1.25} fill={bg} />
@@ -228,28 +260,23 @@ export function QRWithShape({
   const matrix = externalMatrix ?? LEGACY_QR_GRID;
   const N = externalN ?? 21;
 
-  // Two separate scales:
-  // dotScale  = 1.0 always → data dots fill the full canvas, clipped to shape
-  // finderScale = finder-safe scale → finders are shrunk to fit fully inside shape, rendered unclipped
+  // Inset the QR grid so ALL finder modules sit inside the shape boundary.
   const finderScale = useMemo(() => computeFinderSafeScale(shapeId, N), [shapeId, N]);
-
-  // Full-size grid for data dots
-  const gridSize = size;
-  const gridOriginX = 0;
-  const gridOriginY = 0;
+  const gridSize = size * finderScale;
+  const gridOriginX = (size - gridSize) / 2;
+  const gridOriginY = (size - gridSize) / 2;
   const cs = gridSize / N;
-
-  // Finder-safe grid (centred, smaller for non-square shapes)
-  const finderGridSize = size * finderScale;
-  const finderGridOriginX = (size - finderGridSize) / 2;
-  const finderGridOriginY = (size - finderGridSize) / 2;
-  const finderCs = finderGridSize / N;
 
   const pathScale = size / 100;
 
   const ghostDots = useMemo(
     () => buildGhostDots(gridOriginX, gridOriginY, cs, matrix, N, shapeId, size),
     [gridOriginX, gridOriginY, cs, matrix, N, shapeId, size],
+  );
+
+  const padDots = useMemo(
+    () => buildPaddingDots(gridOriginX, gridOriginY, cs, N, shapeId, size),
+    [gridOriginX, gridOriginY, cs, N, shapeId, size],
   );
 
   const realDots = useMemo(() => {
@@ -269,14 +296,13 @@ export function QRWithShape({
     return out;
   }, [matrix, N, gridOriginX, gridOriginY, cs, size, shapeId, dotShape, fg, scale]);
 
-  // Finders use their own safe-scaled grid so they always fit fully inside the shape
+  // Finders rendered outside the clip — always fully visible, never cropped.
   const finderOrigins = getFinderOrigins(N);
   const finders = finderOrigins.map(({ r, c }, i) => (
-    <g key={`f${i}`} transform={`translate(${finderGridOriginX},${finderGridOriginY})`}>
-      {renderFinder(r, c, finderCs, finderStyle, fg, accentFg, accentBg, `f${i}`, eyeBall, bg)}
+    <g key={`f${i}`} transform={`translate(${gridOriginX},${gridOriginY})`}>
+      {renderFinder(r, c, cs, finderStyle, fg, accentFg, accentBg, `f${i}`, eyeBall, bg)}
     </g>
   ));
-
   const logoCx = size / 2, logoCy = size / 2;
   const logoRadius = size * 0.115, haloRadius = logoRadius * 1.25;
   const customClipId = `${clipId}-logo`;
@@ -300,16 +326,19 @@ export function QRWithShape({
       {/* LAYER 1: Shape background fill */}
       <path d={shapeDef.pathIn100} transform={`scale(${pathScale})`} fill={bg} />
 
-      {/* LAYER 2-3: Ghost + real data dots — clipped to shape, full-size grid */}
+      {/* LAYER 2: Ghost + padding fill + real data — clipped to shape */}
       <g clipPath={`url(#${shapeClipId})`}>
+        {/* Faint texture for light cells inside the QR grid */}
         <g opacity={0.28}>
           {ghostDots.map((d, i) => renderDot(d.x, d.y, d.cs, dotShape, fg, `ghost-${i}`, 0.65))}
         </g>
+        {/* Full-opacity random QR-like fill for the padding zone */}
+        {padDots.map((d, i) => renderDot(d.x, d.y, d.cs, dotShape, fg, `pad-${i}`, scale))}
+        {/* Real scannable QR data */}
         {realDots}
       </g>
 
-      {/* LAYER 4: Finder patterns — use finder-safe scale, rendered OUTSIDE clip
-          so they are never cut off regardless of shape */}
+      {/* LAYER 3: Finder patterns — outside clip, always fully visible */}
       {finders}
 
       {/* LAYER 5: Shape outline stroke — on top for crisp edge */}
@@ -365,8 +394,8 @@ export const STICKER_DEFS: StickerDef[] = [
   { id: "circle-ring-pink", label: "Circle Ring", category: "Simple Rings", render: (o, q) => { const p = ringPad(o, q), cx = o / 2, cy = o / 2, r = cx - p * 0.3; return <circle cx={cx} cy={cy} r={r} fill="none" stroke="#e91e8c" strokeWidth={p * 0.55} />; } },
   { id: "double-ring", label: "Double Ring", category: "Simple Rings", render: (o, q) => { const p = ringPad(o, q), cx = o / 2, cy = o / 2; return <g><circle cx={cx} cy={cy} r={cx - p * 0.2} fill="none" stroke="#e91e8c" strokeWidth={p * 0.2} /><circle cx={cx} cy={cy} r={cx - p * 0.55} fill="none" stroke="#e91e8c" strokeWidth={p * 0.2} /></g>; } },
   { id: "dashed-ring", label: "Dashed Ring", category: "Simple Rings", render: (o, q) => { const p = ringPad(o, q), cx = o / 2, cy = o / 2, r = cx - p * 0.35, circ = 2 * Math.PI * r; return <circle cx={cx} cy={cy} r={r} fill="none" stroke="#e91e8c" strokeWidth={p * 0.45} strokeDasharray={`${circ / 16} ${circ / 32}`} />; } },
-  { id: "scalloped", label: "Scalloped", category: "Simple Rings", render: (o, q) => { const cx = o / 2, cy = o / 2, p = ringPad(o, q), r = cx - p * 0.3, scR = p * 0.22; return <g>{Array.from({ length: 24 }, (_, i) => { const a = (2 * Math.PI / 24) * i; return <circle key={i} cx={cx + r * Math.cos(a)} cy={cy + r * Math.sin(a)} r={scR} fill="#e91e8c" />; })}</g>; } },
-  { id: "scallop-fill", label: "Scallop Fill", category: "Simple Rings", render: (o, q) => { const cx = o / 2, cy = o / 2, p = ringPad(o, q), r = cx - p * 0.3, scR = p * 0.22; return <g>{Array.from({ length: 24 }, (_, i) => { const a = (2 * Math.PI / 24) * i; return <circle key={i} cx={cx + r * Math.cos(a)} cy={cy + r * Math.sin(a)} r={scR} fill="#ad1457" />; })}<circle cx={cx} cy={cy} r={r} fill="rgba(173,20,87,0.08)" /></g>; } },
+  { id: "scalloped", label: "Scalloped", category: "Simple Rings", render: (o, q) => { const cx = o / 2, cy = o / 2, p = ringPad(o, q), scR = p > 0 ? p * 0.22 : q * 0.05, r = o / q > 1.5 ? cx - scR - 2 : q / 2 * 0.85; return <g>{Array.from({ length: 24 }, (_, i) => { const a = (2 * Math.PI / 24) * i; return <circle key={i} cx={cx + r * Math.cos(a)} cy={cy + r * Math.sin(a)} r={scR} fill="#e91e8c" />; })}</g>; } },
+  { id: "scallop-fill", label: "Scallop Fill", category: "Simple Rings", render: (o, q) => { const cx = o / 2, cy = o / 2, p = ringPad(o, q), scR = p > 0 ? p * 0.22 : q * 0.05, r = o / q > 1.5 ? cx - scR - 2 : q / 2 * 0.85; return <g>{Array.from({ length: 24 }, (_, i) => { const a = (2 * Math.PI / 24) * i; return <circle key={i} cx={cx + r * Math.cos(a)} cy={cy + r * Math.sin(a)} r={scR} fill="#ad1457" />; })}<circle cx={cx} cy={cy} r={r} fill="rgba(173,20,87,0.08)" /></g>; } },
   { id: "rounded-frame", label: "Rounded Frame", category: "Simple Frames", render: (o, q) => { const p = ringPad(o, q), m = p * 0.25; return <rect x={m} y={m} width={o - 2 * m} height={o - 2 * m} rx={p * 0.7} fill="none" stroke="#e91e8c" strokeWidth={p * 0.5} />; } },
   { id: "corner-frame", label: "Corner Frame", category: "Simple Frames", render: (o, q) => { const p = ringPad(o, q), m = p * 0.2, arm = p * 1.1, sw = p * 0.45; const corners = [[m, m + arm, m, m, m + arm, m], [o - m - arm, m, o - m, m, o - m, m + arm], [m, o - m - arm, m, o - m, m + arm, o - m], [o - m - arm, o - m, o - m, o - m, o - m, o - m - arm]]; return <g>{corners.map((c, i) => <polyline key={i} points={`${c[0]},${c[1]} ${c[2]},${c[3]} ${c[4]},${c[5]}`} fill="none" stroke="#e91e8c" strokeWidth={sw} strokeLinecap="round" />)}</g>; } },
   { id: "bold-frame", label: "Bold Frame", category: "Simple Frames", render: (o, q) => { const p = ringPad(o, q), m = p * 0.15; return <rect x={m} y={m} width={o - 2 * m} height={o - 2 * m} rx={p * 0.3} fill="none" stroke="#e91e8c" strokeWidth={p * 0.8} />; } },
