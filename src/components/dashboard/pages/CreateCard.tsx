@@ -12,13 +12,24 @@ const STEPS = [
     { id: 3, label: "QR Code" },
 ];
 
-function CampaignNameModal({ onCancel, onSave }: { onCancel: () => void; onSave: (campaignName: string) => void }) {
+function CampaignNameModal({
+    onCancel,
+    onSave,
+    isSaving,
+    errorMessage,
+    onClearError,
+}: {
+    onCancel: () => void;
+    onSave: (campaignName: string) => void;
+    isSaving: boolean;
+    errorMessage?: string;
+    onClearError: () => void;
+}) {
     const [campaignName, setCampaignName] = useState("");
     const [folder, setFolder] = useState("");
-    const [isSaving, setIsSaving] = useState(false);
 
     const handleSave = async () => {
-        setIsSaving(true);
+        onClearError();
         await onSave(campaignName);
     };
 
@@ -47,7 +58,10 @@ function CampaignNameModal({ onCancel, onSave }: { onCancel: () => void; onSave:
                     <input
                         type="text"
                         value={campaignName}
-                        onChange={(e) => setCampaignName(e.target.value)}
+                        onChange={(e) => {
+                            setCampaignName(e.target.value);
+                            if (errorMessage) onClearError();
+                        }}
                         placeholder="e.g. My Business Card Campaign"
                         className="w-full px-3 py-2.5 rounded-xl border border-[#008001]/25 bg-[#111811] text-sm text-white outline-none focus:border-[#008001]/60 placeholder-[#555] transition-colors"
                     />
@@ -68,6 +82,12 @@ function CampaignNameModal({ onCancel, onSave }: { onCancel: () => void; onSave:
                         <option value="folder2">Folder 2</option>
                     </select>
                 </div>
+
+                {errorMessage && (
+                    <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+                        {errorMessage}
+                    </div>
+                )}
 
                 {/* Actions */}
                 <div className="flex justify-between gap-3">
@@ -227,6 +247,7 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
     const [createdSlug, setCreatedSlug] = useState<string | undefined>(undefined);
     const [activeCardId, setActiveCardId] = useState<string | undefined>(cardId);
     const [isSaving, setIsSaving] = useState(false);
+    const [saveError, setSaveError] = useState<string | null>(null);
 
     useEffect(() => {
         setStep(1);
@@ -303,6 +324,7 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
     });
 
     const handleSaveFinish = () => {
+        setSaveError(null);
         if (activeCardId) {
             // Editing existing card — save directly, no name prompt
             void handleSaveCard(undefined);
@@ -316,6 +338,7 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
     };
     const handleSaveCard = async (campaignName: string | undefined) => {
         setIsSaving(true);
+        setSaveError(null);
         // Build payload for both create and edit flows
         const payload: any = { cardType: "QR" };
         // Only set name when explicitly provided (new card flow); editing preserves the existing name
@@ -374,7 +397,8 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
             setShowCampaignModal(false);
             setShowSuccessModal(true);
         } catch (error) {
-            console.error("Error saving card:", error);
+            const message = error instanceof Error ? error.message : "Failed to save card";
+            setSaveError(message);
         } finally {
             setIsSaving(false);
         }
@@ -397,7 +421,15 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
         <div className="flex flex-col">
 
             {/* Modals */}
-            {showCampaignModal && <CampaignNameModal onCancel={handleClose} onSave={handleCampaignSave} />}
+            {showCampaignModal && (
+                <CampaignNameModal
+                    onCancel={handleClose}
+                    onSave={handleCampaignSave}
+                    isSaving={isSaving}
+                    errorMessage={saveError ?? undefined}
+                    onClearError={() => setSaveError(null)}
+                />
+            )}
             {showSuccessModal && <SavedSuccessModal onCancel={handleClose} onDashboard={handleDashboard} cardSlug={createdSlug} />}
 
             {/* ── Stepper Header ── */}
@@ -482,6 +514,13 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
                     </button>
                 )}
             </div>
+            {saveError && !showCampaignModal && (
+                <div className="px-8 pb-4 bg-[#0a0f0a]">
+                    <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+                        {saveError}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

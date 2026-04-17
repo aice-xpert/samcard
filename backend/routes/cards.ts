@@ -6,10 +6,79 @@ import { createNotification } from "../lib/notifications";
 
 const router = express.Router();
 
-const getErrorMessage = (error: any): string => {
-  if (error?.message) return error.message;
+const getErrorMessage = (error: unknown): string => {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof (error as { message?: unknown }).message === "string"
+  ) {
+    return (error as { message: string }).message;
+  }
   if (error instanceof Error) return error.message;
   return "Internal server error";
+};
+
+const normalizeCardName = (value: unknown): string | null => {
+  if (typeof value !== "string") return null;
+  const normalized = value.trim().replace(/\s+/g, " ");
+  return normalized.length > 0 ? normalized : null;
+};
+
+const cardNameKey = (name: string): string =>
+  name.trim().replace(/\s+/g, " ").toLowerCase();
+
+const isCardNameConflictError = (error: unknown): boolean => {
+  if (!error || typeof error !== "object") return false;
+
+  const parsed = error as {
+    code?: string;
+    constraint?: string;
+    message?: string;
+    details?: string;
+    hint?: string;
+  };
+
+  if (parsed.code !== "23505") return false;
+  const combined = [
+    parsed.constraint,
+    parsed.message,
+    parsed.details,
+    parsed.hint,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  return combined.includes("card_userid_name_normalized_unique");
+};
+
+const cardNameExistsForUser = async (
+  userId: string,
+  name: string,
+  excludeCardId?: string
+): Promise<{ exists: boolean; error: string | null }> => {
+  let query = supabase
+    .from("Card")
+    .select("id,name")
+    .eq("userId", userId);
+
+  if (excludeCardId) {
+    query = query.neq("id", excludeCardId);
+  }
+
+  const { data, error } = await query;
+  if (error) {
+    return { exists: false, error: error.message };
+  }
+
+  const targetKey = cardNameKey(name);
+  const exists = (data || []).some((card) => {
+    if (typeof card.name !== "string") return false;
+    return cardNameKey(card.name) === targetKey;
+  });
+
+  return { exists, error: null };
 };
 
 const normalizeFontFamily = (value: unknown): string | null => {
@@ -63,8 +132,9 @@ router.get("/", verifySession, async (req: AuthRequest, res: Response) => {
 
 router.post("/", verifySession, async (req: AuthRequest, res: Response) => {
   const { name, cardType, ...otherFields } = req.body;
+  const normalizedName = normalizeCardName(name);
 
-  if (!name) {
+  if (!normalizedName) {
     return res.status(400).json({ error: "Card name is required" });
   }
 
@@ -75,6 +145,14 @@ router.post("/", verifySession, async (req: AuthRequest, res: Response) => {
       email: req.user!.email ?? "",
       updatedAt: new Date().toISOString(),
     }, { onConflict: "id" });
+
+    const duplicateCheck = await cardNameExistsForUser(req.user!.uid, normalizedName);
+    if (duplicateCheck.error) {
+      return res.status(500).json({ error: duplicateCheck.error });
+    }
+    if (duplicateCheck.exists) {
+      return res.status(409).json({ error: "You already have a card with this name" });
+    }
 
 
     // 2. Resolve or Create Business Profile
@@ -115,7 +193,7 @@ router.post("/", verifySession, async (req: AuthRequest, res: Response) => {
       id: cardId,
       userId: req.user!.uid,
       businessProfileId,
-      name,
+      name: normalizedName,
       cardType: cardType || "QR",
       slug,
       shareUrl,
@@ -149,6 +227,9 @@ router.post("/", verifySession, async (req: AuthRequest, res: Response) => {
 
     if (error) {
       console.error("Card creation error:", error);
+      if (isCardNameConflictError(error)) {
+        return res.status(409).json({ error: "You already have a card with this name" });
+      }
       return res.status(500).json({ error: error.message });
     }
 
@@ -156,7 +237,7 @@ router.post("/", verifySession, async (req: AuthRequest, res: Response) => {
       req.user!.uid,
       "CARD",
       "New Card Created",
-      `Your card "${name}" has been created and is ready to customize.`,
+      `Your card "${data.name}" has been created and is ready to customize.`,
       { sourceId: data.id, sourceType: "Card" }
     );
 
@@ -185,7 +266,22 @@ router.put("/:id", verifySession, async (req: AuthRequest, res: Response) => {
       updatedAt: new Date().toISOString(),
     };
 
-    if (name) updateData.name = name;
+    if (name !== undefined) {
+      const normalizedName = normalizeCardName(name);
+      if (!normalizedName) {
+        return res.status(400).json({ error: "Card name is required" });
+      }
+
+      const duplicateCheck = await cardNameExistsForUser(req.user!.uid, normalizedName, String(id));
+      if (duplicateCheck.error) {
+        return res.status(500).json({ error: duplicateCheck.error });
+      }
+      if (duplicateCheck.exists) {
+        return res.status(409).json({ error: "You already have a card with this name" });
+      }
+
+      updateData.name = normalizedName;
+    }
     if (status) {
       const normalizedStatus = normalizeCardStatus(status);
       if (!normalizedStatus) {
@@ -253,6 +349,9 @@ router.put("/:id", verifySession, async (req: AuthRequest, res: Response) => {
       .single();
 
     if (error) {
+      if (isCardNameConflictError(error)) {
+        return res.status(409).json({ error: "You already have a card with this name" });
+      }
       return res.status(500).json({ error: error.message });
     }
 
