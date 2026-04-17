@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { flushSync } from 'react-dom';
 import { Card, CardContent, CardHeader } from '@/components/dashboard/ui/card';
 import { Button } from '@/components/dashboard/ui/button';
 import { Badge } from '@/components/dashboard/ui/badge';
@@ -628,6 +629,14 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onVie
     setDownloadingQrId(card.id);
 
     try {
+      // Fetch fresh config to ensure the hidden SVG reflects saved customizations
+      const freshConfig = await getCardQRConfig(card.id).catch(() => null);
+      if (freshConfig) {
+        flushSync(() => {
+          setCardQrById(prev => ({ ...prev, [card.id]: freshConfig }));
+        });
+      }
+
       const svgElement = qrSvgRefs.current[card.id];
 
       if (svgElement) {

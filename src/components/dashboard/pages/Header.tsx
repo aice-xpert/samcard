@@ -18,7 +18,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/dashboard/ui/dropdown-menu';
-import { getUserProfile, BACKEND_URL } from '@/lib/api';
+import { getUserProfile, BACKEND_URL, getNotifications, markNotificationRead, markAllNotificationsRead } from '@/lib/api';
 import { useUser } from '@/contexts/UserContext';
 import { useState, useCallback, useEffect } from 'react';
 import { signOut } from 'firebase/auth';
@@ -30,6 +30,7 @@ interface Notification {
   message: string;
   time: string;
   read: boolean;
+  type?: string;
 }
 
 interface EnhancedHeaderProps {
@@ -41,7 +42,13 @@ interface EnhancedHeaderProps {
   onNavigate?: (page: string) => void;
 }
 
-const defaultNotifications: Notification[] = [];
+function formatNotifTime(isoDate: string): string {
+  const diff = Math.floor((Date.now() - new Date(isoDate).getTime()) / 1000);
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return `${Math.floor(diff / 86400)}d ago`;
+}
 
 export function EnhancedHeader({
   title,
@@ -52,7 +59,7 @@ export function EnhancedHeader({
   onNavigate
 }: EnhancedHeaderProps) {
   const { profile } = useUser();
-  const [notifications, setNotifications] = useState<Notification[]>(defaultNotifications);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [membershipLabel, setMembershipLabel] = useState('Free');
   const [loggingOut, setLoggingOut] = useState(false);
   const initials = profile.name.split(" ").map(n => n[0]).join("").toUpperCase();
@@ -76,6 +83,22 @@ export function EnhancedHeader({
         if (!isMounted) return;
         setMembershipLabel('Free');
       });
+
+    getNotifications()
+      .then((res) => {
+        if (!isMounted) return;
+        setNotifications(
+          res.notifications.map((n) => ({
+            id: n.id,
+            title: n.title,
+            message: n.message,
+            time: formatNotifTime(n.createdAt),
+            read: n.read,
+            type: n.type,
+          }))
+        );
+      })
+      .catch(() => {/* non-critical */});
 
     return () => {
       isMounted = false;
@@ -112,10 +135,12 @@ export function EnhancedHeader({
 
   const markAllAsRead = useCallback(() => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    markAllNotificationsRead().catch(() => {});
   }, []);
 
   const markAsRead = useCallback((id: string) => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+    markNotificationRead(id).catch(() => {});
   }, []);
 
   return (
