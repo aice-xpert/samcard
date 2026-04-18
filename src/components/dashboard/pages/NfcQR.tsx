@@ -13,6 +13,12 @@ import { LOGOS } from '@/components/dashboard/pages/constants';
 import { makeQRMatrix } from '@/components/dashboard/pages/qr-engine';
 import { useQrStore } from '@/components/dashboard/stores/Useqrstore';
 import { getCardQRConfig, updateCardQR, getCards, BACKEND_URL } from '@/lib/api';
+import {
+  buildQrSvgString,
+  buildCustomizedQrSvgFromConfig,
+  svgTextToPngBlob,
+  triggerBlobDownload,
+} from '@/components/dashboard/pages/qr-download-utils';
 
 // ─── Persistence helpers ──────────────────────────────────────────────────────
 
@@ -344,16 +350,14 @@ export function NfcQr({
     setTimeout(() => setCopiedLink(false), 2000);
   }, [CARD_URL]);
 
-  const downloadQR = useCallback(() => {
-    const svgEl = qrRef.current?.querySelector('svg');
-    if (!svgEl) return;
-    const blob = new Blob([svgEl.outerHTML], { type: 'image/svg+xml' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'samcard-qr.svg';
-    a.click();
-    URL.revokeObjectURL(a.href);
-  }, []);
+  const downloadQR = useCallback(async () => {
+    const svgText = qrConfig
+      ? buildCustomizedQrSvgFromConfig(qrConfig, liveQrMatrix, liveQrN, 1200)
+      : buildQrSvgString(liveQrMatrix, liveQrN, '#000000', '#ffffff', 1200, 40);
+    const pngBlob = await svgTextToPngBlob(svgText, 1200);
+    const filename = cardSlug ? `${cardSlug}-qr.png` : 'samcard-qr.png';
+    triggerBlobDownload(pngBlob, filename);
+  }, [qrConfig, liveQrMatrix, liveQrN, cardSlug]);
 
   const shareQR = useCallback(async () => {
     if (navigator.share) await navigator.share({ title: 'My Digital Card', url: CARD_URL }).catch(() => undefined);
@@ -579,7 +583,7 @@ export function NfcQr({
 
                 {/* Action stack */}
                 <div className="flex flex-col gap-2">
-                  <ActionBtn icon={Download} label="Download SVG" onClick={downloadQR} variant="primary" />
+                  <ActionBtn icon={Download} label="Download PNG" onClick={() => { void downloadQR(); }} variant="primary" />
                   <ActionBtn icon={Share2} label="Share QR Code" onClick={shareQR} />
                   <ActionBtn icon={RefreshCw} label="Regenerate" onClick={() => setCustomizerOpen(true)} />
                   <ActionBtn icon={Printer} label="Print" onClick={printQR} />

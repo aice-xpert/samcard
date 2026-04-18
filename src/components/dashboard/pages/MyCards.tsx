@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import React from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
 import { Card, CardContent, CardHeader } from '@/components/dashboard/ui/card';
 import { Button } from '@/components/dashboard/ui/button';
 import { Badge } from '@/components/dashboard/ui/badge';
@@ -25,8 +23,12 @@ import {
   CardQRConfigPayload,
 } from '@/lib/api';
 import { makeQRMatrix } from '@/components/dashboard/pages/qr-engine';
-import { QRWithShape, STICKER_DEFS } from '@/components/dashboard/pages/Qrrenderers';
-import { LOGOS } from '@/components/dashboard/pages/constants';
+import {
+  buildQrSvgString,
+  buildCustomizedQrSvgFromPayload,
+  svgTextToJpegBlob,
+  triggerBlobDownload,
+} from '@/components/dashboard/pages/qr-download-utils';
 
 const sparklineData = [
   { value: 12 }, { value: 19 }, { value: 15 },
@@ -106,389 +108,6 @@ function Sparkline({ data, color }: { data: Array<{ value: number }>; color: str
     </svg>
   );
 }
-
-const normalizeHexForQrApi = (value: string | undefined, fallback: string): string => {
-  if (!value) return fallback;
-  const cleaned = value.trim().replace('#', '');
-  if (/^[0-9a-fA-F]{6}$/.test(cleaned)) return cleaned.toLowerCase();
-  return fallback;
-};
-
-const buildQrSvgString = (
-  matrix: boolean[][],
-  N: number,
-  fg: string,
-  bg: string,
-  outputSize = 1200,
-  margin = 40,
-): string => {
-  const innerSize = outputSize - margin * 2;
-  const cs = innerSize / N;
-  const rects: string[] = [];
-  for (let r = 0; r < N; r++) {
-    for (let c = 0; c < N; c++) {
-      if (matrix[r][c]) {
-        const x = (margin + c * cs).toFixed(2);
-        const y = (margin + r * cs).toFixed(2);
-        const s = cs.toFixed(2);
-        rects.push(`<rect x="${x}" y="${y}" width="${s}" height="${s}" fill="${fg}"/>`);
-      }
-    }
-  }
-  return [
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${outputSize}" height="${outputSize}" viewBox="0 0 ${outputSize} ${outputSize}">`,
-    `<rect width="${outputSize}" height="${outputSize}" fill="${bg}"/>`,
-    ...rects,
-    `</svg>`,
-  ].join('');
-};
-
-const buildCustomizedQrSvgString = (
-  qrConfig: CardQRConfigPayload,
-  matrix: boolean[][],
-  N: number,
-  outputSize = 1200,
-): string => {
-  const fg = `#${normalizeHexForQrApi(qrConfig.fg, '000000')}`;
-  const bg = `#${normalizeHexForQrApi(qrConfig.bg, 'ffffff')}`;
-  const safeFg = fg.toLowerCase() === bg.toLowerCase() ? '#000000' : fg;
-
-  const gradEnabled = qrConfig.gradEnabled && (qrConfig.gradStops?.length ?? 0) >= 2;
-  const gradId = 'qr-dl-grad';
-  const clipId = 'qr-dl-clip';
-
-  const sticker = qrConfig.stickerId
-    ? STICKER_DEFS.find(s => s.id === qrConfig.stickerId) ?? null
-    : null;
-
-  const isSquareShape = !qrConfig.shapeId || qrConfig.shapeId === 'square' || qrConfig.shapeId === 'rounded-square';
-  const RING_PAD = isSquareShape ? 60 : 36;
-  const QR_SIZE = sticker ? outputSize - RING_PAD * 2 : outputSize;
-  const OUTER = outputSize;
-
-  const logoIndex = qrConfig.selectedLogo?.startsWith('logo-')
-    ? parseInt(qrConfig.selectedLogo.replace('logo-', ''), 10)
-    : null;
-  const logoEntry = logoIndex !== null ? LOGOS[logoIndex] : null;
-  const logoNode: React.ReactNode = logoEntry?.icon ?? null;
-  const logoBg = logoEntry?.bg ?? qrConfig.logoBg ?? '#ffffff';
-
-  const gradAngle = qrConfig.gradAngle ?? 135;
-  const gradStops = qrConfig.gradStops ?? [];
-
-  const svgEl = React.createElement(
-    'svg',
-    {
-      xmlns: 'http://www.w3.org/2000/svg',
-      width: OUTER,
-      height: OUTER,
-      viewBox: `0 0 ${OUTER} ${OUTER}`,
-    },
-    gradEnabled
-      ? React.createElement(
-          'defs',
-          null,
-          React.createElement(
-            'linearGradient',
-            {
-              id: gradId,
-              x1: `${50 - 50 * Math.cos((gradAngle * Math.PI) / 180)}%`,
-              y1: `${50 - 50 * Math.sin((gradAngle * Math.PI) / 180)}%`,
-              x2: `${50 + 50 * Math.cos((gradAngle * Math.PI) / 180)}%`,
-              y2: `${50 + 50 * Math.sin((gradAngle * Math.PI) / 180)}%`,
-            },
-            ...gradStops.map((s, i) =>
-              React.createElement('stop', { key: i, offset: `${s.offset * 100}%`, stopColor: s.color }),
-            ),
-          ),
-        )
-      : null,
-    React.createElement('rect', { width: OUTER, height: OUTER, fill: bg }),
-    React.createElement(
-      'g',
-      sticker ? { transform: `translate(${RING_PAD},${RING_PAD})` } : null,
-      React.createElement(QRWithShape, {
-        shapeId: qrConfig.shapeId ?? 'square',
-        dotShape: qrConfig.dotShape ?? 'square',
-        finderStyle: qrConfig.finderStyle ?? 'square',
-        fg: gradEnabled ? `url(#${gradId})` : safeFg,
-        bg,
-        accentFg: qrConfig.accentFg,
-        accentBg: qrConfig.accentBg,
-        scale: qrConfig.bodyScale ?? 1.0,
-        eyeBall: qrConfig.eyeBall ?? 'square',
-        size: QR_SIZE,
-        strokeEnabled: qrConfig.strokeEnabled ?? false,
-        strokeColor: qrConfig.strokeColor ?? '#000000',
-        selectedLogo: qrConfig.selectedLogo ?? null,
-        customLogoUrl: qrConfig.customLogoUrl ?? null,
-        logoNode,
-        logoBg,
-        clipId,
-        qrMatrix: matrix,
-        qrN: N,
-      }),
-    ),
-    sticker ? sticker.render(OUTER, QR_SIZE) : null,
-  );
-
-  return renderToStaticMarkup(svgEl);
-};
-
-const ensureSvgNamespaces = (svgText: string): string => {
-  let normalized = svgText;
-  if (!/xmlns=/.test(normalized)) {
-    normalized = normalized.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
-  }
-  if (!/xmlns:xlink=/.test(normalized)) {
-    normalized = normalized.replace('<svg', '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
-  }
-  return normalized;
-};
-
-const sanitizeHiddenSvgRootStyles = (styleValue: string): string => {
-  const hiddenKeys = new Set([
-    'position',
-    'width',
-    'height',
-    'opacity',
-    'pointer-events',
-    'display',
-    'visibility',
-    'left',
-    'top',
-  ]);
-
-  return styleValue
-    .split(';')
-    .map((rule) => rule.trim())
-    .filter(Boolean)
-    .filter((rule) => {
-      const separatorIndex = rule.indexOf(':');
-      if (separatorIndex === -1) return true;
-      const key = rule.slice(0, separatorIndex).trim().toLowerCase();
-      return !hiddenKeys.has(key);
-    })
-    .join('; ');
-};
-
-const sanitizeExportSvg = (svgText: string): string => {
-  try {
-    const parser = new DOMParser();
-    const documentNode = parser.parseFromString(svgText, 'image/svg+xml');
-    if (documentNode.querySelector('parsererror')) {
-      return svgText;
-    }
-
-    const svgRoot = documentNode.documentElement;
-    if (svgRoot.tagName.toLowerCase() !== 'svg') {
-      return svgText;
-    }
-
-    svgRoot.removeAttribute('aria-hidden');
-    svgRoot.removeAttribute('focusable');
-
-    const rootStyle = svgRoot.getAttribute('style');
-    if (rootStyle) {
-      const cleanedStyle = sanitizeHiddenSvgRootStyles(rootStyle);
-      if (cleanedStyle) {
-        svgRoot.setAttribute('style', cleanedStyle);
-      } else {
-        svgRoot.removeAttribute('style');
-      }
-    }
-
-    const width = svgRoot.getAttribute('width');
-    if (!width || width === '0' || width === '0px') {
-      svgRoot.setAttribute('width', '360');
-    }
-
-    const height = svgRoot.getAttribute('height');
-    if (!height || height === '0' || height === '0px') {
-      svgRoot.setAttribute('height', '360');
-    }
-
-    if (!svgRoot.getAttribute('preserveAspectRatio')) {
-      svgRoot.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-    }
-
-    // Hoist all nested <defs> to a single root-level <defs> so clipPath
-    // references resolve correctly when the SVG is loaded as a blob image.
-    const nestedDefs = Array.from(svgRoot.querySelectorAll(':scope > * > defs, :scope > * > * > defs'));
-    if (nestedDefs.length > 0) {
-      let rootDefs = svgRoot.querySelector(':scope > defs');
-      if (!rootDefs) {
-        rootDefs = documentNode.createElementNS('http://www.w3.org/2000/svg', 'defs');
-        svgRoot.insertBefore(rootDefs, svgRoot.firstChild);
-      }
-      nestedDefs.forEach(defsNode => {
-        while (defsNode.firstChild) rootDefs!.appendChild(defsNode.firstChild);
-        defsNode.parentNode?.removeChild(defsNode);
-      });
-    }
-
-    return new XMLSerializer().serializeToString(svgRoot);
-  } catch {
-    return svgText;
-  }
-};
-
-const stripExternalSvgImages = (svgText: string): string => {
-  try {
-    const parser = new DOMParser();
-    const documentNode = parser.parseFromString(svgText, 'image/svg+xml');
-    if (documentNode.querySelector('parsererror')) {
-      return svgText;
-    }
-
-    documentNode.querySelectorAll('image').forEach((node) => {
-      const href = node.getAttribute('href') || node.getAttribute('xlink:href') || '';
-      const normalizedHref = href.trim().toLowerCase();
-
-      if (!normalizedHref) {
-        node.remove();
-        return;
-      }
-
-      if (
-        normalizedHref.startsWith('http://') ||
-        normalizedHref.startsWith('https://') ||
-        normalizedHref.startsWith('//')
-      ) {
-        node.remove();
-      }
-    });
-
-    return new XMLSerializer().serializeToString(documentNode.documentElement);
-  } catch {
-    return svgText;
-  }
-};
-
-const blobToDataUrl = (blob: Blob): Promise<string> =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      if (typeof reader.result === 'string') {
-        resolve(reader.result);
-        return;
-      }
-      reject(new Error('Failed to encode image blob'));
-    };
-    reader.onerror = () => reject(new Error('Failed to read image blob'));
-    reader.readAsDataURL(blob);
-  });
-
-const inlineExternalSvgImages = async (svgText: string): Promise<string> => {
-  try {
-    const parser = new DOMParser();
-    const documentNode = parser.parseFromString(svgText, 'image/svg+xml');
-    if (documentNode.querySelector('parsererror')) {
-      return svgText;
-    }
-
-    const imageNodes = Array.from(documentNode.querySelectorAll('image'));
-    if (!imageNodes.length) {
-      return svgText;
-    }
-
-    await Promise.all(
-      imageNodes.map(async (node) => {
-        const href = node.getAttribute('href') || node.getAttribute('xlink:href') || '';
-        const normalizedHref = href.trim().toLowerCase();
-
-        if (!normalizedHref) return;
-        if (normalizedHref.startsWith('data:')) return;
-        if (
-          !normalizedHref.startsWith('http://') &&
-          !normalizedHref.startsWith('https://') &&
-          !normalizedHref.startsWith('//')
-        ) {
-          return;
-        }
-
-        try {
-          const response = await fetch(href);
-          if (!response.ok) return;
-          const imageBlob = await response.blob();
-          const dataUrl = await blobToDataUrl(imageBlob);
-          node.setAttribute('href', dataUrl);
-          node.setAttribute('xlink:href', dataUrl);
-        } catch {
-          // keep original href if we cannot inline
-        }
-      }),
-    );
-
-    return new XMLSerializer().serializeToString(documentNode.documentElement);
-  } catch {
-    return svgText;
-  }
-};
-
-const triggerBlobDownload = (blob: Blob, fileName: string): void => {
-  const downloadUrl = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = downloadUrl;
-  anchor.download = fileName;
-  anchor.click();
-  URL.revokeObjectURL(downloadUrl);
-};
-
-const imageUrlToJpegBlob = async (imageUrl: string, size = 1400): Promise<Blob> => {
-  const image = await new Promise<HTMLImageElement>((resolve, reject) => {
-    const instance = new Image();
-    instance.onload = () => resolve(instance);
-    instance.onerror = () => reject(new Error('Failed to load QR image for JPG conversion'));
-    instance.src = imageUrl;
-  });
-
-  const canvas = document.createElement('canvas');
-  canvas.width = size;
-  canvas.height = size;
-
-  const context = canvas.getContext('2d');
-  if (!context) {
-    throw new Error('Failed to initialize canvas context');
-  }
-
-  context.fillStyle = '#ffffff';
-  context.fillRect(0, 0, size, size);
-  context.drawImage(image, 0, 0, size, size);
-
-  return await new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob((blob) => {
-      if (!blob) {
-        reject(new Error('Failed to export JPG file'));
-        return;
-      }
-      resolve(blob);
-    }, 'image/jpeg', 0.96);
-  });
-};
-
-const svgTextToJpegBlob = async (svgText: string, size = 1400): Promise<Blob> => {
-  const exportSvgAsJpeg = async (inputSvgText: string): Promise<Blob> => {
-    const sanitizedSvg = sanitizeExportSvg(inputSvgText);
-    const normalizedSvg = ensureSvgNamespaces(sanitizedSvg);
-    const svgBlob = new Blob([normalizedSvg], { type: 'image/svg+xml;charset=utf-8' });
-    const svgUrl = URL.createObjectURL(svgBlob);
-
-    try {
-      return await imageUrlToJpegBlob(svgUrl, size);
-    } finally {
-      URL.revokeObjectURL(svgUrl);
-    }
-  };
-
-  try {
-    const inlinedSvg = await inlineExternalSvgImages(svgText);
-    return await exportSvgAsJpeg(inlinedSvg);
-  } catch {
-    const strippedSvg = stripExternalSvgImages(svgText);
-    return await exportSvgAsJpeg(strippedSvg);
-  }
-};
 
 interface MyCardsNewProps {
   onEditCard?: (cardId: string) => void;
@@ -767,12 +386,21 @@ const toggleStatus = useCallback(async (cardId: string) => {
 
     try {
       const freshConfig = await getCardQRConfig(card.id).catch(() => null);
-      const qrConfig = freshConfig || cardQrById[card.id];
+
+      // Fall back to cached API result, then to localStorage (written by NfcQR customizer)
+      let qrConfig: CardQRConfigPayload | null = freshConfig || cardQrById[card.id];
+      if (!qrConfig) {
+        try {
+          const raw = localStorage.getItem(`samcard_qr_config_v1:${card.id}`);
+          if (raw) qrConfig = JSON.parse(raw) as CardQRConfigPayload;
+        } catch { /* ignore */ }
+      }
+
       const { matrix, N } = makeQRMatrix(cardPublicUrl(card));
 
       let svgText: string;
       if (qrConfig) {
-        svgText = buildCustomizedQrSvgString(qrConfig, matrix, N, 1200);
+        svgText = buildCustomizedQrSvgFromPayload(qrConfig, matrix, N, 1200);
       } else {
         const fg = '#000000';
         const bg = '#ffffff';
