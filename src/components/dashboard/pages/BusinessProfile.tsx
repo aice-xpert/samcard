@@ -1231,6 +1231,7 @@ export default function BusinessProfile({
 
   const sharedPreviewProps = useMemo(() => ({
     cardId: previewResolvedCardId,
+    publishedLink: profileShareUrl,
     profileImage: previewProfileImage,
     brandLogo: previewBrandLogo,
     logoPosition: previewLogoPosition,
@@ -1244,6 +1245,7 @@ export default function BusinessProfile({
     themeOverride: previewThemeOverride,
   }), [
     previewResolvedCardId,
+    profileShareUrl,
     previewProfileImage,
     previewBrandLogo,
     previewLogoPosition,

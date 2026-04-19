@@ -1,6 +1,7 @@
 import express, { Response } from "express";
 import { supabase } from "../config/supabase";
 import { randomUUID } from "crypto";
+import { createNotification } from "../lib/notifications";
 
 const router = express.Router();
 
@@ -426,6 +427,14 @@ router.post("/:slug/leads", async (req, res: Response) => {
         totalSaves: ((card as { totalSaves?: number }).totalSaves ?? 0) + 1,
       })
       .eq("id", card.id);
+
+    void createNotification(
+      card.userId,
+      "LEAD",
+      "New Lead Captured",
+      `${name || email || "Someone"} just submitted their contact via your card "${card.name}".`,
+      { sourceId: lead.id, sourceType: "Lead" }
+    );
 
     return res.status(201).json({ success: true, lead });
   } catch (error) {

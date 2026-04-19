@@ -1431,16 +1431,43 @@ const pageBg = (() => {
                     {fd.title || businessProfile.title}
                   </p>
                 )}
-                {(fd.company || businessProfile.company) && (
-                  <p
+                {(fd.company || businessProfile.company || (hasBrandLogo && content.logoPosition === "below-name")) && (
+                  <div
                     style={{
-                      color: "rgba(255,255,255,0.6)",
-                      fontSize: T.bodyFontSize - 1,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
                       marginTop: 2,
                     }}
                   >
-                    {fd.company || businessProfile.company}
-                  </p>
+                    {hasBrandLogo && content.logoPosition === "below-name" && (
+                      <div
+                        style={{
+                          background: "rgba(0,0,0,0.45)",
+                          padding: "2px 4px",
+                          borderRadius: 5,
+                          lineHeight: 0,
+                          flexShrink: 0,
+                        }}
+                      >
+                        <img
+                          src={content.brandLogo}
+                          alt="Brand"
+                          style={{ maxWidth: 22, maxHeight: 22, objectFit: "contain", borderRadius: 3 }}
+                        />
+                      </div>
+                    )}
+                    {(fd.company || businessProfile.company) && (
+                      <p
+                        style={{
+                          color: "rgba(255,255,255,0.6)",
+                          fontSize: T.bodyFontSize - 1,
+                        }}
+                      >
+                        {fd.company || businessProfile.company}
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
             </div>

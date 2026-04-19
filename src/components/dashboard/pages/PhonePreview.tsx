@@ -9,7 +9,7 @@ import {
   Mail, Phone, Globe, MapPin, Calendar, Link2,
   Share2, Check, Copy, Eye,
   Video as VideoIcon, ChevronRight, Upload,
-  MessageSquare, Briefcase, Layout, Smartphone, ChevronDown,
+  MessageSquare, Briefcase,
 } from 'lucide-react';
 import { STICKER_DEFS } from '@/components/dashboard/pages/Qrrenderers';
 
@@ -56,6 +56,7 @@ export interface ThemeOverride {
 
 export interface PhonePreviewProps {
   cardId?: string;
+  publishedLink?: string;
   profileImage: string;
   brandLogo: string;
   logoPosition: LogoPosition;
@@ -162,6 +163,7 @@ function Divider({ T }: { T: ThemeOverride }) {
 // ═══════════════════════════════════════════════════════════════════
 function PhonePreviewComponent({
   cardId,
+  publishedLink,
   profileImage, brandLogo, logoPosition,
   formData, socialLinks, customLinks, extraSections, sections,
   savedContact, copied,
@@ -240,6 +242,11 @@ function PhonePreviewComponent({
   ].filter(Boolean) as { label: string; sub: string; href: string; Icon: React.ElementType }[];
 
   const hasBrandLogo = !!brandLogo?.trim();
+  const publishedLinkValue = publishedLink?.trim() || '';
+  const canShowCopy = Boolean(cardId && publishedLinkValue && onShareLink);
+  const [copyPublishedEnabled, setCopyPublishedEnabled] = useState(true);
+
+  const showCopyButton = canShowCopy && copyPublishedEnabled;
 
   return (
     <>
@@ -260,11 +267,13 @@ function PhonePreviewComponent({
               style={{ background: '#1a1a1a', border: `1px solid ${T.green}33`, color: '#888' }}>
               <Eye className="w-3.5 h-3.5" />
             </button>
-            <button onClick={onShareLink} disabled={!onShareLink}
-              className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ background: '#1a1a1a', border: `1px solid ${T.green}33`, color: copied ? T.greenLight : '#888', opacity: onShareLink ? 1 : 0.35, cursor: onShareLink ? 'pointer' : 'not-allowed' }}>
-              {copied ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
-            </button>
+            {showCopyButton && (
+              <button onClick={onShareLink}
+                className="w-8 h-8 rounded-lg flex items-center justify-center"
+                style={{ background: '#1a1a1a', border: `1px solid ${T.green}33`, color: copied ? T.greenLight : '#888' }}>
+                {copied ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
+              </button>
+            )}
           </div>
         </div>
 
@@ -561,11 +570,13 @@ function PhonePreviewComponent({
                 <div className="flex items-center justify-between px-3 py-2"
                   style={{ background: T.card, borderTop: `1px solid ${T.cardBorder}` }}>
                   <div className="flex items-center gap-2">
-                    <button onClick={e => { e.stopPropagation(); onShareLink?.(); }} disabled={!onShareLink}
-                      className="w-9 h-9 rounded-full flex items-center justify-center"
-                      style={{ background: '#1a1a1a', border: `1px solid ${T.green}4d`, opacity: onShareLink ? 1 : 0.35, cursor: onShareLink ? 'pointer' : 'not-allowed' }}>
-                      {copied ? <Check className="w-4 h-4" style={{ color: T.greenLight }} /> : <Upload className="w-4 h-4" style={{ color: T.textMuted }} />}
-                    </button>
+                    {showCopyButton && (
+                      <button onClick={e => { e.stopPropagation(); onShareLink?.(); }}
+                        className="w-9 h-9 rounded-full flex items-center justify-center"
+                        style={{ background: '#1a1a1a', border: `1px solid ${T.green}4d` }}>
+                        {copied ? <Check className="w-4 h-4" style={{ color: T.greenLight }} /> : <Upload className="w-4 h-4" style={{ color: T.textMuted }} />}
+                      </button>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <button onClick={e => { e.stopPropagation(); onSaveContact(); }}
@@ -597,24 +608,42 @@ function PhonePreviewComponent({
         </div>
 
         {/* Share panel */}
-        <div className="mt-4 p-3 rounded-xl" style={{ background: `${T.green}0f`, border: `1px solid ${T.green}2e` }}>
-          <p className="text-[10px] uppercase tracking-wider font-semibold mb-2" style={{ color: '#555', ...ff }}>Share Your Card</p>
-          <div className="grid grid-cols-1 gap-2">
-            <button onClick={onShareLink} disabled={!onShareLink}
-              className="flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-medium"
-              style={{
-                border: copied ? `1px solid ${T.greenLight}66` : `1px solid ${T.green}33`,
-                color: copied ? T.greenLight : '#888',
-                background: copied ? `${T.greenLight}14` : 'transparent',
-                opacity: onShareLink ? 1 : 0.35,
-                cursor: onShareLink ? 'pointer' : 'not-allowed',
-                ...ff,
-              }}>
-              {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-              {copied ? 'Copied!' : 'Copy Link'}
-            </button>
+        {canShowCopy && (
+          <div className="mt-4 p-3 rounded-xl" style={{ background: `${T.green}0f`, border: `1px solid ${T.green}2e` }}>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: '#555', ...ff }}>Share Your Card</p>
+              <button
+                type="button"
+                onClick={() => setCopyPublishedEnabled(prev => !prev)}
+                className="inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[10px] font-semibold"
+                style={{
+                  border: `1px solid ${copyPublishedEnabled ? T.greenLight : T.green}55`,
+                  color: copyPublishedEnabled ? T.greenLight : '#888',
+                  background: copyPublishedEnabled ? `${T.greenLight}1a` : 'transparent',
+                  ...ff,
+                }}
+                aria-pressed={copyPublishedEnabled}
+              >
+                Published Link
+              </button>
+            </div>
+            {showCopyButton && (
+              <div className="grid grid-cols-1 gap-2">
+                <button onClick={onShareLink}
+                  className="flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-medium"
+                  style={{
+                    border: copied ? `1px solid ${T.greenLight}66` : `1px solid ${T.green}33`,
+                    color: copied ? T.greenLight : '#888',
+                    background: copied ? `${T.greenLight}14` : 'transparent',
+                    ...ff,
+                  }}>
+                  {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copied ? 'Copied!' : 'Copy Link'}
+                </button>
+              </div>
+            )}
           </div>
-        </div>
+        )}
       </div>
     </>
   );
@@ -629,6 +658,41 @@ function ExtraSectionPreview({ section, T }: { section: ExtraSection; T: ThemeOv
   const ff = { fontFamily: T.fontFamily };
 
   switch (section.type) {
+    case 'extra-pdf': {
+      const pdfTitle = str(d, 'pdfTitle'), pdfUrl = str(d, 'pdfUrl');
+      return pdfTitle || pdfUrl ? (
+        <div className="mx-3 mb-2.5 overflow-hidden"
+          style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: T.cardRadius }}>
+          <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ borderBottom: `1px solid ${T.divider}` }}>
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+              style={{ background: `linear-gradient(135deg,${T.green},${T.greenLight})` }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+              </svg>
+            </div>
+            <span style={{ fontWeight: T.boldHeadings ? 700 : 500, fontSize: T.bodyFontSize, color: T.textPrimary, ...ff }}>PDF Gallery</span>
+          </div>
+          <button type="button" onClick={e => { e.stopPropagation(); if (pdfUrl) openLink(pdfUrl); }}
+            className="w-full flex items-center gap-3 px-4 py-3 text-left">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ background: `${T.green}1f`, border: `1px solid ${T.green}40` }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4" style={{ color: T.greenLight }}>
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p style={{ fontWeight: T.boldHeadings ? 700 : 500, fontSize: T.bodyFontSize, color: T.textPrimary, ...ff }}>{pdfTitle || 'View PDF'}</p>
+              <p style={{ fontSize: Math.max(9, T.bodyFontSize - 1), color: T.textMuted, ...ff }} className="truncate">{pdfUrl || 'Tap to open'}</p>
+            </div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 flex-shrink-0" style={{ color: T.muted }}>
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </button>
+        </div>
+      ) : null;
+    }
     case 'extra-button': {
       const btnLabel = str(d, 'btnLabel'), btnUrl = str(d, 'btnUrl');
       return btnLabel || btnUrl ? (

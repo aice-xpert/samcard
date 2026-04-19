@@ -219,4 +219,124 @@ router.put("/business-profile", verifySession, async (req: AuthRequest, res: Res
   }
 });
 
+// ── Payment Method ────────────────────────────────────────────────────────────
+
+router.get("/payment-method", verifySession, async (req: AuthRequest, res: Response) => {
+  try {
+    const { data, error } = await supabase
+      .from("PaymentMethod")
+      .select("brand, last4, expMonth, expYear")
+      .eq("userId", req.user!.uid)
+      .eq("isDefault", true)
+      .maybeSingle();
+
+    if (error) return res.status(500).json({ error: error.message });
+    if (!data) return res.json(null);
+
+    const mm = String(data.expMonth).padStart(2, "0");
+    const yy = String(data.expYear % 100).padStart(2, "0");
+    return res.json({ brand: data.brand, last4: data.last4, expiry: `${mm}/${yy}` });
+  } catch (error: unknown) {
+    return res.status(500).json({ error: getErrorMessage(error) });
+  }
+});
+
+router.put("/payment-method", verifySession, async (req: AuthRequest, res: Response) => {
+  const { brand, last4, expiry } = req.body as { brand: string; last4: string; expiry: string };
+
+  if (!brand || !last4 || !expiry) {
+    return res.status(400).json({ error: "brand, last4 and expiry are required" });
+  }
+
+  const ALLOWED_BRANDS: Record<string, string> = {
+    VISA: "VISA", visa: "VISA",
+    MASTERCARD: "MASTERCARD", mastercard: "MASTERCARD", Mastercard: "MASTERCARD",
+    AMEX: "AMEX", amex: "AMEX",
+    DISCOVER: "DISCOVER", discover: "DISCOVER",
+    JCB: "JCB", jcb: "JCB",
+    UNIONPAY: "UNIONPAY", unionpay: "UNIONPAY",
+  };
+  const normalizedBrand = ALLOWED_BRANDS[brand] ?? "VISA";
+
+  const [rawMonth, rawYear] = expiry.split("/");
+  const expMonth = parseInt(rawMonth ?? "1", 10);
+  const expYearShort = parseInt(rawYear ?? "25", 10);
+  const expYear = expYearShort < 100 ? 2000 + expYearShort : expYearShort;
+
+  if (!expMonth || expMonth < 1 || expMonth > 12) {
+    return res.status(400).json({ error: "Invalid expiry month" });
+  }
+
+  // Use a stable internal identifier so we can upsert on it
+  const internalPmId = `pm_internal_${req.user!.uid}`;
+
+  try {
+    const { data: existing } = await supabase
+      .from("PaymentMethod")
+      .select("id")
+      .eq("userId", req.user!.uid)
+      .eq("isDefault", true)
+      .maybeSingle();
+
+    if (existing) {
+      const { error } = await supabase
+        .from("PaymentMethod")
+        .update({ brand: normalizedBrand, last4, expMonth, expYear, updatedAt: new Date().toISOString() })
+        .eq("id", existing.id);
+      if (error) return res.status(500).json({ error: error.message });
+    } else {
+      const { error } = await supabase
+        .from("PaymentMethod")
+        .insert({
+          id: internalPmId,
+          userId: req.user!.uid,
+          stripePaymentMethodId: internalPmId,
+          brand: normalizedBrand,
+          last4,
+          expMonth,
+          expYear,
+          isDefault: true,
+          updatedAt: new Date().toISOString(),
+        });
+      if (error) return res.status(500).json({ error: error.message });
+    }
+
+    const mm = String(expMonth).padStart(2, "0");
+    const yy = String(expYear % 100).padStart(2, "0");
+    return res.json({ brand: normalizedBrand, last4, expiry: `${mm}/${yy}` });
+  } catch (error: unknown) {
+    return res.status(500).json({ error: getErrorMessage(error) });
+  }
+});
+
+// ── Plan ──────────────────────────────────────────────────────────────────────
+
+router.put("/plan", verifySession, async (req: AuthRequest, res: Response) => {
+  const { tier } = req.body as { tier: string };
+
+  const TIER_MAP: Record<string, string> = {
+    FREE: "FREE", STARTER: "STARTER",
+    PRO: "PROFESSIONAL", PROFESSIONAL: "PROFESSIONAL",
+    BUSINESS: "BUSINESS", ENTERPRISE: "ENTERPRISE",
+  };
+  const normalizedTier = TIER_MAP[tier?.trim().toUpperCase()];
+  if (!normalizedTier) {
+    return res.status(400).json({ error: "Invalid plan tier" });
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("User")
+      .update({ planTier: normalizedTier, updatedAt: new Date().toISOString() })
+      .eq("id", req.user!.uid)
+      .select("planTier")
+      .single();
+
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json(data);
+  } catch (error: unknown) {
+    return res.status(500).json({ error: getErrorMessage(error) });
+  }
+});
+
 export default router;

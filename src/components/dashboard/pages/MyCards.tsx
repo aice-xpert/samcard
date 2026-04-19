@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/dashboard/ui/card';
 import { Button } from '@/components/dashboard/ui/button';
 import { Badge } from '@/components/dashboard/ui/badge';
@@ -22,9 +22,13 @@ import {
   ApiCard,
   CardQRConfigPayload,
 } from '@/lib/api';
-import { QRWithShape, STICKER_DEFS } from '@/components/dashboard/pages/Qrrenderers';
 import { makeQRMatrix } from '@/components/dashboard/pages/qr-engine';
-import { LOGOS } from '@/components/dashboard/pages/constants';
+import {
+  buildQrSvgString,
+  buildCustomizedQrSvgFromPayload,
+  svgTextToJpegBlob,
+  triggerBlobDownload,
+} from '@/components/dashboard/pages/qr-download-utils';
 
 const sparklineData = [
   { value: 12 }, { value: 19 }, { value: 15 },
@@ -105,253 +109,6 @@ function Sparkline({ data, color }: { data: Array<{ value: number }>; color: str
   );
 }
 
-const normalizeHexForQrApi = (value: string | undefined, fallback: string): string => {
-  if (!value) return fallback;
-  const cleaned = value.trim().replace('#', '');
-  if (/^[0-9a-fA-F]{6}$/.test(cleaned)) return cleaned.toLowerCase();
-  return fallback;
-};
-
-const ensureSvgNamespaces = (svgText: string): string => {
-  let normalized = svgText;
-  if (!/xmlns=/.test(normalized)) {
-    normalized = normalized.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
-  }
-  if (!/xmlns:xlink=/.test(normalized)) {
-    normalized = normalized.replace('<svg', '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
-  }
-  return normalized;
-};
-
-const sanitizeHiddenSvgRootStyles = (styleValue: string): string => {
-  const hiddenKeys = new Set([
-    'position',
-    'width',
-    'height',
-    'opacity',
-    'pointer-events',
-    'display',
-    'visibility',
-    'left',
-    'top',
-  ]);
-
-  return styleValue
-    .split(';')
-    .map((rule) => rule.trim())
-    .filter(Boolean)
-    .filter((rule) => {
-      const separatorIndex = rule.indexOf(':');
-      if (separatorIndex === -1) return true;
-      const key = rule.slice(0, separatorIndex).trim().toLowerCase();
-      return !hiddenKeys.has(key);
-    })
-    .join('; ');
-};
-
-const sanitizeExportSvg = (svgText: string): string => {
-  try {
-    const parser = new DOMParser();
-    const documentNode = parser.parseFromString(svgText, 'image/svg+xml');
-    if (documentNode.querySelector('parsererror')) {
-      return svgText;
-    }
-
-    const svgRoot = documentNode.documentElement;
-    if (svgRoot.tagName.toLowerCase() !== 'svg') {
-      return svgText;
-    }
-
-    svgRoot.removeAttribute('aria-hidden');
-    svgRoot.removeAttribute('focusable');
-
-    const rootStyle = svgRoot.getAttribute('style');
-    if (rootStyle) {
-      const cleanedStyle = sanitizeHiddenSvgRootStyles(rootStyle);
-      if (cleanedStyle) {
-        svgRoot.setAttribute('style', cleanedStyle);
-      } else {
-        svgRoot.removeAttribute('style');
-      }
-    }
-
-    const width = svgRoot.getAttribute('width');
-    if (!width || width === '0' || width === '0px') {
-      svgRoot.setAttribute('width', '360');
-    }
-
-    const height = svgRoot.getAttribute('height');
-    if (!height || height === '0' || height === '0px') {
-      svgRoot.setAttribute('height', '360');
-    }
-
-    if (!svgRoot.getAttribute('preserveAspectRatio')) {
-      svgRoot.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-    }
-
-    return new XMLSerializer().serializeToString(svgRoot);
-  } catch {
-    return svgText;
-  }
-};
-
-const stripExternalSvgImages = (svgText: string): string => {
-  try {
-    const parser = new DOMParser();
-    const documentNode = parser.parseFromString(svgText, 'image/svg+xml');
-    if (documentNode.querySelector('parsererror')) {
-      return svgText;
-    }
-
-    documentNode.querySelectorAll('image').forEach((node) => {
-      const href = node.getAttribute('href') || node.getAttribute('xlink:href') || '';
-      const normalizedHref = href.trim().toLowerCase();
-
-      if (!normalizedHref) {
-        node.remove();
-        return;
-      }
-
-      if (
-        normalizedHref.startsWith('http://') ||
-        normalizedHref.startsWith('https://') ||
-        normalizedHref.startsWith('//')
-      ) {
-        node.remove();
-      }
-    });
-
-    return new XMLSerializer().serializeToString(documentNode.documentElement);
-  } catch {
-    return svgText;
-  }
-};
-
-const blobToDataUrl = (blob: Blob): Promise<string> =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      if (typeof reader.result === 'string') {
-        resolve(reader.result);
-        return;
-      }
-      reject(new Error('Failed to encode image blob'));
-    };
-    reader.onerror = () => reject(new Error('Failed to read image blob'));
-    reader.readAsDataURL(blob);
-  });
-
-const inlineExternalSvgImages = async (svgText: string): Promise<string> => {
-  try {
-    const parser = new DOMParser();
-    const documentNode = parser.parseFromString(svgText, 'image/svg+xml');
-    if (documentNode.querySelector('parsererror')) {
-      return svgText;
-    }
-
-    const imageNodes = Array.from(documentNode.querySelectorAll('image'));
-    if (!imageNodes.length) {
-      return svgText;
-    }
-
-    await Promise.all(
-      imageNodes.map(async (node) => {
-        const href = node.getAttribute('href') || node.getAttribute('xlink:href') || '';
-        const normalizedHref = href.trim().toLowerCase();
-
-        if (!normalizedHref) return;
-        if (normalizedHref.startsWith('data:')) return;
-        if (
-          !normalizedHref.startsWith('http://') &&
-          !normalizedHref.startsWith('https://') &&
-          !normalizedHref.startsWith('//')
-        ) {
-          return;
-        }
-
-        try {
-          const response = await fetch(href);
-          if (!response.ok) return;
-          const imageBlob = await response.blob();
-          const dataUrl = await blobToDataUrl(imageBlob);
-          node.setAttribute('href', dataUrl);
-          node.setAttribute('xlink:href', dataUrl);
-        } catch {
-          // keep original href if we cannot inline
-        }
-      }),
-    );
-
-    return new XMLSerializer().serializeToString(documentNode.documentElement);
-  } catch {
-    return svgText;
-  }
-};
-
-const triggerBlobDownload = (blob: Blob, fileName: string): void => {
-  const downloadUrl = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = downloadUrl;
-  anchor.download = fileName;
-  anchor.click();
-  URL.revokeObjectURL(downloadUrl);
-};
-
-const imageUrlToJpegBlob = async (imageUrl: string, size = 1400): Promise<Blob> => {
-  const image = await new Promise<HTMLImageElement>((resolve, reject) => {
-    const instance = new Image();
-    instance.onload = () => resolve(instance);
-    instance.onerror = () => reject(new Error('Failed to load QR image for JPG conversion'));
-    instance.src = imageUrl;
-  });
-
-  const canvas = document.createElement('canvas');
-  canvas.width = size;
-  canvas.height = size;
-
-  const context = canvas.getContext('2d');
-  if (!context) {
-    throw new Error('Failed to initialize canvas context');
-  }
-
-  context.fillStyle = '#ffffff';
-  context.fillRect(0, 0, size, size);
-  context.drawImage(image, 0, 0, size, size);
-
-  return await new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob((blob) => {
-      if (!blob) {
-        reject(new Error('Failed to export JPG file'));
-        return;
-      }
-      resolve(blob);
-    }, 'image/jpeg', 0.96);
-  });
-};
-
-const svgTextToJpegBlob = async (svgText: string, size = 1400): Promise<Blob> => {
-  const exportSvgAsJpeg = async (inputSvgText: string): Promise<Blob> => {
-    const sanitizedSvg = sanitizeExportSvg(inputSvgText);
-    const normalizedSvg = ensureSvgNamespaces(sanitizedSvg);
-    const svgBlob = new Blob([normalizedSvg], { type: 'image/svg+xml;charset=utf-8' });
-    const svgUrl = URL.createObjectURL(svgBlob);
-
-    try {
-      return await imageUrlToJpegBlob(svgUrl, size);
-    } finally {
-      URL.revokeObjectURL(svgUrl);
-    }
-  };
-
-  try {
-    const inlinedSvg = await inlineExternalSvgImages(svgText);
-    return await exportSvgAsJpeg(inlinedSvg);
-  } catch {
-    const strippedSvg = stripExternalSvgImages(svgText);
-    return await exportSvgAsJpeg(strippedSvg);
-  }
-};
-
 interface MyCardsNewProps {
   onEditCard?: (cardId: string) => void;
   onCreateBusinessCard?: () => void;
@@ -381,12 +138,6 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onVie
   const [downloadingQrId, setDownloadingQrId] = useState<string | null>(null);
   const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
   const [togglingIds, setTogglingIds] = useState<Set<string>>(new Set());
-  const qrSvgRefs = useRef<Record<string, SVGSVGElement | null>>({});
-
-  const setQrSvgRef = useCallback((cardId: string, element: SVGSVGElement | null) => {
-    qrSvgRefs.current[cardId] = element;
-  }, []);
-
   const loadCardAssets = useCallback(async (cardIds: string[]) => {
     if (!cardIds.length) return;
 
@@ -482,37 +233,44 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onVie
 
   // ── actions ──────────────────────────────────────────────────────
 
-  // Toggle ACTIVE ↔ DRAFT and persist to backend
-  const toggleStatus = async (card: CardType) => {
-    // BUG-21: Prevent multiple simultaneous toggles on the same card
-    if (togglingIds.has(card.id)) return;
+const toggleStatus = useCallback(async (cardId: string) => {
+  // Bail immediately if already in-flight for this card
+  if (togglingIds.has(cardId)) return;
 
-    const newStatus = card.status === 'ACTIVE' ? 'DRAFT' : 'ACTIVE';
+  // Read current card status from state (avoids stale closure bug)
+  let currentStatus: string | undefined;
+  setCards(prev => {
+    currentStatus = prev.find(c => c.id === cardId)?.status;
+    return prev; // no-op read
+  });
+  if (!currentStatus) return;
 
-    setTogglingIds(prev => new Set(prev).add(card.id));
+  const newStatus = currentStatus === 'ACTIVE' ? 'DRAFT' : 'ACTIVE';
 
-    // Optimistic update
+  setTogglingIds(prev => new Set(prev).add(cardId));
+
+  // Optimistic update
+  setCards(prev =>
+    prev.map(c => c.id === cardId ? { ...c, status: newStatus } : c)
+  );
+
+  try {
+    await updateCard(cardId, { status: newStatus });
+    showToast(newStatus === 'ACTIVE' ? 'Card published!' : 'Card set to draft.');
+  } catch (err) {
+    // Rollback
     setCards(prev =>
-      prev.map(c => c.id === card.id ? { ...c, status: newStatus } : c)
+      prev.map(c => c.id === cardId ? { ...c, status: currentStatus! } : c)
     );
-
-    try {
-      await updateCard(card.id, { status: newStatus });
-      showToast(newStatus === 'ACTIVE' ? 'Card published!' : 'Card set to draft.');
-    } catch (err) {
-      // Rollback on failure
-      setCards(prev =>
-        prev.map(c => c.id === card.id ? { ...c, status: card.status } : c)
-      );
-      showToast(`Failed to update status: ${err instanceof Error ? err.message : 'Unknown error'}`);
-    } finally {
-      setTogglingIds(prev => {
-        const next = new Set(prev);
-        next.delete(card.id);
-        return next;
-      });
-    }
-  };
+    showToast(`Failed to update status: ${err instanceof Error ? err.message : 'Unknown error'}`);
+  } finally {
+    setTogglingIds(prev => {
+      const next = new Set(prev);
+      next.delete(cardId);
+      return next;
+    });
+  }
+}, [togglingIds, showToast]);
 
   const deleteCard = async (id: string) => {
     try {
@@ -528,7 +286,6 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onVie
         delete next[id];
         return next;
       });
-      delete qrSvgRefs.current[id];
       setConfirmDelete(null);
       showToast('Card deleted');
     } catch (error) {
@@ -628,37 +385,30 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onVie
     setDownloadingQrId(card.id);
 
     try {
-      const svgElement = qrSvgRefs.current[card.id];
+      const freshConfig = await getCardQRConfig(card.id).catch(() => null);
 
-      if (svgElement) {
-        const svgText = new XMLSerializer().serializeToString(svgElement);
-        const jpgBlob = await svgTextToJpegBlob(svgText);
-        triggerBlobDownload(jpgBlob, `${card.slug}-qr.jpg`);
-        showToast('Custom QR downloaded (.jpg)');
-        return;
+      // Fall back to cached API result, then to localStorage (written by NfcQR customizer)
+      let qrConfig: CardQRConfigPayload | null = freshConfig || cardQrById[card.id];
+      if (!qrConfig) {
+        try {
+          const raw = localStorage.getItem(`samcard_qr_config_v1:${card.id}`);
+          if (raw) qrConfig = JSON.parse(raw) as CardQRConfigPayload;
+        } catch { /* ignore */ }
       }
 
-      const qrConfig = cardQrById[card.id];
-      const fg = normalizeHexForQrApi(qrConfig?.fg, '000000');
-      const bg = normalizeHexForQrApi(qrConfig?.bg, 'ffffff');
-      const safeFg = fg === bg ? '000000' : fg;
-      const fallbackUrl = `https://api.qrserver.com/v1/create-qr-code/?size=1200x1200&margin=40&data=${encodeURIComponent(cardPublicUrl(card))}&color=${safeFg}&bgcolor=${bg}`;
+      const { matrix, N } = makeQRMatrix(cardPublicUrl(card));
 
-      const response = await fetch(fallbackUrl);
-      if (!response.ok) {
-        throw new Error(`QR generation failed (${response.status})`);
+      let svgText: string;
+      if (qrConfig) {
+        svgText = buildCustomizedQrSvgFromPayload(qrConfig, matrix, N, 1200);
+      } else {
+        const fg = '#000000';
+        const bg = '#ffffff';
+        svgText = buildQrSvgString(matrix, N, fg, bg, 1200, 40);
       }
 
-      const pngBlob = await response.blob();
-      const pngUrl = URL.createObjectURL(pngBlob);
-
-      try {
-        const jpgBlob = await imageUrlToJpegBlob(pngUrl);
-        triggerBlobDownload(jpgBlob, `${card.slug}-qr.jpg`);
-      } finally {
-        URL.revokeObjectURL(pngUrl);
-      }
-
+      const jpgBlob = await svgTextToJpegBlob(svgText, 1200);
+      triggerBlobDownload(jpgBlob, `${card.slug}-qr.jpg`);
       showToast('QR downloaded (.jpg)');
     } catch (error) {
       showToast(`Failed to download QR: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -760,31 +510,6 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onVie
           const previewName = preview?.name?.trim() || card.title || card.name;
           const previewTitle = preview?.title?.trim() || '';
           const previewImage = preview?.profileImage?.trim() || '';
-
-          const qrConfig = cardQrById[card.id] || null;
-          const qrMatrixData = makeQRMatrix(cardPublicUrl(card));
-          const qrGradientId = `mycards-qr-grad-${card.id}`;
-          const gradientStops = qrConfig?.gradStops ?? [];
-          const qrBg = qrConfig?.bg || '#ffffff';
-          const qrSolidFg = qrConfig?.fg || '#000000';
-          const safeQrSolidFg =
-            qrSolidFg.toLowerCase() === qrBg.toLowerCase() ? '#000000' : qrSolidFg;
-          const qrFill = qrConfig?.gradEnabled && gradientStops.length >= 2
-            ? `url(#${qrGradientId})`
-            : safeQrSolidFg;
-          const gradAngle = typeof qrConfig?.gradAngle === 'number' ? qrConfig.gradAngle : 135;
-          const selectedSticker = qrConfig?.stickerId
-            ? STICKER_DEFS.find((sticker) => sticker.id === qrConfig.stickerId) ?? null
-            : null;
-          const qrRenderSize = selectedSticker ? 260 : 320;
-          const qrRenderOffset = (320 - qrRenderSize) / 2;
-
-          const logoIndex = qrConfig?.selectedLogo?.startsWith('logo-')
-            ? Number.parseInt(qrConfig.selectedLogo.replace('logo-', ''), 10)
-            : -1;
-          const logoPreset = Number.isInteger(logoIndex) && logoIndex >= 0 && logoIndex < LOGOS.length
-            ? LOGOS[logoIndex]
-            : null;
 
           return (
           <Card
@@ -960,59 +685,6 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onVie
                 ))}
               </div>
 
-              {/* Hidden SVG used for per-variant custom QR downloads */}
-              <svg
-                ref={(element) => setQrSvgRef(card.id, element)}
-                viewBox="0 0 360 360"
-                width="360"
-                height="360"
-                aria-hidden="true"
-                style={{ position: 'absolute', width: 0, height: 0, opacity: 0, pointerEvents: 'none' }}
-              >
-                {qrConfig?.gradEnabled && gradientStops.length >= 2 && (
-                  <defs>
-                    <linearGradient
-                      id={qrGradientId}
-                      x1={`${50 - 50 * Math.cos((gradAngle * Math.PI) / 180)}%`}
-                      y1={`${50 - 50 * Math.sin((gradAngle * Math.PI) / 180)}%`}
-                      x2={`${50 + 50 * Math.cos((gradAngle * Math.PI) / 180)}%`}
-                      y2={`${50 + 50 * Math.sin((gradAngle * Math.PI) / 180)}%`}
-                    >
-                      {gradientStops.map((stop, index) => (
-                        <stop key={`${card.id}-grad-${index}`} offset={`${Math.max(0, Math.min(1, stop.offset)) * 100}%`} stopColor={stop.color} />
-                      ))}
-                    </linearGradient>
-                  </defs>
-                )}
-                <rect width="360" height="360" fill={qrBg} rx="20" />
-                <g transform="translate(20,20)">
-                  <g transform={`translate(${qrRenderOffset},${qrRenderOffset})`}>
-                    <QRWithShape
-                      shapeId={qrConfig?.shapeId || 'square'}
-                      dotShape={qrConfig?.dotShape || 'square'}
-                      finderStyle={qrConfig?.finderStyle || 'square'}
-                      eyeBall={qrConfig?.eyeBall || 'square'}
-                      fg={qrFill}
-                      bg={qrBg}
-                      accentFg={qrConfig?.accentFg || safeQrSolidFg}
-                      accentBg={qrConfig?.accentBg || qrBg}
-                      scale={typeof qrConfig?.bodyScale === 'number' ? qrConfig.bodyScale : 1}
-                      strokeEnabled={Boolean(qrConfig?.strokeEnabled)}
-                      strokeColor={qrConfig?.strokeColor || '#000000'}
-                      selectedLogo={qrConfig?.selectedLogo || null}
-                      customLogoUrl={qrConfig?.customLogoUrl || null}
-                      logoNode={logoPreset?.icon ?? null}
-                      logoBg={logoPreset?.bg ?? qrConfig?.logoBg ?? '#ffffff'}
-                      size={qrRenderSize}
-                      clipId={`mycards-qr-clip-${card.id}`}
-                      qrMatrix={qrMatrixData.matrix}
-                      qrN={qrMatrixData.N}
-                    />
-                  </g>
-                  {selectedSticker && selectedSticker.render(320, qrRenderSize)}
-                </g>
-              </svg>
-
               {/* Bottom row: Publish toggle */}
               <div className="flex items-center justify-between pt-2 sm:pt-3 border-t border-[#1E1E1E]">
                 <button onClick={() => duplicateCard(card)} disabled={duplicatingId === card.id}
@@ -1029,10 +701,13 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onVie
                   </span>
                   <Switch
                     checked={card.status === 'ACTIVE'}
-                    onCheckedChange={() => toggleStatus(card)}
+                    onCheckedChange={() => toggleStatus(card.id)}
                     disabled={togglingIds.has(card.id)}
                     className="scale-90 sm:scale-100"
-                    style={card.status === 'ACTIVE' ? { backgroundColor: theme.accentLight } : undefined}
+                    style={{
+                      ...(card.status === 'ACTIVE' ? { backgroundColor: theme.accentLight } : {}),
+                      pointerEvents: togglingIds.has(card.id) ? 'none' : undefined,
+                    }}
                   />
                 </div>
 
