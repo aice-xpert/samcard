@@ -221,7 +221,7 @@ export const QRCanvasRenderer = React.forwardRef<HTMLDivElement, QRCanvasProps>(
       } catch (error) {
         console.error("Error rendering QR code:", error);
       }
-    }, [isLibraryLoaded, url, size, dotColor, bgColor, dotType, cornerTypes]);
+    }, [isLibraryLoaded, url, size, dotColor, bgColor, dotType, cornerType]);
 
     return (
       <div
