@@ -195,6 +195,7 @@ async function exportDecorateComposite(
 
     const bg = new Image();
     bg.crossOrigin = "anonymous";
+    bg.onerror = () => resolve(canvas.toDataURL("image/png"));
     bg.onload = () => {
       ctx.drawImage(bg, 0, 0, containerWidth, containerHeight);
 

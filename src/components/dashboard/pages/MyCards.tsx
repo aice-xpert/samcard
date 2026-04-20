@@ -387,29 +387,42 @@ const toggleStatus = useCallback(async (cardId: string) => {
     try {
       const freshConfig = await getCardQRConfig(card.id).catch(() => null);
 
-      // Fall back to cached API result, then to localStorage (written by NfcQR customizer)
-      let qrConfig: CardQRConfigPayload | null = freshConfig || cardQrById[card.id];
-      if (!qrConfig) {
-        try {
-          const raw = localStorage.getItem(`samcard_qr_config_v1:${card.id}`);
-          if (raw) qrConfig = JSON.parse(raw) as CardQRConfigPayload;
-        } catch { /* ignore */ }
-      }
+      // decorateImageUrl from freshConfig (backend) = composite URL we stored during Apply
+      // decorateCompositeDataUrl from localStorage = composite URL stored by NfcQR customizer
+      const compositeUrl = freshConfig?.decorateImageUrl
+        || (() => {
+          try {
+            const raw = localStorage.getItem(`samcard_qr_config_v1:${card.id}`);
+            if (raw) return (JSON.parse(raw) as { decorateCompositeDataUrl?: string }).decorateCompositeDataUrl || null;
+          } catch { /* ignore */ }
+          return null;
+        })();
 
-      const { matrix, N } = makeQRMatrix(cardPublicUrl(card));
-
-      let svgText: string;
-      if (qrConfig) {
-        svgText = buildCustomizedQrSvgFromPayload(qrConfig, matrix, N, 1200);
+      if (compositeUrl) {
+        const res = await fetch(compositeUrl);
+        const blob = await res.blob();
+        triggerBlobDownload(blob, `${card.slug}-qr.jpg`);
+        showToast('QR downloaded (.jpg)');
       } else {
-        const fg = '#000000';
-        const bg = '#ffffff';
-        svgText = buildQrSvgString(matrix, N, fg, bg, 1200, 40);
+        // No decoration — build QR from config
+        let qrConfig: CardQRConfigPayload | null = freshConfig || cardQrById[card.id];
+        if (!qrConfig) {
+          try {
+            const raw = localStorage.getItem(`samcard_qr_config_v1:${card.id}`);
+            if (raw) qrConfig = JSON.parse(raw) as CardQRConfigPayload;
+          } catch { /* ignore */ }
+        }
+        const { matrix, N } = makeQRMatrix(cardPublicUrl(card));
+        let svgText: string;
+        if (qrConfig) {
+          svgText = buildCustomizedQrSvgFromPayload(qrConfig, matrix, N, 1200);
+        } else {
+          svgText = buildQrSvgString(matrix, N, '#000000', '#ffffff', 1200, 40);
+        }
+        const jpgBlob = await svgTextToJpegBlob(svgText, 1200);
+        triggerBlobDownload(jpgBlob, `${card.slug}-qr.jpg`);
+        showToast('QR downloaded (.jpg)');
       }
-
-      const jpgBlob = await svgTextToJpegBlob(svgText, 1200);
-      triggerBlobDownload(jpgBlob, `${card.slug}-qr.jpg`);
-      showToast('QR downloaded (.jpg)');
     } catch (error) {
       showToast(`Failed to download QR: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
