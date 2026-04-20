@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { supabase } from "../config/supabase";
 
 type NotificationType =
@@ -26,7 +27,8 @@ export async function createNotification(
   } = {}
 ) {
   try {
-    await supabase.from("Notification").insert({
+    const { error } = await supabase.from("Notification").insert({
+      id: randomUUID(),
       userId,
       type,
       title,
@@ -39,7 +41,8 @@ export async function createNotification(
       actionLabel: opts.actionLabel ?? null,
       createdAt: new Date().toISOString(),
     });
-  } catch {
-    // Notification creation is non-critical — never let it break the main flow
+    if (error) console.error("[createNotification] insert error:", error.message);
+  } catch (err) {
+    console.error("[createNotification] unexpected error:", err);
   }
 }

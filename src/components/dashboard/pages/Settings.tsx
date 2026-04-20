@@ -14,7 +14,9 @@ import {
     Globe, Palette, Moon, Sun, Lock, Link2, Unlink, ExternalLink,
 } from "lucide-react";
 import { useUser, ConnectedAccountData } from "@/contexts/UserContext";
-import { uploadFile } from "@/lib/api";
+import { uploadFile, updateUserProfile, getPaymentMethod, savePaymentMethod, getUserProfile } from "@/lib/api";
+import { auth } from "@/lib/firebase";
+import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Types
@@ -220,15 +222,31 @@ export function Settings() {
     const [revokingId, setRevokingId] = useState<string | null>(null);
 
     // Payment Cards
-    const [cards, setCards] = useState<PaymentCard[]>([
-        { id: "c1", brand: "Visa", last4: "4242", expiry: "12/27", isDefault: true },
-        { id: "c2", brand: "Mastercard", last4: "8888", expiry: "06/28", isDefault: false },
-    ]);
+    const [cards, setCards] = useState<PaymentCard[]>([]);
     const [addCardModal, setAddCardModal] = useState(false); const [addCardLoading, setAddCardLoading] = useState(false);
     const [deleteCardId, setDeleteCardId] = useState<string | null>(null); const [deleteCardLoading, setDeleteCardLoading] = useState(false);
 
+    // Load payment method from API on mount
+    useEffect(() => {
+        getPaymentMethod()
+            .then(method => {
+                if (method) {
+                    setCards([{ id: "api-default", brand: method.brand, last4: method.last4, expiry: method.expiry, isDefault: true }]);
+                }
+            })
+            .catch(() => {});
+    }, []);
+
     // Notifications
+    const NOTIFS_KEY = "samcard_notif_prefs";
     const [notifs, setNotifs] = useState({ email: true, tapAlerts: true, weeklyReport: true, marketing: false, newLeads: true });
+
+    useEffect(() => {
+        try {
+            const stored = localStorage.getItem(NOTIFS_KEY);
+            if (stored) setNotifs(JSON.parse(stored));
+        } catch {}
+    }, []);
 
     // Appearance
     const [theme, setTheme] = useState<"dark" | "light" | "system">("dark");
@@ -238,6 +256,16 @@ export function Settings() {
     const [profilePublic, setProfilePublic] = useState(true);
     const [analyticsOptIn, setAnalyticsOptIn] = useState(true);
     const [showEmail, setShowEmail] = useState(false);
+
+    // Load privacy settings from API on mount
+    useEffect(() => {
+        getUserProfile()
+            .then(user => {
+                setProfilePublic(user.profilePublic ?? true);
+                setShowEmail(user.showEmail ?? false);
+            })
+            .catch(() => {});
+    }, []);
 
     // Connected Accounts
     const [accountUrls, setAccountUrls] = useState<Record<string, string>>({});
@@ -273,9 +301,16 @@ export function Settings() {
 
     // ── Handlers ──────────────────────────────────────────────────────────
     const handleSaveProfile = async () => {
-        setProfileSaving(true); await new Promise((r) => setTimeout(r, 1200));
-        setProfile({ name: profileName, email: profileEmail, phone: profilePhone, timezone, language, avatar: profileAvatar });
-        setProfileSaving(false); addToast("Profile updated successfully!");
+        setProfileSaving(true);
+        try {
+            await updateUserProfile({ name: profileName, phone: profilePhone, timezone, language, avatar: profileAvatar });
+            setProfile({ name: profileName, email: profileEmail, phone: profilePhone, timezone, language, avatar: profileAvatar });
+            addToast("Profile updated successfully!");
+        } catch (err: any) {
+            addToast("Failed to update profile: " + (err.message || "Unknown error"), "error");
+        } finally {
+            setProfileSaving(false);
+        }
     };
 
     const handlePasswordChange = async () => {
@@ -283,8 +318,25 @@ export function Settings() {
         if (!currentPw) { setPwError("Current password is required"); return; }
         if (newPw.length < 8) { setPwError("New password must be at least 8 characters"); return; }
         if (newPw !== confirmPw) { setPwError("Passwords don't match"); return; }
-        setPwLoading(true); await new Promise((r) => setTimeout(r, 1500));
-        setPwLoading(false); setCurrentPw(""); setNewPw(""); setConfirmPw(""); addToast("Password updated!");
+        setPwLoading(true);
+        try {
+            const user = auth.currentUser;
+            if (!user || !user.email) { setPwError("Not authenticated. Please log in again."); return; }
+            const credential = EmailAuthProvider.credential(user.email, currentPw);
+            await reauthenticateWithCredential(user, credential);
+            await updatePassword(user, newPw);
+            setCurrentPw(""); setNewPw(""); setConfirmPw("");
+            addToast("Password updated!");
+        } catch (err: any) {
+            const msg = err.code === "auth/wrong-password" || err.code === "auth/invalid-credential"
+                ? "Current password is incorrect"
+                : err.code === "auth/too-many-requests"
+                ? "Too many attempts. Try again later."
+                : err.message || "Failed to update password";
+            setPwError(msg);
+        } finally {
+            setPwLoading(false);
+        }
     };
 
     const handleToggle2FA = async (val: boolean) => {
@@ -299,28 +351,50 @@ export function Settings() {
     };
 
     const handleAddCard = async (card: PaymentCard) => {
-        setAddCardLoading(true); await new Promise((r) => setTimeout(r, 1200));
-        setCards((p) => [...p, card]); setAddCardLoading(false); setAddCardModal(false);
-        addToast(`${card.brand} •••• ${card.last4} added`);
+        setAddCardLoading(true);
+        try {
+            await savePaymentMethod({ brand: card.brand, last4: card.last4, expiry: card.expiry });
+            setCards((p) => [...p.map((c) => ({ ...c, isDefault: false })), { ...card, isDefault: true }]);
+            setAddCardModal(false);
+            addToast(`${card.brand} •••• ${card.last4} added`);
+        } catch (err: any) {
+            addToast("Failed to add card: " + (err.message || "Unknown error"), "error");
+        } finally {
+            setAddCardLoading(false);
+        }
     };
 
     const handleDeleteCard = async () => {
         if (!deleteCardId) return;
-        setDeleteCardLoading(true); await new Promise((r) => setTimeout(r, 1000));
+        setDeleteCardLoading(true);
         const c = cards.find((x) => x.id === deleteCardId);
-        setCards((p) => p.filter((x) => x.id !== deleteCardId));
+        const remaining = cards.filter((x) => x.id !== deleteCardId);
+        setCards(remaining);
+        if (remaining.length > 0 && c?.isDefault) {
+            const newDefault = remaining[0];
+            setCards(remaining.map((x, i) => ({ ...x, isDefault: i === 0 })));
+            try { await savePaymentMethod({ brand: newDefault.brand, last4: newDefault.last4, expiry: newDefault.expiry }); } catch {}
+        }
         setDeleteCardLoading(false); setDeleteCardId(null);
         addToast(`Removed ${c?.brand} •••• ${c?.last4}`, "info");
     };
 
     const handleSetDefault = async (cardId: string) => {
-        setCards((p) => p.map((c) => ({ ...c, isDefault: c.id === cardId })));
         const c = cards.find((x) => x.id === cardId);
-        addToast(`${c?.brand} •••• ${c?.last4} set as default`);
+        if (!c) return;
+        try {
+            await savePaymentMethod({ brand: c.brand, last4: c.last4, expiry: c.expiry });
+            setCards((p) => p.map((card) => ({ ...card, isDefault: card.id === cardId })));
+            addToast(`${c.brand} •••• ${c.last4} set as default`);
+        } catch (err: any) {
+            addToast("Failed to update default: " + (err.message || "Unknown error"), "error");
+        }
     };
 
     const handleNotifChange = (key: keyof typeof notifs, val: boolean) => {
-        setNotifs((p) => ({ ...p, [key]: val }));
+        const next = { ...notifs, [key]: val };
+        setNotifs(next);
+        try { localStorage.setItem(NOTIFS_KEY, JSON.stringify(next)); } catch {}
         const names: Record<string, string> = { email: "Email notifications", tapAlerts: "Tap alerts", weeklyReport: "Weekly report", marketing: "Marketing emails", newLeads: "Lead notifications" };
         addToast(`${val ? "Enabled" : "Disabled"} ${names[key]}`, "info");
     };
@@ -578,13 +652,13 @@ export function Settings() {
                         </CardHeader>
                         <CardContent className="pt-4 space-y-3">
                             <div className="flex items-center justify-between gap-4"><div><h4 className="text-sm text-white">Public Profile</h4><p className="text-xs text-[#A0A0A0]">Allow others to find you</p></div>
-                                <Switch checked={profilePublic} onCheckedChange={(v) => { setProfilePublic(v); addToast(`Profile ${v ? "public" : "private"}`, "info"); }} className="data-[state=checked]:bg-[#49B618]" /></div>
+                                <Switch checked={profilePublic} onCheckedChange={async (v) => { setProfilePublic(v); try { await updateUserProfile({ profilePublic: v }); addToast(`Profile ${v ? "public" : "private"}`, "info"); } catch { setProfilePublic(!v); addToast("Failed to update setting", "error"); } }} className="data-[state=checked]:bg-[#49B618]" /></div>
                             <Separator className="bg-[#008001]/20" />
                             <div className="flex items-center justify-between gap-4"><div><h4 className="text-sm text-white">Analytics Tracking</h4><p className="text-xs text-[#A0A0A0]">Help improve SamCard</p></div>
-                                <Switch checked={analyticsOptIn} onCheckedChange={(v) => { setAnalyticsOptIn(v); addToast(`Analytics ${v ? "enabled" : "disabled"}`, "info"); }} className="data-[state=checked]:bg-[#49B618]" /></div>
+                                <Switch checked={analyticsOptIn} onCheckedChange={async (v) => { setAnalyticsOptIn(v); try { await updateUserProfile({ analyticsOptIn: v }); addToast(`Analytics ${v ? "enabled" : "disabled"}`, "info"); } catch { setAnalyticsOptIn(!v); addToast("Failed to update setting", "error"); } }} className="data-[state=checked]:bg-[#49B618]" /></div>
                             <Separator className="bg-[#008001]/20" />
                             <div className="flex items-center justify-between gap-4"><div><h4 className="text-sm text-white">Show Email on Card</h4><p className="text-xs text-[#A0A0A0]">Display email publicly</p></div>
-                                <Switch checked={showEmail} onCheckedChange={(v) => { setShowEmail(v); addToast(`Email visibility ${v ? "on" : "off"}`, "info"); }} className="data-[state=checked]:bg-[#49B618]" /></div>
+                                <Switch checked={showEmail} onCheckedChange={async (v) => { setShowEmail(v); try { await updateUserProfile({ showEmail: v }); addToast(`Email visibility ${v ? "on" : "off"}`, "info"); } catch { setShowEmail(!v); addToast("Failed to update setting", "error"); } }} className="data-[state=checked]:bg-[#49B618]" /></div>
                         </CardContent>
                     </Card>
 

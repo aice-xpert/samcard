@@ -436,7 +436,7 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onVie
           title: c.name,
           views: c.totalViews,
           taps: c.totalTaps,
-          saves: c.totalSaves,
+          saves: c.totalLeads ?? 0,
           trend: sparklineData,
           completion: c.completionScore || 0,
         }));
@@ -553,7 +553,7 @@ const toggleStatus = useCallback(async (cardId: string) => {
         title: duplicated.name,
         views: duplicated.totalViews,
         taps: duplicated.totalTaps,
-        saves: duplicated.totalSaves,
+        saves: duplicated.totalLeads ?? 0,
         completion: duplicated.completionScore,
         trend: sparklineData,
       };
@@ -607,7 +607,7 @@ const toggleStatus = useCallback(async (cardId: string) => {
         title: response.name,
         views: response.totalViews,
         taps: response.totalTaps,
-        saves: response.totalSaves,
+        saves: response.totalLeads ?? 0,
         completion: response.completionScore,
         trend: sparklineData,
       };

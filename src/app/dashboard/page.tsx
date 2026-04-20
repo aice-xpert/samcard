@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Sidebar } from '@/components/dashboard/pages/Sidebar';
 import { EnhancedHeader } from '@/components/dashboard/pages/Header';
 import dynamic from "next/dynamic";
@@ -93,6 +93,27 @@ export default function Home() {
   const [dateRange, setDateRange] = useState('30');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  // Restore page from URL on mount (fixes refresh-to-dashboard bug)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const page = params.get('page');
+    if (page) setActivePage(page);
+    const cardId = params.get('cardId');
+    if (cardId) setAnalyticsCardId(cardId);
+    const cardTitle = params.get('cardTitle');
+    if (cardTitle) setAnalyticsCardTitle(decodeURIComponent(cardTitle));
+    const editCardId = params.get('editCardId');
+    if (editCardId) setEditingCardId(editCardId);
+  }, []);
+
+  const syncURL = (page: string, extra: Record<string, string | undefined> = {}) => {
+    const params = new URLSearchParams();
+    if (page !== 'dashboard') params.set('page', page);
+    Object.entries(extra).forEach(([k, v]) => { if (v) params.set(k, v); });
+    const qs = params.toString();
+    window.history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname);
+  };
+
   const getPageTitle = () => {
     switch (activePage) {
       case 'dashboard': return 'Dashboard Overview';
@@ -129,6 +150,7 @@ export default function Home() {
             onEditCard={(cardId) => {
               setEditingCardId(cardId);
               setActivePage('create-card');
+              syncURL('create-card', { editCardId: cardId });
             }}
             onCreateBusinessCard={() => {
               setEditingCardId(undefined);
@@ -139,6 +161,7 @@ export default function Home() {
               setAnalyticsCardId(cardId);
               setAnalyticsCardTitle(cardTitle);
               setActivePage('analytics');
+              syncURL('analytics', { cardId, cardTitle: encodeURIComponent(cardTitle ?? '') });
             }}
           />
         );
@@ -166,16 +189,15 @@ export default function Home() {
       setAnalyticsCardId(undefined);
       setAnalyticsCardTitle(undefined);
     }
-    // Sidebar navigation to create-card always starts a fresh card
     if (page === 'create-card') {
       setEditingCardId(undefined);
     }
-    // Navigating away from create-card clears any stale editing context
     if (activePage === 'create-card' && page !== 'create-card') {
       setEditingCardId(undefined);
     }
     setActivePage(page);
     setSidebarOpen(false);
+    syncURL(page);
   };
 
   return (

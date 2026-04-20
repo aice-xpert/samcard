@@ -352,7 +352,7 @@ router.post("/:slug/leads", async (req, res: Response) => {
 
     const { data: card, error: cardError } = await supabase
       .from("Card")
-      .select("id, userId, businessProfileId, name, totalSaves, status")
+      .select("id, userId, businessProfileId, name, totalSaves, totalLeads, status")
       .eq("slug", slug)
       .maybeSingle();
 
@@ -378,7 +378,7 @@ router.post("/:slug/leads", async (req, res: Response) => {
       const { data: existingLead } = await supabase
         .from("Lead")
         .select("id")
-        .eq("businessProfileId", card.businessProfileId)
+        .eq("cardId", card.id)
         .eq("email", email)
         .maybeSingle();
 
@@ -424,7 +424,7 @@ router.post("/:slug/leads", async (req, res: Response) => {
     await supabase
       .from("Card")
       .update({
-        totalSaves: ((card as { totalSaves?: number }).totalSaves ?? 0) + 1,
+        totalLeads: ((card as { totalLeads?: number }).totalLeads ?? 0) + 1,
       })
       .eq("id", card.id);
 

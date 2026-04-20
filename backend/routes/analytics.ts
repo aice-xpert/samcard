@@ -115,11 +115,15 @@ async function buildAnalyticsPayload(uid: string, periodQuery: unknown, cardId?:
         .gte("createdAt", startDate.toISOString())
     : { data: [] as { type: string; createdAt: string; deviceType?: string; country?: string }[] };
 
-  const { data: leads } = await supabase
+  let leadsQuery = supabase
     .from("Lead")
     .select("createdAt")
     .eq("businessProfileId", profile.id)
     .gte("createdAt", startDate.toISOString());
+  if (cardId && allCardIds.includes(cardId)) {
+    leadsQuery = leadsQuery.eq("cardId", cardId);
+  }
+  const { data: leads } = await leadsQuery;
 
   const dailyMap: Record<string, { taps: number; views: number; leads: number }> = {};
 
