@@ -65,28 +65,10 @@ export function EnhancedHeader({
   const initials = profile.name.split(" ").map(n => n[0]).join("").toUpperCase();
   const unreadCount = notifications.filter(n => !n.read).length;
 
-  useEffect(() => {
-    let isMounted = true;
-
-    getUserProfile()
-      .then((user) => {
-        if (!isMounted) return;
-        const normalized = (user?.planTier ?? '').trim().toUpperCase();
-        if (!normalized) {
-          setMembershipLabel('Free');
-          return;
-        }
-        const pretty = `${normalized.charAt(0)}${normalized.slice(1).toLowerCase()}`;
-        setMembershipLabel(pretty);
-      })
-      .catch(() => {
-        if (!isMounted) return;
-        setMembershipLabel('Free');
-      });
-
+  const fetchNotifications = useCallback((isMounted: { current: boolean }) => {
     getNotifications()
       .then((res) => {
-        if (!isMounted) return;
+        if (!isMounted.current) return;
         setNotifications(
           res.notifications.map((n) => ({
             id: n.id,
@@ -98,12 +80,37 @@ export function EnhancedHeader({
           }))
         );
       })
-      .catch(() => {/* non-critical */});
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const isMounted = { current: true };
+
+    getUserProfile()
+      .then((user) => {
+        if (!isMounted.current) return;
+        const normalized = (user?.planTier ?? '').trim().toUpperCase();
+        if (!normalized) {
+          setMembershipLabel('Free');
+          return;
+        }
+        const pretty = `${normalized.charAt(0)}${normalized.slice(1).toLowerCase()}`;
+        setMembershipLabel(pretty);
+      })
+      .catch(() => {
+        if (!isMounted.current) return;
+        setMembershipLabel('Free');
+      });
+
+    fetchNotifications(isMounted);
+
+    const interval = setInterval(() => fetchNotifications(isMounted), 30_000);
 
     return () => {
-      isMounted = false;
+      isMounted.current = false;
+      clearInterval(interval);
     };
-  }, []);
+  }, [fetchNotifications]);
 
 
   const handleLogout = useCallback(async () => {

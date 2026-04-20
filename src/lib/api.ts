@@ -229,6 +229,7 @@ export interface ApiCard {
   totalViews: number;
   totalTaps: number;
   totalSaves: number;
+  totalLeads: number;
   completionScore: number;
   createdAt: string;
   updatedAt: string;

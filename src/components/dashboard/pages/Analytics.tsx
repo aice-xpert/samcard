@@ -28,10 +28,6 @@ import {
 // ── Types ──────────────────────────────────────────────────────────────
 type Period = "7" | "30" | "90";
 
-interface ActionModal {
-  lead: Lead;
-  type: "message" | "email" | "call";
-}
 
 // ── Helpers ────────────────────────────────────────────────────────────
 const srcBadgeClass = (s: string): string =>
@@ -174,7 +170,6 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
   const [selected, setSelected] = useState<string[]>([]);
   const [showLegend, setShowLegend] = useState({ taps: true, views: true, leads: true });
   const [toast, setToast] = useState<string | null>(null);
-  const [actionModal, setActionModal] = useState<ActionModal | null>(null);
   const [leadsPage, setLeadsPage] = useState(1);
 
   const showToast = (msg: string) => {
@@ -299,64 +294,6 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
     <div className="min-h-screen bg-[#000000] p-6 space-y-6 font-mono">
       {toast && <Toast msg={toast} onClose={() => setToast(null)} />}
 
-      {/* Action Modal */}
-      {actionModal && (
-        <div
-          className="fixed inset-0 z-40 flex items-center justify-center bg-black/70"
-          onClick={() => setActionModal(null)}
-        >
-          <div
-            className="bg-[#0a0a0a] border border-[#49B618]/30 rounded-2xl p-6 w-80 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-white font-semibold">
-                {actionModal.type === "message"
-                  ? "💬 Message"
-                  : actionModal.type === "email"
-                    ? "✉️ Email"
-                    : "📞 Call"}{" "}
-                {actionModal.lead.name}
-              </h3>
-              <button onClick={() => setActionModal(null)}>
-                <X className="w-4 h-4 text-[#A0A0A0]" />
-              </button>
-            </div>
-            <p className="text-sm text-[#A0A0A0] mb-4">
-              {actionModal.lead.email ?? actionModal.lead.phone ?? ""}
-            </p>
-            {actionModal.type !== "call" ? (
-              <>
-                <textarea
-                  className="w-full bg-[#1E1E1E] border border-[#008001]/30 text-white text-sm rounded-lg p-3 resize-none h-24 focus:outline-none focus:border-[#49B618]"
-                  placeholder={`Write your ${actionModal.type === "email" ? "email" : "message"}…`}
-                />
-                <button
-                  className="w-full mt-3 bg-[#49B618] hover:bg-[#009200] text-white py-2 rounded-lg text-sm font-medium transition-colors"
-                  onClick={() => {
-                    setActionModal(null);
-                    showToast(
-                      `${actionModal.type === "email" ? "Email" : "Message"} sent to ${actionModal.lead.name}`,
-                    );
-                  }}
-                >
-                  Send
-                </button>
-              </>
-            ) : (
-              <button
-                className="w-full bg-[#49B618] hover:bg-[#009200] text-white py-2 rounded-lg text-sm font-medium transition-colors"
-                onClick={() => {
-                  setActionModal(null);
-                  showToast(`Calling ${actionModal.lead.name}…`);
-                }}
-              >
-                Start Call
-              </button>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* ── Header ── */}
       <div className="flex items-center justify-between">
@@ -1062,27 +999,30 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
                         </td>
                         <td className="py-4 px-4">
                           <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => setActionModal({ lead, type: "message" })}
+                            <a
+                              href={lead.phone ? `sms:${lead.phone}` : undefined}
+                              onClick={!lead.phone ? (e) => { e.preventDefault(); showToast("No phone number for this lead"); } : undefined}
                               className="w-8 h-8 rounded-full bg-[#49B618] hover:bg-[#009200] flex items-center justify-center transition-colors"
                               title="Message"
                             >
                               <MessageSquare className="w-4 h-4 text-white" />
-                            </button>
-                            <button
-                              onClick={() => setActionModal({ lead, type: "email" })}
+                            </a>
+                            <a
+                              href={lead.email ? `mailto:${lead.email}` : undefined}
+                              onClick={!lead.email ? (e) => { e.preventDefault(); showToast("No email for this lead"); } : undefined}
                               className="w-8 h-8 rounded-full bg-[#008001] hover:bg-[#006312] flex items-center justify-center transition-colors"
                               title="Email"
                             >
                               <Mail className="w-4 h-4 text-white" />
-                            </button>
-                            <button
-                              onClick={() => setActionModal({ lead, type: "call" })}
+                            </a>
+                            <a
+                              href={lead.phone ? `tel:${lead.phone}` : undefined}
+                              onClick={!lead.phone ? (e) => { e.preventDefault(); showToast("No phone number for this lead"); } : undefined}
                               className="w-8 h-8 rounded-full bg-[#009200] hover:bg-[#006312] flex items-center justify-center transition-colors"
                               title="Call"
                             >
                               <Phone className="w-4 h-4 text-white" />
-                            </button>
+                            </a>
                           </div>
                         </td>
                       </tr>
