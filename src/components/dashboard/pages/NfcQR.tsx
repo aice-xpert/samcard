@@ -31,10 +31,11 @@ const qrStorageKeyForEditor = (
   explicitCardId?: string,
   resolvedCardId?: string,
   allowFallbackToFirstCard: boolean = true,
+  draftId?: string,
 ): string => {
   if (explicitCardId) return qrStorageKeyForCard(explicitCardId);
   if (resolvedCardId) return qrStorageKeyForCard(resolvedCardId);
-  if (!allowFallbackToFirstCard) return `${STORAGE_KEY}:draft`;
+  if (!allowFallbackToFirstCard) return draftId ? `${STORAGE_KEY}:draft:${draftId}` : `${STORAGE_KEY}:draft`;
   return STORAGE_KEY;
 };
 
@@ -217,10 +218,14 @@ export function NfcQr({
   onConfigChange,
   cardId,
   allowFallbackToFirstCard = true,
+  forceNewCard = false,
+  draftId,
 }: {
   onConfigChange?: (config: QRCustomConfig) => void;
   cardId?: string;
   allowFallbackToFirstCard?: boolean;
+  forceNewCard?: boolean;
+  draftId?: string;
 }) {
   const [copiedLink, setCopiedLink] = useState(false);
   const [customizerOpen, setCustomizerOpen] = useState(false);
@@ -264,16 +269,20 @@ export function NfcQr({
     };
   }, [cardId, allowFallbackToFirstCard]);
 
-  const activeQrStorageKey = qrStorageKeyForEditor(cardId, resolvedCardId, allowFallbackToFirstCard);
+  const activeQrStorageKey = qrStorageKeyForEditor(cardId, resolvedCardId, allowFallbackToFirstCard, draftId);
 
   const [qrConfig, setQrConfig] = useState<QRCustomConfig | null>(() => {
-    if (typeof window === 'undefined') return null;
-    return loadConfig(qrStorageKeyForEditor(cardId, cardId, allowFallbackToFirstCard));
+    if (typeof window === 'undefined' || forceNewCard) return null;
+    return loadConfig(qrStorageKeyForEditor(cardId, cardId, allowFallbackToFirstCard, draftId));
   });
 
   useEffect(() => {
-    setQrConfig(loadConfig(activeQrStorageKey));
-  }, [activeQrStorageKey]);
+    if (forceNewCard) {
+      setQrConfig(null);
+    } else {
+      setQrConfig(loadConfig(activeQrStorageKey));
+    }
+  }, [activeQrStorageKey, forceNewCard]);
 
   const qrRef = useRef<HTMLDivElement>(null);
 

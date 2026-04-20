@@ -259,6 +259,8 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
             try {
                 localStorage.removeItem('businessProfile_v1:draft');
                 localStorage.removeItem('cardDesign_v1:draft');
+                // BUG-25: Clear QR draft storage so new cards don't show previous QR config
+                localStorage.removeItem('samcard_qr_config_v1:draft');
             } catch {
                 // ignore storage errors
             }
@@ -480,6 +482,7 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
                         onConfigChange={setQrConfig}
                         cardId={activeCardId}
                         allowFallbackToFirstCard={false}
+                        forceNewCard={!activeCardId}
                     />
                 )}
             </div>
