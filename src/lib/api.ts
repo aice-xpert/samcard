@@ -345,6 +345,7 @@ export interface CardQRConfigPayload {
   designLabel: string;
   shapeLabel: string;
   stickerId: string | null;
+  decorateImageUrl?: string;
 }
 
 export async function getCardQRConfig(cardId: string) {

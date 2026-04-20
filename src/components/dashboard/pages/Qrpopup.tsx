@@ -100,8 +100,8 @@ export function QrPopup({ isOpen, onClose, cardUrl, cardId, allowFallbackToFirst
           selectedSticker,
           designLabel: savedConfig.designLabel,
           shapeLabel: savedConfig.shapeLabel,
-          decorateImageUrl: null,
-          decorateCompositeDataUrl: null,
+          decorateImageUrl: savedConfig.decorateImageUrl || null,
+          decorateCompositeDataUrl: savedConfig.decorateImageUrl || null,
         };
 
         setPopupQrConfig(qrFromDb);
