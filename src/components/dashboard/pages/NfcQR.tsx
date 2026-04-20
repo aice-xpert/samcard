@@ -142,7 +142,7 @@ function LiveQrDisplay({ config, qrMatrix, qrN }: {
           display: 'inline-block',
         }}
       >
-        <svg width={QR_SIZE} height={QR_SIZE} viewBox={`0 0 ${OUTER} ${OUTER}`}
+        <svg width={OUTER} height={OUTER} viewBox={`0 0 ${OUTER} ${OUTER}`}
           style={{ display: 'block', borderRadius: 12, overflow: 'hidden' }}>
           {config?.gradEnabled && (config?.gradStops?.length ?? 0) >= 2 && (
             <defs>
@@ -342,8 +342,7 @@ export function NfcQr({
           qrMatrix: liveQrMatrix,
           qrN: liveQrN,
           decorateImageUrl: savedConfig.decorateImageUrl || localConfig?.decorateImageUrl || null,
-          decorateCompositeDataUrl: savedConfig.decorateImageUrl || localConfig?.decorateCompositeDataUrl || null,
-        };
+ decorateCompositeDataUrl: localConfig?.decorateCompositeDataUrl || savedConfig.decorateImageUrl || null,       };
 
         setQrConfig(qrFromBackend);
         setQr(qrFromBackend, liveQrMatrix, liveQrN);

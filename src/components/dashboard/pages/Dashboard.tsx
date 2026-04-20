@@ -39,7 +39,7 @@ const defaultStatsData = [
   { title: 'Total NFC Taps',  value: '0', change: '+0%', trend: 'up', icon: Smartphone, gradient: 'from-[#008001] to-[#006312]' },
   { title: 'Unique Visitors', value: '0', change: '+0%',  trend: 'up', icon: Users,      gradient: 'from-[#009200] to-[#006312]' },
   { title: 'Profile Views',   value: '0', change: '+0%', trend: 'up', icon: Eye,        gradient: 'from-[#49B618] to-[#008001]' },
-  { title: 'Saved Contacts',  value: '0',   change: '+0%',  trend: 'up', icon: UserPlus,   gradient: 'from-[#006312] to-[#008001]' },
+  { title: 'Leads',  value: '0',   change: '+0%',  trend: 'up', icon: UserPlus,   gradient: 'from-[#006312] to-[#008001]' },
 ];
 
 const tapActivityData = [
@@ -106,7 +106,7 @@ const defaultMonthlyGoal: GoalProgressData = {
 
 const defaultWeeklyChallenge: GoalProgressData = {
   name: 'Weekly Challenge',
-  metric: 'New Saves',
+  metric: 'New Leads',
   current: 0,
   target: 50,
   percentage: 0,
@@ -116,7 +116,7 @@ const defaultWeeklyChallenge: GoalProgressData = {
 const funnelSteps = [
   { label: 'NFC Tapped',    value: 2547, percentage: 100, icon: Smartphone,        color: '#008001', lightColor: 'rgba(0,128,1,0.15)',    drop: null },
   { label: 'Link Clicked',  value: 1203, percentage: 47,  icon: MousePointerClick, color: '#49B618', lightColor: 'rgba(73,182,24,0.15)',  drop: 53   },
-  { label: 'Contact Saved', value: 512,  percentage: 20,  icon: Download,          color: '#7ed957', lightColor: 'rgba(126,217,87,0.15)', drop: 27   },
+  { label: 'Lead Captured', value: 512,  percentage: 20,  icon: Download,          color: '#7ed957', lightColor: 'rgba(126,217,87,0.15)', drop: 27   },
   { label: 'Card Shared',   value: 189,  percentage: 7,   icon: Share2,            color: '#a8f060', lightColor: 'rgba(168,240,96,0.15)', drop: 13   },
 ];
 
@@ -219,7 +219,7 @@ export function ComprehensiveDashboard() {
           getConversionFunnel("30").catch(() => [
             { label: 'NFC Tapped', value: 0, percentage: 0 },
             { label: 'Link Clicked', value: 0, percentage: 0 },
-            { label: 'Contact Saved', value: 0, percentage: 0 },
+            { label: 'Lead Captured', value: 0, percentage: 0 },
             { label: 'Card Shared', value: 0, percentage: 0 },
           ]),
           getTopLocations("30").catch(() => [{ country: 'No Data', visitors: 0, percentage: 0 }]),
@@ -298,7 +298,7 @@ export function ComprehensiveDashboard() {
     { title: 'Total NFC Taps',  value: analytics.totalTaps.toLocaleString(), change: '+0%', trend: 'up', icon: Smartphone, gradient: 'from-[#008001] to-[#006312]' },
     { title: 'Unique Visitors', value: analytics.totalViews.toLocaleString(), change: '+0%',  trend: 'up', icon: Users,      gradient: 'from-[#009200] to-[#006312]' },
     { title: 'Profile Views',   value: analytics.totalViews.toLocaleString(), change: '+0%', trend: 'up', icon: Eye,        gradient: 'from-[#49B618] to-[#008001]' },
-    { title: 'Saved Contacts',  value: analytics.totalLeads.toLocaleString(),   change: '+0%',  trend: 'up', icon: UserPlus,   gradient: 'from-[#006312] to-[#008001]' },
+    { title: 'Leads',  value: analytics.totalLeads.toLocaleString(),   change: '+0%',  trend: 'up', icon: UserPlus,   gradient: 'from-[#006312] to-[#008001]' },
   ] : defaultStatsData;
 
   const tapActivityData = analytics?.daily.map((d: { date: string; taps: number; views: number; leads: number }) => ({
@@ -338,7 +338,7 @@ export function ComprehensiveDashboard() {
     : [
         { label: 'NFC Tapped', value: 0, percentage: 0, drop: null },
         { label: 'Link Clicked', value: 0, percentage: 0, drop: 0 },
-        { label: 'Contact Saved', value: 0, percentage: 0, drop: 0 },
+        { label: 'Lead Captured', value: 0, percentage: 0, drop: 0 },
         { label: 'Card Shared', value: 0, percentage: 0, drop: 0 },
       ];
 

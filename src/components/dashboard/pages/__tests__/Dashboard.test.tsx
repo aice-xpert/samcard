@@ -25,7 +25,7 @@ describe('ComprehensiveDashboard Component', () => {
     expect(screen.getByText('Total NFC Taps')).toBeInTheDocument();
     expect(screen.getByText('Unique Visitors')).toBeInTheDocument();
     expect(screen.getByText('Profile Views')).toBeInTheDocument();
-    expect(screen.getByText('Saved Contacts')).toBeInTheDocument();
+    expect(screen.getByText('Leads')).toBeInTheDocument();
   });
 
   it('displays stat values correctly', () => {

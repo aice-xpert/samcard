@@ -352,7 +352,7 @@ router.post("/:slug/leads", async (req, res: Response) => {
 
     const { data: card, error: cardError } = await supabase
       .from("Card")
-      .select("id, userId, businessProfileId, name, totalSaves, totalLeads, status")
+      .select("id, userId, businessProfileId, name, status")
       .eq("slug", slug)
       .maybeSingle();
 
@@ -420,13 +420,6 @@ router.post("/:slug/leads", async (req, res: Response) => {
       console.error("Lead creation error:", leadError);
       return res.status(500).json({ error: leadError.message || "Failed to create lead" });
     }
-
-    await supabase
-      .from("Card")
-      .update({
-        totalLeads: ((card as { totalLeads?: number }).totalLeads ?? 0) + 1,
-      })
-      .eq("id", card.id);
 
     void createNotification(
       card.userId,

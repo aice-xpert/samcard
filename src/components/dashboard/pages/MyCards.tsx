@@ -46,7 +46,7 @@ type CardType = ApiCard & {
   title?: string;
   views?: number;
   taps?: number;
-  saves?: number;
+  leads?: number;
 };
 
 type CardPreviewData = {
@@ -186,7 +186,7 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onVie
           title: c.name,
           views: c.totalViews,
           taps: c.totalTaps,
-          saves: c.totalLeads ?? 0,
+          leads: c.totalLeads ?? 0,
           trend: sparklineData,
           completion: c.completionScore || 0,
         }));
@@ -302,7 +302,7 @@ const toggleStatus = useCallback(async (cardId: string) => {
         title: duplicated.name,
         views: duplicated.totalViews,
         taps: duplicated.totalTaps,
-        saves: duplicated.totalLeads ?? 0,
+        leads: duplicated.totalLeads ?? 0,
         completion: duplicated.completionScore,
         trend: sparklineData,
       };
@@ -356,7 +356,7 @@ const toggleStatus = useCallback(async (cardId: string) => {
         title: response.name,
         views: response.totalViews,
         taps: response.totalTaps,
-        saves: response.totalLeads ?? 0,
+        leads: response.totalLeads ?? 0,
         completion: response.completionScore,
         trend: sparklineData,
       };
@@ -624,7 +624,7 @@ const toggleStatus = useCallback(async (cardId: string) => {
                 {[
                   { label: 'Taps',  value: (card.taps ?? 0).toLocaleString(), onClick: undefined },
                   { label: 'Views', value: (card.views ?? 0).toLocaleString(), onClick: undefined },
-                  { label: 'Leads', value: String(card.saves ?? 0), onClick: undefined },
+                  { label: 'Leads', value: String(card.leads ?? 0), onClick: undefined },
                 ].map(({ label, value, onClick }) => (
                   <div
                     key={label}
@@ -802,7 +802,7 @@ const toggleStatus = useCallback(async (cardId: string) => {
             {[
               { label: 'Total Views', value: statsCard.views ?? 0, pct: 100 },
               { label: 'NFC Taps',    value: statsCard.taps ?? 0,  pct: Math.round(((statsCard.taps ?? 0)  / Math.max(statsCard.views ?? 1, 1)) * 100) },
-              { label: 'Saves',       value: statsCard.saves ?? 0, pct: Math.round(((statsCard.saves ?? 0) / Math.max(statsCard.views ?? 1, 1)) * 100) },
+              { label: 'Leads',       value: statsCard.leads ?? 0, pct: Math.round(((statsCard.leads ?? 0) / Math.max(statsCard.views ?? 1, 1)) * 100) },
             ].map(({ label, value, pct }) => (
               <div key={label}>
                 <div className="flex justify-between mb-1">

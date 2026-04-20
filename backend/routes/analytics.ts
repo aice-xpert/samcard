@@ -19,7 +19,7 @@ const ZERO_DEVICE_DISTRIBUTION = [
 const ZERO_FUNNEL_STEPS = [
   { label: "NFC Tapped", value: 0, percentage: 0 },
   { label: "Link Clicked", value: 0, percentage: 0 },
-  { label: "Contact Saved", value: 0, percentage: 0 },
+  { label: "Lead Captured", value: 0, percentage: 0 },
   { label: "Card Shared", value: 0, percentage: 0 },
 ];
 
@@ -99,10 +99,11 @@ async function buildAnalyticsPayload(uid: string, periodQuery: unknown, cardId?:
   const { data: cards } = await supabase
     .from("Card")
     .select("id")
-    .eq("businessProfileId", profile.id);
+    .eq("userId", uid);
 
   const allCardIds = cards?.map((c: { id: string }) => c.id) || [];
-  const cardIds = cardId && allCardIds.includes(cardId) ? [cardId] : allCardIds;
+  const isValidCardId = !!(cardId && allCardIds.includes(cardId));
+  const cardIds = isValidCardId ? [cardId as string] : allCardIds;
 
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - days);
@@ -118,10 +119,11 @@ async function buildAnalyticsPayload(uid: string, periodQuery: unknown, cardId?:
   let leadsQuery = supabase
     .from("Lead")
     .select("createdAt")
-    .eq("businessProfileId", profile.id)
     .gte("createdAt", startDate.toISOString());
-  if (cardId && allCardIds.includes(cardId)) {
-    leadsQuery = leadsQuery.eq("cardId", cardId);
+  if (isValidCardId) {
+    leadsQuery = leadsQuery.eq("cardId", cardId as string);
+  } else {
+    leadsQuery = leadsQuery.eq("businessProfileId", profile.id);
   }
   const { data: leads } = await leadsQuery;
 
@@ -269,7 +271,7 @@ async function buildAnalyticsPayload(uid: string, periodQuery: unknown, cardId?:
   const funnelSteps = [
     { label: "NFC Tapped", value: tapCount, percentage: tapCount > 0 ? 100 : 0 },
     { label: "Link Clicked", value: linkClickCount, percentage: tapCount > 0 ? Math.round((linkClickCount / tapCount) * 100) : 0 },
-    { label: "Contact Saved", value: saveCount, percentage: tapCount > 0 ? Math.round((saveCount / tapCount) * 100) : 0 },
+    { label: "Lead Captured", value: saveCount, percentage: tapCount > 0 ? Math.round((saveCount / tapCount) * 100) : 0 },
     { label: "Card Shared", value: shareCount, percentage: tapCount > 0 ? Math.round((shareCount / tapCount) * 100) : 0 },
   ];
 
@@ -500,7 +502,7 @@ async function buildWeeklyChallenge(uid: string) {
 
   return {
     name: "Weekly Challenge",
-    metric: "New Saves",
+    metric: "New Leads",
     current,
     target,
     percentage,

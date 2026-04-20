@@ -114,7 +114,7 @@ const createCardId = (): string =>
 
 router.get("/", verifySession, async (req: AuthRequest, res: Response) => {
   try {
-    const { data, error } = await supabase
+    const { data: cards, error } = await supabase
       .from("Card")
       .select("*")
       .eq("userId", req.user!.uid)
@@ -124,7 +124,30 @@ router.get("/", verifySession, async (req: AuthRequest, res: Response) => {
       return res.status(500).json({ error: error.message });
     }
 
-    return res.json(data || []);
+    if (!cards || cards.length === 0) {
+      return res.json([]);
+    }
+
+    // Compute actual lead counts from Lead table to fix stale/reset totalLeads counter
+    const cardIds = cards.map((c: { id: string }) => c.id);
+    const { data: leadRows } = await supabase
+      .from("Lead")
+      .select("cardId")
+      .in("cardId", cardIds);
+
+    const leadCountByCard: Record<string, number> = {};
+    leadRows?.forEach((l: { cardId: string | null }) => {
+      if (l.cardId) {
+        leadCountByCard[l.cardId] = (leadCountByCard[l.cardId] || 0) + 1;
+      }
+    });
+
+    const result = cards.map((c: Record<string, unknown> & { id: string }) => ({
+      ...c,
+      totalLeads: leadCountByCard[c.id] ?? 0,
+    }));
+
+    return res.json(result);
   } catch (error: unknown) {
     return res.status(500).json({ error: getErrorMessage(error) });
   }
@@ -374,6 +397,26 @@ router.put("/:id", verifySession, async (req: AuthRequest, res: Response) => {
     }
 
     return res.json(data);
+  } catch (error: unknown) {
+    return res.status(500).json({ error: getErrorMessage(error) });
+  }
+});
+
+router.get("/:id/qr", verifySession, async (req: AuthRequest, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    const { data, error } = await supabase
+      .from("Card")
+      .select("qrConfig, userId")
+      .eq("id", id)
+      .single();
+
+    if (error || !data || data.userId !== req.user!.uid) {
+      return res.status(404).json({ error: "Card not found" });
+    }
+
+    return res.json(data.qrConfig ?? null);
   } catch (error: unknown) {
     return res.status(500).json({ error: getErrorMessage(error) });
   }

@@ -637,7 +637,7 @@ export function Settings() {
                             <Separator className="bg-[#008001]/10 my-3" />
                             <NotifRow icon={Megaphone} title="Marketing Emails" description="New features and promotions" checked={notifs.marketing} onChange={(v) => handleNotifChange("marketing", v)} />
                             <Separator className="bg-[#008001]/10 my-3" />
-                            <NotifRow icon={UserPlus} title="New Lead Notifications" description="Alert when someone saves your contact" checked={notifs.newLeads} onChange={(v) => handleNotifChange("newLeads", v)} />
+                            <NotifRow icon={UserPlus} title="New Lead Notifications" description="Alert when someone submits a lead via your card" checked={notifs.newLeads} onChange={(v) => handleNotifChange("newLeads", v)} />
                         </CardContent>
                     </Card>
                 </div>
