@@ -12,6 +12,7 @@ import { LiveQrDisplay } from "@/components/dashboard/pages/NfcQR";
 import { getCardQRConfig, getCards } from "@/lib/api";
 import { STICKER_DEFS } from "@/components/dashboard/pages/Qrrenderers";
 import { makeQRMatrix } from "@/components/dashboard/pages/qr-engine";
+import { LOGOS } from "@/components/dashboard/pages/constants";
 import type { QRCustomConfig } from "@/components/dashboard/pages/Qrcustomizer";
 
 interface QrPopupProps {
@@ -78,6 +79,13 @@ export function QrPopup({ isOpen, onClose, cardUrl, cardId, allowFallbackToFirst
           ? STICKER_DEFS.find((s) => s.id === savedConfig.stickerId) ?? null
           : null;
 
+        // Resolve logoNode from selectedLogo
+        let logoNode = null;
+        if (savedConfig.selectedLogo?.startsWith('logo-')) {
+          const logoIndex = parseInt(savedConfig.selectedLogo.replace('logo-', ''), 10);
+          logoNode = LOGOS[logoIndex]?.icon ?? null;
+        }
+
         const qrFromDb = {
           shapeId: savedConfig.shapeId,
           dotShape: savedConfig.dotShape,
@@ -95,7 +103,7 @@ export function QrPopup({ isOpen, onClose, cardUrl, cardId, allowFallbackToFirst
           gradAngle: savedConfig.gradAngle,
           selectedLogo: savedConfig.selectedLogo,
           customLogoUrl: savedConfig.customLogoUrl,
-          logoNode: null,
+          logoNode: logoNode,
           logoBg: savedConfig.logoBg,
           selectedSticker,
           designLabel: savedConfig.designLabel,
