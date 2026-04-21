@@ -500,31 +500,19 @@ async function buildWeeklyChallenge(uid: string, cardId?: string) {
     return ZERO_WEEKLY_CHALLENGE;
   }
 
-  const cardQuery = supabase
-    .from("Card")
-    .select("id")
-    .eq("businessProfileId", profile.id);
-
-  const { data: cards } = cardId
-    ? await cardQuery.eq("id", cardId)
-    : await cardQuery;
-
-  const cardIds = cards?.map((c: { id: string }) => c.id) || [];
-  if (cardIds.length === 0) {
-    return ZERO_WEEKLY_CHALLENGE;
-  }
-
   const weekStart = new Date();
   weekStart.setDate(weekStart.getDate() - 7);
 
-  const { data: saves } = await supabase
-    .from("CardInteraction")
+  const leadQuery = supabase
+    .from("Lead")
     .select("id")
-    .in("cardId", cardIds)
-    .eq("type", "save")
     .gte("createdAt", weekStart.toISOString());
 
-  const current = saves?.length || 0;
+  const { data: leads } = cardId
+    ? await leadQuery.eq("cardId", cardId)
+    : await leadQuery.eq("businessProfileId", profile.id);
+
+  const current = leads?.length || 0;
   const percentage = Math.min(100, Math.round((current / target) * 100));
   const remaining = Math.max(0, target - current);
 
