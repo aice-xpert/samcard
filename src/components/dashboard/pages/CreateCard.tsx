@@ -259,6 +259,8 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
             try {
                 localStorage.removeItem('businessProfile_v1:draft');
                 localStorage.removeItem('cardDesign_v1:draft');
+                // BUG-25: Clear QR draft storage so new cards don't show previous QR config
+                localStorage.removeItem('samcard_qr_config_v1:draft');
             } catch {
                 // ignore storage errors
             }
@@ -386,8 +388,30 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
 
             // If QR config exists, persist it for the selected card.
             if (qrConfig && targetCardId) {
-                await updateCardQR(targetCardId, qrConfig);
-            }
+                 await updateCardQR(targetCardId, {
+    shapeId: qrConfig.shapeId,
+    dotShape: qrConfig.dotShape,
+    finderStyle: qrConfig.finderStyle,
+    eyeBall: qrConfig.eyeBall,
+    bodyScale: qrConfig.bodyScale,
+    fg: qrConfig.fg,
+    bg: qrConfig.bg,
+    accentFg: qrConfig.accentFg || qrConfig.fg,
+    accentBg: qrConfig.accentBg || qrConfig.bg,
+    strokeEnabled: qrConfig.strokeEnabled,
+    strokeColor: qrConfig.strokeColor,
+    gradEnabled: qrConfig.gradEnabled,
+    gradStops: qrConfig.gradStops,
+    gradAngle: qrConfig.gradAngle,
+    selectedLogo: qrConfig.selectedLogo || '',
+    customLogoUrl: qrConfig.customLogoUrl || '',
+    logoBg: qrConfig.logoBg || '#ffffff',
+    stickerId: qrConfig.selectedSticker?.id ?? null,
+    designLabel: qrConfig.designLabel,
+    shapeLabel: qrConfig.shapeLabel,
+    decorateImageUrl: qrConfig.decorateCompositeDataUrl || '',
+  });
+}
 
             // If contents from step 1 exist, persist them for the selected card.
             if (cardContent && targetCardId) {
@@ -480,6 +504,7 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
                         onConfigChange={setQrConfig}
                         cardId={activeCardId}
                         allowFallbackToFirstCard={false}
+                        forceNewCard={!activeCardId}
                     />
                 )}
             </div>

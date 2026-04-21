@@ -46,7 +46,7 @@ type CardType = ApiCard & {
   title?: string;
   views?: number;
   taps?: number;
-  saves?: number;
+  leads?: number;
 };
 
 type CardPreviewData = {
@@ -186,7 +186,7 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onVie
           title: c.name,
           views: c.totalViews,
           taps: c.totalTaps,
-          saves: c.totalSaves,
+          leads: c.totalLeads ?? 0,
           trend: sparklineData,
           completion: c.completionScore || 0,
         }));
@@ -302,7 +302,7 @@ const toggleStatus = useCallback(async (cardId: string) => {
         title: duplicated.name,
         views: duplicated.totalViews,
         taps: duplicated.totalTaps,
-        saves: duplicated.totalSaves,
+        leads: duplicated.totalLeads ?? 0,
         completion: duplicated.completionScore,
         trend: sparklineData,
       };
@@ -356,7 +356,7 @@ const toggleStatus = useCallback(async (cardId: string) => {
         title: response.name,
         views: response.totalViews,
         taps: response.totalTaps,
-        saves: response.totalSaves,
+        leads: response.totalLeads ?? 0,
         completion: response.completionScore,
         trend: sparklineData,
       };
@@ -387,29 +387,42 @@ const toggleStatus = useCallback(async (cardId: string) => {
     try {
       const freshConfig = await getCardQRConfig(card.id).catch(() => null);
 
-      // Fall back to cached API result, then to localStorage (written by NfcQR customizer)
-      let qrConfig: CardQRConfigPayload | null = freshConfig || cardQrById[card.id];
-      if (!qrConfig) {
-        try {
-          const raw = localStorage.getItem(`samcard_qr_config_v1:${card.id}`);
-          if (raw) qrConfig = JSON.parse(raw) as CardQRConfigPayload;
-        } catch { /* ignore */ }
-      }
+      // decorateImageUrl from freshConfig (backend) = composite URL we stored during Apply
+      // decorateCompositeDataUrl from localStorage = composite URL stored by NfcQR customizer
+      const compositeUrl = freshConfig?.decorateImageUrl
+        || (() => {
+          try {
+            const raw = localStorage.getItem(`samcard_qr_config_v1:${card.id}`);
+            if (raw) return (JSON.parse(raw) as { decorateCompositeDataUrl?: string }).decorateCompositeDataUrl || null;
+          } catch { /* ignore */ }
+          return null;
+        })();
 
-      const { matrix, N } = makeQRMatrix(cardPublicUrl(card));
-
-      let svgText: string;
-      if (qrConfig) {
-        svgText = buildCustomizedQrSvgFromPayload(qrConfig, matrix, N, 1200);
+      if (compositeUrl) {
+        const res = await fetch(compositeUrl);
+        const blob = await res.blob();
+        triggerBlobDownload(blob, `${card.slug}-qr.jpg`);
+        showToast('QR downloaded (.jpg)');
       } else {
-        const fg = '#000000';
-        const bg = '#ffffff';
-        svgText = buildQrSvgString(matrix, N, fg, bg, 1200, 40);
+        // No decoration — build QR from config
+        let qrConfig: CardQRConfigPayload | null = freshConfig || cardQrById[card.id];
+        if (!qrConfig) {
+          try {
+            const raw = localStorage.getItem(`samcard_qr_config_v1:${card.id}`);
+            if (raw) qrConfig = JSON.parse(raw) as CardQRConfigPayload;
+          } catch { /* ignore */ }
+        }
+        const { matrix, N } = makeQRMatrix(cardPublicUrl(card));
+        let svgText: string;
+        if (qrConfig) {
+          svgText = buildCustomizedQrSvgFromPayload(qrConfig, matrix, N, 1200);
+        } else {
+          svgText = buildQrSvgString(matrix, N, '#000000', '#ffffff', 1200, 40);
+        }
+        const jpgBlob = await svgTextToJpegBlob(svgText, 1200);
+        triggerBlobDownload(jpgBlob, `${card.slug}-qr.jpg`);
+        showToast('QR downloaded (.jpg)');
       }
-
-      const jpgBlob = await svgTextToJpegBlob(svgText, 1200);
-      triggerBlobDownload(jpgBlob, `${card.slug}-qr.jpg`);
-      showToast('QR downloaded (.jpg)');
     } catch (error) {
       showToast(`Failed to download QR: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
@@ -611,7 +624,7 @@ const toggleStatus = useCallback(async (cardId: string) => {
                 {[
                   { label: 'Taps',  value: (card.taps ?? 0).toLocaleString(), onClick: undefined },
                   { label: 'Views', value: (card.views ?? 0).toLocaleString(), onClick: undefined },
-                  { label: 'Leads', value: String(card.saves ?? 0), onClick: undefined },
+                  { label: 'Leads', value: String(card.leads ?? 0), onClick: undefined },
                 ].map(({ label, value, onClick }) => (
                   <div
                     key={label}
@@ -789,7 +802,7 @@ const toggleStatus = useCallback(async (cardId: string) => {
             {[
               { label: 'Total Views', value: statsCard.views ?? 0, pct: 100 },
               { label: 'NFC Taps',    value: statsCard.taps ?? 0,  pct: Math.round(((statsCard.taps ?? 0)  / Math.max(statsCard.views ?? 1, 1)) * 100) },
-              { label: 'Saves',       value: statsCard.saves ?? 0, pct: Math.round(((statsCard.saves ?? 0) / Math.max(statsCard.views ?? 1, 1)) * 100) },
+              { label: 'Leads',       value: statsCard.leads ?? 0, pct: Math.round(((statsCard.leads ?? 0) / Math.max(statsCard.views ?? 1, 1)) * 100) },
             ].map(({ label, value, pct }) => (
               <div key={label}>
                 <div className="flex justify-between mb-1">

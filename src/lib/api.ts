@@ -229,6 +229,7 @@ export interface ApiCard {
   totalViews: number;
   totalTaps: number;
   totalSaves: number;
+  totalLeads: number;
   completionScore: number;
   createdAt: string;
   updatedAt: string;
@@ -345,6 +346,7 @@ export interface CardQRConfigPayload {
   designLabel: string;
   shapeLabel: string;
   stickerId: string | null;
+  decorateImageUrl?: string;
 }
 
 export async function getCardQRConfig(cardId: string) {

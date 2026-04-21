@@ -12,7 +12,7 @@ import { QRWithShape, STICKER_DEFS } from '@/components/dashboard/pages/Qrrender
 import { LOGOS } from '@/components/dashboard/pages/constants';
 import { makeQRMatrix } from '@/components/dashboard/pages/qr-engine';
 import { useQrStore } from '@/components/dashboard/stores/Useqrstore';
-import { getCardQRConfig, updateCardQR, getCards, BACKEND_URL } from '@/lib/api';
+import { getCardQRConfig, updateCardQR, getCards, uploadFile, BACKEND_URL } from '@/lib/api';
 import {
   buildQrSvgString,
   buildCustomizedQrSvgFromConfig,
@@ -31,10 +31,11 @@ const qrStorageKeyForEditor = (
   explicitCardId?: string,
   resolvedCardId?: string,
   allowFallbackToFirstCard: boolean = true,
+  draftId?: string,
 ): string => {
   if (explicitCardId) return qrStorageKeyForCard(explicitCardId);
   if (resolvedCardId) return qrStorageKeyForCard(resolvedCardId);
-  if (!allowFallbackToFirstCard) return `${STORAGE_KEY}:draft`;
+  if (!allowFallbackToFirstCard) return draftId ? `${STORAGE_KEY}:draft:${draftId}` : `${STORAGE_KEY}:draft`;
   return STORAGE_KEY;
 };
 
@@ -57,6 +58,8 @@ function saveConfig(cfg: QRCustomConfig, storageKey: string = STORAGE_KEY): void
       gradAngle: cfg.gradAngle, selectedLogo: cfg.selectedLogo, customLogoUrl: cfg.customLogoUrl,
       logoBg: cfg.logoBg, designLabel: cfg.designLabel, shapeLabel: cfg.shapeLabel,
       logoIndex, stickerId: cfg.selectedSticker?.id ?? null,
+      decorateImageUrl: cfg.decorateImageUrl ?? null,
+      decorateCompositeDataUrl: cfg.decorateCompositeDataUrl ?? null,
     };
     localStorage.setItem(storageKey, JSON.stringify(persisted));
   } catch { /* ignore */ }
@@ -77,6 +80,8 @@ function loadConfig(storageKey: string = STORAGE_KEY): QRCustomConfig | null {
       customLogoUrl: p.customLogoUrl, logoNode: logoEntry?.icon ?? null,
       logoBg: logoEntry?.bg ?? p.logoBg ?? '#ffffff', selectedSticker,
       designLabel: p.designLabel, shapeLabel: p.shapeLabel,
+      decorateImageUrl: p.decorateImageUrl ?? null,
+      decorateCompositeDataUrl: p.decorateCompositeDataUrl ?? null,
     };
   } catch { return null; }
 }
@@ -137,7 +142,7 @@ function LiveQrDisplay({ config, qrMatrix, qrN }: {
           display: 'inline-block',
         }}
       >
-        <svg width={QR_SIZE} height={QR_SIZE} viewBox={`0 0 ${OUTER} ${OUTER}`}
+        <svg width={OUTER} height={OUTER} viewBox={`0 0 ${OUTER} ${OUTER}`}
           style={{ display: 'block', borderRadius: 12, overflow: 'hidden' }}>
           {config?.gradEnabled && (config?.gradStops?.length ?? 0) >= 2 && (
             <defs>
@@ -217,10 +222,14 @@ export function NfcQr({
   onConfigChange,
   cardId,
   allowFallbackToFirstCard = true,
+  forceNewCard = false,
+  draftId,
 }: {
   onConfigChange?: (config: QRCustomConfig) => void;
   cardId?: string;
   allowFallbackToFirstCard?: boolean;
+  forceNewCard?: boolean;
+  draftId?: string;
 }) {
   const [copiedLink, setCopiedLink] = useState(false);
   const [customizerOpen, setCustomizerOpen] = useState(false);
@@ -264,16 +273,20 @@ export function NfcQr({
     };
   }, [cardId, allowFallbackToFirstCard]);
 
-  const activeQrStorageKey = qrStorageKeyForEditor(cardId, resolvedCardId, allowFallbackToFirstCard);
+  const activeQrStorageKey = qrStorageKeyForEditor(cardId, resolvedCardId, allowFallbackToFirstCard, draftId);
 
   const [qrConfig, setQrConfig] = useState<QRCustomConfig | null>(() => {
-    if (typeof window === 'undefined') return null;
-    return loadConfig(qrStorageKeyForEditor(cardId, cardId, allowFallbackToFirstCard));
+    if (typeof window === 'undefined' || forceNewCard) return null;
+    return loadConfig(qrStorageKeyForEditor(cardId, cardId, allowFallbackToFirstCard, draftId));
   });
 
   useEffect(() => {
-    setQrConfig(loadConfig(activeQrStorageKey));
-  }, [activeQrStorageKey]);
+    if (forceNewCard) {
+      setQrConfig(null);
+    } else {
+      setQrConfig(loadConfig(activeQrStorageKey));
+    }
+  }, [activeQrStorageKey, forceNewCard]);
 
   const qrRef = useRef<HTMLDivElement>(null);
 
@@ -303,6 +316,7 @@ export function NfcQr({
           : null;
         const logoEntry = (logoIdx !== null && !isNaN(logoIdx)) ? LOGOS[logoIdx] : null;
 
+        const localConfig = loadConfig(activeQrStorageKey);
         const qrFromBackend: QRCustomConfig = {
           shapeId: savedConfig.shapeId,
           dotShape: savedConfig.dotShape,
@@ -327,9 +341,8 @@ export function NfcQr({
           shapeLabel: savedConfig.shapeLabel,
           qrMatrix: liveQrMatrix,
           qrN: liveQrN,
-          decorateImageUrl: null,
-          decorateCompositeDataUrl: null,
-        };
+          decorateImageUrl: savedConfig.decorateImageUrl || localConfig?.decorateImageUrl || null,
+ decorateCompositeDataUrl: localConfig?.decorateCompositeDataUrl || savedConfig.decorateImageUrl || null,       };
 
         setQrConfig(qrFromBackend);
         setQr(qrFromBackend, liveQrMatrix, liveQrN);
@@ -351,11 +364,17 @@ export function NfcQr({
   }, [CARD_URL]);
 
   const downloadQR = useCallback(async () => {
+    const filename = cardSlug ? `${cardSlug}-qr.png` : 'samcard-qr.png';
+    if (qrConfig?.decorateCompositeDataUrl) {
+      const res = await fetch(qrConfig.decorateCompositeDataUrl);
+      const blob = await res.blob();
+      triggerBlobDownload(blob, filename);
+      return;
+    }
     const svgText = qrConfig
       ? buildCustomizedQrSvgFromConfig(qrConfig, liveQrMatrix, liveQrN, 1200)
       : buildQrSvgString(liveQrMatrix, liveQrN, '#000000', '#ffffff', 1200, 40);
     const pngBlob = await svgTextToPngBlob(svgText, 1200);
-    const filename = cardSlug ? `${cardSlug}-qr.png` : 'samcard-qr.png';
     triggerBlobDownload(pngBlob, filename);
   }, [qrConfig, liveQrMatrix, liveQrN, cardSlug]);
 
@@ -365,48 +384,71 @@ export function NfcQr({
   }, [copyLink, CARD_URL]);
 
   const printQR = useCallback(() => {
-    const svgEl = qrRef.current?.querySelector('svg');
-    if (!svgEl) return;
     const w = window.open('', '_blank');
     if (!w) return;
-    w.document.write(`<html><head><title>QR Code</title><style>
-      body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0a0f0a;}
-      svg{width:400px;height:400px;}
-    </style></head><body>${svgEl.outerHTML}</body></html>`);
+    if (qrConfig?.decorateCompositeDataUrl) {
+      w.document.write(`<html><head><title>QR Code</title><style>
+        body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#fff;}
+        img{width:400px;height:auto;}
+      </style></head><body><img src="${qrConfig.decorateCompositeDataUrl}" /></body></html>`);
+    } else {
+      const svgEl = qrRef.current?.querySelector('svg');
+      if (!svgEl) { w.close(); return; }
+      w.document.write(`<html><head><title>QR Code</title><style>
+        body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0a0f0a;}
+        svg{width:400px;height:400px;}
+      </style></head><body>${svgEl.outerHTML}</body></html>`);
+    }
     w.document.close();
     w.focus();
     setTimeout(() => w.print(), 500);
-  }, []);
+  }, [qrConfig]);
 
   const handleCustomizerApply = useCallback(async (cfg: QRCustomConfig) => {
-    setQrConfig(cfg);
-    saveConfig(cfg, activeQrStorageKey);
-    onConfigChange?.(cfg);
+    let finalCfg = cfg;
+
+    // Upload composite PNG to storage so it survives tab switches and page reloads
+    if (cfg.decorateCompositeDataUrl?.startsWith('data:')) {
+      try {
+        const res = await fetch(cfg.decorateCompositeDataUrl);
+        const blob = await res.blob();
+        const file = new File([blob], 'qr-decorated.png', { type: 'image/png' });
+        const { url } = await uploadFile(file);
+        finalCfg = { ...cfg, decorateCompositeDataUrl: url };
+      } catch {
+        // Keep data URL if upload fails; will still work in current session
+      }
+    }
+
+    setQrConfig(finalCfg);
+    saveConfig(finalCfg, activeQrStorageKey);
+    onConfigChange?.(finalCfg);
 
     const idToUse = resolvedCardId || cardId;
     if (idToUse) {
       try {
         await updateCardQR(idToUse, {
-          shapeId: cfg.shapeId,
-          dotShape: cfg.dotShape,
-          finderStyle: cfg.finderStyle,
-          eyeBall: cfg.eyeBall,
-          bodyScale: cfg.bodyScale,
-          fg: cfg.fg,
-          bg: cfg.bg,
-          accentFg: cfg.accentFg || cfg.fg,
-          accentBg: cfg.accentBg || cfg.bg,
-          strokeEnabled: cfg.strokeEnabled,
-          strokeColor: cfg.strokeColor,
-          gradEnabled: cfg.gradEnabled,
-          gradStops: cfg.gradStops,
-          gradAngle: cfg.gradAngle,
-          selectedLogo: cfg.selectedLogo || '',
-          customLogoUrl: cfg.customLogoUrl || '',
-          logoBg: cfg.logoBg || '#ffffff',
-          stickerId: cfg.selectedSticker?.id ?? null,
-          designLabel: cfg.designLabel,
-          shapeLabel: cfg.shapeLabel,
+          shapeId: finalCfg.shapeId,
+          dotShape: finalCfg.dotShape,
+          finderStyle: finalCfg.finderStyle,
+          eyeBall: finalCfg.eyeBall,
+          bodyScale: finalCfg.bodyScale,
+          fg: finalCfg.fg,
+          bg: finalCfg.bg,
+          accentFg: finalCfg.accentFg || finalCfg.fg,
+          accentBg: finalCfg.accentBg || finalCfg.bg,
+          strokeEnabled: finalCfg.strokeEnabled,
+          strokeColor: finalCfg.strokeColor,
+          gradEnabled: finalCfg.gradEnabled,
+          gradStops: finalCfg.gradStops,
+          gradAngle: finalCfg.gradAngle,
+          selectedLogo: finalCfg.selectedLogo || '',
+          customLogoUrl: finalCfg.customLogoUrl || '',
+          logoBg: finalCfg.logoBg || '#ffffff',
+          stickerId: finalCfg.selectedSticker?.id ?? null,
+          designLabel: finalCfg.designLabel,
+          shapeLabel: finalCfg.shapeLabel,
+          decorateImageUrl: finalCfg.decorateCompositeDataUrl || '',
         });
 
         window.dispatchEvent(new Event('cardDataUpdated'));
