@@ -1177,6 +1177,7 @@ export default function BusinessProfile({
     }
   }, [profileImage, brandLogo, pendingProfileImage, pendingBrandLogo, logoPosition, formData, socialLinks, connectFields, sections, expanded, customLinks, extraSections, cardId, resolvedCardId, allowFallbackToFirstCard, shouldPersistGlobalProfile]);
 
+
   const updateField = useCallback(<K extends keyof FormData>(key: K, value: FormData[K]) => setFormData(prev => ({ ...prev, [key]: value })), []);
   const toggleSection = useCallback((key: keyof Sections) => setSections(prev => ({ ...prev, [key]: !prev[key] })), []);
   const toggleExpand = useCallback((key: keyof Expanded) => setExpanded(prev => ({ ...prev, [key]: !prev[key] })), []);
@@ -1516,8 +1517,12 @@ export default function BusinessProfile({
 
       {/* Action buttons */}
       < div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pb-8" >
-        <Button variant="outline" className="text-red-400 border-red-500/30 hover:bg-red-500/10 text-sm">
-          <Trash2 className="w-4 h-4 mr-2" />Delete Profile
+        <Button 
+          variant="outline" 
+          className="text-red-400 border-red-500/30 hover:bg-red-500/10 text-sm"
+        >
+          <Trash2 className="w-4 h-4 mr-2" />
+          Delete Profile
         </Button>
         <div className="flex gap-3">
           <Button onClick={() => {

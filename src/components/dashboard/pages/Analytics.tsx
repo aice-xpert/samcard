@@ -260,28 +260,74 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
     [analytics],
   );
 
-  // ── Export leads CSV ──
+  // ── Export Analytics Report ──
   const handleExport = () => {
-    const rows = [
-      ["Name", "Email", "Phone", "Source", "Status", "Date"],
-      ...leads.map((l) => [
+    const csvRows: string[][] = [];
+
+    // 1. Header & Summary Stats
+    csvRows.push(["SAMCARD ANALYTICS REPORT"]);
+    csvRows.push([`Date Generated: ${new Date().toLocaleString()}`]);
+    csvRows.push([`Period: Last ${period} days`]);
+    if (cardTitle) csvRows.push([`Card: ${cardTitle}`]);
+    csvRows.push([]);
+
+    csvRows.push(["SUMMARY STATISTICS"]);
+    csvRows.push(["Metric", "Value"]);
+    csvRows.push(["Total Taps", analytics?.totalTaps.toString() || "0"]);
+    csvRows.push(["Profile Views", analytics?.totalViews.toString() || "0"]);
+    csvRows.push(["Total Leads", analytics?.totalLeads.toString() || "0"]);
+    csvRows.push(["Engagement Score", `${analytics?.engagementScore || 0}%`]);
+    csvRows.push(["This Week Change", `${analytics?.thisWeekChange || 0}%`]);
+    csvRows.push([]);
+
+    // 2. Daily Performance
+    csvRows.push(["DAILY PERFORMANCE"]);
+    csvRows.push(["Date", "Taps", "Views", "Leads"]);
+    (analytics?.daily || []).forEach(d => {
+      csvRows.push([d.date, d.taps.toString(), d.views.toString(), d.leads.toString()]);
+    });
+    csvRows.push([]);
+
+    // 3. Traffic Sources
+    csvRows.push(["TRAFFIC SOURCES"]);
+    csvRows.push(["Source", "Interactions", "Percentage"]);
+    (analytics?.sources || []).forEach(s => {
+      csvRows.push([s.name, s.value.toString(), `${s.percentage}%`]);
+    });
+    csvRows.push([]);
+
+    // 4. Device Distribution
+    csvRows.push(["DEVICE DISTRIBUTION"]);
+    csvRows.push(["Device", "Count", "Percentage"]);
+    (analytics?.deviceDistribution || []).forEach(d => {
+      csvRows.push([d.name, d.count.toString(), `${d.value}%`]);
+    });
+    csvRows.push([]);
+
+    // 5. Leads Data
+    csvRows.push(["LEADS SUMMARY"]);
+    csvRows.push(["Name", "Email", "Phone", "Source", "Status", "Date"]);
+    leads.forEach((l) => {
+      csvRows.push([
         l.name,
         l.email ?? "",
         l.phone ?? "",
         l.source,
         l.status,
         new Date(l.createdAt).toLocaleDateString(),
-      ]),
-    ];
-    const csv = rows.map((r) => r.join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
+      ]);
+    });
+
+    const csvContent = csvRows.map((r) => r.map(cell => `"${(cell || "").replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "analytics_leads.csv";
+    const timestamp = new Date().toISOString().split("T")[0];
+    a.download = `SamCard_Analytics_Report_${timestamp}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    showToast("Exported leads as CSV");
+    showToast("Exported full analytics report");
   };
 
   // ── Derived values ──

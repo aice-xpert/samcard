@@ -246,6 +246,19 @@ function PhonePreviewComponent({
   const canShowCopy = Boolean(cardId && publishedLinkValue && onShareLink);
   const [copyPublishedEnabled, setCopyPublishedEnabled] = useState(true);
 
+  const [liveTime, setLiveTime] = useState(() => {
+    const now = new Date();
+    return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+  });
+  useEffect(() => {
+    const tick = () => {
+      const now = new Date();
+      setLiveTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }));
+    };
+    const id = setInterval(tick, 60_000);
+    return () => clearInterval(id);
+  }, []);
+
   const showCopyButton = canShowCopy && copyPublishedEnabled;
 
   return (
@@ -300,7 +313,7 @@ function PhonePreviewComponent({
                     style={{ width: 88, height: 26, background: T.bg, borderRadius: '0 0 18px 18px', zIndex: 10 }}>
                     <div style={{ width: 40, height: 4, background: '#222', borderRadius: 999 }} />
                   </div>
-                  <span className="text-[11px] font-bold" style={{ color: T.textPrimary, ...ff }}>9:41</span>
+                  <span className="text-[11px] font-bold" style={{ color: T.textPrimary, ...ff }}>{liveTime}</span>
                   <div className="flex items-center gap-[5px]">
                     <svg width="16" height="11" viewBox="0 0 16 11" fill="none">
                       <rect x="0" y="7" width="3" height="4" rx="0.8" fill={T.greenLight} />

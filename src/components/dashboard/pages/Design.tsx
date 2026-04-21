@@ -877,8 +877,8 @@ export function DesignNew({
     headingText: profile.formData?.headingText || '',
     bodyText: profile.formData?.bodyText || '',
   };
-  const socialLinks = profile.socialLinks || [{ platform: 0, value: 'linkedin.com/in/alex' }];
-  const customLinks = profile.customLinks || [{ label: 'Portfolio', url: 'https://alexjohnson.com' }];
+  const socialLinks = profile.socialLinks || [];
+  const customLinks = profile.customLinks || [];
   const sections = { ...DEFAULT_SECTIONS, ...(profile.sections ?? {}) };
   const extraSections = profile.extraSections || [];
   const themeOverride = buildThemeOverride(draft);
