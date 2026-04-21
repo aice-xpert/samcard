@@ -296,7 +296,7 @@ export function ComprehensiveDashboard() {
 
   const statsData = analytics ? [
     { title: 'Total NFC Taps',  value: analytics.totalTaps.toLocaleString(), change: '+0%', trend: 'up', icon: Smartphone, gradient: 'from-[#008001] to-[#006312]' },
-    { title: 'Unique Visitors', value: analytics.totalViews.toLocaleString(), change: '+0%',  trend: 'up', icon: Users,      gradient: 'from-[#009200] to-[#006312]' },
+    { title: 'Unique Visitors', value: analytics.uniqueVisitors.toLocaleString(), change: '+0%',  trend: 'up', icon: Users,      gradient: 'from-[#009200] to-[#006312]' },
     { title: 'Profile Views',   value: analytics.totalViews.toLocaleString(), change: '+0%', trend: 'up', icon: Eye,        gradient: 'from-[#49B618] to-[#008001]' },
     { title: 'Leads',  value: analytics.totalLeads.toLocaleString(),   change: '+0%',  trend: 'up', icon: UserPlus,   gradient: 'from-[#006312] to-[#008001]' },
   ] : defaultStatsData;

@@ -489,6 +489,7 @@ export interface AnalyticsData {
   funnelSteps: { label: string; value: number; percentage: number }[];
   topLocations: { country: string; visitors: number; percentage: number }[];
   topLinks: { id: string; label: string; clicks: number; percentage: number }[];
+  uniqueVisitors: number;
 }
 
 export interface MonthOverMonthPerformance {

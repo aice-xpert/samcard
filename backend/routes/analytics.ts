@@ -82,6 +82,7 @@ async function buildAnalyticsPayload(uid: string, periodQuery: unknown, cardId?:
     return {
       totalTaps: 0,
       totalViews: 0,
+      uniqueVisitors: 0,
       totalLeads: 0,
       profileCompletion: 0,
       engagementScore: 0,
@@ -165,6 +166,14 @@ async function buildAnalyticsPayload(uid: string, periodQuery: unknown, cardId?:
   const totalTaps = interactions?.filter(i => i.type === "tap" || i.type === "scan").length || 0;
   const totalViews = interactions?.filter(i => i.type === "view").length || 0;
   const totalLeads = leads?.length || 0;
+
+  const uniqueVisitorKeys = new Set<string>();
+  interactions?.filter(i => i.type === "view").forEach(i => {
+    const day = i.createdAt.split("T")[0];
+    const key = `${day}::${i.deviceType ?? "UNKNOWN"}::${i.country ?? "UNKNOWN"}`;
+    uniqueVisitorKeys.add(key);
+  });
+  const uniqueVisitors = uniqueVisitorKeys.size;
 
   const completionFields = [
     profile.name,
@@ -322,6 +331,7 @@ async function buildAnalyticsPayload(uid: string, periodQuery: unknown, cardId?:
   return {
     totalTaps,
     totalViews,
+    uniqueVisitors,
     totalLeads,
     profileCompletion,
     engagementScore,
