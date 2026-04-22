@@ -572,6 +572,8 @@ export interface Lead {
   email: string | null;
   phone: string | null;
   company: string | null;
+  cardName?: string | null;
+  cardPublishedLink?: string | null;
   status: string;
   source: string;
   isFavorite: boolean;
