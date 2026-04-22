@@ -49,8 +49,34 @@ router.get("/", verifySession, async (req: AuthRequest, res: Response) => {
       return res.status(500).json({ error: error.message });
     }
 
+    const leadsData = data || [];
+    const cardIds = Array.from(
+      new Set(leadsData.map((lead: any) => lead.cardId).filter(Boolean)),
+    ) as string[];
+
+    const cardsById: Record<string, { name: string; shareUrl: string }> = {};
+    if (cardIds.length > 0) {
+      const { data: cards } = await supabase
+        .from("Card")
+        .select("id, name, shareUrl")
+        .in("id", cardIds);
+
+      for (const card of cards || []) {
+        cardsById[card.id] = { name: card.name, shareUrl: card.shareUrl };
+      }
+    }
+
+    const leads = leadsData.map((lead: any) => {
+      const cardMeta = lead.cardId ? cardsById[lead.cardId] : undefined;
+      return {
+        ...lead,
+        cardName: cardMeta?.name ?? null,
+        cardPublishedLink: cardMeta?.shareUrl ?? null,
+      };
+    });
+
     return res.json({
-      leads: data || [],
+      leads,
       total: count || 0,
       page: pageNum,
       limit: limitNum,

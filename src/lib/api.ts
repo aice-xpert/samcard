@@ -100,19 +100,37 @@ export async function updateUserProfile(payload: UpdateUserPayload) {
 
 // ─── Payment Method ─────────────────────────────────────────────────
 export interface ApiPaymentMethod {
+  id?: string;
   brand: string;
   last4: string;
   expiry: string;
+  isDefault?: boolean;
 }
 
 export async function getPaymentMethod() {
   return apiRequest<ApiPaymentMethod | null>("/api/user/payment-method", { method: "GET" });
 }
 
+export async function getPaymentMethods() {
+  return apiRequest<ApiPaymentMethod[]>("/api/user/payment-methods", { method: "GET" });
+}
+
 export async function savePaymentMethod(data: ApiPaymentMethod) {
   return apiRequest<ApiPaymentMethod>("/api/user/payment-method", {
     method: "PUT",
     body: JSON.stringify(data),
+  });
+}
+
+export async function setDefaultPaymentMethod(id: string) {
+  return apiRequest<ApiPaymentMethod>(`/api/user/payment-method/${id}/default`, {
+    method: "POST"
+  });
+}
+
+export async function deletePaymentMethod(id: string) {
+  return apiRequest<{ success: boolean }>(`/api/user/payment-method/${id}`, {
+    method: "DELETE"
   });
 }
 
@@ -181,6 +199,7 @@ export async function updateBusinessProfile(payload: UpdateBusinessProfilePayloa
     body: JSON.stringify(payload),
   });
 }
+
 
 // ─── Plans ───────────────────────────────────────────────────────────
 export interface ApiPlan {
@@ -572,6 +591,8 @@ export interface Lead {
   email: string | null;
   phone: string | null;
   company: string | null;
+  cardName?: string | null;
+  cardPublishedLink?: string | null;
   status: string;
   source: string;
   isFavorite: boolean;

@@ -35,6 +35,8 @@ const allowedOrigins = [
 "http://localhost:3000",
   "http://localhost:3000",
   "http://localhost:3001",
+  "https://samcard-6auvfjong-zk19604s-projects.vercel.app",
+  "https://samcard-git-fix-zainab-live-bugs-zk19604s-projects.vercel.app",
 ];
 
 const corsOptions: cors.CorsOptions = {

@@ -11,10 +11,10 @@ import {
     Shield, Bell, Trash2, Key, X, CheckCircle2, Loader2, AlertTriangle,
     Monitor, Smartphone, Eye, EyeOff, Download, LogOut, Mail, Zap,
     BarChart3, Megaphone, UserPlus, CreditCard, Plus, Star, User,
-    Globe, Palette, Moon, Sun, Lock, Link2, Unlink, ExternalLink,
+    Palette, ExternalLink,
 } from "lucide-react";
-import { useUser, ConnectedAccountData } from "@/contexts/UserContext";
-import { uploadFile, updateUserProfile, getPaymentMethod, savePaymentMethod, getUserProfile } from "@/lib/api";
+import { useUser } from "@/contexts/UserContext";
+import { uploadFile, updateUserProfile, getPaymentMethods, savePaymentMethod, setDefaultPaymentMethod, deletePaymentMethod, getUserProfile } from "@/lib/api";
 import { auth } from "@/lib/firebase";
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
 
@@ -172,7 +172,7 @@ function SectionIcon({ icon: Icon, gradient }: { icon: React.ElementType; gradie
    ═══════════════════════════════════════════════════════════════════════════ */
 export function Settings() {
     const [mounted, setMounted] = useState(false);
-    const { profile, setProfile, connectedAccounts, setConnectedAccount } = useUser();
+    const { profile, setProfile } = useUser();
 
     const [profileName, setProfileName] = useState(profile.name);
     const [profileEmail, setProfileEmail] = useState(profile.email);
@@ -226,12 +226,18 @@ export function Settings() {
     const [addCardModal, setAddCardModal] = useState(false); const [addCardLoading, setAddCardLoading] = useState(false);
     const [deleteCardId, setDeleteCardId] = useState<string | null>(null); const [deleteCardLoading, setDeleteCardLoading] = useState(false);
 
-    // Load payment method from API on mount
+    // Load all payment methods from API on mount
     useEffect(() => {
-        getPaymentMethod()
-            .then(method => {
-                if (method) {
-                    setCards([{ id: "api-default", brand: method.brand, last4: method.last4, expiry: method.expiry, isDefault: true }]);
+        getPaymentMethods()
+            .then(methods => {
+                if (methods && Array.isArray(methods)) {
+                    setCards(methods.map(m => ({
+                        id: m.id || `card-${Date.now()}-${Math.random()}`,
+                        brand: m.brand,
+                        last4: m.last4,
+                        expiry: m.expiry,
+                        isDefault: m.isDefault || false
+                    })));
                 }
             })
             .catch(() => {});
@@ -267,17 +273,6 @@ export function Settings() {
             .catch(() => {});
     }, []);
 
-    // Connected Accounts
-    const [accountUrls, setAccountUrls] = useState<Record<string, string>>({});
-    const [connectingId, setConnectingId] = useState<string | null>(null);
-
-    useEffect(() => {
-        const urls: Record<string, string> = {};
-        connectedAccounts.forEach(acc => {
-            urls[acc.id] = acc.url || "";
-        });
-        setAccountUrls(urls);
-    }, [connectedAccounts]);
 
     // Danger Zone
     const [deleteModal, setDeleteModal] = useState(false); const [deleteConfirmText, setDeleteConfirmText] = useState("");
@@ -353,8 +348,14 @@ export function Settings() {
     const handleAddCard = async (card: PaymentCard) => {
         setAddCardLoading(true);
         try {
-            await savePaymentMethod({ brand: card.brand, last4: card.last4, expiry: card.expiry });
-            setCards((p) => [...p.map((c) => ({ ...c, isDefault: false })), { ...card, isDefault: true }]);
+            const added = await savePaymentMethod({ brand: card.brand, last4: card.last4, expiry: card.expiry });
+            // Refresh list from API to be sure or just update local state
+            setCards((p) => {
+                if (added.isDefault) {
+                    return [...p.map((c) => ({ ...c, isDefault: false })), { ...added, id: added.id!, isDefault: true }];
+                }
+                return [...p, { ...added, id: added.id!, isDefault: false }];
+            });
             setAddCardModal(false);
             addToast(`${card.brand} •••• ${card.last4} added`);
         } catch (err: any) {
@@ -367,23 +368,36 @@ export function Settings() {
     const handleDeleteCard = async () => {
         if (!deleteCardId) return;
         setDeleteCardLoading(true);
-        const c = cards.find((x) => x.id === deleteCardId);
-        const remaining = cards.filter((x) => x.id !== deleteCardId);
-        setCards(remaining);
-        if (remaining.length > 0 && c?.isDefault) {
-            const newDefault = remaining[0];
-            setCards(remaining.map((x, i) => ({ ...x, isDefault: i === 0 })));
-            try { await savePaymentMethod({ brand: newDefault.brand, last4: newDefault.last4, expiry: newDefault.expiry }); } catch {}
+        try {
+            await deletePaymentMethod(deleteCardId);
+            const c = cards.find((x) => x.id === deleteCardId);
+            const remaining = cards.filter((x) => x.id !== deleteCardId);
+            
+            // If we deleted the default one, the backend will assign a new one
+            // Let's just refresh the whole list to be safe
+            const methods = await getPaymentMethods();
+            setCards(methods.map(m => ({
+                id: m.id!,
+                brand: m.brand,
+                last4: m.last4,
+                expiry: m.expiry,
+                isDefault: m.isDefault!
+            })));
+            
+            addToast(`Removed ${c?.brand} •••• ${c?.last4}`, "info");
+        } catch (err: any) {
+            addToast("Failed to remove card: " + (err.message || "Unknown error"), "error");
+        } finally {
+            setDeleteCardLoading(false);
+            setDeleteCardId(null);
         }
-        setDeleteCardLoading(false); setDeleteCardId(null);
-        addToast(`Removed ${c?.brand} •••• ${c?.last4}`, "info");
     };
 
     const handleSetDefault = async (cardId: string) => {
         const c = cards.find((x) => x.id === cardId);
         if (!c) return;
         try {
-            await savePaymentMethod({ brand: c.brand, last4: c.last4, expiry: c.expiry });
+            await setDefaultPaymentMethod(cardId);
             setCards((p) => p.map((card) => ({ ...card, isDefault: card.id === cardId })));
             addToast(`${c.brand} •••• ${c.last4} set as default`);
         } catch (err: any) {
@@ -397,26 +411,6 @@ export function Settings() {
         try { localStorage.setItem(NOTIFS_KEY, JSON.stringify(next)); } catch {}
         const names: Record<string, string> = { email: "Email notifications", tapAlerts: "Tap alerts", weeklyReport: "Weekly report", marketing: "Marketing emails", newLeads: "Lead notifications" };
         addToast(`${val ? "Enabled" : "Disabled"} ${names[key]}`, "info");
-    };
-
-    const handleConnectAccount = async (accId: string) => {
-        setConnectingId(accId); await new Promise((r) => setTimeout(r, 1500));
-        const acc = connectedAccounts.find((a) => a.id === accId);
-        const wasConnected = acc?.connected || false;
-        const url = accountUrls[accId] || "";
-        setConnectedAccount({
-            id: accId,
-            connected: !wasConnected,
-            email: !wasConnected ? `sam@${acc?.name.toLowerCase()}.com` : undefined,
-            url: url || undefined,
-        });
-        setConnectingId(null);
-        addToast(wasConnected ? `Disconnected ${acc?.name}` : `Connected ${acc?.name}`, wasConnected ? "info" : "success");
-    };
-
-    const handleUrlChange = (accId: string, url: string) => {
-        setAccountUrls(prev => ({ ...prev, [accId]: url }));
-        setConnectedAccount({ id: accId, url });
     };
 
     const handleDeleteAccount = async () => {
@@ -662,58 +656,8 @@ export function Settings() {
                         </CardContent>
                     </Card>
 
-                    {/* ── Connected Accounts ───────────────────────────────────── */}
-                    <div className="space-y-4 sm:space-y-6">
-                        <Card className="bg-[#000000] border-[#008001]/30 relative overflow-hidden" style={fadeIn(350)}>
-                            <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-[#49B618] to-transparent opacity-[0.03] blur-3xl pointer-events-none" />
-                            <CardHeader className="border-b border-[#008001]/20 pb-4">
-                                <CardTitle className="text-white text-base sm:text-lg flex items-center gap-2"><SectionIcon icon={Link2} />Connected Accounts</CardTitle>
-                            </CardHeader>
-                            <CardContent className="pt-5 space-y-4">
-                                {connectedAccounts.map((acc) => (
-                                    <div key={acc.id} className="space-y-3 p-3 sm:p-4 rounded-xl border border-[#008001]/20 bg-[#111a11] hover:bg-[#0f1f0f] transition-colors">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-3 min-w-0">
-                                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-sm font-bold ${acc.connected ? "bg-gradient-to-br from-[#008001] to-[#49B618] text-white" : "bg-[#1E1E1E] border border-[#008001]/20 text-[#A0A0A0]"}`}>
-                                                    {acc.icon}
-                                                </div>
-                                                <div className="min-w-0">
-                                                    <p className="text-sm font-medium text-white">{acc.name}</p>
-                                                    {acc.connected && acc.email && <p className="text-xs text-[#49B618] mt-0.5 truncate">{acc.email}</p>}
-                                                    {acc.connected && acc.url && (
-                                                        <a href={acc.url} target="_blank" rel="noopener noreferrer" className="text-xs text-[#49B618] mt-0.5 truncate flex items-center gap-1 hover:underline">
-                                                            {acc.url} <ExternalLink className="w-3 h-3" />
-                                                        </a>
-                                                    )}
-                                                    {!acc.connected && <p className="text-xs text-[#555] mt-0.5">Not connected</p>}
-                                                </div>
-                                            </div>
-                                            <Button variant="outline" size="sm" className={`text-xs h-8 rounded-full flex-shrink-0 gap-1.5 ${acc.connected ? "border-[#008001]/30 text-[#A0A0A0] hover:text-white hover:bg-[#ef4444]/10 hover:border-[#ef4444]/30" : "border-[#49B618]/30 text-[#49B618] hover:bg-[#49B618]/10"}`}
-                                                onClick={() => handleConnectAccount(acc.id)} disabled={connectingId === acc.id}>
-                                                {connectingId === acc.id ? <Loader2 className="w-3 h-3 animate-spin" /> : acc.connected ? <Unlink className="w-3 h-3" /> : <Link2 className="w-3 h-3" />}
-                                                {acc.connected ? "Disconnect" : "Connect"}
-                                            </Button>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <Input
-                                                value={accountUrls[acc.id] || ""}
-                                                onChange={(e) => handleUrlChange(acc.id, e.target.value)}
-                                                placeholder={`Enter ${acc.name} profile URL...`}
-                                                className="bg-[#1E1E1E] border-[#008001]/30 text-white h-9 rounded-lg text-xs"
-                                            />
-                                            {acc.url && (
-                                                <a href={acc.url} target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-lg bg-[#1E1E1E] border border-[#008001]/30 flex items-center justify-center text-[#A0A0A0] hover:text-[#49B618] transition-colors">
-                                                    <ExternalLink className="w-4 h-4" />
-                                                </a>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
-                            </CardContent>
-                        </Card>
-
                         {/* ── Danger Zone ──────────────────────────────────────── */}
-                        <Card className="bg-[#000000] border-2 border-[#ef4444]/20 relative overflow-hidden" style={fadeIn(400)}>
+                        <Card className="bg-[#000000] border-2 border-[#ef4444]/20 relative overflow-hidden" style={fadeIn(350)}>
                             <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-[#ef4444] to-transparent opacity-[0.03] blur-3xl pointer-events-none" />
                             <CardHeader className="border-b border-[#ef4444]/10 pb-4">
                                 <CardTitle className="text-[#ef4444] text-base sm:text-lg flex items-center gap-2"><SectionIcon icon={Trash2} gradient="bg-[#ef4444]/10 border border-[#ef4444]/20" />Danger Zone</CardTitle>
@@ -734,7 +678,6 @@ export function Settings() {
                                 </div>
                             </CardContent>
                         </Card>
-                    </div>
                 </div>
             </div>
         </>

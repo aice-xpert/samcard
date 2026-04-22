@@ -65,6 +65,7 @@ export interface PhonePreviewProps {
   customLinks: CustomLink[];
   extraSections: ExtraSection[];
   sections: Sections;
+  expanded?: { profile?: boolean; headingText?: boolean; contactUs?: boolean; businessDetails?: boolean; socialLinks?: boolean; links?: boolean; appointment?: boolean; collectContacts?: boolean };
   savedContact: boolean;
   copied: boolean;
   onPreviewOpen: () => void;
@@ -165,7 +166,7 @@ function PhonePreviewComponent({
   cardId,
   publishedLink,
   profileImage, brandLogo, logoPosition,
-  formData, socialLinks, customLinks, extraSections, sections,
+  formData, socialLinks, customLinks, extraSections, sections, expanded,
   savedContact, copied,
   onPreviewOpen, onShareLink, onSaveContact,
   themeOverride,
@@ -246,6 +247,30 @@ function PhonePreviewComponent({
   const canShowCopy = Boolean(cardId && publishedLinkValue && onShareLink);
   const [copyPublishedEnabled, setCopyPublishedEnabled] = useState(true);
 
+  // Live clock — syncs to the real current time, updates on the minute
+  const [liveTime, setLiveTime] = useState(() => {
+    const now = new Date();
+    return now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  });
+
+  useEffect(() => {
+    const update = () => {
+      const now = new Date();
+      setLiveTime(now.toLocaleTimeString('en-US', {
+        hour: 'numeric', minute: '2-digit', hour12: true
+      }));
+    };
+    // Sync to next minute boundary so ticks happen exactly on the minute
+    const now = new Date();
+    const msUntilNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+    let interval: ReturnType<typeof setInterval>;
+    const timeout = setTimeout(() => {
+      update();
+      interval = setInterval(update, 60_000);
+    }, msUntilNextMinute);
+    return () => { clearTimeout(timeout); clearInterval(interval); };
+  }, []);
+
   const showCopyButton = canShowCopy && copyPublishedEnabled;
 
   return (
@@ -300,7 +325,7 @@ function PhonePreviewComponent({
                     style={{ width: 88, height: 26, background: T.bg, borderRadius: '0 0 18px 18px', zIndex: 10 }}>
                     <div style={{ width: 40, height: 4, background: '#222', borderRadius: 999 }} />
                   </div>
-                  <span className="text-[11px] font-bold" style={{ color: T.textPrimary, ...ff }}>9:41</span>
+                  <span className="text-[11px] font-bold" style={{ color: T.textPrimary, ...ff }}>{liveTime}</span>
                   <div className="flex items-center gap-[5px]">
                     <svg width="16" height="11" viewBox="0 0 16 11" fill="none">
                       <rect x="0" y="7" width="3" height="4" rx="0.8" fill={T.greenLight} />
@@ -326,7 +351,7 @@ function PhonePreviewComponent({
                   style={{ maxHeight: 560, background: T.phoneBgStyle || T.bg, ...ff }}>
 
                   {/* HERO */}
-                  {sections.profile && (
+                  {sections.profile && expanded?.profile !== false && (
                     <div className="relative" style={{ aspectRatio: '4/3', maxHeight: '200px' }}>
                       {profileImage ? (
                         <img
@@ -384,13 +409,13 @@ function PhonePreviewComponent({
                     </div>
                   )}
 
-                  {sections.profile && formData.tagline && (
+                  {sections.profile && expanded?.profile !== false && formData.tagline && (
                     <div className="px-4 py-2.5 text-center">
                       <p style={{ fontSize: T.bodyFontSize, fontStyle: 'italic', lineHeight: 1.5, color: T.textMuted, fontFamily: T.fontFamily }}>{formData.tagline}</p>
                     </div>
                   )}
 
-                  {sections.profile && contactItems.length > 0 && (
+                  {sections.profile && expanded?.profile !== false && contactItems.length > 0 && (
                     <div className="flex justify-center gap-3 py-3 mx-3 mb-2.5"
                       style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: T.cardRadius }}>
                       {contactItems.slice(0, 4).map(({ href, Icon }, i) => (

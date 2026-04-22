@@ -97,8 +97,16 @@ const PLAN_ICONS: Record<string, React.ElementType> = {
 const BILLING_PLAN_ORDER = ["FREE", "PRO", "BUSINESS"] as const;
 type BillingPlanKey = (typeof BILLING_PLAN_ORDER)[number];
 
+/** Map backend tier values → the 3-slot billing plan key used in this component */
+const normalizeBillingTier = (raw: string): string => {
+    const t = raw.trim().toUpperCase();
+    // Backend stores "PROFESSIONAL" for what the UI calls "PRO"
+    if (t === "PROFESSIONAL") return "PRO";
+    return t;
+};
+
 const resolveBillingPlanKey = (plan: PlanData): BillingPlanKey | null => {
-    const tierKey = normalizePlanTier(plan.tier);
+    const tierKey = normalizeBillingTier(plan.tier);
     if (BILLING_PLAN_ORDER.includes(tierKey as BillingPlanKey)) {
         return tierKey as BillingPlanKey;
     }
@@ -550,7 +558,7 @@ export function Billing() {
                     .sort((a, b) => BILLING_PLAN_ORDER.indexOf(a.key) - BILLING_PLAN_ORDER.indexOf(b.key))
                     .map((item) => item.plan);
                 const activePlanIdx = mappedPlans.findIndex(
-                    (plan) => normalizePlanTier(plan.tier) === normalizePlanTier(userData.planTier)
+                    (plan) => normalizeBillingTier(plan.tier) === normalizeBillingTier(userData.planTier)
                 );
 
                 setUser(userData);
