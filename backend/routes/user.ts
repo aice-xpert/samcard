@@ -1,6 +1,8 @@
 import express, { Response } from "express";
 import { supabase } from "../config/supabase";
 import { AuthRequest, verifySession } from "../middleware/auth";
+import { create } from "node:domain";
+import { v4 as uuidv4 } from 'uuid';
 const router = express.Router();
 
 const getErrorMessage = (error: any): string => {
@@ -23,32 +25,6 @@ const normalizeLogoPosition = (value: unknown): string | null => {
   };
   return mapping[value] ?? null;
 };
-
-async function getLatestBusinessProfile(userId: string) {
-  const { data, error } = await supabase
-    .from("BusinessProfile")
-    .select("*")
-    .eq("userId", userId)
-    .order("updatedAt", { ascending: false })
-    .order("createdAt", { ascending: false })
-    .limit(1);
-
-  if (error) throw error;
-  return data?.[0] ?? null;
-}
-
-async function getLatestBusinessProfileId(userId: string) {
-  const { data, error } = await supabase
-    .from("BusinessProfile")
-    .select("id")
-    .eq("userId", userId)
-    .order("updatedAt", { ascending: false })
-    .order("createdAt", { ascending: false })
-    .limit(1);
-
-  if (error) throw error;
-  return data?.[0]?.id ?? null;
-}
 
 router.get("/profile", verifySession, async (req: AuthRequest, res: Response) => {
   try {
@@ -121,7 +97,13 @@ router.get("/business-profile", verifySession, async (req: AuthRequest, res: Res
     if (userError) throw userError;
 
     // 2. Try to get the Business Profile
-    let profile = await getLatestBusinessProfile(req.user!.uid);
+    let { data: profile, error: profileError } = await supabase
+      .from("BusinessProfile")
+      .select("*")
+      .eq("userId", req.user!.uid)
+      .maybeSingle();
+
+    if (profileError) throw profileError;
 
     // 3. AUTO-CREATE: Generate manual ID and timestamp to fix the 23502 error
     if (!profile) {
@@ -168,15 +150,23 @@ router.put("/business-profile", verifySession, async (req: AuthRequest, res: Res
   } = req.body;
 
   try {
-    const existingId = await getLatestBusinessProfileId(req.user!.uid);
+    const { data: existing, error: fetchError } = await supabase
+      .from("BusinessProfile")
+      .select("id")
+      .eq("userId", req.user!.uid)
+      .maybeSingle();
+
+    if (fetchError) {
+      return res.status(500).json({ error: fetchError.message });
+    }
 
     let result;
-    if (existingId) {
+    if (existing) {
       const normalizedLogoPosition = normalizeLogoPosition(logoPosition);
       const { data, error } = await supabase
         .from("BusinessProfile")
         .update({
-          id: existingId,
+          id: existing.id,
           name, title, company, tagline, profileImageUrl, coverImageUrl, brandLogoUrl,
           logoPosition: normalizedLogoPosition ?? undefined,
           primaryEmail, secondaryEmail, primaryPhone, secondaryPhone, website,
@@ -188,7 +178,7 @@ router.put("/business-profile", verifySession, async (req: AuthRequest, res: Res
           metaTitle, metaDescription, ogImage, customCss, customJs,
           updatedAt: new Date().toISOString(),
         })
-        .eq("id", existingId)
+        .eq("userId", req.user!.uid)
         .select()
         .single();
 
