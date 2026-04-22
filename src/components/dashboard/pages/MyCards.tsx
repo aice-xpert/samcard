@@ -311,7 +311,7 @@ const toggleStatus = useCallback(async (cardId: string) => {
       showToast('Card duplicated!');
     } catch (error) {
       // showToast(`Error duplicating card: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      showToast(`Error duplicating card: You can't duplicate a card more than once. Please change the name of the duplicated card or duplicate another card.`);}`);
+      showToast(`Error duplicating card: You can't duplicate a card more than once. Please change the name of the duplicated card or duplicate another card.`);
     } finally {
       setDuplicatingId(null);
       setOpenMenu(null);
