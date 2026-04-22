@@ -457,7 +457,12 @@ router.post("/:slug/track", async (req, res: Response) => {
       return res.status(404).json({ error: "Card not found" });
     }
 
-    const deviceType = req.headers["user-agent"]?.includes("Mobile") ? "MOBILE" : "WEB";
+    const userAgent = String(req.headers["user-agent"] || "").toLowerCase();
+    const deviceType = userAgent.includes("iphone") || userAgent.includes("ipad")
+      ? "IOS"
+      : userAgent.includes("android") || userAgent.includes("mobile")
+        ? "ANDROID"
+        : "WEB";
     const country = req.headers["cf-ipcountry"] || req.headers["x-vercel-ip-country"] || "UNKNOWN";
 
     const { error: interactionError } = await supabase
