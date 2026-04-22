@@ -2,6 +2,7 @@ import express, { Response } from "express";
 import { supabase } from "../config/supabase";
 import { AuthRequest, verifySession } from "../middleware/auth";
 import { randomUUID } from "crypto";
+import { createNotification } from "../lib/notifications";
 
 const router = express.Router();
 
@@ -170,6 +171,15 @@ router.post("/duplicate/:cardId", verifySession, async (req: AuthRequest, res: R
         stickerId: originalQR.stickerId,
       });
     }
+
+    // BUG 38 – notify on card duplication
+    void createNotification(
+      req.user!.uid,
+      "CARD",
+      "Card Duplicated",
+      `"${originalCard.name}" has been duplicated as "${newCard.name}".`,
+      { sourceId: newCard.id, sourceType: "Card" }
+    );
 
     return res.status(201).json(newCard);
   } catch (error) {

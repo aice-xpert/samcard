@@ -43,8 +43,13 @@ interface EnhancedHeaderProps {
 }
 
 function formatNotifTime(isoDate: string): string {
-  const diff = Math.floor((Date.now() - new Date(isoDate).getTime()) / 1000);
-  if (diff < 60) return 'just now';
+  // Supabase returns TIMESTAMP columns without the trailing 'Z'.
+  // Without it, browsers parse the string as local time instead of UTC,
+  // causing the "5h ago" offset bug on UTC+5 systems.
+  const normalized = isoDate.endsWith('Z') || isoDate.includes('+') ? isoDate : isoDate + 'Z';
+  const diff = Math.floor((Date.now() - new Date(normalized).getTime()) / 1000);
+  if (diff < 5) return 'just now';
+  if (diff < 60) return `${diff}s ago`;
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
   return `${Math.floor(diff / 86400)}d ago`;
@@ -80,7 +85,7 @@ export function EnhancedHeader({
           }))
         );
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   useEffect(() => {
@@ -113,6 +118,12 @@ export function EnhancedHeader({
   }, [fetchNotifications]);
 
 
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => setTick(t => t + 1), 60_000);
+    return () => clearInterval(interval);
+  }, []);
+
   const handleLogout = useCallback(async () => {
     setLoggingOut(true);
     try {
@@ -142,12 +153,12 @@ export function EnhancedHeader({
 
   const markAllAsRead = useCallback(() => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-    markAllNotificationsRead().catch(() => {});
+    markAllNotificationsRead().catch(() => { });
   }, []);
 
   const markAsRead = useCallback((id: string) => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-    markNotificationRead(id).catch(() => {});
+    markNotificationRead(id).catch(() => { });
   }, []);
 
   return (

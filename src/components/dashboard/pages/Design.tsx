@@ -64,6 +64,10 @@ interface ProfileCache {
     profile?: boolean; headingText?: boolean; contactUs?: boolean;
     socialLinks?: boolean; links?: boolean; appointment?: boolean; collectContacts?: boolean;
   };
+  expanded?: {
+    profile?: boolean; headingText?: boolean; contactUs?: boolean;
+    businessDetails?: boolean; socialLinks?: boolean; links?: boolean; appointment?: boolean; collectContacts?: boolean;
+  };
   extraSections?: ExtraSection[];
 }
 
@@ -886,7 +890,7 @@ export function DesignNew({
   const shadowMap = { none: 'none', soft: `0 4px 24px ${draft.accentColor}25`, medium: `0 8px 48px ${draft.accentColor}45`, strong: `0 12px 72px ${draft.accentColor}70` };
   const wrapperShadow = draft.glowEffect ? `${shadowMap[draft.shadowIntensity]}, 0 0 40px ${draft.accentColor}22` : shadowMap[draft.shadowIntensity];
 
-  const sharedPreviewProps = { cardId: resolvedCardId, publishedLink: publishedShareUrl, profileImage, brandLogo, logoPosition, formData, socialLinks, customLinks, extraSections, sections, savedContact, copied, themeOverride };
+  const sharedPreviewProps = { cardId: resolvedCardId, publishedLink: publishedShareUrl, profileImage, brandLogo, logoPosition, formData, socialLinks, customLinks, extraSections, sections, expanded: profile.expanded, savedContact, copied, themeOverride };
 
   // ── Controls ──────────────────────────────────────────────────────
   const ControlsPanel = (

@@ -210,19 +210,6 @@ export function CardPreviewModal({
     return () => { document.body.style.overflow = ''; };
   }, [isOpen]);
 
-  const [liveTime, setLiveTime] = useState(() => {
-    const now = new Date();
-    return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-  });
-  useEffect(() => {
-    const tick = () => {
-      const now = new Date();
-      setLiveTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }));
-    };
-    const id = setInterval(tick, 60_000);
-    return () => clearInterval(id);
-  }, []);
-
   if (!isOpen) return null;
 
   const hasProfileImage = !!profileImage?.trim();
@@ -293,7 +280,7 @@ export function CardPreviewModal({
                       style={{ width: 88, height: 26, background: T.bg, borderRadius: '0 0 18px 18px', zIndex: 10 }}>
                       <div style={{ width: 40, height: 4, background: '#222', borderRadius: 999 }} />
                     </div>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: T.textPrimary, ...ff }}>{liveTime}</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: T.textPrimary, ...ff }}>9:41</span>
                     <div className="flex items-center gap-[5px]">
                       <svg width="16" height="11" viewBox="0 0 16 11" fill="none">
                         <rect x="0" y="7" width="3" height="4" rx="0.8" fill={T.greenLight} />
@@ -319,7 +306,6 @@ export function CardPreviewModal({
                     style={{ background: T.phoneBgStyle || T.bg, ...ff }}>
 
                     {/* HERO */}
-                    {sec.profile && (
                     <div className="relative" style={{ aspectRatio: '4/3', maxHeight: '240px', overflow: 'hidden' }}>
                       {hasProfileImage ? (
                         <img src={profileImage} alt={formData.name} className="w-full h-full object-contain object-center" />
@@ -360,7 +346,6 @@ export function CardPreviewModal({
                         )}
                       </div>
                     </div>
-                    )}
 
                     {hasBrandLogo && logoPosition === 'below-photo' && (
                       <div className="flex justify-center py-2.5">
@@ -620,6 +605,42 @@ function ExtraModalSection({ section, T }: { section: ExtraSection; T: ThemeOver
   const ff = { fontFamily: T.fontFamily };
 
   switch (section.type) {
+    // ── BUG 49 FIX: extra-pdf was missing — fell through to default which
+    // looks for 'title'/'content' keys instead of 'pdfTitle'/'pdfUrl' ──
+    case 'extra-pdf': {
+      const pdfTitle = str(d, 'pdfTitle'), pdfUrl = str(d, 'pdfUrl');
+      return pdfTitle || pdfUrl ? (
+        <div className="mx-3 mb-2.5 overflow-hidden"
+          style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: T.cardRadius }}>
+          <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ borderBottom: `1px solid ${T.divider}` }}>
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+              style={{ background: `linear-gradient(135deg,${T.green},${T.greenLight})` }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+              </svg>
+            </div>
+            <span style={{ fontWeight: T.boldHeadings ? 700 : 500, fontSize: T.bodyFontSize, color: T.textPrimary, ...ff }}>PDF Gallery</span>
+          </div>
+          <button type="button" onClick={e => { e.stopPropagation(); if (pdfUrl) openLink(pdfUrl); }}
+            className="modal-tap w-full flex items-center gap-3 px-4 py-2.5 text-left">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ background: `${T.green}1f`, border: `1px solid ${T.green}40` }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4" style={{ color: T.greenLight }}>
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p style={{ fontWeight: T.boldHeadings ? 700 : 500, fontSize: T.bodyFontSize, color: T.textPrimary, ...ff }}>{pdfTitle || 'View PDF'}</p>
+              <p style={{ fontSize: Math.max(9, T.bodyFontSize - 1), color: T.textMuted, ...ff }} className="truncate">{pdfUrl || 'Tap to open'}</p>
+            </div>
+            <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: T.muted }} />
+          </button>
+        </div>
+      ) : null;
+    }
+
     case 'extra-button': {
       const btnLabel = str(d, 'btnLabel'), btnUrl = str(d, 'btnUrl');
       return btnLabel || btnUrl ? (
@@ -713,7 +734,6 @@ function ExtraModalSection({ section, T }: { section: ExtraSection; T: ThemeOver
     }
     case 'extra-customer':
     case 'extra-team': {
-      // Editor stores these as 'title' + 'desc'
       const title = str(d, 'title'), desc = str(d, 'desc');
       return title || desc ? (
         <div className="mx-3 mb-2.5 overflow-hidden"

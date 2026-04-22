@@ -3,6 +3,7 @@ import { supabase } from "../config/supabase";
 import { AuthRequest, verifySession } from "../middleware/auth";
 import { create } from "node:domain";
 import { v4 as uuidv4 } from 'uuid';
+import { createNotification } from "../lib/notifications";
 const router = express.Router();
 
 const getErrorMessage = (error: any): string => {
@@ -213,6 +214,15 @@ router.put("/business-profile", verifySession, async (req: AuthRequest, res: Res
       return res.status(500).json({ error: result.error.message });
     }
 
+    // BUG 38 – notify on business profile update
+    void createNotification(
+      req.user!.uid,
+      "CARD",
+      "Profile Updated",
+      `Your business profile${result.data?.name ? ` "${result.data.name}"` : ''} has been updated successfully.`,
+      { sourceId: result.data?.id ?? undefined, sourceType: "BusinessProfile" }
+    );
+
     return res.json(result.data);
   } catch (error: unknown) {
     return res.status(500).json({ error: getErrorMessage(error) });
@@ -333,6 +343,16 @@ router.put("/plan", verifySession, async (req: AuthRequest, res: Response) => {
       .single();
 
     if (error) return res.status(500).json({ error: error.message });
+
+    // BUG 38 – notify on plan change
+    void createNotification(
+      req.user!.uid,
+      "BILLING",
+      "Subscription Updated",
+      `Your plan has been updated to ${normalizedTier}.`,
+      { sourceType: "Plan" }
+    );
+
     return res.json(data);
   } catch (error: unknown) {
     return res.status(500).json({ error: getErrorMessage(error) });

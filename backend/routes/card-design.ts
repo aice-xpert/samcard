@@ -1,6 +1,7 @@
 import express, { Response } from "express";
 import { supabase } from "../config/supabase";
 import { AuthRequest, verifySession } from "../middleware/auth";
+import { createNotification } from "../lib/notifications";
 const router = express.Router({ mergeParams: true });
 
 const getErrorMessage = (error: unknown): string =>
@@ -66,7 +67,7 @@ router.put("/", verifySession, async (req: AuthRequest, res: Response) => {
   try {
     const { data: card, error: fetchErr } = await supabase
       .from("Card")
-      .select("userId")
+      .select("userId, name")
       .eq("id", cardId)
       .single();
 
@@ -151,6 +152,15 @@ router.put("/", verifySession, async (req: AuthRequest, res: Response) => {
     if (result.error) {
       return res.status(500).json({ error: result.error.message });
     }
+
+    // BUG 38 – notify on card design update
+    void createNotification(
+      req.user!.uid,
+      "CARD",
+      "Card Design Updated",
+      `Your card "${card.name}" design has been updated successfully.`,
+      { sourceId: String(cardId), sourceType: "Card" }
+    );
 
     return res.json(result.data);
   } catch (error: unknown) {

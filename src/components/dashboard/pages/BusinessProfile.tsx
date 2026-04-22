@@ -813,6 +813,7 @@ export default function BusinessProfile({
   const previewCustomLinks = useDeferredValue(customLinks);
   const previewExtraSections = useDeferredValue(extraSections);
   const previewSections = useDeferredValue(sections);
+  const previewExpanded = useDeferredValue(expanded);
   const previewSavedContact = useDeferredValue(savedContact);
   const previewCopied = useDeferredValue(copied);
   const previewThemeOverride = useDeferredValue(themeOverride);
@@ -1241,6 +1242,7 @@ export default function BusinessProfile({
     customLinks: previewCustomLinks,
     extraSections: previewExtraSections,
     sections: previewSections,
+    expanded: previewExpanded,
     savedContact: previewSavedContact,
     copied: previewCopied,
     themeOverride: previewThemeOverride,
@@ -1255,6 +1257,7 @@ export default function BusinessProfile({
     previewCustomLinks,
     previewExtraSections,
     previewSections,
+    previewExpanded,
     previewSavedContact,
     previewCopied,
     previewThemeOverride,
@@ -1418,7 +1421,7 @@ export default function BusinessProfile({
               </SelectContent>
             </Select>
           </div>
-          <div><Label className="text-[#A0A0A0] text-xs">Year Founded</Label><Input type="number" value={formData.yearFounded} onChange={e => updateField('yearFounded', e.target.value)} className="mt-1 bg-[#1E1E1E] border-[#008001]/30 text-white" /></div>
+          <div><Label className="text-[#A0A0A0] text-xs">Year Founded</Label><Input type="text" inputMode="numeric" pattern="[0-9]{0,4}" maxLength={4} placeholder="e.g. 2015" value={formData.yearFounded} onChange={e => { const v = e.target.value.replace(/\D/g, '').slice(0, 4); updateField('yearFounded', v); }} className="mt-1 bg-[#1E1E1E] border-[#008001]/30 text-white" /></div>
           <div><Label className="text-[#A0A0A0] text-xs">Location</Label><Input value={formData.location} onChange={e => updateField('location', e.target.value)} className="mt-1 bg-[#1E1E1E] border-[#008001]/30 text-white" /></div>
         </div>
       </SectionBlock >
@@ -1517,13 +1520,29 @@ export default function BusinessProfile({
 
       {/* Action buttons */}
       < div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pb-8" >
-        <Button 
-          variant="outline" 
-          className="text-red-400 border-red-500/30 hover:bg-red-500/10 text-sm"
-        >
-          <Trash2 className="w-4 h-4 mr-2" />
-          Delete Profile
-        </Button>
+         <Button
+           variant="outline"
+           className="text-red-400 border-red-500/30 hover:bg-red-500/10 text-sm"
+           onClick={() => {
+             setFormData(DEFAULT_STATE.formData);
+             setSocialLinks(DEFAULT_STATE.socialLinks);
+             setCustomLinks(DEFAULT_STATE.customLinks);
+             setSections(DEFAULT_STATE.sections);
+             setExpanded(DEFAULT_EXPANDED);
+             setExtraSections([]);
+             setLogoPosition(DEFAULT_STATE.logoPosition);
+             setBrandLogo('');
+             setProfileImage('');
+             setPendingProfileImage(null);
+             setPendingBrandLogo(null);
+             // Clear the localStorage cache so the reset persists on refresh
+             const ck = cacheKeyForEditor(cardId, resolvedCardId, allowFallbackToFirstCard);
+             try { localStorage.removeItem(ck); } catch { /* quota */ }
+           }}
+         >
+           <Trash2 className="w-4 h-4 mr-2" />
+           Delete Profile
+         </Button>
         <div className="flex gap-3">
           <Button onClick={() => {
             void handleSaveChanges();
