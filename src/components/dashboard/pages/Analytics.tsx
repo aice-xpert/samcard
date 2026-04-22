@@ -192,27 +192,27 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
   useEffect(() => {
     if (!momInView) return;
     setMomLoading(true);
-    getMonthOverMonthPerformance()
+    getMonthOverMonthPerformance(cardId)
       .catch(() => [])
       .then((mom) => {
         setMonthOverMonth(mom);
         setMomLoading(false);
       });
-  }, [momInView]);
+  }, [momInView, cardId]);
 
   // ── Phase 3: Goals (deferred until row scrolls into view) ──
   useEffect(() => {
     if (!goalsInView) return;
     setGoalsLoading(true);
     Promise.all([
-      getMonthlyGoal().catch(() => null),
-      getWeeklyChallenge().catch(() => null),
+      getMonthlyGoal(cardId).catch(() => null),
+      getWeeklyChallenge(cardId).catch(() => null),
     ]).then(([goal, challenge]) => {
       setMonthlyGoal(goal);
       setWeeklyChallenge(challenge);
       setGoalsLoading(false);
     });
-  }, [goalsInView]);
+  }, [goalsInView, cardId]);
 
   // ── Phase 4: Leads (deferred until section scrolls into view) ──
   useEffect(() => {
@@ -335,6 +335,13 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
     analytics?.sources.reduce((s, x) => s + x.value, 0) || 0;
   const sourcePercentage = (value: number): number =>
     totalSources > 0 ? Math.round((value / totalSources) * 100) : 0;
+
+  const resolvePublishedCardUrl = (link?: string | null): string => {
+    if (!link) return "";
+    if (/^https?:\/\//i.test(link)) return link;
+    if (typeof window !== "undefined") return `${window.location.origin}${link}`;
+    return link;
+  };
 
   return (
     <div className="min-h-screen bg-[#000000] p-6 space-y-6 font-mono">
@@ -966,7 +973,7 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
                         className="accent-[#49B618] cursor-pointer"
                       />
                     </th>
-                    {["No", "Contact", "Source", "Date", "Engagement", "Actions"].map((h) => (
+                    {["No", "Contact", "Card", "Source", "Date", "Engagement", "Actions"].map((h) => (
                       <th
                         key={h}
                         className="text-left py-3 px-4 text-xs font-medium text-[#A0A0A0] uppercase tracking-wider"
@@ -1010,6 +1017,22 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
                               <p className="text-xs text-[#A0A0A0]">{lead.email ?? lead.phone ?? "—"}</p>
                             </div>
                           </div>
+                        </td>
+                        <td className="py-4 px-4">
+                          {lead.cardName && lead.cardPublishedLink ? (
+                            <a
+                              href={resolvePublishedCardUrl(lead.cardPublishedLink)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm font-medium text-[#49B618] hover:text-[#66dd2a] underline underline-offset-4"
+                            >
+                              {lead.cardName}
+                            </a>
+                          ) : lead.cardName ? (
+                            <span className="text-sm text-white">{lead.cardName}</span>
+                          ) : (
+                            <span className="text-sm text-[#A0A0A0]">—</span>
+                          )}
                         </td>
                         <td className="py-4 px-4">
                           <span

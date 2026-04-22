@@ -490,6 +490,7 @@ export interface AnalyticsData {
   funnelSteps: { label: string; value: number; percentage: number }[];
   topLocations: { country: string; visitors: number; percentage: number }[];
   topLinks: { id: string; label: string; clicks: number; percentage: number }[];
+  uniqueVisitors: number;
 }
 
 export interface MonthOverMonthPerformance {
@@ -535,23 +536,32 @@ export async function getTopLocations(period: string = "7") {
   );
 }
 
-export async function getMonthOverMonthPerformance() {
+export async function getMonthOverMonthPerformance(cardId?: string) {
+  const params = new URLSearchParams();
+  if (cardId) params.set("cardId", cardId);
+  const query = params.toString();
   return apiRequest<MonthOverMonthPerformance[]>(
-    ANALYTICS_API_ROUTES.monthOverMonth,
+    query ? `${ANALYTICS_API_ROUTES.monthOverMonth}?${query}` : ANALYTICS_API_ROUTES.monthOverMonth,
     { method: "GET" },
   );
 }
 
-export async function getMonthlyGoal() {
+export async function getMonthlyGoal(cardId?: string) {
+  const params = new URLSearchParams();
+  if (cardId) params.set("cardId", cardId);
+  const query = params.toString();
   return apiRequest<GoalProgressData>(
-    ANALYTICS_API_ROUTES.monthlyGoal,
+    query ? `${ANALYTICS_API_ROUTES.monthlyGoal}?${query}` : ANALYTICS_API_ROUTES.monthlyGoal,
     { method: "GET" },
   );
 }
 
-export async function getWeeklyChallenge() {
+export async function getWeeklyChallenge(cardId?: string) {
+  const params = new URLSearchParams();
+  if (cardId) params.set("cardId", cardId);
+  const query = params.toString();
   return apiRequest<GoalProgressData>(
-    ANALYTICS_API_ROUTES.weeklyChallenge,
+    query ? `${ANALYTICS_API_ROUTES.weeklyChallenge}?${query}` : ANALYTICS_API_ROUTES.weeklyChallenge,
     { method: "GET" },
   );
 }
@@ -563,6 +573,8 @@ export interface Lead {
   email: string | null;
   phone: string | null;
   company: string | null;
+  cardName?: string | null;
+  cardPublishedLink?: string | null;
   status: string;
   source: string;
   isFavorite: boolean;
