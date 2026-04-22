@@ -5,7 +5,7 @@ import { AuthRequest, verifySession } from "../middleware/auth";
 const router = express.Router();
 
 const getErrorMessage = (error: any): string => {
-  if (error?.message) return error.message; 
+  if (error?.message) return error.message;
   if (error instanceof Error) return error.message;
   return "Internal server error";
 };
@@ -111,10 +111,10 @@ async function buildAnalyticsPayload(uid: string, periodQuery: unknown, cardId?:
 
   const { data: interactions } = cardIds.length > 0
     ? await supabase
-        .from("CardInteraction")
-        .select("type, createdAt, deviceType, country")
-        .in("cardId", cardIds)
-        .gte("createdAt", startDate.toISOString())
+      .from("CardInteraction")
+      .select("type, createdAt, deviceType, country")
+      .in("cardId", cardIds)
+      .gte("createdAt", startDate.toISOString())
     : { data: [] as { type: string; createdAt: string; deviceType?: string; country?: string }[] };
 
   let leadsQuery = supabase
@@ -180,7 +180,7 @@ async function buildAnalyticsPayload(uid: string, periodQuery: unknown, cardId?:
     profile.title,
     profile.company,
     profile.tagline,
-    profile.profileImageUrl,
+    // profile.profileImageUrl,
     profile.primaryEmail,
     profile.primaryPhone,
     profile.website,
@@ -250,30 +250,30 @@ async function buildAnalyticsPayload(uid: string, periodQuery: unknown, cardId?:
   const tapCount = interactions?.filter(i => i.type === "tap" || i.type === "scan").length || 0;
   const { data: linkClicks } = cardIds.length > 0
     ? await supabase
-        .from("CardInteraction")
-        .select("type")
-        .in("cardId", cardIds)
-        .eq("type", "link_click")
-        .gte("createdAt", startDate.toISOString())
+      .from("CardInteraction")
+      .select("type")
+      .in("cardId", cardIds)
+      .eq("type", "link_click")
+      .gte("createdAt", startDate.toISOString())
     : { data: [] as { type: string }[] };
   const linkClickCount = linkClicks?.length || 0;
 
   const { data: saves } = cardIds.length > 0
     ? await supabase
-        .from("CardInteraction")
-        .select("type")
-        .in("cardId", cardIds)
-        .eq("type", "save")
-        .gte("createdAt", startDate.toISOString())
+      .from("CardInteraction")
+      .select("type")
+      .in("cardId", cardIds)
+      .eq("type", "save")
+      .gte("createdAt", startDate.toISOString())
     : { data: [] as { type: string }[] };
   const saveCount = saves?.length || 0;
 
   const { data: shares } = cardIds.length > 0
     ? await supabase
-        .from("CardShare")
-        .select("id")
-        .in("cardId", cardIds)
-        .gte("createdAt", startDate.toISOString())
+      .from("CardShare")
+      .select("id")
+      .in("cardId", cardIds)
+      .gte("createdAt", startDate.toISOString())
     : { data: [] as { id: string }[] };
   const shareCount = shares?.length || 0;
 
@@ -302,11 +302,11 @@ async function buildAnalyticsPayload(uid: string, periodQuery: unknown, cardId?:
 
   const { data: clickData } = cardIds.length > 0
     ? await supabase
-        .from("CardInteraction")
-        .select("linkLabel, linkId")
-        .in("cardId", cardIds)
-        .eq("type", "link_click")
-        .gte("createdAt", startDate.toISOString())
+      .from("CardInteraction")
+      .select("linkLabel, linkId")
+      .in("cardId", cardIds)
+      .eq("type", "link_click")
+      .gte("createdAt", startDate.toISOString())
     : { data: [] as { linkLabel?: string; linkId?: string }[] };
 
   const linkMap: Record<string, { count: number; label: string }> = {};

@@ -182,6 +182,7 @@ export async function updateBusinessProfile(payload: UpdateBusinessProfilePayloa
   });
 }
 
+
 // ─── Plans ───────────────────────────────────────────────────────────
 export interface ApiPlan {
   id: number;
