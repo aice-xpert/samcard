@@ -624,6 +624,7 @@ export function DesignNew({
   const [showQR, setShowQR] = useState(false);
   const [copied, setCopied] = useState(false);
   const [savedContact, setSavedContact] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
 
   useEffect(() => {
     onSettingsChange?.(draft);
@@ -810,7 +811,34 @@ export function DesignNew({
   }
 }, [draft, resolvedCardId, activeDesignCacheKey]);
 
-  const handleReset = useCallback(() => { setDraft(saved); showToast('Reverted to last saved'); }, [saved]);
+  const handleReset = useCallback(async () => {
+    if (isResetting) return;
+    setIsResetting(true);
+    setIsLoading(true);
+    try {
+      let reverted = loadDesign(activeDesignCacheKey);
+
+      // Keep reset aligned with server-saved design when editing an existing card.
+      if (resolvedCardId) {
+        try {
+          const designData = await getCardDesign(resolvedCardId);
+          if (designData) {
+            reverted = normalizeDesignSettings(designData as Partial<DesignSettings>);
+          }
+        } catch {
+          // Fall back to local persisted design.
+        }
+      }
+
+      setDraft(reverted);
+      setSaved(reverted);
+      saveDesign(reverted, activeDesignCacheKey);
+      showToast('Reverted to last saved');
+    } finally {
+      setIsLoading(false);
+      setIsResetting(false);
+    }
+  }, [isResetting, resolvedCardId, activeDesignCacheKey]);
 
   const applyPalette = useCallback((key: string) => {
     const p = PALETTES[key]; if (!p) return;
@@ -895,7 +923,15 @@ export function DesignNew({
         <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl mb-3" style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.3)' }}>
           <div className="w-1.5 h-1.5 rounded-full animate-pulse flex-shrink-0" style={{ background: '#fbbf24' }} />
           <p className="text-xs flex-1" style={{ color: '#fde68a' }}>Unsaved changes</p>
-          <button onClick={handleReset} className="text-xs underline" style={{ color: '#fbbf24' }}>Revert</button>
+          <button
+            type="button"
+            onClick={handleReset}
+            disabled={isResetting}
+            className="text-xs underline disabled:no-underline disabled:opacity-60 disabled:cursor-not-allowed"
+            style={{ color: '#fbbf24' }}
+          >
+            {isResetting ? 'Reverting...' : 'Revert'}
+          </button>
         </div>
       )}
       <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl mb-3" style={{ background: 'rgba(0,128,1,0.08)', border: '1px solid rgba(0,128,1,0.22)' }}>
@@ -1036,7 +1072,7 @@ export function DesignNew({
 
       {/* Save / Reset */}
       <div className="flex gap-3 pt-1 pb-6">
-        <Button onClick={handleSave} className="flex-1 h-11 gap-2 font-semibold text-white" style={{ background: 'linear-gradient(135deg,#008001,#49B618)' }}>
+        <Button type="button" onClick={handleSave} className="flex-1 h-11 gap-2 font-semibold text-white" style={{ background: 'linear-gradient(135deg,#008001,#49B618)' }}>
           <Save className="w-4 h-4" />{isSaved ? 'Saved!' : 'Save Changes'}
         </Button>
       </div>
@@ -1088,11 +1124,12 @@ export function DesignNew({
               </p>
             </div>
             <div className="flex gap-2">
-              <Button onClick={handleReset} variant="outline" size="sm" className="gap-2 text-sm"
+              <Button type="button" onClick={handleReset} disabled={isResetting} variant="outline" size="sm" className="gap-2 text-sm"
                 style={{ borderColor: hasUnsaved ? 'rgba(251,191,36,0.5)' : 'rgba(0,128,1,0.3)', color: hasUnsaved ? '#fbbf24' : '#a0a0a0' }}>
-                <RotateCcw className="w-3.5 h-3.5" /><span className="hidden sm:inline">Reset</span>
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span className={isResetting ? 'inline' : 'hidden sm:inline'}>{isResetting ? 'Resetting...' : 'Reset'}</span>
               </Button>
-              <Button onClick={handleSave} size="sm" className="gap-2 text-sm font-semibold text-white" style={{ background: 'linear-gradient(135deg,#008001,#49B618)' }}>
+              <Button type="button" onClick={handleSave} size="sm" className="gap-2 text-sm font-semibold text-white" style={{ background: 'linear-gradient(135deg,#008001,#49B618)' }}>
                 <Save className="w-3.5 h-3.5" />{isSaved ? 'Saved!' : 'Save'}
               </Button>
             </div>

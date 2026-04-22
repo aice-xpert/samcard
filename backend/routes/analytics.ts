@@ -82,6 +82,7 @@ async function buildAnalyticsPayload(uid: string, periodQuery: unknown, cardId?:
     return {
       totalTaps: 0,
       totalViews: 0,
+      uniqueVisitors: 0,
       totalLeads: 0,
       profileCompletion: 0,
       engagementScore: 0,
@@ -165,6 +166,14 @@ async function buildAnalyticsPayload(uid: string, periodQuery: unknown, cardId?:
   const totalTaps = interactions?.filter(i => i.type === "tap" || i.type === "scan").length || 0;
   const totalViews = interactions?.filter(i => i.type === "view").length || 0;
   const totalLeads = leads?.length || 0;
+
+  const uniqueVisitorKeys = new Set<string>();
+  interactions?.filter(i => i.type === "view").forEach(i => {
+    const day = i.createdAt.split("T")[0];
+    const key = `${day}::${i.deviceType ?? "UNKNOWN"}::${i.country ?? "UNKNOWN"}`;
+    uniqueVisitorKeys.add(key);
+  });
+  const uniqueVisitors = uniqueVisitorKeys.size;
 
   const completionFields = [
     profile.name,
@@ -322,6 +331,7 @@ async function buildAnalyticsPayload(uid: string, periodQuery: unknown, cardId?:
   return {
     totalTaps,
     totalViews,
+    uniqueVisitors,
     totalLeads,
     profileCompletion,
     engagementScore,
@@ -336,7 +346,7 @@ async function buildAnalyticsPayload(uid: string, periodQuery: unknown, cardId?:
   };
 }
 
-async function buildMonthOverMonthPerformance(uid: string) {
+async function buildMonthOverMonthPerformance(uid: string, cardId?: string) {
   const { data: profile } = await supabase
     .from("BusinessProfile")
     .select("id")
@@ -347,10 +357,14 @@ async function buildMonthOverMonthPerformance(uid: string) {
     return ZERO_MONTH_OVER_MONTH;
   }
 
-  const { data: cards } = await supabase
+  const cardQuery = supabase
     .from("Card")
     .select("id")
     .eq("businessProfileId", profile.id);
+
+  const { data: cards } = cardId
+    ? await cardQuery.eq("id", cardId)
+    : await cardQuery;
 
   const cardIds = cards?.map((c: { id: string }) => c.id) || [];
   if (cardIds.length === 0) {
@@ -369,11 +383,17 @@ async function buildMonthOverMonthPerformance(uid: string) {
     .in("cardId", cardIds)
     .gte("createdAt", previousMonthStart.toISOString());
 
-  const { data: leads } = await supabase
-    .from("Lead")
-    .select("createdAt")
-    .eq("businessProfileId", profile.id)
-    .gte("createdAt", previousMonthStart.toISOString());
+  const { data: leads } = cardId
+    ? await supabase
+        .from("Lead")
+        .select("createdAt")
+        .eq("cardId", cardId)
+        .gte("createdAt", previousMonthStart.toISOString())
+    : await supabase
+        .from("Lead")
+        .select("createdAt")
+        .eq("businessProfileId", profile.id)
+        .gte("createdAt", previousMonthStart.toISOString());
 
   const inThisMonth = (isoDate: string) => new Date(isoDate) >= monthStart;
   const inLastMonth = (isoDate: string) => {
@@ -413,7 +433,7 @@ async function buildMonthOverMonthPerformance(uid: string) {
   ];
 }
 
-async function buildMonthlyGoal(uid: string) {
+async function buildMonthlyGoal(uid: string, cardId?: string) {
   const target = 2000;
 
   const { data: profile } = await supabase
@@ -426,10 +446,14 @@ async function buildMonthlyGoal(uid: string) {
     return ZERO_MONTHLY_GOAL;
   }
 
-  const { data: cards } = await supabase
+  const cardQuery = supabase
     .from("Card")
     .select("id")
     .eq("businessProfileId", profile.id);
+
+  const { data: cards } = cardId
+    ? await cardQuery.eq("id", cardId)
+    : await cardQuery;
 
   const cardIds = cards?.map((c: { id: string }) => c.id) || [];
   if (cardIds.length === 0) {
@@ -463,7 +487,7 @@ async function buildMonthlyGoal(uid: string) {
   };
 }
 
-async function buildWeeklyChallenge(uid: string) {
+async function buildWeeklyChallenge(uid: string, cardId?: string) {
   const target = 50;
 
   const { data: profile } = await supabase
@@ -476,27 +500,19 @@ async function buildWeeklyChallenge(uid: string) {
     return ZERO_WEEKLY_CHALLENGE;
   }
 
-  const { data: cards } = await supabase
-    .from("Card")
-    .select("id")
-    .eq("businessProfileId", profile.id);
-
-  const cardIds = cards?.map((c: { id: string }) => c.id) || [];
-  if (cardIds.length === 0) {
-    return ZERO_WEEKLY_CHALLENGE;
-  }
-
   const weekStart = new Date();
   weekStart.setDate(weekStart.getDate() - 7);
 
-  const { data: saves } = await supabase
-    .from("CardInteraction")
+  const leadQuery = supabase
+    .from("Lead")
     .select("id")
-    .in("cardId", cardIds)
-    .eq("type", "save")
     .gte("createdAt", weekStart.toISOString());
 
-  const current = saves?.length || 0;
+  const { data: leads } = cardId
+    ? await leadQuery.eq("cardId", cardId)
+    : await leadQuery.eq("businessProfileId", profile.id);
+
+  const current = leads?.length || 0;
   const percentage = Math.min(100, Math.round((current / target) * 100));
   const remaining = Math.max(0, target - current);
 
@@ -554,7 +570,8 @@ router.get("/top-locations", verifySession, async (req: AuthRequest, res: Respon
 
 router.get("/month-over-month", verifySession, async (req: AuthRequest, res: Response) => {
   try {
-    const data = await buildMonthOverMonthPerformance(req.user!.uid);
+    const cardId = typeof req.query.cardId === "string" ? req.query.cardId : undefined;
+    const data = await buildMonthOverMonthPerformance(req.user!.uid, cardId);
     return res.json(data.length > 0 ? data : ZERO_MONTH_OVER_MONTH);
   } catch (error: unknown) {
     return res.status(500).json({ error: getErrorMessage(error) });
@@ -563,7 +580,8 @@ router.get("/month-over-month", verifySession, async (req: AuthRequest, res: Res
 
 router.get("/monthly-goal", verifySession, async (req: AuthRequest, res: Response) => {
   try {
-    const data = await buildMonthlyGoal(req.user!.uid);
+    const cardId = typeof req.query.cardId === "string" ? req.query.cardId : undefined;
+    const data = await buildMonthlyGoal(req.user!.uid, cardId);
     return res.json(data);
   } catch (error: unknown) {
     return res.status(500).json({ error: getErrorMessage(error) });
@@ -572,7 +590,8 @@ router.get("/monthly-goal", verifySession, async (req: AuthRequest, res: Respons
 
 router.get("/weekly-challenge", verifySession, async (req: AuthRequest, res: Response) => {
   try {
-    const data = await buildWeeklyChallenge(req.user!.uid);
+    const cardId = typeof req.query.cardId === "string" ? req.query.cardId : undefined;
+    const data = await buildWeeklyChallenge(req.user!.uid, cardId);
     return res.json(data);
   } catch (error: unknown) {
     return res.status(500).json({ error: getErrorMessage(error) });

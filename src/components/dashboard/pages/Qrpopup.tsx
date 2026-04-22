@@ -13,6 +13,12 @@ import { getCardQRConfig, getCards } from "@/lib/api";
 import { STICKER_DEFS } from "@/components/dashboard/pages/Qrrenderers";
 import { makeQRMatrix } from "@/components/dashboard/pages/qr-engine";
 import { LOGOS } from "@/components/dashboard/pages/constants";
+import {
+  buildQrSvgString,
+  buildCustomizedQrSvgFromConfig,
+  svgTextToJpegBlob,
+  triggerBlobDownload,
+} from "@/components/dashboard/pages/qr-download-utils";
 import type { QRCustomConfig } from "@/components/dashboard/pages/Qrcustomizer";
 
 interface QrPopupProps {
@@ -25,7 +31,8 @@ interface QrPopupProps {
 
 export function QrPopup({ isOpen, onClose, cardUrl, cardId, allowFallbackToFirstCard = true }: QrPopupProps) {
   const { qrConfig, qrMatrix, qrN } = useQrStore();
-  const [resolvedCardId, setResolvedCardId] = useState<string | undefined>(cardId);
+  const [fallbackCardId, setFallbackCardId] = useState<string | undefined>(undefined);
+  const resolvedCardId = cardId ?? (allowFallbackToFirstCard ? fallbackCardId : undefined);
   const [popupQrConfig, setPopupQrConfig] = useState<QRCustomConfig | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const popupMatrixResult = useMemo(() => {
@@ -35,20 +42,12 @@ export function QrPopup({ isOpen, onClose, cardUrl, cardId, allowFallbackToFirst
 
   const activeMatrix = popupMatrixResult?.matrix ?? qrMatrix;
   const activeN = popupMatrixResult?.N ?? qrN;
+  const displayQrConfig = resolvedCardId ? (popupQrConfig ?? qrConfig) : qrConfig;
 
   useEffect(() => {
     let active = true;
 
-    if (cardId) {
-      setResolvedCardId(cardId);
-      return () => {
-        active = false;
-      };
-    }
-
-    if (!allowFallbackToFirstCard) {
-      setResolvedCardId(undefined);
-      setPopupQrConfig(null);
+    if (cardId || !allowFallbackToFirstCard) {
       return () => {
         active = false;
       };
@@ -57,7 +56,7 @@ export function QrPopup({ isOpen, onClose, cardUrl, cardId, allowFallbackToFirst
     getCards()
       .then(cards => {
         if (!active) return;
-        if (cards?.length) setResolvedCardId(cards[0].id);
+        if (cards?.length) setFallbackCardId(cards[0].id);
       })
       .catch(() => undefined);
 
@@ -143,17 +142,39 @@ export function QrPopup({ isOpen, onClose, cardUrl, cardId, allowFallbackToFirst
     return () => { clearTimeout(t); document.removeEventListener("mousedown", handler); };
   }, [isOpen, onClose]);
 
-  const handleDownload = useCallback(() => {
-    const svgEl = panelRef.current?.querySelector<SVGSVGElement>("svg");
-    if (!svgEl) return;
-    const blob = new Blob([svgEl.outerHTML], { type: "image/svg+xml" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "card-qr.svg";
-    a.click();
-    URL.revokeObjectURL(a.href);
-  }, []);
+  const handleDownload = useCallback(async () => {
+    if (!activeMatrix || !activeN) return;
 
+    const fileBase = (() => {
+      try {
+        const slug = new URL(cardUrl).pathname.split('/').filter(Boolean).pop();
+        return slug || 'samcard';
+      } catch {
+        return 'samcard';
+      }
+    })();
+
+    const fileName = `${fileBase}-qr.jpg`;
+
+    try {
+      if (popupQrConfig?.decorateCompositeDataUrl) {
+        const res = await fetch(popupQrConfig.decorateCompositeDataUrl);
+        const blob = await res.blob();
+        triggerBlobDownload(blob, fileName);
+        return;
+      }
+
+      const svgText = popupQrConfig
+        ? buildCustomizedQrSvgFromConfig(popupQrConfig, activeMatrix, activeN, 1200)
+        : buildQrSvgString(activeMatrix, activeN, '#000000', '#ffffff', 1200, 40);
+      const jpgBlob = await svgTextToJpegBlob(svgText, 1200);
+      triggerBlobDownload(jpgBlob, fileName);
+    } catch {
+      // Keep popup resilient if a browser blocks export APIs.
+    }
+  }, [activeMatrix, activeN, cardUrl, popupQrConfig]);
+
+  
   const handleShare = useCallback(async () => {
     if (navigator.share) {
       await navigator.share({ title: "My Digital Card", url: cardUrl }).catch(() => undefined);
@@ -229,7 +250,7 @@ export function QrPopup({ isOpen, onClose, cardUrl, cardId, allowFallbackToFirst
 
           {/* Live QR — reflect DB-loaded config when available */}
           <LiveQrDisplay
-            config={popupQrConfig ?? qrConfig}
+            config={displayQrConfig}
             qrMatrix={activeMatrix ?? undefined}
             qrN={activeN ?? undefined}
           />

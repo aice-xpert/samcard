@@ -78,6 +78,7 @@ router.post("/duplicate/:cardId", verifySession, async (req: AuthRequest, res: R
         ogImage: originalCard.ogImage,
         monthlyTapGoal: originalCard.monthlyTapGoal,
         monthlyViewGoal: originalCard.monthlyViewGoal,
+        qrConfig: originalCard.qrConfig,
         updatedAt: new Date().toISOString(),
       })
       .select()

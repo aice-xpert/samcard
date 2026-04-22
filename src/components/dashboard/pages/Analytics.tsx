@@ -192,27 +192,27 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
   useEffect(() => {
     if (!momInView) return;
     setMomLoading(true);
-    getMonthOverMonthPerformance()
+    getMonthOverMonthPerformance(cardId)
       .catch(() => [])
       .then((mom) => {
         setMonthOverMonth(mom);
         setMomLoading(false);
       });
-  }, [momInView]);
+  }, [momInView, cardId]);
 
   // ── Phase 3: Goals (deferred until row scrolls into view) ──
   useEffect(() => {
     if (!goalsInView) return;
     setGoalsLoading(true);
     Promise.all([
-      getMonthlyGoal().catch(() => null),
-      getWeeklyChallenge().catch(() => null),
+      getMonthlyGoal(cardId).catch(() => null),
+      getWeeklyChallenge(cardId).catch(() => null),
     ]).then(([goal, challenge]) => {
       setMonthlyGoal(goal);
       setWeeklyChallenge(challenge);
       setGoalsLoading(false);
     });
-  }, [goalsInView]);
+  }, [goalsInView, cardId]);
 
   // ── Phase 4: Leads (deferred until section scrolls into view) ──
   useEffect(() => {
