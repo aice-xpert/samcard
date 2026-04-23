@@ -90,22 +90,28 @@ export function Sidebar({ activePage, onNavigate, onClose, profile }: SidebarPro
   useEffect(() => {
     let isMounted = true;
 
-    Promise.all([getAnalytics("7"), getUserProfile()])
-      .then(([analytics, user]) => {
-        if (!isMounted) return;
-        setCompletionScore(Math.max(0, Math.min(100, analytics?.profileCompletion ?? 0)));
-        setWeeklyTrendChange(analytics?.thisWeekChange ?? 0);
-        setPlanLabel(normalizePlanLabel(user?.planTier));
-      })
-      .catch(() => {
-        if (!isMounted) return;
-        setCompletionScore(0);
-        setWeeklyTrendChange(0);
-        setPlanLabel("Pro");
-      });
+    const fetchData = () => {
+      Promise.all([getAnalytics("7"), getUserProfile()])
+        .then(([analytics, user]) => {
+          if (!isMounted) return;
+          setCompletionScore(Math.max(0, Math.min(100, analytics?.profileCompletion ?? 0)));
+          setWeeklyTrendChange(analytics?.thisWeekChange ?? 0);
+          setPlanLabel(normalizePlanLabel(user?.planTier));
+        })
+        .catch(() => {
+          if (!isMounted) return;
+          setCompletionScore(0);
+          setWeeklyTrendChange(0);
+          setPlanLabel("Pro");
+        });
+    };
 
+    fetchData();
+
+    window.addEventListener('profileUpdated', fetchData);
     return () => {
       isMounted = false;
+      window.removeEventListener('profileUpdated', fetchData);
     };
   }, []);
 

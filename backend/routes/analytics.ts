@@ -181,23 +181,43 @@ async function buildAnalyticsPayload(uid: string, periodQuery: unknown, cardId?:
   });
   const uniqueVisitors = uniqueVisitorKeys.size;
 
-  const completionFields = [
-    profile?.name,
-    profile?.title,
-    profile?.company,
-    profile?.tagline,
-    profile?.primaryEmail,
-    profile?.primaryPhone,
-    profile?.website,
-    profile?.address,
-    profile?.city,
-    profile?.country,
-  ];
-  const filledCompletionFields = completionFields.filter(Boolean).length;
-  const profileCompletion = Math.min(
-    100,
-    Math.round((filledCompletionFields / completionFields.length) * 100),
-  );
+  // ─── Profile Completion Logic ───────────────────────────────────────
+  let profileCompletion = 0;
+  if (profile) {
+    const { count: socialCount } = await supabase
+      .from("SocialLink")
+      .select("*", { count: "exact", head: true })
+      .eq("businessProfileId", profile.id);
+
+    const { count: customCount } = await supabase
+      .from("CustomLink")
+      .select("*", { count: "exact", head: true })
+      .eq("businessProfileId", profile.id);
+
+    const weights = [
+      // Core Identity (40%)
+      { val: profile.name, weight: 15 },
+      { val: profile.title, weight: 10 },
+      { val: profile.company, weight: 10 },
+      { val: profile.profileImageUrl, weight: 5 },
+      // Contact Info (25%)
+      { val: profile.primaryEmail, weight: 10 },
+      { val: profile.primaryPhone, weight: 10 },
+      { val: profile.website, weight: 5 },
+      // Professional Bio & Industry (15%)
+      { val: profile.tagline, weight: 5 },
+      { val: profile.industry, weight: 5 },
+      { val: profile.yearFounded, weight: 5 },
+      // Contact/Location Details (10%)
+      { val: profile.address || profile.city || profile.country, weight: 10 },
+      // Links & Social (10%)
+      { val: (socialCount || 0) > 0, weight: 5 },
+      { val: (customCount || 0) > 0, weight: 5 },
+    ];
+
+    const score = weights.reduce((acc, w) => acc + (w.val ? w.weight : 0), 0);
+    profileCompletion = Math.min(100, Math.round(score));
+  }
 
   const weightedEngagement = totalTaps + Math.round(totalViews * 0.5) + totalLeads * 3;
   const engagementScore = Math.min(100, Math.round(Math.sqrt(weightedEngagement) * 3.2));
