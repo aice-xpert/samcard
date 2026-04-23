@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useParams } from "next/navigation";
 import {
   Phone,
@@ -29,6 +29,7 @@ import {
 } from "@/components/dashboard/pages/Qrrenderers";
 import { makeQRMatrix } from "@/components/dashboard/pages/qr-engine";
 import { LOGOS } from "@/components/dashboard/pages/constants";
+import { getCardQRConfig } from "@/lib/api";
 
 const BACKEND_URL =
   process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "") || "";
@@ -719,6 +720,64 @@ function ExtraSectionBlock({
         </div>
       );
     }
+    case "extra-pdf": {
+      const pdfTitle = str("pdfTitle");
+      const pdfUrl = str("pdfUrl");
+      if (!pdfTitle && !pdfUrl) return null;
+      return (
+        <div
+          style={{
+            margin: "0 12px 10px",
+            background: T.card,
+            border: `1px solid ${T.cardBorder}`,
+            borderRadius: T.cardRadius,
+            overflow: "hidden",
+          }}
+        >
+          <button
+            onClick={() => { onLinkClick(); openLink(pdfUrl); }}
+            style={{
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+               gap: 12,
+              padding: "14px 16px",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              textAlign: "left",
+            }}
+          >
+            <div
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 8,
+                flexShrink: 0,
+                background: `linear-gradient(135deg, ${T.green}, ${T.greenLight})`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <span style={{ fontSize: 18 }}>📄</span>
+            </div>
+            <span
+              style={{
+                flex: 1,
+                fontWeight: T.boldHeadings ? 700 : 500,
+                fontSize: T.bodyFontSize,
+                color: T.textPrimary,
+                fontFamily: T.fontFamily,
+              }}
+            >
+              {pdfTitle || "Download PDF"}
+            </span>
+            <ChevronRight size={18} color={T.textMuted} />
+          </button>
+        </div>
+      );
+    }
     default: {
       const title = str("title");
       const bodyText = str("content");
@@ -770,12 +829,14 @@ function ExtraSectionBlock({
 
 function QRModal({
   onClose,
-  qrConfig,
+  qrConfig: initialQrConfig,
+  cardId,
   cardUrl,
   T,
 }: {
   onClose: () => void;
   qrConfig: QRConfig | null | undefined;
+  cardId?: string | null;
   cardUrl: string;
   T: {
     bg: string;
@@ -791,6 +852,20 @@ function QRModal({
     fontFamily: string;
   };
 }) {
+  const [qrConfig, setQrConfig] = useState(initialQrConfig);
+  const fetched = useRef(false);
+
+  useEffect(() => {
+    if (qrConfig || !cardId || fetched.current) return;
+    fetched.current = true;
+
+    getCardQRConfig(cardId)
+      .then((data) => {
+        if (data) setQrConfig(data);
+      })
+      .catch(() => {});
+  }, [cardId]);
+
   return (
     <div
       onClick={onClose}
@@ -1239,6 +1314,7 @@ const pageBg = (() => {
           qrConfig={card.qrConfig}
           cardUrl={cardUrl}
           T={T}
+          cardId={card.id}
         />
       )}
 
