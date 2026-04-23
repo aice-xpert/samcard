@@ -39,7 +39,7 @@ router.post("/duplicate/:cardId", verifySession, async (req: AuthRequest, res: R
         businessProfileId: originalCard.businessProfileId,
         name: `${originalCard.name} (Copy)`,
         cardType: originalCard.cardType,
-        status: "DRAFT",
+        status: "ACTIVE",
         slug: newSlug,
         shareUrl: newShareUrl,
         headingText: originalCard.headingText,
@@ -81,6 +81,7 @@ router.post("/duplicate/:cardId", verifySession, async (req: AuthRequest, res: R
         monthlyViewGoal: originalCard.monthlyViewGoal,
         qrConfig: originalCard.qrConfig,
         updatedAt: new Date().toISOString(),
+        publishedAt: new Date().toISOString(),
       })
       .select()
       .single();
