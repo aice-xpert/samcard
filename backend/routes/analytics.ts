@@ -67,7 +67,7 @@ async function buildAnalyticsPayload(uid: string, periodQuery: unknown, cardId?:
 
   const { data: profile } = await supabase
     .from("BusinessProfile")
-    .select("id, name, title, company, tagline, profileImageUrl, primaryEmail, primaryPhone, website, address, city, country")
+    .select("id, name, title, company, tagline, profileImageUrl, primaryEmail, primaryPhone, website, address, city, country, industry, yearFounded")
     .eq("userId", uid)
     .single();
 
