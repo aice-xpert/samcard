@@ -125,6 +125,7 @@ export enum DeviceType {
   NFC_READER = "NFC_READER",
   QR_SCANNER = "QR_SCANNER",
   UNKNOWN = "UNKNOWN",
+
 }
 
 export enum AuditAction {
