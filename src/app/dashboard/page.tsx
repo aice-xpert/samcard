@@ -142,7 +142,7 @@ export default function Home() {
 
   const renderPage = () => {
     switch (activePage) {
-      case 'dashboard': return <ComprehensiveDashboard />;
+      case 'dashboard': return <ComprehensiveDashboard onNavigate={handleNavigate} />;
       case 'business-profile': return <BusinessProfile />;
       case 'my-cards':
         return (

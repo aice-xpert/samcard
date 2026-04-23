@@ -63,6 +63,14 @@ const formatNumber = (n: number): string =>
 const changeColor = (v: number) =>
   v > 0 ? "text-[#49B618]" : v < 0 ? "text-red-400" : "text-[#A0A0A0]";
 
+const normalizeDate = (d: string): Date => {
+  if (!d) return new Date();
+  // If string missing trailing 'Z' and offset '+/-', browser assumes local.
+  // Append 'Z' to force UTC interpretation of database timestamps.
+  const normalized = d.endsWith('Z') || d.includes('+') ? d : d + 'Z';
+  return new Date(normalized);
+};
+
 const changeIcon = (v: number) =>
   v > 0 ? <TrendingUp className="w-3 h-3" /> : v < 0 ? <TrendingDown className="w-3 h-3" /> : null;
 
@@ -314,7 +322,7 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
         l.phone ?? "",
         l.source,
         l.status,
-        new Date(l.createdAt).toLocaleDateString(),
+        normalizeDate(l.createdAt).toLocaleString(),
       ]);
     });
 
@@ -1043,14 +1051,14 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
                         </td>
                         <td className="py-4 px-4">
                           <p className="text-sm text-white">
-                            {new Date(lead.createdAt).toLocaleDateString("en-US", {
+                            {normalizeDate(lead.createdAt).toLocaleDateString("en-US", {
                               month: "short",
                               day: "numeric",
                               year: "numeric",
                             })}
                           </p>
                           <p className="text-xs text-[#A0A0A0]">
-                            {new Date(lead.createdAt).toLocaleTimeString("en-US", {
+                            {normalizeDate(lead.createdAt).toLocaleTimeString("en-US", {
                               hour: "2-digit",
                               minute: "2-digit",
                             })}

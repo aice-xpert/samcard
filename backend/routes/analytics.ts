@@ -71,7 +71,16 @@ async function buildAnalyticsPayload(uid: string, periodQuery: unknown, cardId?:
     .eq("userId", uid)
     .single();
 
-  if (!profile) {
+  const { data: cards } = await supabase
+    .from("Card")
+    .select("id")
+    .eq("userId", uid);
+
+  const allCardIds = cards?.map((c: { id: string }) => c.id) || [];
+  const isValidCardId = !!(cardId && allCardIds.includes(cardId));
+  const cardIds = isValidCardId ? [cardId as string] : allCardIds;
+
+  if (cardIds.length === 0 && !profile) {
     const daily: { date: string; taps: number; views: number; leads: number }[] = [];
     for (let i = days - 1; i >= 0; i--) {
       const date = new Date();
@@ -97,15 +106,6 @@ async function buildAnalyticsPayload(uid: string, periodQuery: unknown, cardId?:
     };
   }
 
-  const { data: cards } = await supabase
-    .from("Card")
-    .select("id")
-    .eq("userId", uid);
-
-  const allCardIds = cards?.map((c: { id: string }) => c.id) || [];
-  const isValidCardId = !!(cardId && allCardIds.includes(cardId));
-  const cardIds = isValidCardId ? [cardId as string] : allCardIds;
-
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - days);
 
@@ -121,10 +121,16 @@ async function buildAnalyticsPayload(uid: string, periodQuery: unknown, cardId?:
     .from("Lead")
     .select("createdAt")
     .gte("createdAt", startDate.toISOString());
+
   if (isValidCardId) {
     leadsQuery = leadsQuery.eq("cardId", cardId as string);
-  } else {
+  } else if (cardIds.length > 0) {
+    leadsQuery = leadsQuery.in("cardId", cardIds);
+  } else if (profile) {
     leadsQuery = leadsQuery.eq("businessProfileId", profile.id);
+  } else {
+    // If no context, return empty
+    leadsQuery = leadsQuery.eq("id", "none");
   }
   const { data: leads } = await leadsQuery;
 
@@ -176,17 +182,16 @@ async function buildAnalyticsPayload(uid: string, periodQuery: unknown, cardId?:
   const uniqueVisitors = uniqueVisitorKeys.size;
 
   const completionFields = [
-    profile.name,
-    profile.title,
-    profile.company,
-    profile.tagline,
-    // profile.profileImageUrl,
-    profile.primaryEmail,
-    profile.primaryPhone,
-    profile.website,
-    profile.address,
-    profile.city,
-    profile.country,
+    profile?.name,
+    profile?.title,
+    profile?.company,
+    profile?.tagline,
+    profile?.primaryEmail,
+    profile?.primaryPhone,
+    profile?.website,
+    profile?.address,
+    profile?.city,
+    profile?.country,
   ];
   const filledCompletionFields = completionFields.filter(Boolean).length;
   const profileCompletion = Math.min(
@@ -353,20 +358,15 @@ async function buildMonthOverMonthPerformance(uid: string, cardId?: string) {
     .eq("userId", uid)
     .single();
 
-  if (!profile) {
-    return ZERO_MONTH_OVER_MONTH;
-  }
-
-  const cardQuery = supabase
+  const { data: cards } = await supabase
     .from("Card")
     .select("id")
-    .eq("businessProfileId", profile.id);
+    .eq("userId", uid);
 
-  const { data: cards } = cardId
-    ? await cardQuery.eq("id", cardId)
-    : await cardQuery;
+  const allCardIds = cards?.map((c: { id: string }) => c.id) || [];
+  const isValidCardId = !!(cardId && allCardIds.includes(cardId));
+  const cardIds = isValidCardId ? [cardId] : allCardIds;
 
-  const cardIds = cards?.map((c: { id: string }) => c.id) || [];
   if (cardIds.length === 0) {
     return ZERO_MONTH_OVER_MONTH;
   }
@@ -392,7 +392,7 @@ async function buildMonthOverMonthPerformance(uid: string, cardId?: string) {
     : await supabase
         .from("Lead")
         .select("createdAt")
-        .eq("businessProfileId", profile.id)
+        .in("cardId", cardIds)
         .gte("createdAt", previousMonthStart.toISOString());
 
   const inThisMonth = (isoDate: string) => new Date(isoDate) >= monthStart;
@@ -436,26 +436,15 @@ async function buildMonthOverMonthPerformance(uid: string, cardId?: string) {
 async function buildMonthlyGoal(uid: string, cardId?: string) {
   const target = 2000;
 
-  const { data: profile } = await supabase
-    .from("BusinessProfile")
-    .select("id")
-    .eq("userId", uid)
-    .single();
-
-  if (!profile) {
-    return ZERO_MONTHLY_GOAL;
-  }
-
-  const cardQuery = supabase
+  const { data: cards } = await supabase
     .from("Card")
     .select("id")
-    .eq("businessProfileId", profile.id);
+    .eq("userId", uid);
 
-  const { data: cards } = cardId
-    ? await cardQuery.eq("id", cardId)
-    : await cardQuery;
+  const allCardIds = cards?.map((c: { id: string }) => c.id) || [];
+  const isValidCardId = !!(cardId && allCardIds.includes(cardId));
+  const cardIds = isValidCardId ? [cardId] : allCardIds;
 
-  const cardIds = cards?.map((c: { id: string }) => c.id) || [];
   if (cardIds.length === 0) {
     return ZERO_MONTHLY_GOAL;
   }
@@ -490,13 +479,16 @@ async function buildMonthlyGoal(uid: string, cardId?: string) {
 async function buildWeeklyChallenge(uid: string, cardId?: string) {
   const target = 50;
 
-  const { data: profile } = await supabase
-    .from("BusinessProfile")
+  const { data: cards } = await supabase
+    .from("Card")
     .select("id")
-    .eq("userId", uid)
-    .single();
+    .eq("userId", uid);
 
-  if (!profile) {
+  const allCardIds = cards?.map((c: { id: string }) => c.id) || [];
+  const isValidCardId = !!(cardId && allCardIds.includes(cardId));
+  const cardIds = isValidCardId ? [cardId] : allCardIds;
+
+  if (cardIds.length === 0) {
     return ZERO_WEEKLY_CHALLENGE;
   }
 
@@ -510,7 +502,7 @@ async function buildWeeklyChallenge(uid: string, cardId?: string) {
 
   const { data: leads } = cardId
     ? await leadQuery.eq("cardId", cardId)
-    : await leadQuery.eq("businessProfileId", profile.id);
+    : await leadQuery.in("cardId", cardIds);
 
   const current = leads?.length || 0;
   const percentage = Math.min(100, Math.round((current / target) * 100));

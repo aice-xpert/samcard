@@ -173,7 +173,7 @@ function LazySection({
 }
 
 // ─────────────────────────────────────────────────────────────────
-export function ComprehensiveDashboard() {
+export function ComprehensiveDashboard({ onNavigate }: { onNavigate?: (page: string) => void }) {
   const { profile } = useUser();
   const [businessProfile, setBusinessProfile] = useState<ApiBusinessProfile | null>(null);
   const [cards, setCards] = useState<ApiCard[]>([]);
@@ -698,7 +698,12 @@ export function ComprehensiveDashboard() {
               </CardTitle>
               <p className="text-xs sm:text-sm text-[#A0A0A0] mt-1">Live interactions with your digital card</p>
             </div>
-            <Button variant="outline" size="sm" className="border-[#008001]/30 text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20 text-xs sm:text-sm h-8">
+            <Button
+              onClick={() => onNavigate?.('analytics')}
+              variant="outline"
+              size="sm"
+              className="border-[#008001]/30 text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20 text-xs sm:text-sm h-8"
+            >
               View All <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2" />
             </Button>
           </div>
