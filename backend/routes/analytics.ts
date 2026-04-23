@@ -71,12 +71,16 @@ async function buildAnalyticsPayload(uid: string, periodQuery: unknown, cardId?:
     .eq("userId", uid)
     .single();
 
-  const { data: cards } = await supabase
+  const { data: cards, error: cardsError } = await supabase
     .from("Card")
     .select("id")
     .eq("userId", uid);
 
-  const allCardIds = cards?.map((c: { id: string }) => c.id) || [];
+  if (cardsError) {
+    console.error("Error fetching cards for analytics:", cardsError);
+  }
+
+  const allCardIds = (cards || []).map((c: { id: string }) => c.id);
   const isValidCardId = !!(cardId && allCardIds.includes(cardId));
   const cardIds = isValidCardId ? [cardId as string] : allCardIds;
 
@@ -109,30 +113,31 @@ async function buildAnalyticsPayload(uid: string, periodQuery: unknown, cardId?:
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - days);
 
-  const { data: interactions } = cardIds.length > 0
+  const { data: interactions, error: interactionsError } = cardIds.length > 0
     ? await supabase
       .from("CardInteraction")
       .select("type, createdAt, deviceType, country")
       .in("cardId", cardIds)
       .gte("createdAt", startDate.toISOString())
-    : { data: [] as { type: string; createdAt: string; deviceType?: string; country?: string }[] };
+    : { data: [] as any[], error: null as any };
+
+  if (interactionsError) {
+    console.error("Error fetching interactions for analytics:", interactionsError);
+  }
 
   let leadsQuery = supabase
     .from("Lead")
     .select("createdAt")
+    .eq("userId", uid)
     .gte("createdAt", startDate.toISOString());
 
   if (isValidCardId) {
     leadsQuery = leadsQuery.eq("cardId", cardId as string);
-  } else if (cardIds.length > 0) {
-    leadsQuery = leadsQuery.in("cardId", cardIds);
-  } else if (profile) {
-    leadsQuery = leadsQuery.eq("businessProfileId", profile.id);
-  } else {
-    // If no context, return empty
-    leadsQuery = leadsQuery.eq("id", "none");
   }
-  const { data: leads } = await leadsQuery;
+  const { data: leads, error: leadsError } = await leadsQuery;
+  if (leadsError) {
+    console.error("Error fetching leads for analytics:", leadsError);
+  }
 
   const dailyMap: Record<string, { taps: number; views: number; leads: number }> = {};
 

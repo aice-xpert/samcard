@@ -14,28 +14,24 @@ router.get("/", verifySession, async (req: AuthRequest, res: Response) => {
   const { status, page = "1", limit = "20", cardId } = req.query;
 
   try {
-    const { data: profile } = await supabase
-      .from("BusinessProfile")
+    const { data: cards } = await supabase
+      .from("Card")
       .select("id")
-      .eq("userId", req.user!.uid)
-      .maybeSingle();
+      .eq("userId", req.user!.uid);
 
-    if (!profile) {
-      return res.json({ leads: [], total: 0, page: 1, limit: 20 });
-    }
+    const ownedCardIds = cards?.map((c: { id: string }) => c.id) || [];
 
     let query = supabase
       .from("Lead")
       .select("*", { count: "exact" })
-      .eq("businessProfileId", profile.id)
-      .order("createdAt", { ascending: false });
+      .eq("userId", req.user!.uid);
+
+    if (cardId && typeof cardId === "string" && ownedCardIds.includes(cardId)) {
+      query = query.eq("cardId", cardId);
+    }
 
     if (status && status !== "all") {
       query = query.eq("status", status);
-    }
-
-    if (cardId && typeof cardId === "string") {
-      query = query.eq("cardId", cardId);
     }
 
     const pageNum = Math.max(1, Number.parseInt(String(page), 10) || 1);
