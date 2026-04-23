@@ -218,11 +218,8 @@ router.post("/", verifySession, async (req: AuthRequest, res: Response) => {
       businessProfileId,
       name: normalizedName,
       cardType: cardType || "QR",
-      slug,
-      shareUrl,
       status: "ACTIVE",
       updatedAt: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
     };
 
     const normalizedFields = { ...otherFields } as Record<string, unknown>;

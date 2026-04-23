@@ -231,11 +231,12 @@ router.put("/business-profile", verifySession, async (req: AuthRequest, res: Res
 
 // ── Payment Method ────────────────────────────────────────────────────────────
 
+// Return the default payment method (for backward compatibility)
 router.get("/payment-method", verifySession, async (req: AuthRequest, res: Response) => {
   try {
     const { data, error } = await supabase
       .from("PaymentMethod")
-      .select("brand, last4, expMonth, expYear")
+      .select("brand, last4, expMonth, expYear, id, isDefault")
       .eq("userId", req.user!.uid)
       .eq("isDefault", true)
       .maybeSingle();
@@ -245,7 +246,29 @@ router.get("/payment-method", verifySession, async (req: AuthRequest, res: Respo
 
     const mm = String(data.expMonth).padStart(2, "0");
     const yy = String(data.expYear % 100).padStart(2, "0");
-    return res.json({ brand: data.brand, last4: data.last4, expiry: `${mm}/${yy}` });
+    return res.json({ id: data.id, brand: data.brand, last4: data.last4, expiry: `${mm}/${yy}`, isDefault: data.isDefault });
+  } catch (error: unknown) {
+    return res.status(500).json({ error: getErrorMessage(error) });
+  }
+});
+
+// Return all payment methods
+router.get("/payment-methods", verifySession, async (req: AuthRequest, res: Response) => {
+  try {
+    const { data, error } = await supabase
+      .from("PaymentMethod")
+      .select("brand, last4, expMonth, expYear, id, isDefault")
+      .eq("userId", req.user!.uid);
+
+    if (error) return res.status(500).json({ error: error.message });
+    
+    const formatted = (data || []).map(d => {
+      const mm = String(d.expMonth).padStart(2, "0");
+      const yy = String(d.expYear % 100).padStart(2, "0");
+      return { id: d.id, brand: d.brand, last4: d.last4, expiry: `${mm}/${yy}`, isDefault: d.isDefault };
+    });
+    
+    return res.json(formatted);
   } catch (error: unknown) {
     return res.status(500).json({ error: getErrorMessage(error) });
   }
@@ -259,12 +282,12 @@ router.put("/payment-method", verifySession, async (req: AuthRequest, res: Respo
   }
 
   const ALLOWED_BRANDS: Record<string, string> = {
-    VISA: "VISA", visa: "VISA",
+    VISA: "VISA", visa: "VISA", Visa: "VISA",
     MASTERCARD: "MASTERCARD", mastercard: "MASTERCARD", Mastercard: "MASTERCARD",
-    AMEX: "AMEX", amex: "AMEX",
-    DISCOVER: "DISCOVER", discover: "DISCOVER",
+    AMEX: "AMEX", amex: "AMEX", Amex: "AMEX",
+    DISCOVER: "DISCOVER", discover: "DISCOVER", Discover: "DISCOVER",
     JCB: "JCB", jcb: "JCB",
-    UNIONPAY: "UNIONPAY", unionpay: "UNIONPAY",
+    UNIONPAY: "UNIONPAY", unionpay: "UNIONPAY", UnionPay: "UNIONPAY",
   };
   const normalizedBrand = ALLOWED_BRANDS[brand] ?? "VISA";
 
@@ -277,43 +300,115 @@ router.put("/payment-method", verifySession, async (req: AuthRequest, res: Respo
     return res.status(400).json({ error: "Invalid expiry month" });
   }
 
-  // Use a stable internal identifier so we can upsert on it
-  const internalPmId = `pm_internal_${req.user!.uid}`;
-
   try {
-    const { data: existing } = await supabase
+    // Check if user has any payment methods already
+    const { count } = await supabase
       .from("PaymentMethod")
-      .select("id")
-      .eq("userId", req.user!.uid)
-      .eq("isDefault", true)
-      .maybeSingle();
+      .select("*", { count: "exact", head: true })
+      .eq("userId", req.user!.uid);
 
-    if (existing) {
-      const { error } = await supabase
-        .from("PaymentMethod")
-        .update({ brand: normalizedBrand, last4, expMonth, expYear, updatedAt: new Date().toISOString() })
-        .eq("id", existing.id);
-      if (error) return res.status(500).json({ error: error.message });
-    } else {
-      const { error } = await supabase
-        .from("PaymentMethod")
-        .insert({
-          id: internalPmId,
-          userId: req.user!.uid,
-          stripePaymentMethodId: internalPmId,
-          brand: normalizedBrand,
-          last4,
-          expMonth,
-          expYear,
-          isDefault: true,
-          updatedAt: new Date().toISOString(),
-        });
-      if (error) return res.status(500).json({ error: error.message });
+    const isFirstCard = count === 0;
+
+    // Use a unique ID for each new card
+    const cardId = `pm_int_${req.user!.uid}_${Date.now()}`;
+
+    const { data: inserted, error } = await supabase
+      .from("PaymentMethod")
+      .insert({
+        id: cardId,
+        userId: req.user!.uid,
+        stripePaymentMethodId: cardId, // Unique for each card
+        brand: normalizedBrand,
+        last4,
+        expMonth,
+        expYear,
+        isDefault: isFirstCard, // Make default if it's the first card
+        updatedAt: new Date().toISOString(),
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error inserting payment method:", error);
+      return res.status(500).json({ error: error.message });
     }
 
-    const mm = String(expMonth).padStart(2, "0");
-    const yy = String(expYear % 100).padStart(2, "0");
-    return res.json({ brand: normalizedBrand, last4, expiry: `${mm}/${yy}` });
+    const mm = String(inserted.expMonth).padStart(2, "0");
+    const yy = String(inserted.expYear % 100).padStart(2, "0");
+    return res.json({ id: inserted.id, brand: inserted.brand, last4: inserted.last4, expiry: `${mm}/${yy}`, isDefault: inserted.isDefault });
+  } catch (error: unknown) {
+    return res.status(500).json({ error: getErrorMessage(error) });
+  }
+});
+
+// Set default payment method
+router.post("/payment-method/:id/default", verifySession, async (req: AuthRequest, res: Response) => {
+  const { id } = req.params;
+  const userId = req.user!.uid;
+
+  try {
+    // Unset current default
+    await supabase
+      .from("PaymentMethod")
+      .update({ isDefault: false })
+      .eq("userId", userId);
+
+    // Set new default
+    const { data, error } = await supabase
+      .from("PaymentMethod")
+      .update({ isDefault: true })
+      .eq("id", id)
+      .eq("userId", userId)
+      .select()
+      .single();
+
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json(data);
+  } catch (error: unknown) {
+    return res.status(500).json({ error: getErrorMessage(error) });
+  }
+});
+
+// Delete payment method
+router.delete("/payment-method/:id", verifySession, async (req: AuthRequest, res: Response) => {
+  const { id } = req.params;
+  const userId = req.user!.uid;
+
+  try {
+    // Check if it's the default one
+    const { data: card } = await supabase
+      .from("PaymentMethod")
+      .select("isDefault")
+      .eq("id", id)
+      .eq("userId", userId)
+      .single();
+
+    const { error } = await supabase
+      .from("PaymentMethod")
+      .delete()
+      .eq("id", id)
+      .eq("userId", userId);
+
+    if (error) return res.status(500).json({ error: error.message });
+
+    // If we deleted the default card, set another one as default if any exist
+    if (card?.isDefault) {
+      const { data: nextCard } = await supabase
+        .from("PaymentMethod")
+        .select("id")
+        .eq("userId", userId)
+        .limit(1)
+        .maybeSingle();
+
+      if (nextCard) {
+        await supabase
+          .from("PaymentMethod")
+          .update({ isDefault: true })
+          .eq("id", nextCard.id);
+      }
+    }
+
+    return res.json({ success: true });
   } catch (error: unknown) {
     return res.status(500).json({ error: getErrorMessage(error) });
   }
