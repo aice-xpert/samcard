@@ -457,7 +457,11 @@ router.post("/:slug/track", async (req, res: Response) => {
       return res.status(404).json({ error: "Card not found" });
     }
 
-    const deviceType = req.headers["user-agent"]?.includes("Mobile") ? "MOBILE" : "WEB";
+    const ua = req.headers["user-agent"] || "";
+    const deviceType: "IOS" | "ANDROID" | "WEB" | "NFC_READER" | "QR_SCANNER" | "UNKNOWN" =
+      /iPhone|iPad|iPod/i.test(ua) ? "IOS" :
+      /Android/i.test(ua) ? "ANDROID" :
+      "WEB";
     const country = req.headers["cf-ipcountry"] || req.headers["x-vercel-ip-country"] || "UNKNOWN";
 
     const { error: interactionError } = await supabase
@@ -468,7 +472,7 @@ router.post("/:slug/track", async (req, res: Response) => {
         type,
         visitorId: visitorId || null,
         fingerprint: fingerprint || null,
-        deviceType: deviceType as "IOS" | "ANDROID" | "WEB" | "NFC_READER" | "QR_SCANNER" | "UNKNOWN",
+        deviceType,
         browser: req.headers["user-agent"] || null,
         referrer: referrer || req.headers.referer || null,
         utmSource: utmSource || null,

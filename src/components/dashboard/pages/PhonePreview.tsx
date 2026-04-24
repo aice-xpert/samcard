@@ -384,11 +384,11 @@ function PhonePreviewComponent({
                         </div>
                       )}
                       <div className="absolute bottom-0 left-0 right-0 px-4 pb-3 z-10">
-                        <h1 style={{ fontWeight: T.boldHeadings ? 800 : 600, fontSize: T.nameFontSize, lineHeight: 1.2, color: '#fff', textShadow: '0 1px 8px rgba(0,0,0,0.7)', fontFamily: T.fontFamily }}>
+                        <h1 style={{ fontWeight: T.boldHeadings ? 800 : 600, fontSize: T.nameFontSize, lineHeight: 1.2, color: '#fff', textShadow: '0 1px 8px rgba(0,0,0,0.7)', fontFamily: T.fontFamily, wordBreak: 'break-word', overflowWrap: 'break-word' }}>
                           {formData.name}
                         </h1>
                         {formData.title && (
-                          <p style={{ fontSize: T.bodyFontSize, marginTop: 2, color: T.greenLight, fontFamily: T.fontFamily }}>{formData.title}</p>
+                          <p style={{ fontSize: T.bodyFontSize, marginTop: 2, color: T.greenLight, fontFamily: T.fontFamily, wordBreak: 'break-word', overflowWrap: 'break-word' }}>{formData.title}</p>
                         )}
                         {(formData.company || (hasBrandLogo && logoPosition === 'below-name')) && (
                           <div className="flex items-center gap-1.5 mt-0.5">
@@ -396,7 +396,7 @@ function PhonePreviewComponent({
                               <BrandLogoBadge src={brandLogo} bg="rgba(0,0,0,0.45)" blur={false} maxSize={22} padding="2px 4px" borderRadius={5} />
                             )}
                             {formData.company && (
-                              <p style={{ fontSize: T.bodyFontSize, color: 'rgba(255,255,255,0.65)', fontFamily: T.fontFamily }}>{formData.company}</p>
+                              <p style={{ fontSize: T.bodyFontSize, color: 'rgba(255,255,255,0.65)', fontFamily: T.fontFamily, wordBreak: 'break-word', overflowWrap: 'break-word' }}>{formData.company}</p>
                             )}
                           </div>
                         )}
