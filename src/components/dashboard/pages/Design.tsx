@@ -879,6 +879,7 @@ export function DesignNew({
   }, [publishedShareUrl]);
 
   const handleSaveContact = useCallback(() => {
+    if (!profile.formData?.name?.trim()) return;
     const fd = {
       name: profile.formData?.name || '',
       title: profile.formData?.title || '',

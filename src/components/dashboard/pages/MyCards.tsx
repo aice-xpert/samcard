@@ -309,6 +309,7 @@ const toggleStatus = useCallback(async (cardId: string) => {
       setCards(prev => [mapped, ...prev]);
       void loadCardAssets([mapped.id]);
       showToast('Card duplicated!');
+      setTimeout(() => window.dispatchEvent(new CustomEvent('notifications:refresh')), 1500);
     } catch (error) {
       // showToast(`Error duplicating card: ${error instanceof Error ? error.message : 'Unknown error'}`);
       showToast(`Error duplicating card: You can't duplicate a card more than once. Please change the name of the duplicated card or duplicate another card.`);

@@ -1170,6 +1170,7 @@ export default function BusinessProfile({
 
       setSaveFlash(true);
       window.dispatchEvent(new CustomEvent('profileUpdated'));
+      setTimeout(() => window.dispatchEvent(new CustomEvent('notifications:refresh')), 1500);
       setTimeout(() => setSaveFlash(false), 2200);
       setReloadTrigger(prev => prev + 1);
     } catch (error: unknown) {
@@ -1207,6 +1208,7 @@ export default function BusinessProfile({
   }, [profileShareUrl]);
 
   const handleSaveContact = useCallback(() => {
+    if (!formDataRef.current.name.trim()) return;
     downloadVCard(formDataRef.current, profileImageRef.current);
     setSavedContact(true); setTimeout(() => setSavedContact(false), 2500);
   }, []);

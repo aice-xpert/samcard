@@ -558,7 +558,8 @@ export function CardPreviewModal({
                     <div className="flex items-center gap-2">
                       {sec.profile && (
                         <button onClick={onSaveContact}
-                          className="modal-tap flex items-center gap-1.5 rounded-full px-3.5 py-2 font-bold text-white"
+                          disabled={!formData.name?.trim()}
+                          className="modal-tap flex items-center gap-1.5 rounded-full px-3.5 py-2 font-bold text-white disabled:opacity-40 disabled:cursor-not-allowed"
                           style={{ background: savedContact ? T.greenLight : `linear-gradient(135deg,${T.green},${T.greenLight})`, fontSize: T.bodyFontSize, fontFamily: T.fontFamily }}>
                           {savedContact ? '✓ Saved!' : 'Add to Contact'}
                         </button>

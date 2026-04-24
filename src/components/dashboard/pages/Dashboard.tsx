@@ -185,13 +185,14 @@ export function ComprehensiveDashboard({ onNavigate }: { onNavigate?: (page: str
   const [monthlyGoal, setMonthlyGoal] = useState<GoalProgressData>(defaultMonthlyGoal);
   const [weeklyChallenge, setWeeklyChallenge] = useState<GoalProgressData>(defaultWeeklyChallenge);
   const [loading, setLoading] = useState(true);
+  const [chartPeriod, setChartPeriod] = useState<'7' | '30' | '90'>('30');
 
   // ── Phase 1: Load the data that drives above-the-fold content immediately ──
   useEffect(() => {
     Promise.all([
       getBusinessProfile().catch(() => null),
       getCards().catch(() => []),
-      getAnalytics("30").catch(() => null),
+      getAnalytics(chartPeriod).catch(() => null),
     ]).then(([bp, c, a]) => {
       setBusinessProfile(bp);
       setCards(c);
@@ -199,6 +200,11 @@ export function ComprehensiveDashboard({ onNavigate }: { onNavigate?: (page: str
       setLoading(false);
     });
   }, []);
+
+  // ── Re-fetch analytics when the chart period changes ──
+  useEffect(() => {
+    getAnalytics(chartPeriod).catch(() => null).then(setAnalytics);
+  }, [chartPeriod]);
 
   // ── Phase 2a: charts + funnel + device + locations (on scroll past stats) ──
   const [chartsLoaded, setChartsLoaded] = useState(false);
@@ -302,7 +308,9 @@ export function ComprehensiveDashboard({ onNavigate }: { onNavigate?: (page: str
   ] : defaultStatsData;
 
   const tapActivityData = analytics?.daily.map((d: { date: string; taps: number; views: number; leads: number }) => ({
-    date: new Date(d.date).toLocaleDateString('en-US', { weekday: 'short' }),
+    date: chartPeriod === '7'
+      ? new Date(d.date).toLocaleDateString('en-US', { weekday: 'short' })
+      : new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
     taps: d.taps,
     views: d.views,
     leads: d.leads,
@@ -506,9 +514,20 @@ export function ComprehensiveDashboard({ onNavigate }: { onNavigate?: (page: str
                 <p className="text-xs sm:text-sm text-[#A0A0A0] mt-0.5">Track your performance over time</p>
               </div>
               <div className="flex gap-2">
-                <Button size="sm" className="h-7 sm:h-8 px-2 sm:px-3 text-xs bg-gradient-to-r from-[#008001] to-[#49B618] hover:from-[#006312] hover:to-[#008001] text-white">30 Days</Button>
-                <Button variant="outline" size="sm" className="h-7 sm:h-8 px-2 sm:px-3 text-xs border-[#008001]/30 text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20">7 Days</Button>
-                <Button variant="outline" size="sm" className="h-7 sm:h-8 px-2 sm:px-3 text-xs border-[#008001]/30 text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20">90 Days</Button>
+                {(['30', '7', '90'] as const).map((p) => (
+                  <Button
+                    key={p}
+                    size="sm"
+                    onClick={() => setChartPeriod(p)}
+                    className={`h-7 sm:h-8 px-2 sm:px-3 text-xs ${
+                      chartPeriod === p
+                        ? 'bg-gradient-to-r from-[#008001] to-[#49B618] hover:from-[#006312] hover:to-[#008001] text-white'
+                        : 'border border-[#008001]/30 bg-transparent text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20'
+                    }`}
+                  >
+                    {p} Days
+                  </Button>
+                ))}
               </div>
             </CardHeader>
             <CardContent className="pt-4 sm:pt-6">
