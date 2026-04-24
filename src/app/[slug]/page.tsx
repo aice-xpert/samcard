@@ -1547,6 +1547,8 @@ const pageBg = (() => {
                     lineHeight: 1.15,
                     fontWeight: T.boldHeadings ? 800 : 600,
                     textShadow: "0 2px 12px rgba(0,0,0,0.8)",
+                    wordBreak: "break-word",
+                    overflowWrap: "break-word",
                   }}
                 >
                   {fd.name || businessProfile.name}
@@ -1558,6 +1560,8 @@ const pageBg = (() => {
                       fontSize: T.bodyFontSize,
                       marginTop: 3,
                       fontWeight: 500,
+                      wordBreak: "break-word",
+                      overflowWrap: "break-word",
                     }}
                   >
                     {fd.title || businessProfile.title}
@@ -1594,6 +1598,8 @@ const pageBg = (() => {
                         style={{
                           color: "rgba(255,255,255,0.6)",
                           fontSize: T.bodyFontSize - 1,
+                          wordBreak: "break-word",
+                          overflowWrap: "break-word",
                         }}
                       >
                         {fd.company || businessProfile.company}

@@ -328,10 +328,10 @@ export function CardPreviewModal({
                         </div>
                       )}
                       <div className="absolute bottom-0 left-0 right-0 px-4 pb-3 z-10">
-                        <h1 style={{ fontWeight: T.boldHeadings ? 800 : 600, fontSize: T.nameFontSize, lineHeight: 1.2, color: '#fff', textShadow: '0 1px 8px rgba(0,0,0,0.7)', fontFamily: T.fontFamily }}>
+                        <h1 style={{ fontWeight: T.boldHeadings ? 800 : 600, fontSize: T.nameFontSize, lineHeight: 1.2, color: '#fff', textShadow: '0 1px 8px rgba(0,0,0,0.7)', fontFamily: T.fontFamily, wordBreak: 'break-word', overflowWrap: 'break-word' }}>
                           {formData.name}
                         </h1>
-                        {formData.title && <p style={{ fontSize: T.bodyFontSize, marginTop: 2, color: T.greenLight, fontFamily: T.fontFamily }}>{formData.title}</p>}
+                        {formData.title && <p style={{ fontSize: T.bodyFontSize, marginTop: 2, color: T.greenLight, fontFamily: T.fontFamily, wordBreak: 'break-word', overflowWrap: 'break-word' }}>{formData.title}</p>}
 
                         {hasBrandLogo && logoPosition === 'below-name' && (
                           <div className="flex justify-center mt-1">
@@ -341,7 +341,7 @@ export function CardPreviewModal({
 
                         {formData.company && (
                           <div className="flex items-center gap-1.5 mt-0.5 justify-center">
-                            <p style={{ fontSize: T.bodyFontSize, color: 'rgba(255,255,255,0.65)', fontFamily: T.fontFamily }}>{formData.company}</p>
+                            <p style={{ fontSize: T.bodyFontSize, color: 'rgba(255,255,255,0.65)', fontFamily: T.fontFamily, wordBreak: 'break-word', overflowWrap: 'break-word' }}>{formData.company}</p>
                           </div>
                         )}
                       </div>
