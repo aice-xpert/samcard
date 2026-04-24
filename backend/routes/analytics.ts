@@ -67,11 +67,24 @@ async function buildAnalyticsPayload(uid: string, periodQuery: unknown, cardId?:
 
   const { data: profile } = await supabase
     .from("BusinessProfile")
-    .select("id, name, title, company, tagline, profileImageUrl, primaryEmail, primaryPhone, website, address, city, country")
+    .select("id, name, title, company, tagline, profileImageUrl, primaryEmail, primaryPhone, website, address, city, country, industry, yearFounded")
     .eq("userId", uid)
     .single();
 
-  if (!profile) {
+  const { data: cards, error: cardsError } = await supabase
+    .from("Card")
+    .select("id")
+    .eq("userId", uid);
+
+  if (cardsError) {
+    console.error("Error fetching cards for analytics:", cardsError);
+  }
+
+  const allCardIds = (cards || []).map((c: { id: string }) => c.id);
+  const isValidCardId = !!(cardId && allCardIds.includes(cardId));
+  const cardIds = isValidCardId ? [cardId as string] : allCardIds;
+
+  if (cardIds.length === 0 && !profile) {
     const daily: { date: string; taps: number; views: number; leads: number }[] = [];
     for (let i = days - 1; i >= 0; i--) {
       const date = new Date();
@@ -97,36 +110,34 @@ async function buildAnalyticsPayload(uid: string, periodQuery: unknown, cardId?:
     };
   }
 
-  const { data: cards } = await supabase
-    .from("Card")
-    .select("id")
-    .eq("userId", uid);
-
-  const allCardIds = cards?.map((c: { id: string }) => c.id) || [];
-  const isValidCardId = !!(cardId && allCardIds.includes(cardId));
-  const cardIds = isValidCardId ? [cardId as string] : allCardIds;
-
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - days);
 
-  const { data: interactions } = cardIds.length > 0
+  const { data: interactions, error: interactionsError } = cardIds.length > 0
     ? await supabase
       .from("CardInteraction")
       .select("type, createdAt, deviceType, country")
       .in("cardId", cardIds)
       .gte("createdAt", startDate.toISOString())
-    : { data: [] as { type: string; createdAt: string; deviceType?: string; country?: string }[] };
+    : { data: [] as any[], error: null as any };
+
+  if (interactionsError) {
+    console.error("Error fetching interactions for analytics:", interactionsError);
+  }
 
   let leadsQuery = supabase
     .from("Lead")
     .select("createdAt")
+    .eq("userId", uid)
     .gte("createdAt", startDate.toISOString());
+
   if (isValidCardId) {
     leadsQuery = leadsQuery.eq("cardId", cardId as string);
-  } else {
-    leadsQuery = leadsQuery.eq("businessProfileId", profile.id);
   }
-  const { data: leads } = await leadsQuery;
+  const { data: leads, error: leadsError } = await leadsQuery;
+  if (leadsError) {
+    console.error("Error fetching leads for analytics:", leadsError);
+  }
 
   const dailyMap: Record<string, { taps: number; views: number; leads: number }> = {};
 
@@ -175,24 +186,43 @@ async function buildAnalyticsPayload(uid: string, periodQuery: unknown, cardId?:
   });
   const uniqueVisitors = uniqueVisitorKeys.size;
 
-  const completionFields = [
-    profile.name,
-    profile.title,
-    profile.company,
-    profile.tagline,
-    // profile.profileImageUrl,
-    profile.primaryEmail,
-    profile.primaryPhone,
-    profile.website,
-    profile.address,
-    profile.city,
-    profile.country,
-  ];
-  const filledCompletionFields = completionFields.filter(Boolean).length;
-  const profileCompletion = Math.min(
-    100,
-    Math.round((filledCompletionFields / completionFields.length) * 100),
-  );
+  // ─── Profile Completion Logic ───────────────────────────────────────
+  let profileCompletion = 0;
+  if (profile) {
+    const { count: socialCount } = await supabase
+      .from("SocialLink")
+      .select("*", { count: "exact", head: true })
+      .eq("businessProfileId", profile.id);
+
+    const { count: customCount } = await supabase
+      .from("CustomLink")
+      .select("*", { count: "exact", head: true })
+      .eq("businessProfileId", profile.id);
+
+    const weights = [
+      // Core Identity (40%)
+      { val: profile.name, weight: 15 },
+      { val: profile.title, weight: 10 },
+      { val: profile.company, weight: 10 },
+      { val: profile.profileImageUrl, weight: 5 },
+      // Contact Info (25%)
+      { val: profile.primaryEmail, weight: 10 },
+      { val: profile.primaryPhone, weight: 10 },
+      { val: profile.website, weight: 5 },
+      // Professional Bio & Industry (15%)
+      { val: profile.tagline, weight: 5 },
+      { val: profile.industry, weight: 5 },
+      { val: profile.yearFounded, weight: 5 },
+      // Contact/Location Details (10%)
+      { val: profile.address || profile.city || profile.country, weight: 10 },
+      // Links & Social (10%)
+      { val: (socialCount || 0) > 0, weight: 5 },
+      { val: (customCount || 0) > 0, weight: 5 },
+    ];
+
+    const score = weights.reduce((acc, w) => acc + (w.val ? w.weight : 0), 0);
+    profileCompletion = Math.min(100, Math.round(score));
+  }
 
   const weightedEngagement = totalTaps + Math.round(totalViews * 0.5) + totalLeads * 3;
   const engagementScore = Math.min(100, Math.round(Math.sqrt(weightedEngagement) * 3.2));
@@ -353,20 +383,15 @@ async function buildMonthOverMonthPerformance(uid: string, cardId?: string) {
     .eq("userId", uid)
     .single();
 
-  if (!profile) {
-    return ZERO_MONTH_OVER_MONTH;
-  }
-
-  const cardQuery = supabase
+  const { data: cards } = await supabase
     .from("Card")
     .select("id")
-    .eq("businessProfileId", profile.id);
+    .eq("userId", uid);
 
-  const { data: cards } = cardId
-    ? await cardQuery.eq("id", cardId)
-    : await cardQuery;
+  const allCardIds = cards?.map((c: { id: string }) => c.id) || [];
+  const isValidCardId = !!(cardId && allCardIds.includes(cardId));
+  const cardIds = isValidCardId ? [cardId] : allCardIds;
 
-  const cardIds = cards?.map((c: { id: string }) => c.id) || [];
   if (cardIds.length === 0) {
     return ZERO_MONTH_OVER_MONTH;
   }
@@ -392,7 +417,7 @@ async function buildMonthOverMonthPerformance(uid: string, cardId?: string) {
     : await supabase
         .from("Lead")
         .select("createdAt")
-        .eq("businessProfileId", profile.id)
+        .in("cardId", cardIds)
         .gte("createdAt", previousMonthStart.toISOString());
 
   const inThisMonth = (isoDate: string) => new Date(isoDate) >= monthStart;
@@ -436,26 +461,15 @@ async function buildMonthOverMonthPerformance(uid: string, cardId?: string) {
 async function buildMonthlyGoal(uid: string, cardId?: string) {
   const target = 2000;
 
-  const { data: profile } = await supabase
-    .from("BusinessProfile")
-    .select("id")
-    .eq("userId", uid)
-    .single();
-
-  if (!profile) {
-    return ZERO_MONTHLY_GOAL;
-  }
-
-  const cardQuery = supabase
+  const { data: cards } = await supabase
     .from("Card")
     .select("id")
-    .eq("businessProfileId", profile.id);
+    .eq("userId", uid);
 
-  const { data: cards } = cardId
-    ? await cardQuery.eq("id", cardId)
-    : await cardQuery;
+  const allCardIds = cards?.map((c: { id: string }) => c.id) || [];
+  const isValidCardId = !!(cardId && allCardIds.includes(cardId));
+  const cardIds = isValidCardId ? [cardId] : allCardIds;
 
-  const cardIds = cards?.map((c: { id: string }) => c.id) || [];
   if (cardIds.length === 0) {
     return ZERO_MONTHLY_GOAL;
   }
@@ -490,13 +504,16 @@ async function buildMonthlyGoal(uid: string, cardId?: string) {
 async function buildWeeklyChallenge(uid: string, cardId?: string) {
   const target = 50;
 
-  const { data: profile } = await supabase
-    .from("BusinessProfile")
+  const { data: cards } = await supabase
+    .from("Card")
     .select("id")
-    .eq("userId", uid)
-    .single();
+    .eq("userId", uid);
 
-  if (!profile) {
+  const allCardIds = cards?.map((c: { id: string }) => c.id) || [];
+  const isValidCardId = !!(cardId && allCardIds.includes(cardId));
+  const cardIds = isValidCardId ? [cardId] : allCardIds;
+
+  if (cardIds.length === 0) {
     return ZERO_WEEKLY_CHALLENGE;
   }
 
@@ -510,7 +527,7 @@ async function buildWeeklyChallenge(uid: string, cardId?: string) {
 
   const { data: leads } = cardId
     ? await leadQuery.eq("cardId", cardId)
-    : await leadQuery.eq("businessProfileId", profile.id);
+    : await leadQuery.in("cardId", cardIds);
 
   const current = leads?.length || 0;
   const percentage = Math.min(100, Math.round((current / target) * 100));

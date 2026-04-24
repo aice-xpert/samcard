@@ -1169,6 +1169,7 @@ export default function BusinessProfile({
       }
 
       setSaveFlash(true);
+      window.dispatchEvent(new CustomEvent('profileUpdated'));
       setTimeout(() => setSaveFlash(false), 2200);
       setReloadTrigger(prev => prev + 1);
     } catch (error: unknown) {

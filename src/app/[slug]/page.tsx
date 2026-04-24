@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useParams } from "next/navigation";
 import {
   Phone,
@@ -29,6 +29,7 @@ import {
 } from "@/components/dashboard/pages/Qrrenderers";
 import { makeQRMatrix } from "@/components/dashboard/pages/qr-engine";
 import { LOGOS } from "@/components/dashboard/pages/constants";
+import { getCardQRConfig } from "@/lib/api";
 
 const BACKEND_URL =
   process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "") || "";
@@ -40,6 +41,25 @@ const PUBLIC_BASE =
 const normalizePhoneBgType = (value: unknown): "solid" | "gradient" => {
   if (typeof value !== "string") return "solid";
   return value.toLowerCase() === "gradient" ? "gradient" : "solid";
+};
+
+const resolveAssetUrl = (value: unknown): string | null => {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  // Keep already-resolved URLs and inline sources unchanged.
+  if (/^(https?:|data:|blob:)/i.test(trimmed)) return trimmed;
+  if (trimmed.startsWith("//")) return `https:${trimmed}`;
+
+  const cleaned = trimmed.replace(/^\/+/, "");
+  const base =
+    BACKEND_URL ||
+    PUBLIC_BASE ||
+    (typeof window !== "undefined" ? window.location.origin : "");
+
+  if (!base) return trimmed;
+  return `${base.replace(/\/$/, "")}/${cleaned}`;
 };
 
 // ── Types ──────────────────────────────────────────────────────────
@@ -63,6 +83,7 @@ interface QRConfig {
   customLogoUrl?: string;
   logoBg?: string;
   stickerId?: string | null;
+  decorateImageUrl?: string;
 }
 
 interface PublicCard {
@@ -207,6 +228,11 @@ function DynamicQR({
 }) {
   const { matrix, N } = useMemo(() => makeQRMatrix(cardUrl), [cardUrl]);
 
+  const decoratedImageUrl = useMemo(
+    () => resolveAssetUrl(qrConfig?.decorateImageUrl),
+    [qrConfig?.decorateImageUrl],
+  );
+
   const sticker = useMemo(() => {
     if (!qrConfig?.stickerId) return null;
     return STICKER_DEFS.find((s) => s.id === qrConfig.stickerId) ?? null;
@@ -218,6 +244,18 @@ function DynamicQR({
     return isNaN(idx) ? null : LOGOS[idx];
   }, [qrConfig?.selectedLogo]);
 
+  const customLogoUrl = useMemo(
+    () => resolveAssetUrl(qrConfig?.customLogoUrl),
+    [qrConfig?.customLogoUrl],
+  );
+
+  const selectedLogo = useMemo(() => {
+    const raw = qrConfig?.selectedLogo?.trim() || "";
+    if (raw.startsWith("logo-")) return raw;
+    if (raw === "custom" || customLogoUrl) return "custom";
+    return raw || null;
+  }, [qrConfig?.selectedLogo, customLogoUrl]);
+
   const isSquareShape = !qrConfig?.shapeId || qrConfig.shapeId === 'square' || qrConfig.shapeId === 'rounded-square';
   const RING_PAD = sticker ? (isSquareShape ? 60 : 32) : 0;
   const OUTER = size + RING_PAD * 2;
@@ -225,6 +263,25 @@ function DynamicQR({
   const clipId = "pub-qr-clip";
   const fg = qrConfig?.fg ?? "#000000";
   const bg = qrConfig?.bg ?? "#ffffff";
+
+  if (decoratedImageUrl) {
+    return (
+      <img
+        src={decoratedImageUrl}
+        alt="QR code"
+        width={size}
+        height={size}
+        style={{
+          display: "block",
+          width: size,
+          height: size,
+          objectFit: "contain",
+          borderRadius: 10,
+          background: qrConfig?.bg ?? "#ffffff",
+        }}
+      />
+    );
+  }
 
   return (
     <svg
@@ -263,8 +320,8 @@ function DynamicQR({
           size={size}
           strokeEnabled={qrConfig?.strokeEnabled ?? false}
           strokeColor={qrConfig?.strokeColor ?? "#000000"}
-          selectedLogo={qrConfig?.selectedLogo ?? null}
-          customLogoUrl={qrConfig?.customLogoUrl ?? null}
+          selectedLogo={selectedLogo}
+          customLogoUrl={customLogoUrl}
           logoNode={logoEntry?.icon ?? null}
           logoBg={logoEntry?.bg ?? qrConfig?.logoBg ?? "#ffffff"}
           clipId={clipId}
@@ -719,6 +776,64 @@ function ExtraSectionBlock({
         </div>
       );
     }
+    case "extra-pdf": {
+      const pdfTitle = str("pdfTitle");
+      const pdfUrl = str("pdfUrl");
+      if (!pdfTitle && !pdfUrl) return null;
+      return (
+        <div
+          style={{
+            margin: "0 12px 10px",
+            background: T.card,
+            border: `1px solid ${T.cardBorder}`,
+            borderRadius: T.cardRadius,
+            overflow: "hidden",
+          }}
+        >
+          <button
+            onClick={() => { onLinkClick(); openLink(pdfUrl); }}
+            style={{
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+               gap: 12,
+              padding: "14px 16px",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              textAlign: "left",
+            }}
+          >
+            <div
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 8,
+                flexShrink: 0,
+                background: `linear-gradient(135deg, ${T.green}, ${T.greenLight})`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <span style={{ fontSize: 18 }}>📄</span>
+            </div>
+            <span
+              style={{
+                flex: 1,
+                fontWeight: T.boldHeadings ? 700 : 500,
+                fontSize: T.bodyFontSize,
+                color: T.textPrimary,
+                fontFamily: T.fontFamily,
+              }}
+            >
+              {pdfTitle || "Download PDF"}
+            </span>
+            <ChevronRight size={18} color={T.textMuted} />
+          </button>
+        </div>
+      );
+    }
     default: {
       const title = str("title");
       const bodyText = str("content");
@@ -770,12 +885,14 @@ function ExtraSectionBlock({
 
 function QRModal({
   onClose,
-  qrConfig,
+  qrConfig: initialQrConfig,
+  cardId,
   cardUrl,
   T,
 }: {
   onClose: () => void;
   qrConfig: QRConfig | null | undefined;
+  cardId?: string | null;
   cardUrl: string;
   T: {
     bg: string;
@@ -791,6 +908,20 @@ function QRModal({
     fontFamily: string;
   };
 }) {
+  const [qrConfig, setQrConfig] = useState(initialQrConfig);
+  const fetched = useRef(false);
+
+  useEffect(() => {
+    if (qrConfig || !cardId || fetched.current) return;
+    fetched.current = true;
+
+    getCardQRConfig(cardId)
+      .then((data) => {
+        if (data) setQrConfig(data);
+      })
+      .catch(() => {});
+  }, [cardId]);
+
   return (
     <div
       onClick={onClose}
@@ -1239,6 +1370,7 @@ const pageBg = (() => {
           qrConfig={card.qrConfig}
           cardUrl={cardUrl}
           T={T}
+          cardId={card.id}
         />
       )}
 

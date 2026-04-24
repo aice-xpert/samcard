@@ -505,6 +505,7 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
                         cardId={activeCardId}
                         allowFallbackToFirstCard={false}
                         forceNewCard={!activeCardId}
+                        initialConfig={qrConfig}
                     />
                 )}
             </div>

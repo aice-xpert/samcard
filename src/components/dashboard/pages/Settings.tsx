@@ -5,25 +5,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
-import { Switch } from "../ui/switch";
 import { Separator } from "../ui/separator";
 import {
-    Shield, Bell, Trash2, Key, X, CheckCircle2, Loader2, AlertTriangle,
-    Monitor, Smartphone, Eye, EyeOff, Download, LogOut, Mail, Zap,
-    BarChart3, Megaphone, UserPlus, CreditCard, Plus, Star, User,
-    Palette, ExternalLink,
+    Shield, Trash2, Key, X, CheckCircle2, Loader2, AlertTriangle,
+    Eye, EyeOff, Download, CreditCard, Plus, Star, User,
 } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
-import { uploadFile, updateUserProfile, getPaymentMethods, savePaymentMethod, setDefaultPaymentMethod, deletePaymentMethod, getUserProfile } from "@/lib/api";
+import { uploadFile, updateUserProfile, getPaymentMethods, savePaymentMethod, setDefaultPaymentMethod, deletePaymentMethod } from "@/lib/api";
 import { auth } from "@/lib/firebase";
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Types
    ═══════════════════════════════════════════════════════════════════════════ */
-interface Session {
-    id: string; device: string; location: string; current: boolean; icon: React.ElementType;
-}
+
 interface PaymentCard {
     id: string; brand: string; last4: string; expiry: string; isDefault: boolean;
 }
@@ -142,19 +137,7 @@ function AddCardModal({ open, loading, onSave, onClose }: {
 /* ═══════════════════════════════════════════════════════════════════════════
    Notification Row
    ═══════════════════════════════════════════════════════════════════════════ */
-function NotifRow({ icon: Icon, title, description, checked, onChange }: {
-    icon: React.ElementType; title: string; description: string; checked: boolean; onChange: (v: boolean) => void;
-}) {
-    return (
-        <div className="flex items-center justify-between gap-4 py-1">
-            <div className="flex items-start gap-3 min-w-0">
-                <div className="w-8 h-8 rounded-lg bg-[#1E1E1E] border border-[#008001]/20 flex items-center justify-center flex-shrink-0 mt-0.5"><Icon className="w-4 h-4 text-[#A0A0A0]" /></div>
-                <div className="min-w-0"><h4 className="text-sm text-white">{title}</h4><p className="text-xs text-[#A0A0A0] mt-0.5">{description}</p></div>
-            </div>
-            <Switch checked={checked} onCheckedChange={onChange} className="data-[state=checked]:bg-[#49B618] flex-shrink-0" />
-        </div>
-    );
-}
+
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Section Header
@@ -210,16 +193,7 @@ export function Settings() {
     const [showCurrentPw, setShowCurrentPw] = useState(false); const [showNewPw, setShowNewPw] = useState(false);
     const [pwLoading, setPwLoading] = useState(false); const [pwError, setPwError] = useState("");
 
-    // 2FA
-    const [twoFA, setTwoFA] = useState(false); const [twoFALoading, setTwoFALoading] = useState(false);
 
-    // Sessions
-    const [sessions, setSessions] = useState<Session[]>([
-        { id: "s1", device: "MacBook Pro — Chrome", location: "San Francisco, CA • Current session", current: true, icon: Monitor },
-        { id: "s2", device: "iPhone 15 — Safari", location: "San Francisco, CA • 2 hours ago", current: false, icon: Smartphone },
-        { id: "s3", device: "Windows PC — Firefox", location: "New York, NY • 3 days ago", current: false, icon: Monitor },
-    ]);
-    const [revokingId, setRevokingId] = useState<string | null>(null);
 
     // Payment Cards
     const [cards, setCards] = useState<PaymentCard[]>([]);
@@ -243,35 +217,13 @@ export function Settings() {
             .catch(() => {});
     }, []);
 
-    // Notifications
-    const NOTIFS_KEY = "samcard_notif_prefs";
-    const [notifs, setNotifs] = useState({ email: true, tapAlerts: true, weeklyReport: true, marketing: false, newLeads: true });
 
-    useEffect(() => {
-        try {
-            const stored = localStorage.getItem(NOTIFS_KEY);
-            if (stored) setNotifs(JSON.parse(stored));
-        } catch {}
-    }, []);
 
     // Appearance
     const [theme, setTheme] = useState<"dark" | "light" | "system">("dark");
     const [compactMode, setCompactMode] = useState(false);
 
-    // Privacy
-    const [profilePublic, setProfilePublic] = useState(true);
-    const [analyticsOptIn, setAnalyticsOptIn] = useState(true);
-    const [showEmail, setShowEmail] = useState(false);
 
-    // Load privacy settings from API on mount
-    useEffect(() => {
-        getUserProfile()
-            .then(user => {
-                setProfilePublic(user.profilePublic ?? true);
-                setShowEmail(user.showEmail ?? false);
-            })
-            .catch(() => {});
-    }, []);
 
 
     // Danger Zone
@@ -334,16 +286,7 @@ export function Settings() {
         }
     };
 
-    const handleToggle2FA = async (val: boolean) => {
-        setTwoFALoading(true); await new Promise((r) => setTimeout(r, 1000));
-        setTwoFA(val); setTwoFALoading(false);
-        addToast(val ? "Two-factor authentication enabled" : "Two-factor authentication disabled", val ? "success" : "info");
-    };
 
-    const handleRevokeSession = async (sid: string) => {
-        setRevokingId(sid); await new Promise((r) => setTimeout(r, 1000));
-        setSessions((p) => p.filter((s) => s.id !== sid)); setRevokingId(null); addToast("Session revoked");
-    };
 
     const handleAddCard = async (card: PaymentCard) => {
         setAddCardLoading(true);
@@ -405,13 +348,7 @@ export function Settings() {
         }
     };
 
-    const handleNotifChange = (key: keyof typeof notifs, val: boolean) => {
-        const next = { ...notifs, [key]: val };
-        setNotifs(next);
-        try { localStorage.setItem(NOTIFS_KEY, JSON.stringify(next)); } catch {}
-        const names: Record<string, string> = { email: "Email notifications", tapAlerts: "Tap alerts", weeklyReport: "Weekly report", marketing: "Marketing emails", newLeads: "Lead notifications" };
-        addToast(`${val ? "Enabled" : "Disabled"} ${names[key]}`, "info");
-    };
+
 
     const handleDeleteAccount = async () => {
         setDeleteLoading(true); await new Promise((r) => setTimeout(r, 2000));
@@ -421,7 +358,7 @@ export function Settings() {
 
     const handleExportData = async () => {
         setExportLoading(true); await new Promise((r) => setTimeout(r, 2000));
-        const data = { exportDate: new Date().toISOString(), account: { name: profileName, email: profileEmail, plan: "Pro" }, cards: cards.map((c) => ({ brand: c.brand, last4: c.last4 })), notifications: notifs, sessions: sessions.map((s) => ({ device: s.device, location: s.location })) };
+        const data = { exportDate: new Date().toISOString(), account: { name: profileName, email: profileEmail, plan: "Pro" }, cards: cards.map((c) => ({ brand: c.brand, last4: c.last4 })) };
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
         const url = URL.createObjectURL(blob); const a = document.createElement("a");
         a.href = url; a.download = `samcard-export-${new Date().toISOString().split("T")[0]}.json`;
@@ -586,98 +523,31 @@ export function Settings() {
                                     </Button>
                                 </div>
                             </div>
-                            <Separator className="bg-[#008001]/20" />
-                            {/* 2FA */}
-                            <div className="flex items-center justify-between gap-4">
-                                <div className="flex items-start gap-3"><div className="w-8 h-8 rounded-lg bg-[#1E1E1E] border border-[#008001]/20 flex items-center justify-center flex-shrink-0 mt-0.5"><Shield className="w-4 h-4 text-[#A0A0A0]" /></div>
-                                    <div><h4 className="text-sm text-white">Two-Factor Authentication</h4><p className="text-xs text-[#A0A0A0] mt-0.5">Extra layer of security</p>
-                                        {twoFA && <span className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#49B618]/10 text-[#49B618] border border-[#49B618]/20"><span className="w-1 h-1 rounded-full bg-[#49B618]" />Enabled</span>}
-                                    </div></div>
-                                <div className="flex items-center gap-2">{twoFALoading && <Loader2 className="w-3.5 h-3.5 text-[#49B618] animate-spin" />}<Switch checked={twoFA} onCheckedChange={handleToggle2FA} disabled={twoFALoading} className="data-[state=checked]:bg-[#49B618]" /></div>
+                        </CardContent>
+                    </Card>
+
+                    {/* ── Danger Zone ──────────────────────────────────────── */}
+                    <Card className="bg-[#000000] border-2 border-[#ef4444]/20 relative overflow-hidden" style={fadeIn(350)}>
+                        <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-[#ef4444] to-transparent opacity-[0.03] blur-3xl pointer-events-none" />
+                        <CardHeader className="border-b border-[#ef4444]/10 pb-4">
+                            <CardTitle className="text-[#ef4444] text-base sm:text-lg flex items-center gap-2"><SectionIcon icon={Trash2} gradient="bg-[#ef4444]/10 border border-[#ef4444]/20" />Danger Zone</CardTitle>
+                        </CardHeader>
+                        <CardContent className="pt-5 space-y-4">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div><h4 className="text-sm font-semibold text-white">Delete Account</h4><p className="text-xs text-[#A0A0A0] mt-0.5">Permanently delete everything</p></div>
+                                <Button variant="outline" className="text-[#ef4444] border-[#ef4444]/30 hover:bg-[#ef4444]/10 text-xs h-9 rounded-full gap-1.5 flex-shrink-0" onClick={() => setDeleteModal(true)}>
+                                    <Trash2 className="w-3.5 h-3.5" />Delete Account
+                                </Button>
                             </div>
-                            <Separator className="bg-[#008001]/20" />
-                            {/* Sessions */}
-                            <div>
-                                <h4 className="text-sm font-semibold text-white mb-3 flex items-center gap-2"><Monitor className="w-3.5 h-3.5 text-[#49B618]" />Active Sessions</h4>
-                                <div className="space-y-2">
-                                    {sessions.map((s) => {
-                                        const I = s.icon; return (
-                                            <div key={s.id} className="flex items-center justify-between p-3 rounded-xl border border-[#008001]/20 bg-[#111a11] hover:bg-[#0f1f0f] transition-colors">
-                                                <div className="flex items-center gap-3 min-w-0"><div className="w-8 h-8 rounded-lg bg-[#1E1E1E] border border-[#008001]/20 flex items-center justify-center flex-shrink-0"><I className="w-4 h-4 text-[#A0A0A0]" /></div>
-                                                    <div className="min-w-0"><p className="text-sm text-white truncate">{s.device}</p><p className="text-xs text-[#A0A0A0] mt-0.5 truncate">{s.location}</p></div></div>
-                                                {s.current ? <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-[#49B618]/10 text-[#49B618] border border-[#49B618]/20 flex-shrink-0"><span className="w-1.5 h-1.5 rounded-full bg-[#49B618]" />Current</span>
-                                                    : <Button variant="outline" size="sm" className="border-[#008001]/30 text-[#A0A0A0] hover:text-white hover:bg-[#ef4444]/10 hover:border-[#ef4444]/30 text-xs h-7 rounded-full flex-shrink-0" onClick={() => handleRevokeSession(s.id)} disabled={revokingId === s.id}>
-                                                        {revokingId === s.id ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <LogOut className="w-3 h-3 mr-1" />}Revoke</Button>}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
+                            <Separator className="bg-[#ef4444]/10" />
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div><h4 className="text-sm font-semibold text-white">Export Data</h4><p className="text-xs text-[#A0A0A0] mt-0.5">Download all your data as JSON</p></div>
+                                <Button variant="outline" className="border-[#008001]/30 text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20 text-xs h-9 rounded-full gap-1.5 flex-shrink-0" onClick={handleExportData} disabled={exportLoading}>
+                                    {exportLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}{exportLoading ? "Exporting…" : "Export Data"}
+                                </Button>
                             </div>
                         </CardContent>
                     </Card>
-
-                    {/* ── Notifications ────────────────────────────────────────── */}
-                    <Card className="bg-[#000000] border-[#008001]/30 relative overflow-hidden" style={fadeIn(250)}>
-                        <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-[#49B618] to-transparent opacity-[0.03] blur-3xl pointer-events-none" />
-                        <CardHeader className="border-b border-[#008001]/20 pb-4">
-                            <CardTitle className="text-white text-base sm:text-lg flex items-center gap-2"><SectionIcon icon={Bell} />Notifications</CardTitle>
-                        </CardHeader>
-                        <CardContent className="pt-5 space-y-1">
-                            <NotifRow icon={Mail} title="Email Notifications" description="Account updates via email" checked={notifs.email} onChange={(v) => handleNotifChange("email", v)} />
-                            <Separator className="bg-[#008001]/10 my-3" />
-                            <NotifRow icon={Zap} title="New Card Tap Alerts" description="Get notified on card taps" checked={notifs.tapAlerts} onChange={(v) => handleNotifChange("tapAlerts", v)} />
-                            <Separator className="bg-[#008001]/10 my-3" />
-                            <NotifRow icon={BarChart3} title="Weekly Analytics Report" description="Weekly card performance summary" checked={notifs.weeklyReport} onChange={(v) => handleNotifChange("weeklyReport", v)} />
-                            <Separator className="bg-[#008001]/10 my-3" />
-                            <NotifRow icon={Megaphone} title="Marketing Emails" description="New features and promotions" checked={notifs.marketing} onChange={(v) => handleNotifChange("marketing", v)} />
-                            <Separator className="bg-[#008001]/10 my-3" />
-                            <NotifRow icon={UserPlus} title="New Lead Notifications" description="Alert when someone submits a lead via your card" checked={notifs.newLeads} onChange={(v) => handleNotifChange("newLeads", v)} />
-                        </CardContent>
-                    </Card>
-                </div>
-
-                {/* ═══ ROW 3: Appearance & Privacy + Connected Accounts ═══ */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                    {/* ── Appearance & Privacy ─────────────────────────────────── */}
-                    <Card className="bg-[#000000] border-[#008001]/30 relative overflow-hidden" style={fadeIn(300)}>
-                        <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-[#008001] to-transparent opacity-[0.04] blur-3xl pointer-events-none" />
-                        <CardHeader className="border-b border-[#008001]/20 pb-4">
-                            <CardTitle className="text-white text-base sm:text-lg flex items-center gap-2"><SectionIcon icon={Palette} /> Privacy</CardTitle>
-                        </CardHeader>
-                        <CardContent className="pt-4 space-y-3">
-                            <div className="flex items-center justify-between gap-4"><div><h4 className="text-sm text-white">Public Profile</h4><p className="text-xs text-[#A0A0A0]">Allow others to find you</p></div>
-                                <Switch checked={profilePublic} onCheckedChange={async (v) => { setProfilePublic(v); try { await updateUserProfile({ profilePublic: v }); addToast(`Profile ${v ? "public" : "private"}`, "info"); } catch { setProfilePublic(!v); addToast("Failed to update setting", "error"); } }} className="data-[state=checked]:bg-[#49B618]" /></div>
-                            <Separator className="bg-[#008001]/20" />
-                            <div className="flex items-center justify-between gap-4"><div><h4 className="text-sm text-white">Analytics Tracking</h4><p className="text-xs text-[#A0A0A0]">Help improve SamCard</p></div>
-                                <Switch checked={analyticsOptIn} onCheckedChange={async (v) => { setAnalyticsOptIn(v); try { await updateUserProfile({ analyticsOptIn: v }); addToast(`Analytics ${v ? "enabled" : "disabled"}`, "info"); } catch { setAnalyticsOptIn(!v); addToast("Failed to update setting", "error"); } }} className="data-[state=checked]:bg-[#49B618]" /></div>
-                            <Separator className="bg-[#008001]/20" />
-                            <div className="flex items-center justify-between gap-4"><div><h4 className="text-sm text-white">Show Email on Card</h4><p className="text-xs text-[#A0A0A0]">Display email publicly</p></div>
-                                <Switch checked={showEmail} onCheckedChange={async (v) => { setShowEmail(v); try { await updateUserProfile({ showEmail: v }); addToast(`Email visibility ${v ? "on" : "off"}`, "info"); } catch { setShowEmail(!v); addToast("Failed to update setting", "error"); } }} className="data-[state=checked]:bg-[#49B618]" /></div>
-                        </CardContent>
-                    </Card>
-
-                        {/* ── Danger Zone ──────────────────────────────────────── */}
-                        <Card className="bg-[#000000] border-2 border-[#ef4444]/20 relative overflow-hidden" style={fadeIn(350)}>
-                            <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-[#ef4444] to-transparent opacity-[0.03] blur-3xl pointer-events-none" />
-                            <CardHeader className="border-b border-[#ef4444]/10 pb-4">
-                                <CardTitle className="text-[#ef4444] text-base sm:text-lg flex items-center gap-2"><SectionIcon icon={Trash2} gradient="bg-[#ef4444]/10 border border-[#ef4444]/20" />Danger Zone</CardTitle>
-                            </CardHeader>
-                            <CardContent className="pt-5 space-y-4">
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                    <div><h4 className="text-sm font-semibold text-white">Delete Account</h4><p className="text-xs text-[#A0A0A0] mt-0.5">Permanently delete everything</p></div>
-                                    <Button variant="outline" className="text-[#ef4444] border-[#ef4444]/30 hover:bg-[#ef4444]/10 text-xs h-9 rounded-full gap-1.5 flex-shrink-0" onClick={() => setDeleteModal(true)}>
-                                        <Trash2 className="w-3.5 h-3.5" />Delete Account
-                                    </Button>
-                                </div>
-                                <Separator className="bg-[#ef4444]/10" />
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                    <div><h4 className="text-sm font-semibold text-white">Export Data</h4><p className="text-xs text-[#A0A0A0] mt-0.5">Download all your data as JSON</p></div>
-                                    <Button variant="outline" className="border-[#008001]/30 text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20 text-xs h-9 rounded-full gap-1.5 flex-shrink-0" onClick={handleExportData} disabled={exportLoading}>
-                                        {exportLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}{exportLoading ? "Exporting…" : "Export Data"}
-                                    </Button>
-                                </div>
-                            </CardContent>
-                        </Card>
                 </div>
             </div>
         </>

@@ -224,12 +224,14 @@ export function NfcQr({
   allowFallbackToFirstCard = true,
   forceNewCard = false,
   draftId,
+  initialConfig,
 }: {
   onConfigChange?: (config: QRCustomConfig) => void;
   cardId?: string;
   allowFallbackToFirstCard?: boolean;
   forceNewCard?: boolean;
   draftId?: string;
+  initialConfig?: QRCustomConfig | null;
 }) {
   const [copiedLink, setCopiedLink] = useState(false);
   const [customizerOpen, setCustomizerOpen] = useState(false);
@@ -276,16 +278,20 @@ export function NfcQr({
   const activeQrStorageKey = qrStorageKeyForEditor(cardId, resolvedCardId, allowFallbackToFirstCard, draftId);
 
   const [qrConfig, setQrConfig] = useState<QRCustomConfig | null>(() => {
-    if (typeof window === 'undefined' || forceNewCard) return null;
-    return loadConfig(qrStorageKeyForEditor(cardId, cardId, allowFallbackToFirstCard, draftId));
+    if (typeof window === 'undefined') return initialConfig ?? null;
+    if (forceNewCard) return initialConfig ?? null;
+    return loadConfig(qrStorageKeyForEditor(cardId, cardId, allowFallbackToFirstCard, draftId)) ?? initialConfig ?? null;
   });
 
   useEffect(() => {
     if (forceNewCard) {
-      setQrConfig(null);
+      // When forceNewCard, preserve initialConfig across tab remounts so
+      // customizations applied before Save & Finish are not lost.
+      setQrConfig((prev) => prev ?? initialConfig ?? null);
     } else {
-      setQrConfig(loadConfig(activeQrStorageKey));
+      setQrConfig(loadConfig(activeQrStorageKey) ?? initialConfig ?? null);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeQrStorageKey, forceNewCard]);
 
   const qrRef = useRef<HTMLDivElement>(null);
