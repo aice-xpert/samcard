@@ -351,7 +351,7 @@ function PhonePreviewComponent({
                   style={{ maxHeight: 560, background: T.phoneBgStyle || T.bg, ...ff }}>
 
                   {/* HERO */}
-                  {sections.profile && expanded?.profile !== false && (
+                  {sections.profile && (
                     <div className="relative" style={{ aspectRatio: '4/3', maxHeight: '200px' }}>
                       {profileImage ? (
                         <img
@@ -403,19 +403,19 @@ function PhonePreviewComponent({
                       </div>
                     </div>)}
 
-                  {hasBrandLogo && logoPosition === 'below-photo' && (
+                  {sections.profile && hasBrandLogo && logoPosition === 'below-photo' && (
                     <div className="flex justify-center py-2.5">
                       <BrandLogoBadge src={brandLogo} bg={T.card} blur={false} maxSize={80} padding="8px 12px" borderRadius={12} border={`1px solid ${T.cardBorder}`} />
                     </div>
                   )}
 
-                  {sections.profile && expanded?.profile !== false && formData.tagline && (
+                  {sections.profile && formData.tagline && (
                     <div className="px-4 py-2.5 text-center">
                       <p style={{ fontSize: T.bodyFontSize, fontStyle: 'italic', lineHeight: 1.5, color: T.textMuted, fontFamily: T.fontFamily }}>{formData.tagline}</p>
                     </div>
                   )}
 
-                  {sections.profile && expanded?.profile !== false && contactItems.length > 0 && (
+                  {sections.profile && contactItems.length > 0 && (
                     <div className="flex justify-center gap-3 py-3 mx-3 mb-2.5"
                       style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: T.cardRadius }}>
                       {contactItems.slice(0, 4).map(({ href, Icon }, i) => (
