@@ -24,7 +24,8 @@ router.get("/", verifySession, async (req: AuthRequest, res: Response) => {
     let query = supabase
       .from("Lead")
       .select("*", { count: "exact" })
-      .eq("userId", req.user!.uid);
+      .eq("userId", req.user!.uid)
+      .order("createdAt", { ascending: false });
 
     if (cardId && typeof cardId === "string" && ownedCardIds.includes(cardId)) {
       query = query.eq("cardId", cardId);

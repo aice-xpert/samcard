@@ -607,11 +607,12 @@ export interface LeadsResponse {
   limit: number;
 }
 
-export async function getLeads(status?: string, page?: number, cardId?: string) {
+export async function getLeads(status?: string, page?: number, cardId?: string, limit?: number) {
   const params = new URLSearchParams();
   if (status) params.set("status", status);
   if (page) params.set("page", page.toString());
   if (cardId) params.set("cardId", cardId);
+  if (limit) params.set("limit", limit.toString());
   return apiRequest<LeadsResponse>(`/api/user/leads?${params}`, { method: "GET" });
 }
 
