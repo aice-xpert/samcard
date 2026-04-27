@@ -317,8 +317,8 @@ function PhonePreviewComponent({
                 background: 'linear-gradient(160deg,#444,#1c1c1c)',
                 boxShadow: '0 0 0 1px rgba(255,255,255,0.06), 0 28px 70px rgba(0,0,0,0.95)',
               }}>
-              <div className="rounded-[2.6rem] overflow-hidden" style={{ background: T.phoneBgStyle || T.bg }}>
-
+              {/* <div className="rounded-[2.6rem] overflow-hidden" style={{ background: T.phoneBgStyle || T.bg }}> */}
+              <div className="rounded-[2.6rem] overflow-hidden" style={{ background: T.phoneBgStyle || T.bg, overflowX: 'hidden' }}>
                 {/* Status bar */}
                 <div className="relative flex items-center justify-between px-5 pt-2 pb-1" style={{ background: T.bg }}>
                   <div className="absolute top-0 left-1/2 -translate-x-1/2 flex items-end justify-center pb-[5px]"
@@ -348,7 +348,7 @@ function PhonePreviewComponent({
 
                 {/* Scrollable body */}
                 <div data-scrollid={uid} className="overflow-y-auto"
-                  style={{ maxHeight: 560, background: T.phoneBgStyle || T.bg, ...ff }}>
+                  style={{ maxHeight: 560, overflowX: 'hidden', background: T.phoneBgStyle || T.bg, ...ff }}>
 
                   {/* HERO */}
                   {sections.profile && (
@@ -384,7 +384,8 @@ function PhonePreviewComponent({
                         </div>
                       )}
                       <div className="absolute bottom-0 left-0 right-0 px-4 pb-3 z-10">
-                        <h1 style={{ fontWeight: T.boldHeadings ? 800 : 600, fontSize: T.nameFontSize, lineHeight: 1.2, color: '#fff', textShadow: '0 1px 8px rgba(0,0,0,0.7)', fontFamily: T.fontFamily, wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+                        <h1 style={{ fontWeight: T.boldHeadings ? 800 : 600, fontSize: T.nameFontSize, lineHeight: 1.2, color: '#fff', textShadow: '0 1px 8px rgba(0,0,0,0.7)', fontFamily: T.fontFamily, wordBreak: 'break-word', overflowWrap: 'anywhere', maxWidth: '100%' }}>
+                          {/* <h1 style={{ fontWeight: T.boldHeadings ? 800 : 600, fontSize: T.nameFontSize, lineHeight: 1.2, color: '#fff', textShadow: '0 1px 8px rgba(0,0,0,0.7)', fontFamily: T.fontFamily, wordBreak: 'break-word', overflowWrap: 'break-word' }}> */}
                           {formData.name}
                         </h1>
                         {formData.title && (
@@ -411,7 +412,7 @@ function PhonePreviewComponent({
 
                   {sections.profile && formData.tagline && (
                     <div className="px-4 py-2.5 text-center">
-                      <p style={{ fontSize: T.bodyFontSize, fontStyle: 'italic', lineHeight: 1.5, color: T.textMuted, fontFamily: T.fontFamily }}>{formData.tagline}</p>
+                      <p style={{ fontSize: T.bodyFontSize, fontStyle: 'italic', lineHeight: 1.5, color: T.textMuted, fontFamily: T.fontFamily, wordBreak: 'break-word', overflowWrap: 'anywhere', maxWidth: '100%' }}>{formData.tagline}</p>
                     </div>
                   )}
 
@@ -484,7 +485,8 @@ function PhonePreviewComponent({
                           <div key={label}>
                             <div className="flex items-center justify-between px-4 py-2.5">
                               <span style={{ fontSize: T.bodyFontSize, color: T.textMuted, fontFamily: T.fontFamily }}>{label}</span>
-                              <span style={{ fontSize: T.bodyFontSize, fontWeight: T.boldHeadings ? 700 : 400, color: T.textPrimary, fontFamily: T.fontFamily }} className="text-right max-w-[55%]">{val}</span>
+                              <span style={{ fontSize: T.bodyFontSize, fontWeight: T.boldHeadings ? 700 : 400, color: T.textPrimary, fontFamily: T.fontFamily, wordBreak: 'break-word', overflowWrap: 'anywhere', maxWidth: '55%', display: 'inline-block', textAlign: 'right' }}>{val}</span>
+                              {/* <span style={{ fontSize: T.bodyFontSize, fontWeight: T.boldHeadings ? 700 : 400, color: T.textPrimary, fontFamily: T.fontFamily }} className="text-right max-w-[55%]">{val}</span> */}
                             </div>
                             {i < arr.length - 1 && <Divider T={T} />}
                           </div>
