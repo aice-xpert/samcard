@@ -217,6 +217,8 @@ router.post("/", verifySession, async (req: AuthRequest, res: Response) => {
       userId: req.user!.uid,
       businessProfileId,
       name: normalizedName,
+      slug,
+      shareUrl,
       cardType: cardType || "QR",
       status: "ACTIVE",
       updatedAt: new Date().toISOString(),

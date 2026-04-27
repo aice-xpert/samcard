@@ -1400,7 +1400,7 @@ const pageBg = (() => {
   maxWidth: 480,
   minHeight: "100vh",
   background: "transparent",
-
+  overflowX: "hidden",
   borderRadius: T.cardRadius,
 }}>
           {/* ── HERO ── */}
@@ -1410,6 +1410,7 @@ const pageBg = (() => {
                 position: "relative",
                 aspectRatio: "16/9",
                 overflow: "hidden",
+                clipPath: "inset(0)",
                 background: "#000",
               }}
             >
@@ -1547,7 +1548,7 @@ const pageBg = (() => {
                     lineHeight: 1.15,
                     fontWeight: T.boldHeadings ? 800 : 600,
                     textShadow: "0 2px 12px rgba(0,0,0,0.8)",
-                    wordBreak: "break-word",
+                    wordBreak: "break-all",
                     overflowWrap: "break-word",
                   }}
                 >
@@ -1560,7 +1561,7 @@ const pageBg = (() => {
                       fontSize: T.bodyFontSize,
                       marginTop: 3,
                       fontWeight: 500,
-                      wordBreak: "break-word",
+                      wordBreak: "break-all",
                       overflowWrap: "break-word",
                     }}
                   >
@@ -1598,7 +1599,7 @@ const pageBg = (() => {
                         style={{
                           color: "rgba(255,255,255,0.6)",
                           fontSize: T.bodyFontSize - 1,
-                          wordBreak: "break-word",
+                          wordBreak: "break-all",
                           overflowWrap: "break-word",
                         }}
                       >
