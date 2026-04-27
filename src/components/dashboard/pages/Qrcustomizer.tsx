@@ -535,7 +535,7 @@ export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUr
                 <QRThumbnail key={d.id} design={d} selected={selectedDesign?.id === d.id}
                   onClick={() => {
                     if (selectedDesign?.id === d.id) setSelectedDesign(null);
-                    else { setSelectedDesign(d); setFgOverride(null); setBgOverride(null); setShapesOverridden(false); setEyeEnabled(false); }
+                    else { setSelectedDesign(d); setFgOverride(null); setBgOverride(null); setShapesOverridden(false); setEyeEnabled(false); setFgGradEnabled(false); }
                   }} />
               ))}
             </div>
@@ -545,7 +545,7 @@ export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUr
                 <QRThumbnail key={d.id} design={d} selected={selectedDesign?.id === d.id}
                   onClick={() => {
                     if (selectedDesign?.id === d.id) setSelectedDesign(null);
-                    else { setSelectedDesign(d); setFgOverride(null); setBgOverride(null); setShapesOverridden(false); setEyeEnabled(false); }
+                    else { setSelectedDesign(d); setFgOverride(null); setBgOverride(null); setShapesOverridden(false); setEyeEnabled(false); setFgGradEnabled(false); }
                   }} />
               ))}
             </div>
