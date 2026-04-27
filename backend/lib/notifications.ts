@@ -79,6 +79,8 @@ export async function createNotification(
       sourceType: opts.sourceType ?? null,
       actionUrl: opts.actionUrl ?? null,
       actionLabel: opts.actionLabel ?? null,
+      emailSent: false,
+      pushSent: false,
       createdAt: new Date().toISOString(),
     });
     if (error) {

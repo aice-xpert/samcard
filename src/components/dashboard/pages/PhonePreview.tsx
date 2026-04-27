@@ -351,7 +351,7 @@ function PhonePreviewComponent({
                   style={{ maxHeight: 560, background: T.phoneBgStyle || T.bg, ...ff }}>
 
                   {/* HERO */}
-                  {sections.profile && expanded?.profile !== false && (
+                  {sections.profile && (
                     <div className="relative" style={{ aspectRatio: '4/3', maxHeight: '200px' }}>
                       {profileImage ? (
                         <img
@@ -384,11 +384,11 @@ function PhonePreviewComponent({
                         </div>
                       )}
                       <div className="absolute bottom-0 left-0 right-0 px-4 pb-3 z-10">
-                        <h1 style={{ fontWeight: T.boldHeadings ? 800 : 600, fontSize: T.nameFontSize, lineHeight: 1.2, color: '#fff', textShadow: '0 1px 8px rgba(0,0,0,0.7)', fontFamily: T.fontFamily }}>
+                        <h1 style={{ fontWeight: T.boldHeadings ? 800 : 600, fontSize: T.nameFontSize, lineHeight: 1.2, color: '#fff', textShadow: '0 1px 8px rgba(0,0,0,0.7)', fontFamily: T.fontFamily, wordBreak: 'break-word', overflowWrap: 'break-word' }}>
                           {formData.name}
                         </h1>
                         {formData.title && (
-                          <p style={{ fontSize: T.bodyFontSize, marginTop: 2, color: T.greenLight, fontFamily: T.fontFamily }}>{formData.title}</p>
+                          <p style={{ fontSize: T.bodyFontSize, marginTop: 2, color: T.greenLight, fontFamily: T.fontFamily, wordBreak: 'break-word', overflowWrap: 'break-word' }}>{formData.title}</p>
                         )}
                         {(formData.company || (hasBrandLogo && logoPosition === 'below-name')) && (
                           <div className="flex items-center gap-1.5 mt-0.5">
@@ -396,26 +396,26 @@ function PhonePreviewComponent({
                               <BrandLogoBadge src={brandLogo} bg="rgba(0,0,0,0.45)" blur={false} maxSize={22} padding="2px 4px" borderRadius={5} />
                             )}
                             {formData.company && (
-                              <p style={{ fontSize: T.bodyFontSize, color: 'rgba(255,255,255,0.65)', fontFamily: T.fontFamily }}>{formData.company}</p>
+                              <p style={{ fontSize: T.bodyFontSize, color: 'rgba(255,255,255,0.65)', fontFamily: T.fontFamily, wordBreak: 'break-word', overflowWrap: 'break-word' }}>{formData.company}</p>
                             )}
                           </div>
                         )}
                       </div>
                     </div>)}
 
-                  {hasBrandLogo && logoPosition === 'below-photo' && (
+                  {sections.profile && hasBrandLogo && logoPosition === 'below-photo' && (
                     <div className="flex justify-center py-2.5">
                       <BrandLogoBadge src={brandLogo} bg={T.card} blur={false} maxSize={80} padding="8px 12px" borderRadius={12} border={`1px solid ${T.cardBorder}`} />
                     </div>
                   )}
 
-                  {sections.profile && expanded?.profile !== false && formData.tagline && (
+                  {sections.profile && formData.tagline && (
                     <div className="px-4 py-2.5 text-center">
                       <p style={{ fontSize: T.bodyFontSize, fontStyle: 'italic', lineHeight: 1.5, color: T.textMuted, fontFamily: T.fontFamily }}>{formData.tagline}</p>
                     </div>
                   )}
 
-                  {sections.profile && expanded?.profile !== false && contactItems.length > 0 && (
+                  {sections.profile && contactItems.length > 0 && (
                     <div className="flex justify-center gap-3 py-3 mx-3 mb-2.5"
                       style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: T.cardRadius }}>
                       {contactItems.slice(0, 4).map(({ href, Icon }, i) => (
@@ -432,8 +432,8 @@ function PhonePreviewComponent({
                   {sections.headingText && (formData.headingText || formData.bodyText) && (
                     <CardBlock T={T}>
                       <div className="px-4 py-3">
-                        {formData.headingText && <p style={{ fontWeight: T.boldHeadings ? 700 : 500, fontSize: T.bodyFontSize, marginBottom: 4, color: T.textPrimary, fontFamily: T.fontFamily }}>{formData.headingText}</p>}
-                        {formData.bodyText && <p style={{ fontSize: T.bodyFontSize, lineHeight: 1.5, color: T.textMuted, fontFamily: T.fontFamily }}>{formData.bodyText}</p>}
+                        {formData.headingText && <p style={{ fontWeight: T.boldHeadings ? 700 : 500, fontSize: T.bodyFontSize, marginBottom: 4, color: T.textPrimary, fontFamily: T.fontFamily, overflowWrap: 'break-word', wordBreak: 'break-word' }}>{formData.headingText}</p>}
+                        {formData.bodyText && <p style={{ fontSize: T.bodyFontSize, lineHeight: 1.5, color: T.textMuted, fontFamily: T.fontFamily, overflowWrap: 'break-word', wordBreak: 'break-word' }}>{formData.bodyText}</p>}
                       </div>
                     </CardBlock>
                   )}
@@ -605,7 +605,8 @@ function PhonePreviewComponent({
                   </div>
                   <div className="flex items-center gap-2">
                     <button onClick={e => { e.stopPropagation(); onSaveContact(); }}
-                      className="flex items-center gap-1.5 rounded-full px-3.5 py-2 font-bold text-white"
+                      disabled={!formData.name.trim()}
+                      className="flex items-center gap-1.5 rounded-full px-3.5 py-2 font-bold text-white disabled:opacity-40 disabled:cursor-not-allowed"
                       style={{ background: savedContact ? T.greenLight : `linear-gradient(135deg,${T.green},${T.greenLight})`, fontSize: T.bodyFontSize, fontFamily: T.fontFamily }}>
                       {savedContact ? '✓ Saved!' : 'Add to Contact'}
                     </button>
