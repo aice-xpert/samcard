@@ -226,7 +226,7 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
   useEffect(() => {
     if (!leadsInView) return;
     setLeadsLoading(true);
-    getLeads(undefined, leadsPage, cardId)
+    getLeads(undefined, leadsPage, cardId, PAGE_SIZE)
       .then((res) => {
         setLeads(res.leads ?? []);
         setLeadsTotal(res.total ?? 0);

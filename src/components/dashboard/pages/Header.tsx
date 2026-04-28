@@ -109,11 +109,15 @@ export function EnhancedHeader({
 
     fetchNotifications(isMounted);
 
+    const handleRefresh = () => fetchNotifications(isMounted);
+    window.addEventListener('notifications:refresh', handleRefresh);
+
     const interval = setInterval(() => fetchNotifications(isMounted), 30_000);
 
     return () => {
       isMounted.current = false;
       clearInterval(interval);
+      window.removeEventListener('notifications:refresh', handleRefresh);
     };
   }, [fetchNotifications]);
 

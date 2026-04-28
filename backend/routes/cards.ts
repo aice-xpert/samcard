@@ -217,6 +217,8 @@ router.post("/", verifySession, async (req: AuthRequest, res: Response) => {
       userId: req.user!.uid,
       businessProfileId,
       name: normalizedName,
+      slug,
+      shareUrl,
       cardType: cardType || "QR",
       status: "ACTIVE",
       updatedAt: new Date().toISOString(),
@@ -237,6 +239,12 @@ router.post("/", verifySession, async (req: AuthRequest, res: Response) => {
       }
       normalizedFields.status = normalizedStatus;
     }
+    // Keep server-owned identifiers/URLs authoritative on create.
+    delete normalizedFields.id;
+    delete normalizedFields.userId;
+    delete normalizedFields.businessProfileId;
+    delete normalizedFields.slug;
+    delete normalizedFields.shareUrl;
     Object.assign(cardData, normalizedFields);
 
     const { data, error } = await supabase

@@ -179,7 +179,7 @@ export default function Home() {
       case 'orders': return <Orders />;
       case 'billing': return <Billing />;
       case 'settings': return <Settings />;
-      default: return <ComprehensiveDashboard />;
+      default: return <ComprehensiveDashboard onNavigate={handleNavigate} />;
     }
   };
 

@@ -303,59 +303,61 @@ export function CardPreviewModal({
 
                   {/* Scrollable content */}
                   <div data-modalscroll={uid} className="overflow-y-auto overscroll-contain flex-1 min-h-0"
-                    style={{ background: T.phoneBgStyle || T.bg, ...ff }}>
+                    style={{ background: T.phoneBgStyle || T.bg, overflowX: 'hidden', ...ff }}>
 
                     {/* HERO */}
-                    <div className="relative" style={{ aspectRatio: '4/3', maxHeight: '240px', overflow: 'hidden' }}>
-                      {hasProfileImage ? (
-                        <img src={profileImage} alt={formData.name} className="w-full h-full object-contain object-center" />
-                      ) : (
-                        <div className="w-full h-full"
-                          style={{ background: `linear-gradient(160deg, ${T.muted} 0%, ${T.card} 100%)` }} />
-                      )}
-                      <div className="absolute inset-0"
-                        style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.75) 100%)' }} />
-                      <div className="absolute bottom-0 left-0 right-0 h-[2px]"
-                        style={{ background: `linear-gradient(90deg, transparent, ${T.green}, ${T.greenLight}, ${T.green}, transparent)` }} />
-                      {hasBrandLogo && logoPosition === 'top-left' && (
-                        <div className="absolute top-3 left-3 z-10">
-                          <BrandLogoBadge src={brandLogo!} maxSize={48} padding="5px" borderRadius={10} />
-                        </div>
-                      )}
-                      {hasBrandLogo && logoPosition === 'top-right' && (
-                        <div className="absolute top-3 right-3 z-10">
-                          <BrandLogoBadge src={brandLogo!} maxSize={48} padding="5px" borderRadius={10} />
-                        </div>
-                      )}
-                      <div className="absolute bottom-0 left-0 right-0 px-4 pb-3 z-10">
-                        <h1 style={{ fontWeight: T.boldHeadings ? 800 : 600, fontSize: T.nameFontSize, lineHeight: 1.2, color: '#fff', textShadow: '0 1px 8px rgba(0,0,0,0.7)', fontFamily: T.fontFamily }}>
-                          {formData.name}
-                        </h1>
-                        {formData.title && <p style={{ fontSize: T.bodyFontSize, marginTop: 2, color: T.greenLight, fontFamily: T.fontFamily }}>{formData.title}</p>}
-
-                        {hasBrandLogo && logoPosition === 'below-name' && (
-                          <div className="flex justify-center mt-1">
-                            <BrandLogoBadge src={brandLogo!} bg="rgba(0,0,0,0.45)" blur={false} maxSize={22} padding="2px 4px" borderRadius={5} />
+                    {sec.profile && (
+                      <div className="relative" style={{ aspectRatio: '4/3', maxHeight: '240px', overflow: 'hidden' }}>
+                        {hasProfileImage ? (
+                          <img src={profileImage} alt={formData.name} className="w-full h-full object-contain object-center" />
+                        ) : (
+                          <div className="w-full h-full"
+                            style={{ background: `linear-gradient(160deg, ${T.muted} 0%, ${T.card} 100%)` }} />
+                        )}
+                        <div className="absolute inset-0"
+                          style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.75) 100%)' }} />
+                        <div className="absolute bottom-0 left-0 right-0 h-[2px]"
+                          style={{ background: `linear-gradient(90deg, transparent, ${T.green}, ${T.greenLight}, ${T.green}, transparent)` }} />
+                        {hasBrandLogo && logoPosition === 'top-left' && (
+                          <div className="absolute top-3 left-3 z-10">
+                            <BrandLogoBadge src={brandLogo!} maxSize={48} padding="5px" borderRadius={10} />
                           </div>
                         )}
-
-                        {formData.company && (
-                          <div className="flex items-center gap-1.5 mt-0.5 justify-center">
-                            <p style={{ fontSize: T.bodyFontSize, color: 'rgba(255,255,255,0.65)', fontFamily: T.fontFamily }}>{formData.company}</p>
+                        {hasBrandLogo && logoPosition === 'top-right' && (
+                          <div className="absolute top-3 right-3 z-10">
+                            <BrandLogoBadge src={brandLogo!} maxSize={48} padding="5px" borderRadius={10} />
                           </div>
                         )}
+                        <div className="absolute bottom-0 left-0 right-0 px-4 pb-3 z-10">
+                          <h1 style={{ fontWeight: T.boldHeadings ? 800 : 600, fontSize: T.nameFontSize, lineHeight: 1.2, color: '#fff', textShadow: '0 1px 8px rgba(0,0,0,0.7)', fontFamily: T.fontFamily, wordBreak: 'break-all', overflowWrap: 'break-word' }}>
+                            {formData.name}
+                          </h1>
+                          {formData.title && <p style={{ fontSize: T.bodyFontSize, marginTop: 2, color: T.greenLight, fontFamily: T.fontFamily, wordBreak: 'break-all', overflowWrap: 'break-word' }}>{formData.title}</p>}
+
+                          {hasBrandLogo && logoPosition === 'below-name' && (
+                            <div className="flex justify-center mt-1">
+                              <BrandLogoBadge src={brandLogo!} bg="rgba(0,0,0,0.45)" blur={false} maxSize={22} padding="2px 4px" borderRadius={5} />
+                            </div>
+                          )}
+
+                          {formData.company && (
+                            <div className="flex items-center gap-1.5 mt-0.5 justify-center">
+                              <p style={{ fontSize: T.bodyFontSize, color: 'rgba(255,255,255,0.65)', fontFamily: T.fontFamily, wordBreak: 'break-all', overflowWrap: 'break-word' }}>{formData.company}</p>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
+                    )}
 
-                    {hasBrandLogo && logoPosition === 'below-photo' && (
+                    {sec.profile && hasBrandLogo && logoPosition === 'below-photo' && (
                       <div className="flex justify-center py-2.5">
                         <BrandLogoBadge src={brandLogo!} bg={T.card} blur={false} maxSize={80} padding="8px 12px" borderRadius={12} border={`1px solid ${T.cardBorder}`} />
                       </div>
                     )}
 
-                    {formData.tagline && (
+                    {sec.profile && formData.tagline && (
                       <div className="px-4 py-2.5 text-center">
-                        <p style={{ fontSize: T.bodyFontSize, fontStyle: 'italic', lineHeight: 1.5, color: T.textMuted, fontFamily: T.fontFamily }}>{formData.tagline}</p>
+                        <p style={{ fontSize: T.bodyFontSize, fontStyle: 'italic', lineHeight: 1.5, color: T.textMuted, fontFamily: T.fontFamily, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{formData.tagline}</p>
                       </div>
                     )}
 
@@ -430,7 +432,8 @@ export function CardPreviewModal({
                             <div key={label}>
                               <div className="flex items-center justify-between px-4 py-2.5">
                                 <span style={{ fontSize: T.bodyFontSize, color: T.textMuted, fontFamily: T.fontFamily }}>{label}</span>
-                                <span style={{ fontSize: T.bodyFontSize, fontWeight: T.boldHeadings ? 700 : 400, color: T.textPrimary, fontFamily: T.fontFamily }} className="text-right max-w-[55%]">{val}</span>
+                                <span style={{ fontSize: T.bodyFontSize, fontWeight: T.boldHeadings ? 700 : 400, color: T.textPrimary, fontFamily: T.fontFamily, wordBreak: 'break-word', overflowWrap: 'anywhere', maxWidth: '55%', display: 'inline-block', textAlign: 'right' }}>{val}</span>
+                                {/* <span style={{ fontSize: T.bodyFontSize, fontWeight: T.boldHeadings ? 700 : 400, color: T.textPrimary, fontFamily: T.fontFamily }} className="text-right max-w-[55%]">{val}</span> */}
                               </div>
                               {i < arr.length - 1 && <Divider T={T} />}
                             </div>
@@ -558,7 +561,8 @@ export function CardPreviewModal({
                     <div className="flex items-center gap-2">
                       {sec.profile && (
                         <button onClick={onSaveContact}
-                          className="modal-tap flex items-center gap-1.5 rounded-full px-3.5 py-2 font-bold text-white"
+                          disabled={!formData.name?.trim()}
+                          className="modal-tap flex items-center gap-1.5 rounded-full px-3.5 py-2 font-bold text-white disabled:opacity-40 disabled:cursor-not-allowed"
                           style={{ background: savedContact ? T.greenLight : `linear-gradient(135deg,${T.green},${T.greenLight})`, fontSize: T.bodyFontSize, fontFamily: T.fontFamily }}>
                           {savedContact ? '✓ Saved!' : 'Add to Contact'}
                         </button>
