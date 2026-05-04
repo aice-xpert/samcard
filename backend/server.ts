@@ -6,6 +6,10 @@ import signupRoute from "./auth/signup";
 import loginRoute from "./auth/login";
 import logoutRoute from "./auth/logout";
 import verifyRoute from "./auth/verify";
+import emailVerificationRoute from "./auth/email-verification";
+import resendVerificationRoute from "./auth/resend-verification";
+import forgotPasswordRoute from "./auth/forgot-password";
+import resetPasswordRoute from "./auth/reset-password";
 import oauthRoute from "./middleware/oauth";
 import userRoute from "./routes/user";
 import cardsRoute from "./routes/cards";
@@ -65,6 +69,10 @@ app.use("/api/auth/signup", signupRoute);
 app.use("/api/auth/login", loginRoute);
 app.use("/api/auth/logout", logoutRoute);
 app.use("/api/auth/verify", verifyRoute);
+app.use("/api/auth/verify-email", emailVerificationRoute);
+app.use("/api/auth/resend-verification", resendVerificationRoute);
+app.use("/api/auth/forgot-password", forgotPasswordRoute);
+app.use("/api/auth/reset-password", resetPasswordRoute);
 app.use("/api/auth/oauth", oauthRoute);
 
 // Mount specific routes BEFORE general routes to prevent interception

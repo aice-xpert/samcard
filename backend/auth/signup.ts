@@ -1,8 +1,10 @@
 import express from "express";
+import crypto from "crypto";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 import { supabase } from "../config/supabase";
+import { sendVerificationEmail } from "../services/email";
 
 const router = express.Router();
 
@@ -84,6 +86,23 @@ router.post("/", async (req, res) => {
       return res.status(500).json({ success: false, error: "Failed to create user" });
     }
 
+    // ── Send verification email ───────────────────────────────────────────────
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    const { error: tokenInsertError } = await supabase.from("EmailToken").insert({
+      userId: newUser.id,
+      token: verificationToken,
+      type: "email_verification",
+      expiresAt: tokenExpiry,
+    });
+    if (tokenInsertError) {
+      console.error("[signup] EmailToken insert failed:", tokenInsertError);
+    } else {
+      sendVerificationEmail(newUser.email, newUser.name ?? "there", verificationToken).catch((err) =>
+        console.error("[signup] sendVerificationEmail failed:", err)
+      );
+    }
+
     // ── Issue JWT session token ───────────────────────────────────────────────
     const payload = { uid: newUser.id, email: newUser.email, name: newUser.name };
     const sessionToken = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
@@ -100,7 +119,7 @@ router.post("/", async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      message: "User created successfully",
+      message: "User created successfully. Please check your email to verify your account.",
       user: {
         uid: newUser.id,
         email: newUser.email,
