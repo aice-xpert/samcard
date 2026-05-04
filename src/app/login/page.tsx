@@ -1,14 +1,39 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "motion/react";
 import { Mail, Lock, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import { FaGithub } from "react-icons/fa";
-import { signInWithEmailAndPassword, linkWithCredential, GithubAuthProvider, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { FirebaseError } from "firebase/app";
-import { auth } from "@/lib/firebase";
+
+const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "") ?? "";
+const COOKIE_MAX_AGE = 60 * 60 * 24 * 5; // 5 days in seconds
+
+// ── helpers ───────────────────────────────────────────────────────────────────
+
+function persistSession(token: string) {
+  localStorage.setItem("sessionToken", token);
+  document.cookie = `session=${token}; path=/; max-age=${COOKIE_MAX_AGE}; SameSite=Lax`;
+}
+
+/**
+ * When the backend redirects back after OAuth it appends `#token=<jwt>` to the
+ * URL so the frontend can grab it before the fragment is stripped by the browser.
+ */
+function consumeHashToken() {
+  if (typeof window === "undefined") return;
+  const hash = window.location.hash;
+  const match = hash.match(/[#&]token=([^&]+)/);
+  if (match) {
+    persistSession(decodeURIComponent(match[1]));
+    // Clean the fragment so it doesn't leak in copy-paste or history
+    window.history.replaceState(null, "", window.location.pathname + window.location.search);
+    window.location.href = "/dashboard";
+  }
+}
+
+// ── component ─────────────────────────────────────────────────────────────────
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -17,184 +42,58 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const persistSessionToken = (token: string) => {
-    localStorage.setItem("sessionToken", token);
-    document.cookie = `sessionToken=${token}; path=/; max-age=${60 * 60 * 24 * 5}; SameSite=Lax`;
-  };
+  // Pick up token from OAuth redirect hash on mount
+  useEffect(() => { consumeHashToken(); }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // ── email / password login ──────────────────────────────────────────────────
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
     try {
-      // 1. Sign in on the client
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      if (!API_BASE) throw new Error("Missing NEXT_PUBLIC_BACKEND_URL");
 
-      // 2. Get the ID Token
-      const idToken = await userCredential.user.getIdToken();
-
-      const apiBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "");
-
-      if (!apiBaseUrl) {
-        throw new Error("Missing NEXT_PUBLIC_BACKEND_URL environment variable");
-      }
-
-      const response = await fetch(`${apiBaseUrl}/api/auth/login`, {
+      const response = await fetch(`${API_BASE}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken }),
+        body: JSON.stringify({ email, password }),
         credentials: "include",
       });
 
       const data = await response.json();
 
-      if (response.ok) {
-        if (data.sessionToken) {
-          persistSessionToken(data.sessionToken);
-          // Manually set cookie in case cross-origin Set-Cookie gets blocked in dev
-          document.cookie = `session=${data.sessionToken}; path=/; max-age=${60 * 60 * 24 * 5}; SameSite=Lax`;
-        }
-        // Full page reload to ensure middleware sees the new session cookie
-        window.location.href = "/dashboard";
-      } else {
-        throw new Error(data.error || "Failed to create session");
+      if (!response.ok) {
+        throw new Error(data.error || "Login failed");
       }
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+
+      if (data.sessionToken) persistSession(data.sessionToken);
+      window.location.href = "/dashboard";
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
   };
 
-  // Replace your existing handleBackendSession function with this:
-  const handleBackendSession = async (user: { getIdToken: () => Promise<string> }) => {
-    const idToken = await user.getIdToken();
-    const apiBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "");
-
-    if (!apiBaseUrl) throw new Error("Missing NEXT_PUBLIC_BACKEND_URL");
-
-    const response = await fetch(`${apiBaseUrl}/api/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ idToken }),
-      credentials: "include",
-    });
-
-    if (!response.ok) {
-      const data = await response.json().catch(() => ({}));
-      throw new Error(data.error || data.message || "Backend session failed");
+  // ── OAuth — just redirect to the backend OAuth entry-point ─────────────────
+  const handleSocialSignIn = (provider: "google" | "github") => {
+    if (!API_BASE) {
+      setError("Missing NEXT_PUBLIC_BACKEND_URL");
+      return;
     }
-
-    const data = await response.json();
-
-    // Save session token to localStorage so api.ts can use it as Bearer token.
-    // Also set a readable cookie so Next.js middleware can fall back to it.
-    if (data.sessionToken) {
-      persistSessionToken(data.sessionToken);
-      // Manually set cookie in case cross-origin Set-Cookie gets blocked in dev
-      document.cookie = `session=${data.sessionToken}; path=/; max-age=${60 * 60 * 24 * 5}; SameSite=Lax`;
-    }
-
-    // Full page reload to ensure middleware sees the new session cookie
-    window.location.href = "/dashboard";
-  };
-
-  const handleSocialSignIn = async (providerType: "google" | "github") => {
-    setError(null);
-    setLoading(true);
-
-    const provider =
-      providerType === "google"
-        ? new GoogleAuthProvider()
-        : new GithubAuthProvider();
-
-    try {
-      const result = await signInWithPopup(auth, provider);
-      await handleBackendSession(result.user);
-
-    } catch (err: unknown) {
-      if (!(err instanceof FirebaseError)) {
-        setError('An error occurred');
-        setLoading(false);
-        return;
-      }
-      const error = err;
-      if (error.code === "auth/account-exists-with-different-credential") {
-        const pendingCred =
-          providerType === "google"
-            ? GoogleAuthProvider.credentialFromError(error)
-            : GithubAuthProvider.credentialFromError(error);
-
-        const conflictingEmail = error.customData?.email;
-
-        if (!pendingCred || !conflictingEmail) {
-          setError("Sign-in failed. Please try again.");
-          setLoading(false);
-          return;
-        }
-
-        const email = conflictingEmail as string;
-        // Store pending credential in sessionStorage
-        sessionStorage.setItem("pendingCred", JSON.stringify({
-          providerType,
-          email,
-        }));
-
-        const oppositeProvider =
-          providerType === "google"
-            ? new GithubAuthProvider()
-            : new GoogleAuthProvider();
-
-        oppositeProvider.setCustomParameters({ login_hint: email });
-
-        try {
-          // Single second popup — silent to user, feels like normal sign-in
-          const originalResult = await signInWithPopup(auth, oppositeProvider);
-          await linkWithCredential(originalResult.user, pendingCred);
-          sessionStorage.removeItem("pendingCred");
-          await handleBackendSession(originalResult.user);
-
-        } catch (linkErr: unknown) {
-          sessionStorage.removeItem("pendingCred");
-          if (!(linkErr instanceof FirebaseError)) {
-            setError("Sign-in failed. Please try again.");
-            setLoading(false);
-            return;
-          }
-          const linkError = linkErr;
-
-          if (linkError.code === "auth/credential-already-in-use") {
-            // Already linked — just push them through
-            if (auth.currentUser) {
-              await handleBackendSession(auth.currentUser);
-            }
-          } else if (linkError.code !== "auth/popup-closed-by-user") {
-            setError("Sign-in failed. Please try again.");
-          }
-          // popup-closed-by-user: show nothing, user knows they closed it
-        }
-
-      } else if (error.code !== "auth/popup-closed-by-user") {
-        setError(error.message || 'An error occurred');
-      }
-    } finally {
-      setLoading(false);
-    }
+    // The backend will handle the full OAuth dance and redirect back here
+    window.location.href = `${API_BASE}/api/auth/oauth/${provider}`;
   };
 
   return (
     <div
       className="
         min-h-screen
-        bg-gradient-to-b
-        from-theme-devil-green
-        via-black
-        to-black
+        bg-gradient-to-b from-theme-devil-green via-black to-black
         pt-24 pb-5
         flex items-center justify-center px-4
-        overflow-hidden
-        relative
+        overflow-hidden relative
       "
     >
       {/* Glow Effects */}
@@ -219,12 +118,8 @@ export default function LoginPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
           className="
-            bg-white/5
-            backdrop-blur-lg
-            rounded-2xl
-            p-8
-            border border-white/10
-            shadow-2xl shadow-theme-digital-green/10
+            bg-white/5 backdrop-blur-lg rounded-2xl p-8
+            border border-white/10 shadow-2xl shadow-theme-digital-green/10
           "
         >
           {/* Error Banner */}
@@ -237,17 +132,11 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email */}
             <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-white mb-2"
-              >
+              <label htmlFor="email" className="block text-sm font-medium text-white mb-2">
                 Email Address
               </label>
               <div className="relative">
-                <Mail
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                  size={20}
-                />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                 <input
                   id="email"
                   type="email"
@@ -257,15 +146,9 @@ export default function LoginPage() {
                   required
                   className="
                     w-full pl-11 pr-4 py-3
-                    bg-white/5
-                    border border-white/10
-                    rounded-xl
-                    text-white
-                    placeholder:text-gray-500
-                    focus:outline-none
-                    focus:ring-2
-                    focus:ring-accent
-                    focus:border-transparent
+                    bg-white/5 border border-white/10 rounded-xl
+                    text-white placeholder:text-gray-500
+                    focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent
                     transition-all
                   "
                 />
@@ -274,17 +157,11 @@ export default function LoginPage() {
 
             {/* Password */}
             <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-white mb-2"
-              >
+              <label htmlFor="password" className="block text-sm font-medium text-white mb-2">
                 Password
               </label>
               <div className="relative">
-                <Lock
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                  size={20}
-                />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
@@ -294,14 +171,9 @@ export default function LoginPage() {
                   required
                   className="
                     w-full pl-11 pr-12 py-3
-                    bg-white/5
-                    border border-white/10
-                    rounded-xl
-                    text-white
-                    placeholder:text-gray-500
-                    focus:outline-none
-                    focus:ring-2
-                    focus:ring-accent
+                    bg-white/5 border border-white/10 rounded-xl
+                    text-white placeholder:text-gray-500
+                    focus:outline-none focus:ring-2 focus:ring-accent
                     transition-all
                   "
                 />
@@ -320,13 +192,7 @@ export default function LoginPage() {
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
-                  className="
-                    w-4 h-4 rounded
-                    border-white/10
-                    bg-white/5
-                    text-accent
-                    focus:ring-accent
-                  "
+                  className="w-4 h-4 rounded border-white/10 bg-white/5 text-accent focus:ring-accent"
                 />
                 <span className="text-sm text-gray-400">Remember me</span>
               </label>
@@ -346,19 +212,14 @@ export default function LoginPage() {
                 w-full py-3
                 bg-gradient-to-r from-primary to-theme-strong-green
                 text-white rounded-xl
-                hover:scale-105
-                hover:shadow-2xl hover:shadow-theme-digital-green/30
-                transition-all
-                flex items-center justify-center gap-2 group
+                hover:scale-105 hover:shadow-2xl hover:shadow-theme-digital-green/30
+                transition-all flex items-center justify-center gap-2 group
                 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100
               "
             >
-              {loading ? "Signing in..." : "Sign In"}
+              {loading ? "Signing in…" : "Sign In"}
               {!loading && (
-                <ArrowRight
-                  size={20}
-                  className="group-hover:translate-x-1 transition-transform"
-                />
+                <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
               )}
             </button>
           </form>
@@ -369,38 +230,34 @@ export default function LoginPage() {
               <div className="w-full border-t border-white/10" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-4 text-gray-400">Or continue with</span>
+              <span className="px-4 text-gray-400 bg-transparent">Or continue with</span>
             </div>
           </div>
 
-          {/* Social */}
           {/* Social Buttons */}
           <div className="grid grid-cols-2 gap-4">
             <button
               onClick={() => handleSocialSignIn("google")}
               disabled={loading}
-              className="py-3 flex items-center justify-center gap-2 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all"
+              className="py-3 flex items-center justify-center gap-2 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <FcGoogle size={20} />
-              <span>Google</span>
+              <span className="text-white text-sm">Google</span>
             </button>
 
             <button
               onClick={() => handleSocialSignIn("github")}
               disabled={loading}
-              className="py-3 flex items-center justify-center gap-2 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all"
+              className="py-3 flex items-center justify-center gap-2 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <FaGithub size={20} />
-              <span>GitHub</span>
+              <FaGithub size={20} className="text-white" />
+              <span className="text-white text-sm">GitHub</span>
             </button>
           </div>
 
           <p className="mt-6 text-center text-sm text-gray-400">
             Don&apos;t have an account?{" "}
-            <Link
-              href="/signup"
-              className="text-accent hover:text-theme-digital-green transition-colors"
-            >
+            <Link href="/signup" className="text-accent hover:text-theme-digital-green transition-colors">
               Sign up for free
             </Link>
           </p>
@@ -412,10 +269,7 @@ export default function LoginPage() {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="mt-6 text-center"
         >
-          <Link
-            href="/"
-            className="text-sm text-gray-400 hover:text-white transition-colors"
-          >
+          <Link href="/" className="text-sm text-gray-400 hover:text-white transition-colors">
             ← Back to home
           </Link>
         </motion.div>

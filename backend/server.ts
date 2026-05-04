@@ -6,6 +6,7 @@ import signupRoute from "./auth/signup";
 import loginRoute from "./auth/login";
 import logoutRoute from "./auth/logout";
 import verifyRoute from "./auth/verify";
+import oauthRoute from "./middleware/oauth";
 import userRoute from "./routes/user";
 import cardsRoute from "./routes/cards";
 import socialLinksRoute from "./routes/social-links";
@@ -64,6 +65,7 @@ app.use("/api/auth/signup", signupRoute);
 app.use("/api/auth/login", loginRoute);
 app.use("/api/auth/logout", logoutRoute);
 app.use("/api/auth/verify", verifyRoute);
+app.use("/api/auth/oauth", oauthRoute);
 
 // Mount specific routes BEFORE general routes to prevent interception
 app.use("/api/public/cards", publicCardRoute);
