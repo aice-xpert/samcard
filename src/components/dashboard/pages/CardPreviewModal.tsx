@@ -303,7 +303,7 @@ export function CardPreviewModal({
 
                   {/* Scrollable content */}
                   <div data-modalscroll={uid} className="overflow-y-auto overscroll-contain flex-1 min-h-0"
-                    style={{ background: T.phoneBgStyle || T.bg, ...ff }}>
+                    style={{ background: T.phoneBgStyle || T.bg, overflowX: 'hidden', ...ff }}>
 
                     {/* HERO */}
                     {sec.profile && (
@@ -357,7 +357,7 @@ export function CardPreviewModal({
 
                     {sec.profile && formData.tagline && (
                       <div className="px-4 py-2.5 text-center">
-                        <p style={{ fontSize: T.bodyFontSize, fontStyle: 'italic', lineHeight: 1.5, color: T.textMuted, fontFamily: T.fontFamily }}>{formData.tagline}</p>
+                        <p style={{ fontSize: T.bodyFontSize, fontStyle: 'italic', lineHeight: 1.5, color: T.textMuted, fontFamily: T.fontFamily, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{formData.tagline}</p>
                       </div>
                     )}
 
@@ -432,7 +432,8 @@ export function CardPreviewModal({
                             <div key={label}>
                               <div className="flex items-center justify-between px-4 py-2.5">
                                 <span style={{ fontSize: T.bodyFontSize, color: T.textMuted, fontFamily: T.fontFamily }}>{label}</span>
-                                <span style={{ fontSize: T.bodyFontSize, fontWeight: T.boldHeadings ? 700 : 400, color: T.textPrimary, fontFamily: T.fontFamily }} className="text-right max-w-[55%]">{val}</span>
+                                <span style={{ fontSize: T.bodyFontSize, fontWeight: T.boldHeadings ? 700 : 400, color: T.textPrimary, fontFamily: T.fontFamily, wordBreak: 'break-word', overflowWrap: 'anywhere', maxWidth: '55%', display: 'inline-block', textAlign: 'right' }}>{val}</span>
+                                {/* <span style={{ fontSize: T.bodyFontSize, fontWeight: T.boldHeadings ? 700 : 400, color: T.textPrimary, fontFamily: T.fontFamily }} className="text-right max-w-[55%]">{val}</span> */}
                               </div>
                               {i < arr.length - 1 && <Divider T={T} />}
                             </div>

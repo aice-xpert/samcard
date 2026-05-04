@@ -192,7 +192,7 @@ function track(slug: string, type: string) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ type, visitorId: getVisitorId() }),
-  }).catch(() => {});
+  }).catch(() => { });
 }
 
 function openLink(url: string) {
@@ -796,7 +796,7 @@ function ExtraSectionBlock({
               width: "100%",
               display: "flex",
               alignItems: "center",
-               gap: 12,
+              gap: 12,
               padding: "14px 16px",
               background: "none",
               border: "none",
@@ -919,7 +919,7 @@ function QRModal({
       .then((data) => {
         if (data) setQrConfig(data);
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [cardId]);
 
   return (
@@ -1135,8 +1135,8 @@ export default function PublicCardPage() {
     const phoneBgType = normalizePhoneBgType(design.phoneBgType);
     const resolvedBackground =
       phoneBgType === "gradient" &&
-      design.phoneBgColor1 &&
-      design.phoneBgColor2
+        design.phoneBgColor1 &&
+        design.phoneBgColor2
         ? `linear-gradient(${design.phoneBgAngle || 135}deg, ${design.phoneBgColor1}, ${design.phoneBgColor2})`
         : design.phoneBgColor1 || design.bgColor || "#0a0f0a";
 
@@ -1156,7 +1156,7 @@ export default function PublicCardPage() {
   const cardUrl = `${PUBLIC_BASE}/${slug}`;
 
   const copyLink = useCallback(async () => {
-    await navigator.clipboard.writeText(window.location.href).catch(() => {});
+    await navigator.clipboard.writeText(window.location.href).catch(() => { });
     setCopied(true);
     track(slug, "share");
     setTimeout(() => setCopied(false), 2000);
@@ -1289,29 +1289,29 @@ export default function PublicCardPage() {
     cardRadius: D.cardRadius ?? 16,
   };
 
-// In [slug]/page.tsx — add this lookup before pageBg computation
-const PRESET_STYLES: Record<string, string> = {
-  'aurora': 'linear-gradient(160deg, #0a0a0a 0%, #003322 25%, #006644 50%, #004422 70%, #001133 85%, #0a0a0a 100%)',
-  'deep-space': 'radial-gradient(ellipse at 20% 80%, #0f2027 0%, #203a43 45%, #2c5364 100%)',
-  'midnight-purple': 'radial-gradient(ellipse at 60% 10%, #2d0855 0%, #1a0533 40%, #0d0118 70%, #050010 100%)',
-  'sunset-dusk': 'linear-gradient(170deg, #1a0500 0%, #3d1000 30%, #2a0a00 55%, #1a0800 75%, #000 100%)',
-  'ocean-depth': 'radial-gradient(ellipse at 30% 20%, #003366 0%, #001f3f 40%, #000d1a 75%, #000510 100%)',
-  'volcanic': 'radial-gradient(ellipse at 50% 90%, #3d0000 0%, #2d0000 30%, #1a0000 60%, #050000 100%)',
-};
+  // In [slug]/page.tsx — add this lookup before pageBg computation
+  const PRESET_STYLES: Record<string, string> = {
+    'aurora': 'linear-gradient(160deg, #0a0a0a 0%, #003322 25%, #006644 50%, #004422 70%, #001133 85%, #0a0a0a 100%)',
+    'deep-space': 'radial-gradient(ellipse at 20% 80%, #0f2027 0%, #203a43 45%, #2c5364 100%)',
+    'midnight-purple': 'radial-gradient(ellipse at 60% 10%, #2d0855 0%, #1a0533 40%, #0d0118 70%, #050010 100%)',
+    'sunset-dusk': 'linear-gradient(170deg, #1a0500 0%, #3d1000 30%, #2a0a00 55%, #1a0800 75%, #000 100%)',
+    'ocean-depth': 'radial-gradient(ellipse at 30% 20%, #003366 0%, #001f3f 40%, #000d1a 75%, #000510 100%)',
+    'volcanic': 'radial-gradient(ellipse at 50% 90%, #3d0000 0%, #2d0000 30%, #1a0000 60%, #050000 100%)',
+  };
 
-const pageBg = (() => {
-  // 1. If a named preset is set (and it's not 'custom'), use its CSS directly
-  if (D.phoneBgPreset && D.phoneBgPreset !== 'custom' && PRESET_STYLES[D.phoneBgPreset]) {
-    return PRESET_STYLES[D.phoneBgPreset];
-  }
-  // 2. Custom or fallback: use raw colors
-  const phoneBgType = normalizePhoneBgType(D.phoneBgType);
-  if (phoneBgType === 'gradient' && D.phoneBgColor1 && D.phoneBgColor2) {
-    return `linear-gradient(${D.phoneBgAngle || 135}deg, ${D.phoneBgColor1}, ${D.phoneBgColor2})`;
-  }
-  if (D.phoneBgColor1) return D.phoneBgColor1;
-  return D.bgColor || '#0a0f0a';
-})();
+  const pageBg = (() => {
+    // 1. If a named preset is set (and it's not 'custom'), use its CSS directly
+    if (D.phoneBgPreset && D.phoneBgPreset !== 'custom' && PRESET_STYLES[D.phoneBgPreset]) {
+      return PRESET_STYLES[D.phoneBgPreset];
+    }
+    // 2. Custom or fallback: use raw colors
+    const phoneBgType = normalizePhoneBgType(D.phoneBgType);
+    if (phoneBgType === 'gradient' && D.phoneBgColor1 && D.phoneBgColor2) {
+      return `linear-gradient(${D.phoneBgAngle || 135}deg, ${D.phoneBgColor1}, ${D.phoneBgColor2})`;
+    }
+    if (D.phoneBgColor1) return D.phoneBgColor1;
+    return D.bgColor || '#0a0f0a';
+  })();
 
   const hasBrandLogo = !!content.brandLogo?.trim();
 
@@ -1375,34 +1375,34 @@ const pageBg = (() => {
       )}
 
       {/* ── Full-bleed background = user's chosen phone bg ── */}
-     <div style={{
-  minHeight: "100dvh",
-  background: pageBg,
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "flex-start",
-  padding: "0 0 80px",
-  fontFamily: T.fontFamily,
-  width: "100%",
+      <div style={{
+        minHeight: "100dvh",
+        background: pageBg,
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "flex-start",
+        padding: "0 0 80px",
+        fontFamily: T.fontFamily,
+        width: "100%",
 
-  // ✅ FULL WINDOW GLOW
-//   boxShadow: D.glowEffect
-//     ? `
-//       inset 0 0 80px ${T.green}55,
-//       inset 0 0 120px ${T.greenLight}33,
-//       inset 0 0 160px ${D.bgColor || "#0a0f0a"}
-//     `
-//     : "none",
-}}>
+        // ✅ FULL WINDOW GLOW
+        //   boxShadow: D.glowEffect
+        //     ? `
+        //       inset 0 0 80px ${T.green}55,
+        //       inset 0 0 120px ${T.greenLight}33,
+        //       inset 0 0 160px ${D.bgColor || "#0a0f0a"}
+        //     `
+        //     : "none",
+      }}>
         {/* Card column — transparent so page bg shows around edges on wider screens */}
         <div className="sc-card" style={{
-  width: "100%",
-  maxWidth: 480,
-  minHeight: "100vh",
-  background: "transparent",
-  overflowX: "hidden",
-  borderRadius: T.cardRadius,
-}}>
+          width: "100%",
+          maxWidth: 480,
+          minHeight: "100vh",
+          background: "transparent",
+          overflowX: "hidden",
+          borderRadius: T.cardRadius,
+        }}>
           {/* ── HERO ── */}
           {S.profile && (
             <div
@@ -1647,6 +1647,8 @@ const pageBg = (() => {
                 fontSize: T.bodyFontSize,
                 fontStyle: "italic",
                 lineHeight: 1.6,
+                wordBreak: "break-word",
+                overflowWrap: "anywhere",
               }}
             >
               {fd.tagline || businessProfile.tagline}
@@ -1841,6 +1843,9 @@ const pageBg = (() => {
                             color: T.textPrimary,
                             maxWidth: "55%",
                             textAlign: "right",
+                            wordBreak: "break-word",
+                            overflowWrap: "anywhere",
+                            display: "inline-block",
                           }}
                         >
                           {val}
