@@ -103,17 +103,8 @@ router.post("/", async (req, res) => {
       );
     }
 
-    // ── Issue JWT session token ───────────────────────────────────────────────
-    const payload = { uid: newUser.id, email: newUser.email, name: newUser.name };
-    const sessionToken = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
-
-    res.cookie("session", sessionToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      maxAge: COOKIE_MAX_AGE,
-      path: "/",
-    });
+    // Do not issue a session token until the email is verified.
+    console.log(`[signup] User created: ${newUser.id}, awaiting email verification.`);
 
     console.log(`[signup] User created: ${newUser.id}`);
 
@@ -125,7 +116,6 @@ router.post("/", async (req, res) => {
         email: newUser.email,
         name: newUser.name,
       },
-      sessionToken,
     });
   } catch (err: unknown) {
     console.error("Signup error:", err);

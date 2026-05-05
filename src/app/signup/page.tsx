@@ -70,12 +70,8 @@ export default function SignupPage() {
 
       if (!response.ok) throw new Error(data.error || "Signup failed");
 
-      // Persist the session that was returned on creation so the user is
-      // immediately logged in — no need to go through login separately.
-      if (data.sessionToken) persistSession(data.sessionToken);
-
-      // Redirect straight to dashboard (or check-email if you still want verification)
-      window.location.href = "/dashboard";
+      // Redirect to check-email page to inform user to verify their account
+      window.location.href = `/check-email?email=${encodeURIComponent(formData.email)}`;
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Something went wrong!");
     } finally {

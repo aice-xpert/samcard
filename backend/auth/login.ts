@@ -23,7 +23,7 @@ router.post("/", async (req: Request, res: Response) => {
     // ── Fetch user from Supabase ──────────────────────────────────────────────
     const { data: user, error: fetchError } = await supabase
       .from("User")
-      .select("id, email, name, passwordHash")
+      .select("id, email, name, passwordHash, emailVerified")
       .eq("email", emailTrimmed)
       .maybeSingle();
 
@@ -38,6 +38,10 @@ router.post("/", async (req: Request, res: Response) => {
 
     const invalidCredentials = () =>
       res.status(401).json({ success: false, error: "Invalid email or password" });
+
+    if (!user.emailVerified) {
+      return res.status(403).json({ success: false, error: "Please verify your email before logging in." });
+    }
 
     // ── Guard: social-only accounts have no password ──────────────────────────
     if (!user.passwordHash) {
