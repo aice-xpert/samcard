@@ -253,11 +253,26 @@ router.get("/:slug", async (req, res: Response) => {
       .eq("cardId", card.id)
       .maybeSingle();
 
-    const { data: qrConfig } = await supabase
+    console.log("[public-card] about to fetch qrConfig", {
+      slug,
+      cardId: card.id,
+      cardIdType: typeof card.id,
+    });
+
+    const { data: qrConfig, error: qrError } = await supabase
       .from("CardQRConfig")
       .select("*")
       .eq("cardId", card.id)
       .maybeSingle();
+
+    console.log("[public-card] fetched QR config", {
+      slug,
+      cardId: card.id,
+      hasQrConfig: !!qrConfig,
+      qrError: qrError?.message,
+      allQrConfigKeys: qrConfig ? Object.keys(qrConfig) : null,
+      qrConfig: qrConfig ? { shapeId: qrConfig.shapeId, fg: qrConfig.fg, bg: qrConfig.bg, stickerId: qrConfig.stickerId, selectedLogo: qrConfig.selectedLogo } : null,
+    });
 
     const { data: socialLinks } = await supabase
       .from("SocialLink")
@@ -494,6 +509,12 @@ router.get("/:slug", async (req, res: Response) => {
         phoneBgColor2: response.design.phoneBgColor2,
         phoneBgAngle: response.design.phoneBgAngle,
       },
+    });
+
+    console.log("[public-card] final response", {
+      slug,
+      hasQrConfig: !!response.qrConfig,
+      qrConfig: response.qrConfig ? { shapeId: response.qrConfig.shapeId, fg: response.qrConfig.fg, bg: response.qrConfig.bg } : null,
     });
 
     res.set("Cache-Control", "no-store");

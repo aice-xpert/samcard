@@ -1049,9 +1049,11 @@ export default function BusinessProfile({
         getCards().catch(() => [] as Awaited<ReturnType<typeof getCards>>),
       ]);
       const matchedCard = cards.find(c => c.id === resolvedCardId);
-      if (matchedCard?.slug) {
+      if (matchedCard) {
         const PUBLIC_BASE = (process.env.NEXT_PUBLIC_APP_URL || 'https://samcard.vercel.app').replace(/\/$/, '');
-        setProfileShareUrl(`${PUBLIC_BASE}/${matchedCard.slug}`);
+        // Use customSlug if available, otherwise fall back to regular slug
+        const cardSlug = matchedCard.customSlug || matchedCard.slug;
+        setProfileShareUrl(`${PUBLIC_BASE}/${cardSlug}`);
       }
       if (!content) {
         const fallback = loadCache(cacheKeyForEditor(cardId, resolvedCardId, allowFallbackToFirstCard));

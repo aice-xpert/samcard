@@ -472,9 +472,20 @@ export function NfcQr({
     onConfigChange?.(finalCfg);
 
     const idToUse = resolvedCardId || cardId;
+    console.log("[NfcQR] about to save QR config", {
+      cardId,
+      resolvedCardId,
+      idToUse,
+      hasQrData: !!finalCfg,
+      fg: finalCfg.fg,
+      bg: finalCfg.bg,
+      stickerId: finalCfg.selectedSticker?.id,
+      selectedLogo: finalCfg.selectedLogo,
+    });
+    
     if (idToUse) {
       try {
-        await updateCardQR(idToUse, {
+        const payload = {
           shapeId: finalCfg.shapeId,
           dotShape: finalCfg.dotShape,
           finderStyle: finalCfg.finderStyle,
@@ -496,10 +507,16 @@ export function NfcQr({
           designLabel: finalCfg.designLabel,
           shapeLabel: finalCfg.shapeLabel,
           decorateImageUrl: finalCfg.decorateCompositeDataUrl || '',
-        });
+        };
+        
+        console.log("[NfcQR] sending updateCardQR request", { idToUse, payloadKeys: Object.keys(payload) });
+        
+        const result = await updateCardQR(idToUse, payload);
+        console.log("[NfcQR] updateCardQR result", { idToUse, success: !!result });
 
         window.dispatchEvent(new Event('cardDataUpdated'));
-      } catch {
+      } catch (e) {
+        console.error("[NfcQR] updateCardQR error", { idToUse, error: String(e) });
         // Error handled silently for now
       }
     }

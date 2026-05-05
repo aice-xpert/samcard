@@ -1,4 +1,5 @@
 import express, { Response } from "express";
+import bcrypt from "bcrypt";
 import { supabase } from "../config/supabase";
 import { AuthRequest, verifySession } from "../middleware/auth";
 import { create } from "node:domain";
@@ -97,6 +98,76 @@ router.put(
 
       return res.json(data);
     } catch (error: unknown) {
+      return res.status(500).json({ error: getErrorMessage(error) });
+    }
+  },
+);
+
+router.put(
+  "/change-password",
+  verifySession,
+  async (req: AuthRequest, res: Response) => {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user!.uid;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: "Current password and new password are required" });
+    }
+
+    if (newPassword.length < 8) {
+      return res.status(400).json({ error: "New password must be at least 8 characters" });
+    }
+
+    try {
+      // Get user email and passwordHash from database
+      const { data: user } = await supabase
+        .from("User")
+        .select("email, passwordHash")
+        .eq("id", userId)
+        .single();
+
+      if (!user || !user.email) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Verify current password against the bcrypt hash (like login does)
+      if (!user.passwordHash) {
+        return res.status(400).json({ error: "This account doesn't have a password. Please use OAuth." });
+      }
+
+      const passwordMatch = await bcrypt.compare(currentPassword, user.passwordHash);
+      if (!passwordMatch) {
+        console.log("[change-password] Password verification failed for user:", userId);
+        return res.status(401).json({ error: "Current password is incorrect" });
+      }
+
+      // Update password using admin API
+      const { error: updateError } = await supabase.auth.admin.updateUserById(userId, {
+        password: newPassword,
+      });
+
+      if (updateError) {
+        console.error("[change-password] Supabase Auth update error:", updateError);
+        return res.status(500).json({ error: "Failed to update password" });
+      }
+
+      // Also update the passwordHash in the User table to keep in sync
+      const passwordHash = await bcrypt.hash(newPassword, 12);
+      const { error: dbUpdateError } = await supabase
+        .from("User")
+        .update({ passwordHash, updatedAt: new Date().toISOString() })
+        .eq("id", userId);
+
+      if (dbUpdateError) {
+        console.error("[change-password] Database update error:", dbUpdateError);
+        // Password was updated in Auth, so still return success even if DB update fails
+        // But log the error for debugging
+      }
+
+      console.log(`[change-password] Password updated for user: ${userId}`);
+      return res.status(200).json({ success: true, message: "Password updated successfully" });
+    } catch (error: unknown) {
+      console.error("[change-password] Error:", error);
       return res.status(500).json({ error: getErrorMessage(error) });
     }
   },

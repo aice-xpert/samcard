@@ -210,13 +210,17 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onVie
     setTimeout(() => setToast(null), 2500);
   };
 
-  // Returns the shareable public URL for a card
-  const cardPublicUrl = (card: CardType) =>
-    `${PUBLIC_BASE}/${card.slug}`;
+  // Returns the shareable public URL for a card (prioritizes customSlug if available)
+  const cardPublicUrl = (card: CardType) => {
+    const slug = card.customSlug && card.customSlug.trim() ? card.customSlug : card.slug;
+    return `${PUBLIC_BASE}/${slug}`;
+  };
 
-  // Returns the preview URL (works for DRAFT too)
-  const cardPreviewUrl = (card: CardType) =>
-    `${PUBLIC_BASE}/${card.slug}?preview=true`;
+  // Returns the preview URL (works for DRAFT too, prioritizes customSlug if available)
+  const cardPreviewUrl = (card: CardType) => {
+    const slug = card.customSlug && card.customSlug.trim() ? card.customSlug : card.slug;
+    return `${PUBLIC_BASE}/${slug}?preview=true`;
+  };
 
   // ── derived list ─────────────────────────────────────────────────
   const visible = cards
@@ -786,30 +790,64 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onVie
             )}
             Share your card link
           </p>
-          <div className="flex gap-2 mb-4">
-            <Input
-              readOnly
-              value={cardPublicUrl(shareCard)}
-              className="bg-muted border-[#008001]/30 text-foreground text-xs sm:text-sm"
-            />
-            <Button
-              onClick={() => copyLink(shareCard)}
-              className="bg-[#008001] hover:bg-[#006312] text-white flex-shrink-0"
-            >
-              <Copy className="w-4 h-4" />
-            </Button>
-          </div>
-          <div className="grid grid-cols-3 gap-2">
+          {/* Display custom URL if it exists */}
+          {shareCard.customSlug && shareCard.customSlug.trim() && (
+            <>
+              <div className="text-xs text-muted-foreground mb-2 font-medium">Your Custom URL:</div>
+              <div className="flex gap-2 mb-3">
+                <Input
+                  readOnly
+                  value={cardPublicUrl(shareCard)}
+                  className="bg-muted border-[#008001]/30 text-foreground text-xs sm:text-sm"
+                />
+                <Button
+                  onClick={() => copyLink(shareCard)}
+                  className="bg-[#008001] hover:bg-[#006312] text-white flex-shrink-0"
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
+              </div>
+              <div className="text-xs text-muted-foreground mb-2 font-medium">Default URL:</div>
+              <div className="flex gap-2 mb-4">
+                <Input
+                  readOnly
+                  value={`${PUBLIC_BASE}/${shareCard.slug}`}
+                  className="bg-muted border-[#008001]/30 text-foreground text-xs sm:text-sm"
+                />
+                <Button
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${PUBLIC_BASE}/${shareCard.slug}`);
+                    showToast('Default link copied to clipboard!');
+                  }}
+                  className="bg-[#008001] hover:bg-[#006312] text-white flex-shrink-0"
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
+              </div>
+            </>
+          )}
+          {/* Display only default URL if no custom URL */}
+          {!shareCard.customSlug || !shareCard.customSlug.trim() ? (
+            <div className="flex gap-2 mb-4">
+              <Input
+                readOnly
+                value={cardPublicUrl(shareCard)}
+                className="bg-muted border-[#008001]/30 text-foreground text-xs sm:text-sm"
+              />
+              <Button
+                onClick={() => copyLink(shareCard)}
+                className="bg-[#008001] hover:bg-[#006312] text-white flex-shrink-0"
+              >
+                <Copy className="w-4 h-4" />
+              </Button>
+            </div>
+          ) : null}
+          <div className="grid grid-cols-2 gap-2">
             {[
               {
                 label: 'WhatsApp',
                 href: (url: string) =>
                   `https://wa.me/?text=${encodeURIComponent(url)}`,
-              },
-              {
-                label: 'Email',
-                href: (url: string) =>
-                  `mailto:?subject=${encodeURIComponent('Check out my digital card')}&body=${encodeURIComponent(url)}`,
               },
               {
                 label: 'Twitter',

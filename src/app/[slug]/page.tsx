@@ -954,19 +954,14 @@ function QRModal({
     fontFamily: string;
   };
 }) {
-  const [qrConfig, setQrConfig] = useState(initialQrConfig);
-  const fetched = useRef(false);
+  // Use the qrConfig passed from props (already fetched from public API)
+  // No need to fetch again — the public endpoint returns it for published cards
+  const qrConfig = initialQrConfig;
 
-  useEffect(() => {
-    if (qrConfig || !cardId || fetched.current) return;
-    fetched.current = true;
-
-    getCardQRConfig(cardId)
-      .then((data) => {
-        if (data) setQrConfig(data);
-      })
-      .catch(() => { });
-  }, [cardId]);
+  console.log("[QRModal] received qrConfig", {
+    qrConfig: initialQrConfig,
+    hasCustomization: !!initialQrConfig?.shapeId,
+  });
 
   return (
     <div
@@ -1156,8 +1151,10 @@ export default function PublicCardPage() {
       })
       .then((data) => {
         if (data) {
-          console.log("[public-card-page] fetched background payload", {
+          console.log("[public-card-page] fetched card data", {
             slug,
+            hasQrConfig: !!data?.qrConfig,
+            qrConfig: data?.qrConfig,
             design: {
               bgColor: data?.design?.bgColor,
               phoneBgType: data?.design?.phoneBgType,

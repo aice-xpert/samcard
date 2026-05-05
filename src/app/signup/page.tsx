@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { Mail, Lock, User, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
-import { FaGithub } from "react-icons/fa";
+import { FaFacebook } from "react-icons/fa";
 import { useTheme } from "@/contexts/ThemeContext";
 
 const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "") ?? "";
@@ -85,7 +85,7 @@ export default function SignupPage() {
   };
 
   // ── OAuth — redirect to backend ────────────────────────────────────────────
-  const handleSocialSignIn = (provider: "google" | "github") => {
+  const handleSocialSignIn = (provider: "google" | "facebook") => {
     if (!API_BASE) {
       setError("Missing NEXT_PUBLIC_BACKEND_URL");
       return;
@@ -163,14 +163,16 @@ export default function SignupPage() {
               <span className={`text-sm ${socialTextColor}`}>Google</span>
             </button>
 
+            {/* Facebook auth coming soon */}
             <button
               type="button"
-              onClick={() => handleSocialSignIn("github")}
-              disabled={isLoading}
+              onClick={() => {}} // handleSocialSignIn("facebook")
+              disabled={true} // {isLoading}
               className={`py-3 flex items-center justify-center gap-2 border rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed ${socialBtnClass}`}
+              title="Facebook authentication coming soon"
             >
-              <FaGithub size={20} className={socialTextColor} />
-              <span className={`text-sm ${socialTextColor}`}>GitHub</span>
+              <FaFacebook size={20} className="text-blue-600" />
+              <span className={`text-sm ${socialTextColor}`}>Facebook</span>
             </button>
           </div>
 

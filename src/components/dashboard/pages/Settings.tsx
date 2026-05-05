@@ -12,9 +12,7 @@ import {
     Eye, EyeOff, Download, CreditCard, Plus, Star, User,
 } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
-import { uploadFile, updateUserProfile, getPaymentMethods, savePaymentMethod, setDefaultPaymentMethod, deletePaymentMethod } from "@/lib/api";
-import { auth } from "@/lib/firebase";
-import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
+import { uploadFile, updateUserProfile, getPaymentMethods, savePaymentMethod, setDefaultPaymentMethod, deletePaymentMethod, changePassword } from "@/lib/api";
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Types
@@ -263,19 +261,11 @@ export function Settings() {
         if (newPw !== confirmPw) { setPwError("Passwords don't match"); return; }
         setPwLoading(true);
         try {
-            const user = auth.currentUser;
-            if (!user || !user.email) { setPwError("Not authenticated. Please log in again."); return; }
-            const credential = EmailAuthProvider.credential(user.email, currentPw);
-            await reauthenticateWithCredential(user, credential);
-            await updatePassword(user, newPw);
+            await changePassword(currentPw, newPw);
             setCurrentPw(""); setNewPw(""); setConfirmPw("");
-            addToast("Password updated!");
+            addToast("Password updated successfully!");
         } catch (err: any) {
-            const msg = err.code === "auth/wrong-password" || err.code === "auth/invalid-credential"
-                ? "Current password is incorrect"
-                : err.code === "auth/too-many-requests"
-                ? "Too many attempts. Try again later."
-                : err.message || "Failed to update password";
+            const msg = err.message || "Failed to update password";
             setPwError(msg);
         } finally {
             setPwLoading(false);
