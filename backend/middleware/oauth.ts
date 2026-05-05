@@ -100,84 +100,110 @@ function sendSessionAndRedirect(
   return res.redirect(`${FRONTEND_URL}${redirectPath}#token=${token}`);
 }
 
+const googleConfigured = !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
+const githubConfigured = !!(process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET);
+
 // ── Google Strategy ───────────────────────────────────────────────────────────
-passport.use(
-  new GoogleStrategy(
-    {
-      clientID: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      callbackURL: `${BACKEND_URL}/api/auth/oauth/google/callback`,
-    },
-    async (_accessToken: string, _refreshToken: string, profile: GoogleProfile, done: VerifyCallback) => {
-      try {
-        const email =
-          profile.emails?.[0]?.value ?? `${profile.id}@google.noemail`;
-        const name = profile.displayName || profile.id;
-        const token = await handleOAuthUser({ id: profile.id, email, name, provider: "google" });
-        done(null, { token } as unknown as Express.User);
-      } catch (err) {
-        done(err as Error);
+if (googleConfigured) {
+  passport.use(
+    new GoogleStrategy(
+      {
+        clientID: process.env.GOOGLE_CLIENT_ID!,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+        callbackURL: `${BACKEND_URL}/api/auth/oauth/google/callback`,
+      },
+      async (_accessToken: string, _refreshToken: string, profile: GoogleProfile, done: VerifyCallback) => {
+        try {
+          const email =
+            profile.emails?.[0]?.value ?? `${profile.id}@google.noemail`;
+          const name = profile.displayName || profile.id;
+          const token = await handleOAuthUser({ id: profile.id, email, name, provider: "google" });
+          done(null, { token } as unknown as Express.User);
+        } catch (err) {
+          done(err as Error);
+        }
       }
-    }
-  )
-);
+    )
+  );
+} else {
+  console.warn("[oauth] Google OAuth disabled — GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET not set");
+}
 
 // ── GitHub Strategy ───────────────────────────────────────────────────────────
-passport.use(
-  new GitHubStrategy(
-    {
-      clientID: process.env.GITHUB_CLIENT_ID!,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-      callbackURL: `${BACKEND_URL}/api/auth/oauth/github/callback`,
-      scope: ["user:email"],
-    },
-    async (_accessToken: string, _refreshToken: string, profile: GitHubProfile, done: (err: Error | null, user?: unknown) => void) => {
-      try {
-        const email =
-          (profile.emails as { value: string }[] | undefined)?.[0]?.value ??
-          `${profile.id}@github.noemail`;
-        const name = profile.displayName || profile.username || profile.id;
-        const token = await handleOAuthUser({ id: String(profile.id), email, name, provider: "github" });
-        done(null, { token } as unknown as Express.User);
-      } catch (err) {
-        done(err as Error);
+if (githubConfigured) {
+  passport.use(
+    new GitHubStrategy(
+      {
+        clientID: process.env.GITHUB_CLIENT_ID!,
+        clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+        callbackURL: `${BACKEND_URL}/api/auth/oauth/github/callback`,
+        scope: ["user:email"],
+      },
+      async (_accessToken: string, _refreshToken: string, profile: GitHubProfile, done: (err: Error | null, user?: unknown) => void) => {
+        try {
+          const email =
+            (profile.emails as { value: string }[] | undefined)?.[0]?.value ??
+            `${profile.id}@github.noemail`;
+          const name = profile.displayName || profile.username || profile.id;
+          const token = await handleOAuthUser({ id: String(profile.id), email, name, provider: "github" });
+          done(null, { token } as unknown as Express.User);
+        } catch (err) {
+          done(err as Error);
+        }
       }
-    }
-  )
-);
+    )
+  );
+} else {
+  console.warn("[oauth] GitHub OAuth disabled — GITHUB_CLIENT_ID / GITHUB_CLIENT_SECRET not set");
+}
 
 // Passport needs these even if we're not using sessions
 passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((user, done) => done(null, user as Express.User));
 
+const oauthNotConfigured = (provider: string) => (_req: express.Request, res: express.Response) =>
+  res.status(503).json({ error: `${provider} OAuth is not configured on this server` });
+
 // ── Google routes ─────────────────────────────────────────────────────────────
 router.get(
   "/google",
-  passport.authenticate("google", { scope: ["profile", "email"], session: false })
+  googleConfigured
+    ? passport.authenticate("google", { scope: ["profile", "email"], session: false })
+    : oauthNotConfigured("Google")
 );
 
 router.get(
   "/google/callback",
-  passport.authenticate("google", { session: false, failureRedirect: `${FRONTEND_URL}/login?error=oauth_failed` }),
-  (req, res) => {
-    const { token } = req.user as unknown as { token: string };
-    sendSessionAndRedirect(res, token);
-  }
+  ...(googleConfigured
+    ? [
+        passport.authenticate("google", { session: false, failureRedirect: `${FRONTEND_URL}/login?error=oauth_failed` }),
+        (req: express.Request, res: express.Response) => {
+          const { token } = req.user as unknown as { token: string };
+          sendSessionAndRedirect(res, token);
+        },
+      ]
+    : [oauthNotConfigured("Google")])
 );
 
 // ── GitHub routes ─────────────────────────────────────────────────────────────
 router.get(
   "/github",
-  passport.authenticate("github", { scope: ["user:email"], session: false })
+  githubConfigured
+    ? passport.authenticate("github", { scope: ["user:email"], session: false })
+    : oauthNotConfigured("GitHub")
 );
 
 router.get(
   "/github/callback",
-  passport.authenticate("github", { session: false, failureRedirect: `${FRONTEND_URL}/login?error=oauth_failed` }),
-  (req, res) => {
-    const { token } = req.user as unknown as { token: string };
-    sendSessionAndRedirect(res, token);
-  }
+  ...(githubConfigured
+    ? [
+        passport.authenticate("github", { session: false, failureRedirect: `${FRONTEND_URL}/login?error=oauth_failed` }),
+        (req: express.Request, res: express.Response) => {
+          const { token } = req.user as unknown as { token: string };
+          sendSessionAndRedirect(res, token);
+        },
+      ]
+    : [oauthNotConfigured("GitHub")])
 );
 
 export default router;

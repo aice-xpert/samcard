@@ -4,18 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Mail, ArrowRight, CheckCircle2 } from "lucide-react";
-import { sendPasswordResetEmail } from "firebase/auth";
-import { auth } from "@/lib/firebase";
-
-function friendlyError(code: string): string {
-  switch (code) {
-    case "auth/invalid-email": return "Please enter a valid email address.";
-    case "auth/user-not-found": return "No account found with that email.";
-    case "auth/too-many-requests": return "Too many attempts. Please wait a moment and try again.";
-    case "auth/network-request-failed": return "Network error. Check your connection and try again.";
-    default: return "Failed to send reset email. Please try again.";
-  }
-}
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -29,16 +18,17 @@ export default function ForgotPasswordPage() {
     setLoading(true);
 
     try {
-      const actionCodeSettings = {
-        url: `${window.location.origin}/login`,
-        handleCodeInApp: false,
-      };
-      await sendPasswordResetEmail(auth, email, actionCodeSettings);
+      const res = await fetch(`${BACKEND_URL}/api/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to send reset email");
       setSubmitted(true);
     } catch (err: any) {
       console.error("[forgot-password]", err);
-      const code: string = err?.code ?? "";
-      setError(friendlyError(code));
+      setError(err.message || "Failed to send reset email. Please try again.");
     } finally {
       setLoading(false);
     }
