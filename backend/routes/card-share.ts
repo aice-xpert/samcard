@@ -139,6 +139,8 @@ router.post("/duplicate/:cardId", verifySession, async (req: AuthRequest, res: R
         sections: originalContent.sections,
         customLinks: originalContent.customLinks,
         extraSections: originalContent.extraSections,
+        sectionOrder: originalContent.sectionOrder,
+        unifiedOrder: originalContent.unifiedOrder,
       });
     }
 

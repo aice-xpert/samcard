@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import BusinessProfile from "./BusinessProfile";
 import { DesignNew } from "./Design";
 import { NfcQr } from "./NfcQR";
@@ -47,8 +47,6 @@ function CampaignNameModal({
                         ×
                     </button>
                 </div>
-
-         
 
                 {/* Campaign Name */}
                 <div className="mb-4">
@@ -236,6 +234,7 @@ function SavedSuccessModal({ onCancel, onDashboard, cardSlug }: { onCancel: () =
         </div>
     );
 }
+
 export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () => void }) {
     const [step, setStep] = useState(1);
     const [showCampaignModal, setShowCampaignModal] = useState(false);
@@ -249,17 +248,24 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
     const [isSaving, setIsSaving] = useState(false);
     const [saveError, setSaveError] = useState<string | null>(null);
 
+    // ── FIX: Keep a ref that always holds the latest cardContent ──────────────
+    // onContentChange fires on every state change in BusinessProfile, so by the
+    // time Save & Finish is clicked we always have the most recent content — even
+    // if the user never changed anything on Step 1 (the initial load fires it too).
+    const cardContentRef = useRef<CardContentPayload | null>(null);
+    const handleContentChange = useCallback((content: CardContentPayload) => {
+        cardContentRef.current = content;
+        setCardContent(content);
+    }, []);
+
     useEffect(() => {
         setStep(1);
         setActiveCardId(cardId);
 
-        // BUG-19: When starting a new card (no cardId), clear the draft cache keys so
-        // the form always opens with default/empty state instead of previous card data.
         if (!cardId) {
             try {
                 localStorage.removeItem('businessProfile_v1:draft');
                 localStorage.removeItem('cardDesign_v1:draft');
-                // BUG-25: Clear QR draft storage so new cards don't show previous QR config
                 localStorage.removeItem('samcard_qr_config_v1:draft');
             } catch {
                 // ignore storage errors
@@ -328,25 +334,23 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
     const handleSaveFinish = () => {
         setSaveError(null);
         if (activeCardId) {
-            // Editing existing card — save directly, no name prompt
             void handleSaveCard(undefined);
         } else {
-            // Creating new card — ask for campaign name first
             setShowCampaignModal(true);
         }
     };
+
     const handleCampaignSave = async (campaignName: string) => {
         await handleSaveCard(campaignName);
     };
+
     const handleSaveCard = async (campaignName: string | undefined) => {
         setIsSaving(true);
         setSaveError(null);
-        // Build payload for both create and edit flows
+
         const payload: any = { cardType: "QR" };
-        // Only set name when explicitly provided (new card flow); editing preserves the existing name
         if (campaignName) payload.name = campaignName;
 
-        // Add design settings
         if (designSettings) {
             payload.backgroundColor = designSettings.bgColor;
             payload.accentColor = designSettings.accentColor;
@@ -386,36 +390,49 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
                 await updateCardDesign(targetCardId, buildCardDesignPayload(designSettings));
             }
 
-            // If QR config exists, persist it for the selected card.
             if (qrConfig && targetCardId) {
-                 await updateCardQR(targetCardId, {
-    shapeId: qrConfig.shapeId,
-    dotShape: qrConfig.dotShape,
-    finderStyle: qrConfig.finderStyle,
-    eyeBall: qrConfig.eyeBall,
-    bodyScale: qrConfig.bodyScale,
-    fg: qrConfig.fg,
-    bg: qrConfig.bg,
-    accentFg: qrConfig.accentFg || qrConfig.fg,
-    accentBg: qrConfig.accentBg || qrConfig.bg,
-    strokeEnabled: qrConfig.strokeEnabled,
-    strokeColor: qrConfig.strokeColor,
-    gradEnabled: qrConfig.gradEnabled,
-    gradStops: qrConfig.gradStops,
-    gradAngle: qrConfig.gradAngle,
-    selectedLogo: qrConfig.selectedLogo || '',
-    customLogoUrl: qrConfig.customLogoUrl || '',
-    logoBg: qrConfig.logoBg || '#ffffff',
-    stickerId: qrConfig.selectedSticker?.id ?? null,
-    designLabel: qrConfig.designLabel,
-    shapeLabel: qrConfig.shapeLabel,
-    decorateImageUrl: qrConfig.decorateCompositeDataUrl || '',
-  });
-}
+                await updateCardQR(targetCardId, {
+                    shapeId: qrConfig.shapeId,
+                    dotShape: qrConfig.dotShape,
+                    finderStyle: qrConfig.finderStyle,
+                    eyeBall: qrConfig.eyeBall,
+                    bodyScale: qrConfig.bodyScale,
+                    fg: qrConfig.fg,
+                    bg: qrConfig.bg,
+                    accentFg: qrConfig.accentFg || qrConfig.fg,
+                    accentBg: qrConfig.accentBg || qrConfig.bg,
+                    strokeEnabled: qrConfig.strokeEnabled,
+                    strokeColor: qrConfig.strokeColor,
+                    gradEnabled: qrConfig.gradEnabled,
+                    gradStops: qrConfig.gradStops,
+                    gradAngle: qrConfig.gradAngle,
+                    selectedLogo: qrConfig.selectedLogo || '',
+                    customLogoUrl: qrConfig.customLogoUrl || '',
+                    logoBg: qrConfig.logoBg || '#ffffff',
+                    stickerId: qrConfig.selectedSticker?.id ?? null,
+                    designLabel: qrConfig.designLabel,
+                    shapeLabel: qrConfig.shapeLabel,
+                    decorateImageUrl: qrConfig.decorateCompositeDataUrl || '',
+                });
+            }
 
-            // If contents from step 1 exist, persist them for the selected card.
-            if (cardContent && targetCardId) {
-                await updateCardContent(targetCardId, cardContent);
+            // ── FIX: Use the ref so we always have the latest content ────────────
+            // cardContent state may be null if onContentChange never fired after
+            // mount (e.g. user went straight to Step 2 without touching Step 1).
+            // The ref is always up to date because onContentChange updates it on
+            // every render of BusinessProfile.
+            const latestContent = cardContentRef.current ?? cardContent;
+
+            if (latestContent && targetCardId) {
+                console.log('[CreateCard] Saving cardContent with ordering:');
+                console.log('[CreateCard] sectionOrder:', latestContent.sectionOrder);
+                console.log('[CreateCard] unifiedOrder:', latestContent.unifiedOrder);
+                await updateCardContent(targetCardId, latestContent);
+            } else {
+                console.warn('[CreateCard] cardContent NOT saved', {
+                    hasContent: !!latestContent,
+                    targetCardId,
+                });
             }
 
             setShowCampaignModal(false);
@@ -427,6 +444,7 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
             setIsSaving(false);
         }
     };
+
     const handleClose = () => { setShowCampaignModal(false); setShowSuccessModal(false); };
     const handleDashboard = () => {
         setShowSuccessModal(false);
@@ -489,7 +507,7 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
                     <BusinessProfile
                         cardId={activeCardId}
                         allowFallbackToFirstCard={false}
-                        onContentChange={setCardContent}
+                        onContentChange={handleContentChange}
                     />
                 )}
                 {step === 2 && (

@@ -337,6 +337,9 @@ export interface CardContentPayload {
   sections?: CardContentSectionConfig;
   customLinks?: { label: string; url: string }[];
   extraSections?: CardContentExtraSection[];
+  // Drag-and-drop section ordering
+  sectionOrder?: string[];
+  unifiedOrder?: string[];
 }
 
 export interface CardContentResponse extends CardContentPayload {

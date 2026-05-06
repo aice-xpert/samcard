@@ -70,7 +70,7 @@ export function Hero() {
           
 <div className="relative">
   <Image
-    src="/images/hero2.png"
+    src="/images/hero(1).png"
     alt="Digital business cards"
     width={800}
     height={600}

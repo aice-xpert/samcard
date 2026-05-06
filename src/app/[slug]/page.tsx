@@ -151,6 +151,9 @@ interface PublicCard {
       enabled: boolean;
       data: Record<string, unknown>;
     }[];
+    // Drag-and-drop section ordering persisted by the backend
+    sectionOrder?: string[];
+    unifiedOrder?: string[];
   };
   socialLinks: {
     platform: string;
@@ -1701,492 +1704,238 @@ export default function PublicCardPage() {
             </div>
           )}
 
-          {S.headingText && (card.headingText || card.headingBodyText || fd.headingText || fd.bodyText) && (
-            <CardBlock T={T}>
-              <div style={{ padding: "12px 16px" }}>
-                {(card.headingText || fd.headingText) && (
-                  <p
-                    style={{
-                      fontWeight: T.boldHeadings ? 700 : 500,
-                      fontSize: T.bodyFontSize + 1,
-                      color: T.textPrimary,
-                      marginBottom: 4,
-                    }}
-                  >
-                    {card.headingText || fd.headingText}
-                  </p>
-                )}
-                {(card.headingBodyText || fd.bodyText) && (
-                  <p
-                    style={{
-                      fontSize: T.bodyFontSize,
-                      lineHeight: 1.6,
-                      color: T.textMuted,
-                    }}
-                  >
-                    {card.headingBodyText || fd.bodyText}
-                  </p>
-                )}
-              </div>
-            </CardBlock>
-          )}
+          {/* ── Ordered sections – respects unifiedOrder from the backend ── */}
+          {(() => {
+            // Build the render order from unifiedOrder (preferred) or fall back to
+            // a sensible default so old records without ordering still render correctly.
+            const DEFAULT_ORDER = [
+              'profile', 'headingText', 'contactUs', 'businessDetails',
+              'socialLinks', 'links', 'appointment', 'collectContacts',
+            ];
+            const extraIds = new Set(content.extraSections.map(s => s.id));
+            const coreKeys = new Set(DEFAULT_ORDER);
 
-          {S.contactUs && contactItems.length > 0 && (
-            <CardBlock T={T}>
-              <SectionHeader
-                T={T}
-                icon={<Phone size={14} color="#fff" />}
-                title="Contact Us"
-              />
-              {contactItems.map(({ label, sub, href, Icon }, i) => (
-                <div key={i}>
-                  <a
-                    href={href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => track(slug, "link_click")}
-                    className="sc-row"
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 12,
-                      padding: "10px 16px",
-                      color: "inherit",
-                      transition: "background .15s",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: 28,
-                        height: 28,
-                        borderRadius: 8,
-                        flexShrink: 0,
-                        background: `${T.green}28`,
-                        border: `1px solid ${T.green}44`,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <Icon size={13} color={T.greenLight} />
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p
-                        style={{
-                          fontWeight: T.boldHeadings ? 600 : 500,
-                          fontSize: T.bodyFontSize,
-                          color: T.textPrimary,
-                        }}
-                      >
-                        {label}
-                      </p>
-                      <p
-                        style={{
-                          fontSize: T.bodyFontSize - 1,
-                          color: T.textMuted,
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {sub}
-                      </p>
-                    </div>
-                    <ChevronRight size={14} color={T.muted} />
-                  </a>
-                  {i < contactItems.length - 1 && <Divider color={T.divider} />}
-                </div>
-              ))}
-            </CardBlock>
-          )}
+            // Use saved unifiedOrder when available (written by backend on save).
+            // Fall back to sectionOrder or DEFAULT_ORDER + extra section IDs for old
+            // records that pre-date this feature (i.e. unifiedOrder is still empty).
+            const savedOrder = Array.isArray(content.unifiedOrder) && content.unifiedOrder.length > 0
+              ? content.unifiedOrder
+              : Array.isArray(content.sectionOrder) && content.sectionOrder.length > 0
+                ? [
+                    ...content.sectionOrder,
+                    ...content.extraSections.map(s => s.id).filter(id => !content.sectionOrder!.includes(id)),
+                  ]
+                : [
+                    // Last resort: use default order filtered by enabled sections,
+                    // matching exactly what PhonePreview does so both views agree.
+                    ...DEFAULT_ORDER.filter(key => S[key as keyof typeof S] !== false),
+                    ...content.extraSections.filter(s => s.enabled).map(s => s.id),
+                  ];
 
-          {S.businessDetails && (fd.company || businessProfile.company || fd.industry || fd.yearFounded || fd.location) && (
-            <CardBlock T={T}>
-              <SectionHeader
-                T={T}
-                icon={<Briefcase size={14} color="#fff" />}
-                title="Business Details"
-              />
-              {[
-                (fd.company || businessProfile.company) && {
-                  label: "Company",
-                  val: fd.company || businessProfile.company!,
-                },
-                fd.industry && { label: "Industry", val: fd.industry },
-                fd.yearFounded && { label: "Year Founded", val: fd.yearFounded },
-                fd.location && { label: "Location", val: fd.location },
-              ]
-                .filter(Boolean)
-                .map((row, i, arr) => {
-                  const { label, val } = row as { label: string; val: string };
-                  return (
-                    <div key={label}>
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          padding: "10px 16px",
-                        }}
-                      >
-                        <span
-                          style={{
-                            fontSize: T.bodyFontSize,
-                            color: T.textMuted,
-                          }}
-                        >
-                          {label}
-                        </span>
-                        <span
-                          style={{
-                            fontSize: T.bodyFontSize,
-                            fontWeight: T.boldHeadings ? 600 : 400,
-                            color: T.textPrimary,
-                            maxWidth: "55%",
-                            textAlign: "right",
-                            wordBreak: "break-word",
-                            overflowWrap: "anywhere",
-                            display: "inline-block",
-                          }}
-                        >
-                          {val}
-                        </span>
-                      </div>
-                      {i < arr.length - 1 && <Divider color={T.divider} />}
-                    </div>
-                  );
-                })}
-            </CardBlock>
-          )}
+            // Ensure no duplicates and no unknown ids slip through
+            const allKnown = new Set([...coreKeys, ...extraIds]);
+            const seen = new Set<string>();
+            const order = savedOrder.filter(id => {
+              if (!allKnown.has(id) || seen.has(id)) return false;
+              seen.add(id); return true;
+            });
+            // Append anything missing
+            for (const id of allKnown) { if (!seen.has(id)) order.push(id); }
 
-          {S.socialLinks && socialLinks.filter(sl => sl.enabled !== false).length > 0 && (
-            <CardBlock T={T}>
-              <SectionHeader
-                T={T}
-                icon={<Share2 size={14} color="#fff" />}
-                title="Social Links"
-              />
-              {socialLinks.filter(sl => sl.enabled !== false).map((sl, i, arr) => {
-                const meta = SOCIAL_META[sl.platform?.toLowerCase()] ?? {
-                  Icon: Link2,
-                  color: T.green,
-                  label: sl.platform,
-                };
-                const { Icon, color, label } = meta;
+            return order.map(id => {
+              // ── Extra section ──────────────────────────────────────────────
+              if (extraIds.has(id)) {
+                const section = content.extraSections.find(s => s.id === id);
+                if (!section || !section.enabled) return null;
                 return (
-                  <div key={i}>
-                    <button
-                      onClick={() => {
-                        track(slug, "link_click");
-                        openLink(sl.url);
-                      }}
-                      className="sc-row"
-                      style={{
-                        width: "100%",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 12,
-                        padding: "10px 16px",
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        textAlign: "left",
-                        transition: "background .15s",
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: 36,
-                          height: 36,
-                          borderRadius: 10,
-                          flexShrink: 0,
-                          background: `${color}1a`,
-                          border: `1px solid ${color}35`,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <Icon size={16} color={color} />
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p
-                          style={{
-                            fontWeight: T.boldHeadings ? 600 : 500,
-                            fontSize: T.bodyFontSize,
-                            color: T.textPrimary,
-                          }}
-                        >
-                          {sl.label || label}
-                        </p>
-                        <p
-                          style={{
-                            fontSize: T.bodyFontSize - 1,
-                            color: T.textMuted,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {sl.handle || sl.url}
-                        </p>
-                      </div>
-                      <ChevronRight size={14} color={T.muted} />
-                    </button>
-                    {i < arr.length - 1 && (
-                      <Divider color={T.divider} />
-                    )}
-                  </div>
-                );
-              })}
-            </CardBlock>
-          )}
-
-          {S.links && content.customLinks.length > 0 && (
-            <CardBlock T={T}>
-              <SectionHeader
-                T={T}
-                icon={<Link2 size={14} color="#fff" />}
-                title="Web Links"
-              />
-              {content.customLinks.map((cl, i) => (
-                <div key={i}>
-                  <button
-                    onClick={() => {
-                      track(slug, "link_click");
-                      openLink(cl.url);
-                    }}
-                    className="sc-row"
-                    style={{
-                      width: "100%",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 12,
-                      padding: "10px 16px",
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      textAlign: "left",
-                      transition: "background .15s",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: 10,
-                        flexShrink: 0,
-                        background: `${T.green}1f`,
-                        border: `1px solid ${T.green}40`,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <Link2 size={15} color={T.greenLight} />
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p
-                        style={{
-                          fontWeight: T.boldHeadings ? 600 : 500,
-                          fontSize: T.bodyFontSize,
-                          color: T.textPrimary,
-                        }}
-                      >
-                        {cl.label || "Link"}
-                      </p>
-                      <p
-                        style={{
-                          fontSize: T.bodyFontSize - 1,
-                          color: T.textMuted,
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {cl.url}
-                      </p>
-                    </div>
-                    <ChevronRight size={14} color={T.muted} />
-                  </button>
-                  {i < content.customLinks.length - 1 && (
-                    <Divider color={T.divider} />
-                  )}
-                </div>
-              ))}
-            </CardBlock>
-          )}
-
-          {S.appointment && fd.appointmentUrl && (
-            <CardBlock T={T}>
-              <div
-                style={{
-                  padding: "16px",
-                  textAlign: "center",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  gap: 8,
-                }}
-              >
-                <div
-                  style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: "50%",
-                    background: `linear-gradient(135deg, ${T.green}, ${T.greenLight})`,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Calendar size={20} color="#fff" />
-                </div>
-                <p
-                  style={{
-                    fontWeight: T.boldHeadings ? 700 : 500,
-                    fontSize: T.bodyFontSize + 1,
-                    color: T.textPrimary,
-                  }}
-                >
-                  Schedule Meeting
-                </p>
-                <p
-                  style={{
-                    fontSize: T.bodyFontSize,
-                    lineHeight: 1.5,
-                    color: T.textMuted,
-                    padding: "0 8px",
-                  }}
-                >
-                  Book a time to discuss potential opportunities
-                </p>
-              </div>
-              <div
-                style={{
-                  padding: "0 16px 16px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 8,
-                }}
-              >
-                {["Book on Calendly", "Add to Calendar"].map((label) => (
-                  <button
-                    key={label}
-                    onClick={() => {
-                      track(slug, "link_click");
-                      openLink(fd.appointmentUrl!);
-                    }}
-                    style={{
-                      width: "100%",
-                      padding: "10px",
-                      borderRadius: 999,
-                      border: `1px solid ${T.green}59`,
-                      color: T.greenLight,
-                      background: `${T.green}1a`,
-                      fontWeight: 600,
-                      fontSize: T.bodyFontSize,
-                      cursor: "pointer",
-                      fontFamily: T.fontFamily,
-                    }}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </CardBlock>
-          )}
-
-          {content.extraSections
-            .filter((s) => s.enabled)
-            .map((section, index) => (
-              <ExtraSectionBlock
-                key={section.id || `extra-sec-${index}`}
-                section={section}
-                T={T}
-                onLinkClick={() => track(slug, "link_click")}
-              />
-            ))}
-
-          {S.collectContacts && (
-            <CardBlock T={T}>
-              <SectionHeader
-                T={T}
-                icon={<MessageSquare size={14} color="#fff" />}
-                title="Get in Touch"
-              />
-              <div
-                style={{
-                  padding: "12px 16px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 8,
-                }}
-              >
-                {[
-                  { key: "name" as const, placeholder: "Your name", type: "text" },
-                  { key: "email" as const, placeholder: "Email address", type: "email" },
-                  { key: "phone" as const, placeholder: "Phone number", type: "tel" },
-                ].map((field) => (
-                  <input
-                    key={field.key}
-                    type={field.type}
-                    value={leadForm[field.key]}
-                    placeholder={field.placeholder}
-                    onChange={(e) =>
-                      setLeadForm((prev) => ({
-                        ...prev,
-                        [field.key]: e.target.value,
-                      }))
-                    }
-                    style={{
-                      width: "100%",
-                      padding: "9px 12px",
-                      borderRadius: 10,
-                      background: T.bg,
-                      border: `1px solid ${T.green}33`,
-                      color: T.textPrimary,
-                      fontSize: T.bodyFontSize,
-                      outline: "none",
-                      fontFamily: T.fontFamily,
-                    }}
+                  <ExtraSectionBlock
+                    key={section.id}
+                    section={section}
+                    T={T}
+                    onLinkClick={() => track(slug, "link_click")}
                   />
-                ))}
-                <button
-                  onClick={submitLead}
-                  disabled={leadSubmitting}
-                  style={{
-                    width: "100%",
-                    padding: "10px",
-                    borderRadius: 999,
-                    border: "none",
-                    background: `linear-gradient(135deg, ${T.green}, ${T.greenLight})`,
-                    color: "#fff",
-                    fontWeight: 700,
-                    fontSize: T.bodyFontSize,
-                    cursor: leadSubmitting ? "not-allowed" : "pointer",
-                    opacity: leadSubmitting ? 0.8 : 1,
-                    fontFamily: T.fontFamily,
-                  }}
-                >
-                  {leadSubmitting ? "Submitting..." : "Submit"}
-                </button>
-                {leadSubmitFeedback.type && (
-                  <p
-                    style={{
-                      marginTop: 4,
-                      fontSize: T.bodyFontSize - 1,
-                      color:
-                        leadSubmitFeedback.type === "success"
-                          ? T.greenLight
-                          : "#ff7a7a",
-                    }}
-                  >
-                    {leadSubmitFeedback.message}
-                  </p>
-                )}
-              </div>
-            </CardBlock>
-          )}
+                );
+              }
+
+              // ── Core sections ──────────────────────────────────────────────
+              switch (id) {
+
+                case 'headingText':
+                  if (!S.headingText) return null;
+                  if (!card.headingText && !card.headingBodyText && !fd.headingText && !fd.bodyText) return null;
+                  return (
+                    <CardBlock key="headingText" T={T}>
+                      <div style={{ padding: "12px 16px" }}>
+                        {(card.headingText || fd.headingText) && (
+                          <p style={{ fontWeight: T.boldHeadings ? 700 : 500, fontSize: T.bodyFontSize + 1, color: T.textPrimary, marginBottom: 4 }}>
+                            {card.headingText || fd.headingText}
+                          </p>
+                        )}
+                        {(card.headingBodyText || fd.bodyText) && (
+                          <p style={{ fontSize: T.bodyFontSize, lineHeight: 1.6, color: T.textMuted }}>
+                            {card.headingBodyText || fd.bodyText}
+                          </p>
+                        )}
+                      </div>
+                    </CardBlock>
+                  );
+
+                case 'contactUs':
+                  if (!S.contactUs || contactItems.length === 0) return null;
+                  return (
+                    <CardBlock key="contactUs" T={T}>
+                      <SectionHeader T={T} icon={<Phone size={14} color="#fff" />} title="Contact Us" />
+                      {contactItems.map(({ label, sub, href, Icon }, i) => (
+                        <div key={i}>
+                          <a href={href} target="_blank" rel="noopener noreferrer"
+                            onClick={() => track(slug, "link_click")} className="sc-row"
+                            style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", color: "inherit", transition: "background .15s" }}>
+                            <div style={{ width: 28, height: 28, borderRadius: 8, flexShrink: 0, background: `${T.green}28`, border: `1px solid ${T.green}44`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                              <Icon size={13} color={T.greenLight} />
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <p style={{ fontWeight: T.boldHeadings ? 600 : 500, fontSize: T.bodyFontSize, color: T.textPrimary }}>{label}</p>
+                              <p style={{ fontSize: T.bodyFontSize - 1, color: T.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sub}</p>
+                            </div>
+                            <ChevronRight size={14} color={T.muted} />
+                          </a>
+                          {i < contactItems.length - 1 && <Divider color={T.divider} />}
+                        </div>
+                      ))}
+                    </CardBlock>
+                  );
+
+                case 'businessDetails': {
+                  if (!S.businessDetails) return null;
+                  if (!fd.company && !businessProfile.company && !fd.industry && !fd.yearFounded && !fd.location) return null;
+                  const rows = [
+                    (fd.company || businessProfile.company) && { label: "Company", val: fd.company || businessProfile.company! },
+                    fd.industry && { label: "Industry", val: fd.industry },
+                    fd.yearFounded && { label: "Year Founded", val: fd.yearFounded },
+                    fd.location && { label: "Location", val: fd.location },
+                  ].filter(Boolean) as { label: string; val: string }[];
+                  return (
+                    <CardBlock key="businessDetails" T={T}>
+                      <SectionHeader T={T} icon={<Briefcase size={14} color="#fff" />} title="Business Details" />
+                      {rows.map((row, i) => (
+                        <div key={row.label}>
+                          <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 16px" }}>
+                            <span style={{ fontSize: T.bodyFontSize, color: T.textMuted }}>{row.label}</span>
+                            <span style={{ fontSize: T.bodyFontSize, fontWeight: T.boldHeadings ? 600 : 400, color: T.textPrimary, maxWidth: "55%", textAlign: "right", wordBreak: "break-word", overflowWrap: "anywhere", display: "inline-block" }}>{row.val}</span>
+                          </div>
+                          {i < rows.length - 1 && <Divider color={T.divider} />}
+                        </div>
+                      ))}
+                    </CardBlock>
+                  );
+                }
+
+                case 'socialLinks': {
+                  const activeSocials = socialLinks.filter(sl => sl.enabled !== false);
+                  if (!S.socialLinks || activeSocials.length === 0) return null;
+                  return (
+                    <CardBlock key="socialLinks" T={T}>
+                      <SectionHeader T={T} icon={<Share2 size={14} color="#fff" />} title="Social Links" />
+                      {activeSocials.map((sl, i, arr) => {
+                        const meta = SOCIAL_META[sl.platform?.toLowerCase()] ?? { Icon: Link2, color: T.green, label: sl.platform };
+                        const { Icon, color, label } = meta;
+                        return (
+                          <div key={i}>
+                            <button onClick={() => { track(slug, "link_click"); openLink(sl.url); }} className="sc-row"
+                              style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", background: "none", border: "none", cursor: "pointer", textAlign: "left", transition: "background .15s" }}>
+                              <div style={{ width: 36, height: 36, borderRadius: 10, background: `${color}22`, border: `1px solid ${color}44`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                <Icon size={16} color={color} />
+                              </div>
+                              <span style={{ flex: 1, fontSize: T.bodyFontSize, fontWeight: T.boldHeadings ? 500 : 400, color: T.textPrimary }}>{label}</span>
+                              <ChevronRight size={14} color={T.muted} />
+                            </button>
+                            {i < arr.length - 1 && <Divider color={T.divider} />}
+                          </div>
+                        );
+                      })}
+                    </CardBlock>
+                  );
+                }
+
+                case 'links': {
+                  const activeLinks = content.customLinks.filter(l => l.label || l.url);
+                  if (!S.links || activeLinks.length === 0) return null;
+                  return (
+                    <CardBlock key="links" T={T}>
+                      <SectionHeader T={T} icon={<Link2 size={14} color="#fff" />} title="Links" />
+                      {activeLinks.map((l, i) => (
+                        <div key={i}>
+                          <button onClick={() => { track(slug, "link_click"); openLink(l.url); }} className="sc-row"
+                            style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", background: "none", border: "none", cursor: "pointer", textAlign: "left", transition: "background .15s" }}>
+                            <div style={{ width: 32, height: 32, borderRadius: 8, background: `${T.green}22`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                              <Link2 size={14} color={T.greenLight} />
+                            </div>
+                            <span style={{ flex: 1, fontSize: T.bodyFontSize, color: T.textPrimary, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.label || l.url}</span>
+                            <ChevronRight size={14} color={T.muted} />
+                          </button>
+                          {i < activeLinks.length - 1 && <Divider color={T.divider} />}
+                        </div>
+                      ))}
+                    </CardBlock>
+                  );
+                }
+
+                case 'appointment':
+                  if (!S.appointment || !fd.appointmentUrl) return null;
+                  return (
+                    <CardBlock key="appointment" T={T}>
+                      <div style={{ padding: "16px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+                        <div style={{ width: 40, height: 40, borderRadius: "50%", background: `linear-gradient(135deg, ${T.green}, ${T.greenLight})`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <Calendar size={20} color="#fff" />
+                        </div>
+                        <p style={{ fontWeight: T.boldHeadings ? 700 : 500, fontSize: T.bodyFontSize + 1, color: T.textPrimary }}>Schedule Meeting</p>
+                        <p style={{ fontSize: T.bodyFontSize, lineHeight: 1.5, color: T.textMuted, padding: "0 8px" }}>Book a time to discuss potential opportunities</p>
+                      </div>
+                      <div style={{ padding: "0 16px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
+                        {["Book on Calendly", "Add to Calendar"].map((label) => (
+                          <button key={label} onClick={() => { track(slug, "link_click"); openLink(fd.appointmentUrl!); }}
+                            style={{ width: "100%", padding: "10px", borderRadius: 999, border: `1px solid ${T.green}59`, color: T.greenLight, background: `${T.green}1a`, fontWeight: 600, fontSize: T.bodyFontSize, cursor: "pointer", fontFamily: T.fontFamily }}>
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </CardBlock>
+                  );
+
+                case 'collectContacts':
+                  if (!S.collectContacts) return null;
+                  return (
+                    <CardBlock key="collectContacts" T={T}>
+                      <SectionHeader T={T} icon={<MessageSquare size={14} color="#fff" />} title="Get in Touch" />
+                      <div style={{ padding: "12px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
+                        {[
+                          { key: "name" as const, placeholder: "Your name", type: "text" },
+                          { key: "email" as const, placeholder: "Email address", type: "email" },
+                          { key: "phone" as const, placeholder: "Phone number", type: "tel" },
+                        ].map((field) => (
+                          <input key={field.key} type={field.type} value={leadForm[field.key]} placeholder={field.placeholder}
+                            onChange={(e) => setLeadForm((prev) => ({ ...prev, [field.key]: e.target.value }))}
+                            style={{ width: "100%", padding: "9px 12px", borderRadius: 10, background: T.bg, border: `1px solid ${T.green}33`, color: T.textPrimary, fontSize: T.bodyFontSize, outline: "none", fontFamily: T.fontFamily }} />
+                        ))}
+                        <button onClick={submitLead} disabled={leadSubmitting}
+                          style={{ width: "100%", padding: "10px", borderRadius: 999, border: "none", background: `linear-gradient(135deg, ${T.green}, ${T.greenLight})`, color: "#fff", fontWeight: 700, fontSize: T.bodyFontSize, cursor: leadSubmitting ? "not-allowed" : "pointer", opacity: leadSubmitting ? 0.8 : 1, fontFamily: T.fontFamily }}>
+                          {leadSubmitting ? "Submitting..." : "Submit"}
+                        </button>
+                        {leadSubmitFeedback.type && (
+                          <p style={{ marginTop: 4, fontSize: T.bodyFontSize - 1, color: leadSubmitFeedback.type === "success" ? T.greenLight : "#ff7a7a" }}>
+                            {leadSubmitFeedback.message}
+                          </p>
+                        )}
+                      </div>
+                    </CardBlock>
+                  );
+
+                // 'profile' is rendered above in the header block — skip here
+                default:
+                  return null;
+              }
+            });
+          })()}
 
           <div style={{ height: 80 }} />
         </div>

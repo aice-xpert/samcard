@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useState, useCallback } from 'react';
 import {
   X, Mail, Phone, Globe, MapPin,
   Linkedin, Instagram, Twitter, Facebook, Youtube,
@@ -10,6 +10,16 @@ import { Button } from '@/components/dashboard/ui/button';
 
 // ── Types ──────────────────────────────────────────────────────────
 export type LogoPosition = 'top-left' | 'top-right' | 'below-photo' | 'below-name';
+
+export type SectionKey = 
+  | 'profile'
+  | 'headingText'
+  | 'contactUs'
+  | 'businessDetails'
+  | 'socialLinks'
+  | 'links'
+  | 'appointment'
+  | 'collectContacts';
 
 interface SocialLink { platform: number; value: string; }
 interface CustomLink { label: string; url: string; }
@@ -66,6 +76,9 @@ export interface CardPreviewModalProps {
   onShareLink?: () => void;
   onSaveContact?: () => void;
   themeOverride?: Partial<ThemeOverride>;
+  sectionOrder?: SectionKey[];
+  // Interleaved order of both core SectionKeys and extra section IDs.
+  unifiedOrder?: string[];
 }
 
 // ── Social config ──────────────────────────────────────────────────
@@ -101,6 +114,18 @@ const DEFAULT_T: ThemeOverride = {
   boldHeadings: true,
   cardRadius: 16,
 };
+
+// Default section order (fallback)
+const DEFAULT_SECTION_ORDER: SectionKey[] = [
+  'profile',
+  'headingText',
+  'contactUs',
+  'businessDetails',
+  'socialLinks',
+  'links',
+  'appointment',
+  'collectContacts',
+];
 
 function resolveSocialUrl(value: string, platform: number): string {
   if (!value.trim()) return '';
@@ -175,6 +200,259 @@ function Divider({ T }: { T: ThemeOverride }) {
   return <div style={{ height: 1, background: T.divider, margin: '0 16px' }} />;
 }
 
+// ── Section Components ─────────────────────────────────────────────
+
+function ProfileSection({ T, profileImage, formData, brandLogo, logoPosition, hasBrandLogo, hasProfileImage, contactItems }: any) {
+  return (
+    <>
+      <div className="relative" style={{ aspectRatio: '4/3', maxHeight: '240px', overflow: 'hidden' }}>
+        {hasProfileImage ? (
+          <img src={profileImage} alt={formData.name} className="w-full h-full object-contain object-center" />
+        ) : (
+          <div className="w-full h-full"
+            style={{ background: `linear-gradient(160deg, ${T.muted} 0%, ${T.card} 100%)` }} />
+        )}
+        <div className="absolute inset-0"
+          style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.75) 100%)' }} />
+        <div className="absolute bottom-0 left-0 right-0 h-[2px]"
+          style={{ background: `linear-gradient(90deg, transparent, ${T.green}, ${T.greenLight}, ${T.green}, transparent)` }} />
+        {hasBrandLogo && logoPosition === 'top-left' && (
+          <div className="absolute top-3 left-3 z-10">
+            <BrandLogoBadge src={brandLogo!} maxSize={48} padding="5px" borderRadius={10} />
+          </div>
+        )}
+        {hasBrandLogo && logoPosition === 'top-right' && (
+          <div className="absolute top-3 right-3 z-10">
+            <BrandLogoBadge src={brandLogo!} maxSize={48} padding="5px" borderRadius={10} />
+          </div>
+        )}
+        <div className="absolute bottom-0 left-0 right-0 px-4 pb-3 z-10">
+          <h1 style={{ fontWeight: T.boldHeadings ? 800 : 600, fontSize: T.nameFontSize, lineHeight: 1.2, color: '#fff', textShadow: '0 1px 8px rgba(0,0,0,0.7)', fontFamily: T.fontFamily, wordBreak: 'break-all', overflowWrap: 'break-word' }}>
+            {formData.name}
+          </h1>
+          {formData.title && <p style={{ fontSize: T.bodyFontSize, marginTop: 2, color: T.greenLight, fontFamily: T.fontFamily, wordBreak: 'break-all', overflowWrap: 'break-word' }}>{formData.title}</p>}
+
+          {hasBrandLogo && logoPosition === 'below-name' && (
+            <div className="flex justify-center mt-1">
+              <BrandLogoBadge src={brandLogo!} bg="rgba(0,0,0,0.45)" blur={false} maxSize={22} padding="2px 4px" borderRadius={5} />
+            </div>
+          )}
+
+          {formData.company && (
+            <div className="flex items-center gap-1.5 mt-0.5 justify-center">
+              <p style={{ fontSize: T.bodyFontSize, color: 'rgba(255,255,255,0.65)', fontFamily: T.fontFamily, wordBreak: 'break-all', overflowWrap: 'break-word' }}>{formData.company}</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {hasBrandLogo && logoPosition === 'below-photo' && (
+        <div className="flex justify-center py-2.5">
+          <BrandLogoBadge src={brandLogo!} bg={T.card} blur={false} maxSize={80} padding="8px 12px" borderRadius={12} border={`1px solid ${T.cardBorder}`} />
+        </div>
+      )}
+
+      {formData.tagline && (
+        <div className="px-4 py-2.5 text-center">
+          <p style={{ fontSize: T.bodyFontSize, fontStyle: 'italic', lineHeight: 1.5, color: T.textMuted, fontFamily: T.fontFamily, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{formData.tagline}</p>
+        </div>
+      )}
+
+      {contactItems.length > 0 && (
+        <div className="flex justify-center gap-3 py-3 mx-3 mb-2.5"
+          style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: T.cardRadius }}>
+          {contactItems.slice(0, 4).map(({ hrefFn, value, icon: Icon }: any, i: number) => (
+            <a key={i} href={hrefFn(value)} target="_blank" rel="noopener noreferrer"
+              onClick={e => e.stopPropagation()} className="flex flex-col items-center gap-1 modal-tap">
+              <div className="w-11 h-11 rounded-full flex items-center justify-center"
+                style={{ background: `linear-gradient(135deg,${T.green},${T.greenLight})`, boxShadow: `0 3px 10px ${T.green}66` }}>
+                <Icon className="w-4 h-4 text-white" />
+              </div>
+            </a>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
+function HeadingTextSection({ T, formData }: any) {
+  if (!formData.headingText && !formData.bodyText) return null;
+  return (
+    <CardBlock T={T}>
+      <div className="px-4 py-3">
+        {formData.headingText && <p style={{ fontWeight: T.boldHeadings ? 700 : 500, fontSize: T.bodyFontSize, marginBottom: 4, color: T.textPrimary, fontFamily: T.fontFamily }}>{formData.headingText}</p>}
+        {formData.bodyText && <p style={{ fontSize: T.bodyFontSize, lineHeight: 1.5, color: T.textMuted, fontFamily: T.fontFamily }}>{formData.bodyText}</p>}
+      </div>
+    </CardBlock>
+  );
+}
+
+function ContactUsSection({ T, contactItems, formData }: any) {
+  if (contactItems.length === 0) return null;
+  return (
+    <CardBlock T={T}>
+      <SectionHeader T={T} icon={<Phone className="w-3.5 h-3.5 text-white" />} title="Contact Us" />
+      {contactItems.map(({ icon: Icon, label, value, hrefFn }: any, i: number) => (
+        <div key={i}>
+          <a href={hrefFn(value)} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
+            className="modal-tap flex items-center gap-3 px-4 py-2.5" style={{ color: 'inherit' }}>
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+              style={{ background: `${T.green}26`, border: `1px solid ${T.green}40` }}>
+              <Icon className="w-3.5 h-3.5" style={{ color: T.greenLight }} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p style={{ fontWeight: T.boldHeadings ? 700 : 500, fontSize: T.bodyFontSize, color: T.textPrimary, fontFamily: T.fontFamily }}>{label}</p>
+              <p style={{ fontSize: Math.max(9, T.bodyFontSize - 1), color: T.textMuted, fontFamily: T.fontFamily }} className="truncate">{value}</p>
+            </div>
+            <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: T.muted }} />
+          </a>
+          {i < contactItems.length - 1 && <Divider T={T} />}
+        </div>
+      ))}
+      {formData.location && (
+        <div className="px-4 py-2.5">
+          <a href={`https://maps.google.com/?q=${encodeURIComponent(formData.location)}`}
+            target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
+            className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 font-semibold text-white modal-tap"
+            style={{ background: `linear-gradient(135deg,${T.green},${T.greenLight})`, fontSize: T.bodyFontSize, fontFamily: T.fontFamily }}>
+            <MapPin className="w-3 h-3" /> Direction
+          </a>
+        </div>
+      )}
+    </CardBlock>
+  );
+}
+
+function BusinessDetailsSection({ T, formData }: any) {
+  const items = [
+    formData.company && { label: 'Company', val: formData.company },
+    formData.industry && { label: 'Industry', val: formData.industry },
+    formData.yearFounded && { label: 'Year Founded', val: formData.yearFounded },
+    formData.location && { label: 'Location', val: formData.location },
+  ].filter(Boolean);
+  
+  if (items.length === 0) return null;
+  
+  return (
+    <CardBlock T={T}>
+      <SectionHeader T={T} icon={<Briefcase className="w-3.5 h-3.5 text-white" />} title="Business Details" />
+      {items.map((row: any, i: number, arr: any[]) => (
+        <div key={row.label}>
+          <div className="flex items-center justify-between px-4 py-2.5">
+            <span style={{ fontSize: T.bodyFontSize, color: T.textMuted, fontFamily: T.fontFamily }}>{row.label}</span>
+            <span style={{ fontSize: T.bodyFontSize, fontWeight: T.boldHeadings ? 700 : 400, color: T.textPrimary, fontFamily: T.fontFamily, wordBreak: 'break-word', overflowWrap: 'anywhere', maxWidth: '55%', display: 'inline-block', textAlign: 'right' }}>{row.val}</span>
+          </div>
+          {i < arr.length - 1 && <Divider T={T} />}
+        </div>
+      ))}
+    </CardBlock>
+  );
+}
+
+function SocialLinksSection({ T, activeSocials }: any) {
+  if (activeSocials.length === 0) return null;
+  return (
+    <CardBlock T={T}>
+      <SectionHeader T={T} icon={<Share2 className="w-3.5 h-3.5 text-white" />} title="Social Links" />
+      {activeSocials.map((s: any, i: number) => {
+        const opt = SOCIAL_OPTIONS[s.platform] ?? SOCIAL_OPTIONS[0];
+        const Icon = opt.icon;
+        const url = resolveSocialUrl(s.value, s.platform);
+        return (
+          <div key={i}>
+            <a href={url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
+              className="modal-tap flex items-center gap-3 px-4 py-2.5" style={{ color: 'inherit' }}>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: `${opt.color}1a`, border: `1px solid ${opt.color}35` }}>
+                <Icon className="w-4 h-4" style={{ color: opt.color }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p style={{ fontWeight: T.boldHeadings ? 700 : 500, fontSize: T.bodyFontSize, color: T.textPrimary, fontFamily: T.fontFamily }}>{opt.name}</p>
+                <p style={{ fontSize: Math.max(9, T.bodyFontSize - 1), color: T.textMuted, fontFamily: T.fontFamily }} className="truncate">{s.value}</p>
+              </div>
+              <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: T.muted }} />
+            </a>
+            {i < activeSocials.length - 1 && <Divider T={T} />}
+          </div>
+        );
+      })}
+    </CardBlock>
+  );
+}
+
+function LinksSection({ T, activeLinks }: any) {
+  if (activeLinks.length === 0) return null;
+  return (
+    <CardBlock T={T}>
+      <SectionHeader T={T} icon={<Link2 className="w-3.5 h-3.5 text-white" />} title="Web Links" />
+      {activeLinks.map((l: any, i: number) => (
+        <div key={i}>
+          <button type="button" onClick={e => { e.stopPropagation(); openLink(l.url); }}
+            className="modal-tap w-full flex items-center gap-3 px-4 py-2.5 text-left">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ background: `${T.green}1f`, border: `1px solid ${T.green}40` }}>
+              <Link2 className="w-4 h-4" style={{ color: T.greenLight }} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p style={{ fontWeight: T.boldHeadings ? 700 : 500, fontSize: T.bodyFontSize, color: T.textPrimary, fontFamily: T.fontFamily }}>{l.label || 'Title'}</p>
+              <p style={{ fontSize: Math.max(9, T.bodyFontSize - 1), color: T.textMuted, fontFamily: T.fontFamily }} className="truncate">{l.url || 'URL'}</p>
+            </div>
+            <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: T.muted }} />
+          </button>
+          {i < activeLinks.length - 1 && <Divider T={T} />}
+        </div>
+      ))}
+    </CardBlock>
+  );
+}
+
+function AppointmentSection({ T, formData }: any) {
+  if (!formData.appointmentUrl) return null;
+  return (
+    <CardBlock T={T}>
+      <div className="px-4 pt-4 pb-2 text-center">
+        <div className="w-10 h-10 rounded-full mx-auto mb-2 flex items-center justify-center"
+          style={{ background: `linear-gradient(135deg,${T.green},${T.greenLight})` }}>
+          <Calendar className="w-5 h-5 text-white" />
+        </div>
+        <h3 style={{ fontWeight: T.boldHeadings ? 700 : 500, fontSize: T.bodyFontSize + 1, color: T.textPrimary, fontFamily: T.fontFamily }}>Schedule Meeting</h3>
+        <p style={{ fontSize: T.bodyFontSize, marginTop: 4, lineHeight: 1.5, color: T.textMuted, fontFamily: T.fontFamily }} className="px-2">
+          Book a time to discuss potential opportunities
+        </p>
+      </div>
+      <div className="px-4 pb-4 space-y-2">
+        {['Book on Calendly', 'Add to Calendar'].map((label, idx) => (
+          <button key={idx} type="button"
+            onClick={e => { e.stopPropagation(); openLink(formData.appointmentUrl!); }}
+            className="modal-tap w-full py-2.5 rounded-full font-semibold"
+            style={{ border: `1px solid ${T.green}59`, color: T.greenLight, background: `${T.green}1a`, fontSize: T.bodyFontSize, fontFamily: T.fontFamily }}>
+            {label}
+          </button>
+        ))}
+      </div>
+    </CardBlock>
+  );
+}
+
+function CollectContactsSection({ T }: any) {
+  return (
+    <CardBlock T={T}>
+      <SectionHeader T={T} icon={<MessageSquare className="w-3.5 h-3.5 text-white" />} title="Get in Touch" />
+      <div className="px-4 py-3 space-y-2">
+        {['Your name', 'Email address', 'Phone number'].map((ph, i) => (
+          <input key={i} readOnly placeholder={ph} className="w-full px-3 py-2 rounded-xl outline-none"
+            style={{ background: T.bg, border: `1px solid ${T.green}33`, color: T.textPrimary, fontSize: T.bodyFontSize, fontFamily: T.fontFamily }} />
+        ))}
+        <button className="w-full py-2.5 rounded-full font-bold text-white"
+          style={{ background: `linear-gradient(135deg,${T.green},${T.greenLight})`, fontSize: T.bodyFontSize, fontFamily: T.fontFamily }}>
+          Submit
+        </button>
+      </div>
+    </CardBlock>
+  );
+}
+
 // ═══════════════════════════════════════════════════════════════════
 // CardPreviewModal
 // ═══════════════════════════════════════════════════════════════════
@@ -187,6 +465,8 @@ export function CardPreviewModal({
   savedContact = false, copied = false,
   onShareLink, onSaveContact,
   themeOverride,
+  sectionOrder,
+  unifiedOrder,
 }: CardPreviewModalProps) {
 
   const T: ThemeOverride = { ...DEFAULT_T, ...themeOverride };
@@ -215,6 +495,13 @@ export function CardPreviewModal({
   const hasProfileImage = !!profileImage?.trim();
   const hasBrandLogo = !!brandLogo?.trim();
 
+  const contactItems = CONTACT_CONFIG
+    .map(c => ({ ...c, value: (formData as Record<string, string>)[c.key] ?? '' }))
+    .filter(c => c.value.trim());
+
+  const activeSocials = socialLinks.filter(s => s.value.trim());
+  const activeLinks = customLinks.filter(l => l.label || l.url);
+
   const dynamicStyles = `
     @keyframes modal-in {
       from { opacity: 0; transform: scale(0.93) translateY(14px); }
@@ -230,12 +517,31 @@ export function CardPreviewModal({
     .modal-tap:active { transform: scale(0.96); }
   `;
 
-  const contactItems = CONTACT_CONFIG
-    .map(c => ({ ...c, value: (formData as Record<string, string>)[c.key] ?? '' }))
-    .filter(c => c.value.trim());
+  // Section component map
+  const sectionComponentMap: Record<SectionKey, React.FC<any>> = {
+    profile: ProfileSection,
+    headingText: HeadingTextSection,
+    contactUs: ContactUsSection,
+    businessDetails: BusinessDetailsSection,
+    socialLinks: SocialLinksSection,
+    links: LinksSection,
+    appointment: AppointmentSection,
+    collectContacts: CollectContactsSection,
+  };
 
-  const activeSocials = socialLinks.filter(s => s.value.trim());
-  const activeLinks = customLinks.filter(l => l.label || l.url);
+  // Build extra section lookup map
+  const extraSectionById = new Map<string, ExtraSection>();
+  extraSections.forEach(s => extraSectionById.set(s.id, s));
+
+  // Determine render order: use unifiedOrder if provided (interleaved core + extra),
+  // otherwise fall back to legacy: ordered core sections, then extras appended.
+  const renderItems: string[] = (() => {
+    if (unifiedOrder && unifiedOrder.length > 0) return unifiedOrder;
+    const order = sectionOrder && sectionOrder.length > 0 ? sectionOrder : DEFAULT_SECTION_ORDER;
+    const coreIds = order.filter(key => sec[key]);
+    const extraIds = extraSections.filter(s => s.enabled).map(s => s.id);
+    return [...coreIds, ...extraIds];
+  })();
 
   return (
     <>
@@ -301,242 +607,33 @@ export function CardPreviewModal({
                     </div>
                   </div>
 
-                  {/* Scrollable content */}
+                  {/* Scrollable content with ordered sections */}
                   <div data-modalscroll={uid} className="overflow-y-auto overscroll-contain flex-1 min-h-0"
                     style={{ background: T.phoneBgStyle || T.bg, overflowX: 'hidden', ...ff }}>
 
-                    {/* HERO */}
-                    {sec.profile && (
-                      <div className="relative" style={{ aspectRatio: '4/3', maxHeight: '240px', overflow: 'hidden' }}>
-                        {hasProfileImage ? (
-                          <img src={profileImage} alt={formData.name} className="w-full h-full object-contain object-center" />
-                        ) : (
-                          <div className="w-full h-full"
-                            style={{ background: `linear-gradient(160deg, ${T.muted} 0%, ${T.card} 100%)` }} />
-                        )}
-                        <div className="absolute inset-0"
-                          style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.75) 100%)' }} />
-                        <div className="absolute bottom-0 left-0 right-0 h-[2px]"
-                          style={{ background: `linear-gradient(90deg, transparent, ${T.green}, ${T.greenLight}, ${T.green}, transparent)` }} />
-                        {hasBrandLogo && logoPosition === 'top-left' && (
-                          <div className="absolute top-3 left-3 z-10">
-                            <BrandLogoBadge src={brandLogo!} maxSize={48} padding="5px" borderRadius={10} />
-                          </div>
-                        )}
-                        {hasBrandLogo && logoPosition === 'top-right' && (
-                          <div className="absolute top-3 right-3 z-10">
-                            <BrandLogoBadge src={brandLogo!} maxSize={48} padding="5px" borderRadius={10} />
-                          </div>
-                        )}
-                        <div className="absolute bottom-0 left-0 right-0 px-4 pb-3 z-10">
-                          <h1 style={{ fontWeight: T.boldHeadings ? 800 : 600, fontSize: T.nameFontSize, lineHeight: 1.2, color: '#fff', textShadow: '0 1px 8px rgba(0,0,0,0.7)', fontFamily: T.fontFamily, wordBreak: 'break-all', overflowWrap: 'break-word' }}>
-                            {formData.name}
-                          </h1>
-                          {formData.title && <p style={{ fontSize: T.bodyFontSize, marginTop: 2, color: T.greenLight, fontFamily: T.fontFamily, wordBreak: 'break-all', overflowWrap: 'break-word' }}>{formData.title}</p>}
-
-                          {hasBrandLogo && logoPosition === 'below-name' && (
-                            <div className="flex justify-center mt-1">
-                              <BrandLogoBadge src={brandLogo!} bg="rgba(0,0,0,0.45)" blur={false} maxSize={22} padding="2px 4px" borderRadius={5} />
-                            </div>
-                          )}
-
-                          {formData.company && (
-                            <div className="flex items-center gap-1.5 mt-0.5 justify-center">
-                              <p style={{ fontSize: T.bodyFontSize, color: 'rgba(255,255,255,0.65)', fontFamily: T.fontFamily, wordBreak: 'break-all', overflowWrap: 'break-word' }}>{formData.company}</p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {sec.profile && hasBrandLogo && logoPosition === 'below-photo' && (
-                      <div className="flex justify-center py-2.5">
-                        <BrandLogoBadge src={brandLogo!} bg={T.card} blur={false} maxSize={80} padding="8px 12px" borderRadius={12} border={`1px solid ${T.cardBorder}`} />
-                      </div>
-                    )}
-
-                    {sec.profile && formData.tagline && (
-                      <div className="px-4 py-2.5 text-center">
-                        <p style={{ fontSize: T.bodyFontSize, fontStyle: 'italic', lineHeight: 1.5, color: T.textMuted, fontFamily: T.fontFamily, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{formData.tagline}</p>
-                      </div>
-                    )}
-
-                    {sec.profile && contactItems.length > 0 && (
-                      <div className="flex justify-center gap-3 py-3 mx-3 mb-2.5"
-                        style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: T.cardRadius }}>
-                        {contactItems.slice(0, 4).map(({ hrefFn, value, icon: Icon }, i) => (
-                          <a key={i} href={hrefFn(value)} target="_blank" rel="noopener noreferrer"
-                            onClick={e => e.stopPropagation()} className="flex flex-col items-center gap-1 modal-tap">
-                            <div className="w-11 h-11 rounded-full flex items-center justify-center"
-                              style={{ background: `linear-gradient(135deg,${T.green},${T.greenLight})`, boxShadow: `0 3px 10px ${T.green}66` }}>
-                              <Icon className="w-4 h-4 text-white" />
-                            </div>
-                          </a>
-                        ))}
-                      </div>
-                    )}
-
-                    {sec.headingText && (formData.headingText || formData.bodyText) && (
-                      <CardBlock T={T}>
-                        <div className="px-4 py-3">
-                          {formData.headingText && <p style={{ fontWeight: T.boldHeadings ? 700 : 500, fontSize: T.bodyFontSize, marginBottom: 4, color: T.textPrimary, fontFamily: T.fontFamily }}>{formData.headingText}</p>}
-                          {formData.bodyText && <p style={{ fontSize: T.bodyFontSize, lineHeight: 1.5, color: T.textMuted, fontFamily: T.fontFamily }}>{formData.bodyText}</p>}
-                        </div>
-                      </CardBlock>
-                    )}
-
-                    {sec.contactUs && contactItems.length > 0 && (
-                      <CardBlock T={T}>
-                        <SectionHeader T={T} icon={<Phone className="w-3.5 h-3.5 text-white" />} title="Contact Us" />
-                        {contactItems.map(({ icon: Icon, label, value, hrefFn }, i) => (
-                          <div key={i}>
-                            <a href={hrefFn(value)} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
-                              className="modal-tap flex items-center gap-3 px-4 py-2.5" style={{ color: 'inherit' }}>
-                              <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                                style={{ background: `${T.green}26`, border: `1px solid ${T.green}40` }}>
-                                <Icon className="w-3.5 h-3.5" style={{ color: T.greenLight }} />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p style={{ fontWeight: T.boldHeadings ? 700 : 500, fontSize: T.bodyFontSize, color: T.textPrimary, fontFamily: T.fontFamily }}>{label}</p>
-                                <p style={{ fontSize: Math.max(9, T.bodyFontSize - 1), color: T.textMuted, fontFamily: T.fontFamily }} className="truncate">{value}</p>
-                              </div>
-                              <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: T.muted }} />
-                            </a>
-                            {i < contactItems.length - 1 && <Divider T={T} />}
-                          </div>
-                        ))}
-                        {formData.location && (
-                          <div className="px-4 py-2.5">
-                            <a href={`https://maps.google.com/?q=${encodeURIComponent(formData.location)}`}
-                              target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
-                              className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 font-semibold text-white modal-tap"
-                              style={{ background: `linear-gradient(135deg,${T.green},${T.greenLight})`, fontSize: T.bodyFontSize, fontFamily: T.fontFamily }}>
-                              <MapPin className="w-3 h-3" /> Direction
-                            </a>
-                          </div>
-                        )}
-                      </CardBlock>
-                    )}
-
-                    {sec.businessDetails && (formData.company || formData.industry || formData.yearFounded || formData.location) && (
-                      <CardBlock T={T}>
-                        <SectionHeader T={T} icon={<Briefcase className="w-3.5 h-3.5 text-white" />} title="Business Details" />
-                        {[
-                          formData.company && { label: 'Company', val: formData.company },
-                          formData.industry && { label: 'Industry', val: formData.industry },
-                          formData.yearFounded && { label: 'Year Founded', val: formData.yearFounded },
-                          formData.location && { label: 'Location', val: formData.location },
-                        ].filter(Boolean).map((row, i, arr) => {
-                          const { label, val } = row as { label: string; val: string };
-                          return (
-                            <div key={label}>
-                              <div className="flex items-center justify-between px-4 py-2.5">
-                                <span style={{ fontSize: T.bodyFontSize, color: T.textMuted, fontFamily: T.fontFamily }}>{label}</span>
-                                <span style={{ fontSize: T.bodyFontSize, fontWeight: T.boldHeadings ? 700 : 400, color: T.textPrimary, fontFamily: T.fontFamily, wordBreak: 'break-word', overflowWrap: 'anywhere', maxWidth: '55%', display: 'inline-block', textAlign: 'right' }}>{val}</span>
-                                {/* <span style={{ fontSize: T.bodyFontSize, fontWeight: T.boldHeadings ? 700 : 400, color: T.textPrimary, fontFamily: T.fontFamily }} className="text-right max-w-[55%]">{val}</span> */}
-                              </div>
-                              {i < arr.length - 1 && <Divider T={T} />}
-                            </div>
-                          );
-                        })}
-                      </CardBlock>
-                    )}
-
-                    {sec.socialLinks && activeSocials.length > 0 && (
-                      <CardBlock T={T}>
-                        <SectionHeader T={T} icon={<Share2 className="w-3.5 h-3.5 text-white" />} title="Social Links" />
-                        {activeSocials.map((s, i) => {
-                          const opt = SOCIAL_OPTIONS[s.platform] ?? SOCIAL_OPTIONS[0];
-                          const Icon = opt.icon;
-                          const url = resolveSocialUrl(s.value, s.platform);
-                          return (
-                            <div key={i}>
-                              <a href={url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
-                                className="modal-tap flex items-center gap-3 px-4 py-2.5" style={{ color: 'inherit' }}>
-                                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                                  style={{ background: `${opt.color}1a`, border: `1px solid ${opt.color}35` }}>
-                                  <Icon className="w-4 h-4" style={{ color: opt.color }} />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p style={{ fontWeight: T.boldHeadings ? 700 : 500, fontSize: T.bodyFontSize, color: T.textPrimary, fontFamily: T.fontFamily }}>{opt.name}</p>
-                                  <p style={{ fontSize: Math.max(9, T.bodyFontSize - 1), color: T.textMuted, fontFamily: T.fontFamily }} className="truncate">{s.value}</p>
-                                </div>
-                                <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: T.muted }} />
-                              </a>
-                              {i < activeSocials.length - 1 && <Divider T={T} />}
-                            </div>
-                          );
-                        })}
-                      </CardBlock>
-                    )}
-
-                    {sec.links && activeLinks.length > 0 && (
-                      <CardBlock T={T}>
-                        <SectionHeader T={T} icon={<Link2 className="w-3.5 h-3.5 text-white" />} title="Web Links" />
-                        {activeLinks.map((l, i) => (
-                          <div key={i}>
-                            <button type="button" onClick={e => { e.stopPropagation(); openLink(l.url); }}
-                              className="modal-tap w-full flex items-center gap-3 px-4 py-2.5 text-left">
-                              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                                style={{ background: `${T.green}1f`, border: `1px solid ${T.green}40` }}>
-                                <Link2 className="w-4 h-4" style={{ color: T.greenLight }} />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p style={{ fontWeight: T.boldHeadings ? 700 : 500, fontSize: T.bodyFontSize, color: T.textPrimary, fontFamily: T.fontFamily }}>{l.label || 'Title'}</p>
-                                <p style={{ fontSize: Math.max(9, T.bodyFontSize - 1), color: T.textMuted, fontFamily: T.fontFamily }} className="truncate">{l.url || 'URL'}</p>
-                              </div>
-                              <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: T.muted }} />
-                            </button>
-                            {i < activeLinks.length - 1 && <Divider T={T} />}
-                          </div>
-                        ))}
-                      </CardBlock>
-                    )}
-
-                    {sec.appointment && formData.appointmentUrl && (
-                      <CardBlock T={T}>
-                        <div className="px-4 pt-4 pb-2 text-center">
-                          <div className="w-10 h-10 rounded-full mx-auto mb-2 flex items-center justify-center"
-                            style={{ background: `linear-gradient(135deg,${T.green},${T.greenLight})` }}>
-                            <Calendar className="w-5 h-5 text-white" />
-                          </div>
-                          <h3 style={{ fontWeight: T.boldHeadings ? 700 : 500, fontSize: T.bodyFontSize + 1, color: T.textPrimary, fontFamily: T.fontFamily }}>Schedule Meeting</h3>
-                          <p style={{ fontSize: T.bodyFontSize, marginTop: 4, lineHeight: 1.5, color: T.textMuted, fontFamily: T.fontFamily }} className="px-2">
-                            Book a time to discuss potential opportunities
-                          </p>
-                        </div>
-                        <div className="px-4 pb-4 space-y-2">
-                          {['Book on Calendly', 'Add to Calendar'].map(label => (
-                            <button key={label} type="button"
-                              onClick={e => { e.stopPropagation(); openLink(formData.appointmentUrl!); }}
-                              className="modal-tap w-full py-2.5 rounded-full font-semibold"
-                              style={{ border: `1px solid ${T.green}59`, color: T.greenLight, background: `${T.green}1a`, fontSize: T.bodyFontSize, fontFamily: T.fontFamily }}>
-                              {label}
-                            </button>
-                          ))}
-                        </div>
-                      </CardBlock>
-                    )}
-
-                    {sec.collectContacts && (
-                      <CardBlock T={T}>
-                        <SectionHeader T={T} icon={<MessageSquare className="w-3.5 h-3.5 text-white" />} title="Get in Touch" />
-                        <div className="px-4 py-3 space-y-2">
-                          {['Your name', 'Email address', 'Phone number'].map(ph => (
-                            <input key={ph} readOnly placeholder={ph} className="w-full px-3 py-2 rounded-xl outline-none"
-                              style={{ background: T.bg, border: `1px solid ${T.green}33`, color: T.textPrimary, fontSize: T.bodyFontSize, fontFamily: T.fontFamily }} />
-                          ))}
-                          <button className="w-full py-2.5 rounded-full font-bold text-white"
-                            style={{ background: `linear-gradient(135deg,${T.green},${T.greenLight})`, fontSize: T.bodyFontSize, fontFamily: T.fontFamily }}>
-                            Submit
-                          </button>
-                        </div>
-                      </CardBlock>
-                    )}
-
-                    {extraSections.filter(s => s.enabled).map(section => (
-                      <ExtraModalSection key={section.id} section={section} T={T} />
-                    ))}
+                    {/* Render all sections in unified order (core + extra interleaved) */}
+                    {renderItems.map((id) => {
+                      // Core section?
+                      if (DEFAULT_SECTION_ORDER.includes(id as SectionKey)) {
+                        const sectionKey = id as SectionKey;
+                        if (!sec[sectionKey]) return null;
+                        const SectionComponent = sectionComponentMap[sectionKey];
+                        if (!SectionComponent) return null;
+                        return (
+                          <SectionComponent key={sectionKey} T={T}
+                            profileImage={profileImage} formData={formData}
+                            brandLogo={brandLogo} logoPosition={logoPosition}
+                            hasBrandLogo={hasBrandLogo} hasProfileImage={hasProfileImage}
+                            contactItems={contactItems}
+                            activeSocials={activeSocials} activeLinks={activeLinks}
+                          />
+                        );
+                      }
+                      // Extra section
+                      const section = extraSectionById.get(id);
+                      if (!section || !section.enabled) return null;
+                      return <ExtraModalSection key={section.id} section={section} T={T} />;
+                    })}
 
                     <div className="px-4 py-3 flex justify-center">
                       <p style={{ fontSize: 8, color: '#555', fontFamily: T.fontFamily }}>Powered by Digital Cards</p>
@@ -609,12 +706,10 @@ function ExtraModalSection({ section, T }: { section: ExtraSection; T: ThemeOver
   const ff = { fontFamily: T.fontFamily };
 
   switch (section.type) {
-    // ── BUG 49 FIX: extra-pdf was missing — fell through to default which
-    // looks for 'title'/'content' keys instead of 'pdfTitle'/'pdfUrl' ──
     case 'extra-pdf': {
       const pdfTitle = str(d, 'pdfTitle'), pdfUrl = str(d, 'pdfUrl');
       return pdfTitle || pdfUrl ? (
-        <div className="mx-3 mb-2.5 overflow-hidden"
+        <div className="mx-3 mb-2.5 overflow-hidden" key={section.id}
           style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: T.cardRadius }}>
           <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ borderBottom: `1px solid ${T.divider}` }}>
             <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
@@ -648,7 +743,7 @@ function ExtraModalSection({ section, T }: { section: ExtraSection; T: ThemeOver
     case 'extra-button': {
       const btnLabel = str(d, 'btnLabel'), btnUrl = str(d, 'btnUrl');
       return btnLabel || btnUrl ? (
-        <div className="mx-3 mb-2.5">
+        <div className="mx-3 mb-2.5" key={section.id}>
           <button onClick={e => { e.stopPropagation(); if (btnUrl) openLink(btnUrl); }}
             className="modal-tap w-full py-3 font-bold text-white"
             style={{ background: `linear-gradient(135deg,${T.green},${T.greenLight})`, borderRadius: T.cardRadius, fontSize: T.bodyFontSize, ...ff }}>
@@ -660,7 +755,7 @@ function ExtraModalSection({ section, T }: { section: ExtraSection; T: ThemeOver
     case 'extra-video': {
       const videoUrl = str(d, 'videoUrl');
       return videoUrl ? (
-        <div className="mx-3 mb-2.5 overflow-hidden"
+        <div className="mx-3 mb-2.5 overflow-hidden" key={section.id}
           style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: T.cardRadius }}>
           <button onClick={e => { e.stopPropagation(); openLink(videoUrl); }}
             className="modal-tap w-full h-24 flex flex-col items-center justify-center gap-2">
@@ -677,7 +772,7 @@ function ExtraModalSection({ section, T }: { section: ExtraSection; T: ThemeOver
       const days = ['Monday–Friday', 'Saturday', 'Sunday'];
       const hasAny = days.some(day => str(d, day));
       return hasAny ? (
-        <div className="mx-3 mb-2.5 overflow-hidden"
+        <div className="mx-3 mb-2.5 overflow-hidden" key={section.id}
           style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: T.cardRadius }}>
           <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ borderBottom: `1px solid ${T.divider}` }}>
             <div className="w-7 h-7 rounded-lg flex items-center justify-center text-sm"
@@ -698,7 +793,7 @@ function ExtraModalSection({ section, T }: { section: ExtraSection; T: ThemeOver
     case 'extra-products': {
       const productName = str(d, 'productName'), price = str(d, 'price'), buyUrl = str(d, 'buyUrl');
       return productName ? (
-        <div className="mx-3 mb-2.5 overflow-hidden"
+        <div className="mx-3 mb-2.5 overflow-hidden" key={section.id}
           style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: T.cardRadius }}>
           <div className="px-4 py-3">
             <div className="flex items-center justify-between mb-2">
@@ -720,7 +815,7 @@ function ExtraModalSection({ section, T }: { section: ExtraSection; T: ThemeOver
       const heading = str(d, 'heading'), body = str(d, 'body'), imgUrl = str(d, 'imgUrl');
       if (!heading && !body && !imgUrl) return null;
       return (
-        <div className="mx-3 mb-2.5 overflow-hidden"
+        <div className="mx-3 mb-2.5 overflow-hidden" key={section.id}
           style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: T.cardRadius }}>
           {imgUrl && (
             <div className="w-full overflow-hidden" style={{ maxHeight: 140 }}>
@@ -740,7 +835,7 @@ function ExtraModalSection({ section, T }: { section: ExtraSection; T: ThemeOver
     case 'extra-team': {
       const title = str(d, 'title'), desc = str(d, 'desc');
       return title || desc ? (
-        <div className="mx-3 mb-2.5 overflow-hidden"
+        <div className="mx-3 mb-2.5 overflow-hidden" key={section.id}
           style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: T.cardRadius }}>
           <div className="px-4 py-3">
             {title && <p style={{ fontWeight: T.boldHeadings ? 700 : 500, fontSize: T.bodyFontSize, marginBottom: 4, color: T.textPrimary, ...ff }}>{title}</p>}
@@ -752,7 +847,7 @@ function ExtraModalSection({ section, T }: { section: ExtraSection; T: ThemeOver
     default: {
       const title = str(d, 'title'), content = str(d, 'content');
       return title || content ? (
-        <div className="mx-3 mb-2.5 overflow-hidden"
+        <div className="mx-3 mb-2.5 overflow-hidden" key={section.id}
           style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: T.cardRadius }}>
           <div className="px-4 py-3">
             {title && <p style={{ fontWeight: T.boldHeadings ? 700 : 500, fontSize: T.bodyFontSize, marginBottom: 4, color: T.textPrimary, ...ff }}>{title}</p>}

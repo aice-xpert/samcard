@@ -10,7 +10,7 @@ import {
   Check, RotateCcw, Save, Palette, Smartphone, ChevronDown, ChevronUp,
   Type, Layout, Sun, X, Download, Layers,
 } from 'lucide-react';
-import { PhonePreview, ThemeOverride, ExtraSection } from '@/components/dashboard/pages/PhonePreview';
+import { PhonePreview, ThemeOverride, ExtraSection, SectionKey } from '@/components/dashboard/pages/PhonePreview';
 import { CardPreviewModal } from '@/components/dashboard/pages/CardPreviewModal';
 import { getBusinessProfile, getCardContent, getCardDesign, updateCardDesign, getSocialLinks, getCustomLinks, getCards } from '@/lib/api';
 import type { LogoPosition } from '@/components/dashboard/pages/PhonePreview';
@@ -52,6 +52,10 @@ interface ProfileCache {
   profileImage?: string;
   brandLogo?: string;
   logoPosition?: LogoPosition;
+  sectionOrder?: SectionKey[];
+  // Interleaved order of both core SectionKeys and extra section IDs.
+  // When present, drives the unified render order in previews.
+  unifiedOrder?: string[];
   formData?: {
     name?: string; title?: string; company?: string; tagline?: string;
     email?: string; phone?: string; website?: string; location?: string;
@@ -154,7 +158,6 @@ export interface DesignSettings {
 interface Palette {
   name: string; emoji: string; accent: string; accentLight: string;
   bg: string; card: string; textPrimary: string; textMuted: string;
-  // Which wallpaper preset best matches this palette
   wallpaper: string;
 }
 const PALETTES: Record<string, Palette> = {
@@ -205,18 +208,23 @@ const DEFAULT_DESIGN: DesignSettings = {
   glowEffect: true,
 };
 
-const DEFAULT_PROFILE_FORM = {
-  name: '', title: '', company: '',
-  tagline: '', email: '',
-  phone: '', website: '',
-  location: '', industry: '', yearFounded: '',
-  appointmentUrl: '', headingText: '', bodyText: '',
-};
 const DEFAULT_SECTIONS = {
   profile: true, headingText: true, contactUs: true,
   socialLinks: true, links: true, appointment: false, collectContacts: false,
   businessDetails: true,
 };
+
+// ── Default section order ─────────────────────────────────────────
+const DEFAULT_SECTION_ORDER: SectionKey[] = [
+  'profile',
+  'headingText',
+  'contactUs',
+  'businessDetails',
+  'socialLinks',
+  'links',
+  'appointment',
+  'collectContacts',
+];
 
 // ── Compute phone bg CSS ──────────────────────────────────────────
 function getPhoneBgStyle(d: DesignSettings): string {
@@ -491,7 +499,6 @@ function WallpaperPicker({ draft, set }: {
 
   return (
     <div className="space-y-3">
-      {/* 3-column wallpaper grid */}
       <div className="grid grid-cols-3 gap-2">
         {WALLPAPER_PRESETS.map(preset => {
           const isSelected = draft.phoneBgPreset === preset.id;
@@ -523,11 +530,9 @@ function WallpaperPicker({ draft, set }: {
         })}
       </div>
 
-      {/* Custom controls */}
       {draft.phoneBgPreset === 'custom' && (
         <div className="space-y-3 pt-2 px-3 pb-3 rounded-xl"
           style={{ background: '#0d0d0d', border: '1px solid rgba(0,128,1,0.2)' }}>
-
           <Chips
             options={[
               { value: 'solid', label: 'Solid Color' },
@@ -536,10 +541,7 @@ function WallpaperPicker({ draft, set }: {
             value={draft.phoneBgType}
             onChange={v => set('phoneBgType', v as 'solid' | 'gradient')}
           />
-
-          {/* Live preview */}
           <div className="h-8 rounded-lg w-full transition-all" style={{ background: customBg }} />
-
           <div className={`grid gap-3 ${draft.phoneBgType === 'gradient' ? 'grid-cols-2' : 'grid-cols-1'}`}>
             <ColorRow
               label={draft.phoneBgType === 'gradient' ? 'Color 1' : 'Background Color'}
@@ -554,7 +556,6 @@ function WallpaperPicker({ draft, set }: {
               />
             )}
           </div>
-
           {draft.phoneBgType === 'gradient' && (
             <SliderRow
               label="Gradient Angle"
@@ -677,6 +678,9 @@ export function DesignNew({
                 brandLogo: contentData.brandLogo || prev.brandLogo,
                 logoPosition: (contentData.logoPosition as LogoPosition) || prev.logoPosition,
                 formData: { ...prev.formData, ...(contentData.formData ?? {}) },
+                sectionOrder: (contentData as any).sectionOrder || prev.sectionOrder,
+                unifiedOrder: (contentData as any).unifiedOrder || prev.unifiedOrder,
+                extraSections: (contentData as any).extraSections || prev.extraSections,
               }));
             }
             if (profileData) {
@@ -770,6 +774,9 @@ export function DesignNew({
             brandLogo: contentData.brandLogo || prev.brandLogo,
             logoPosition: (contentData.logoPosition as LogoPosition) || prev.logoPosition,
             formData: { ...prev.formData, ...(contentData.formData ?? {}) },
+            sectionOrder: (contentData as any).sectionOrder || prev.sectionOrder,
+            unifiedOrder: (contentData as any).unifiedOrder || prev.unifiedOrder,
+            extraSections: (contentData as any).extraSections || prev.extraSections,
           }));
         }
 
@@ -810,10 +817,10 @@ export function DesignNew({
     setIsSaved(true); showToast('Design saved!');
     setTimeout(() => setIsSaved(false), 2000);
 
-  if (resolvedCardId) {
-    await updateCardDesign(resolvedCardId, draft);
-  }
-}, [draft, resolvedCardId, activeDesignCacheKey]);
+    if (resolvedCardId) {
+      await updateCardDesign(resolvedCardId, draft);
+    }
+  }, [draft, resolvedCardId, activeDesignCacheKey]);
 
   const handleReset = useCallback(async () => {
     if (isResetting) return;
@@ -822,7 +829,6 @@ export function DesignNew({
     try {
       let reverted = loadDesign(activeDesignCacheKey);
 
-      // Keep reset aligned with server-saved design when editing an existing card.
       if (resolvedCardId) {
         try {
           const designData = await getCardDesign(resolvedCardId);
@@ -855,7 +861,6 @@ export function DesignNew({
       cardColor: p.card,
       textPrimary: p.textPrimary,
       textMuted: p.textMuted,
-      // ── NEW: auto-switch wallpaper to the palette's matching preset ──
       phoneBgPreset: p.wallpaper,
     }));
   }, []);
@@ -914,12 +919,34 @@ export function DesignNew({
   const customLinks = profile.customLinks || [];
   const sections = { ...DEFAULT_SECTIONS, ...(profile.sections ?? {}) };
   const extraSections = profile.extraSections || [];
+  const sectionOrder = profile.sectionOrder || DEFAULT_SECTION_ORDER;
+  // Use saved unifiedOrder if present; otherwise fall back to core-then-extra legacy order.
+  const unifiedOrder: string[] = profile.unifiedOrder && profile.unifiedOrder.length > 0
+    ? profile.unifiedOrder
+    : [...sectionOrder, ...extraSections.map(s => s.id)];
   const themeOverride = buildThemeOverride(draft);
 
   const shadowMap = { none: 'none', soft: `0 4px 24px ${draft.accentColor}25`, medium: `0 8px 48px ${draft.accentColor}45`, strong: `0 12px 72px ${draft.accentColor}70` };
   const wrapperShadow = draft.glowEffect ? `${shadowMap[draft.shadowIntensity]}, 0 0 40px ${draft.accentColor}22` : shadowMap[draft.shadowIntensity];
 
-  const sharedPreviewProps = { cardId: resolvedCardId, publishedLink: publishedShareUrl, profileImage, brandLogo, logoPosition, formData, socialLinks, customLinks, extraSections, sections, expanded: profile.expanded, savedContact, copied, themeOverride };
+  const sharedPreviewProps = { 
+    cardId: resolvedCardId, 
+    publishedLink: publishedShareUrl, 
+    profileImage, 
+    brandLogo, 
+    logoPosition, 
+    formData, 
+    socialLinks, 
+    customLinks, 
+    extraSections, 
+    sections, 
+    expanded: profile.expanded, 
+    savedContact, 
+    copied, 
+    themeOverride,
+    sectionOrder,
+    unifiedOrder, // Interleaved order so previews respect cross-boundary drag order
+  };
 
   // ── Controls ──────────────────────────────────────────────────────
   const ControlsPanel = (
@@ -965,33 +992,22 @@ export function DesignNew({
                   transition: 'all 0.18s ease',
                 }}
               >
-                {/* Wallpaper fills the card background */}
                 <div className="absolute inset-0" style={{ background: linkedWallpaper?.thumb || p.bg }} />
-                {/* Subtle dark scrim so text is readable */}
                 <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.38)' }} />
-
-                {/* Card body */}
                 <div className="relative z-10 p-2">
-                  {/* Mini "card" strip showing accent + text colors */}
                   <div className="w-full rounded-md overflow-hidden mb-1.5"
                     style={{ background: `${p.card}dd`, border: `1px solid ${p.accent}55` }}>
-                    {/* Accent bar */}
                     <div style={{ height: 3, background: `linear-gradient(90deg,${p.accent},${p.accentLight})` }} />
                     <div className="px-1.5 py-1">
-                      {/* Fake name line */}
                       <div className="rounded-sm mb-0.5" style={{ height: 4, width: '70%', background: p.textPrimary, opacity: 0.9 }} />
-                      {/* Fake subtitle */}
                       <div className="rounded-sm" style={{ height: 3, width: '50%', background: p.accentLight, opacity: 0.85 }} />
                     </div>
-                    {/* Color dots */}
                     <div className="flex gap-0.5 px-1.5 pb-1">
-                      {[p.accent, p.accentLight, p.textMuted].map((c, i) => (
-                        <div key={i} className="rounded-full" style={{ width: 5, height: 5, background: c }} />
+                      {[p.accent, p.accentLight, p.textMuted].map((c, idx) => (
+                        <div key={idx} className="rounded-full" style={{ width: 5, height: 5, background: c }} />
                       ))}
                     </div>
                   </div>
-
-                  {/* Name + active indicator row */}
                   <div className="flex items-center justify-between">
                     <p className="text-[9px] font-bold text-white drop-shadow">{p.emoji} {p.name}</p>
                     {isActive && (

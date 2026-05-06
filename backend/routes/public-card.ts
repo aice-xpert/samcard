@@ -33,6 +33,18 @@ const normalizeLeadSource = (value: unknown): string => {
 const createLeadId = (): string =>
   `lead_${randomUUID().replace(/-/g, "")}`;
 
+// ── Default section order (must match DEFAULT_SECTION_ORDER in the frontend) ──
+const DEFAULT_SECTION_ORDER = [
+  "profile",
+  "headingText",
+  "contactUs",
+  "businessDetails",
+  "socialLinks",
+  "links",
+  "appointment",
+  "collectContacts",
+];
+
 interface PublicCardResponse {
   id: string;
   name: string;
@@ -98,6 +110,12 @@ interface PublicCardResponse {
       enabled: boolean;
       data: Record<string, unknown>;
     }[];
+    // ── Drag-and-drop render order ─────────────────────────────────────────
+    // sectionOrder: ordered array of core SectionKey strings.
+    sectionOrder: string[];
+    // unifiedOrder: interleaved array of core SectionKey strings + extra-section IDs.
+    // The public card page should use this as the authoritative render order.
+    unifiedOrder: string[];
   };
   qrConfig?: {
     shapeId: string;
@@ -237,6 +255,76 @@ router.get("/:slug", async (req, res: Response) => {
       businessDetails: card.showBusinessDetails ?? true,
     };
 
+    // ── Resolve section ordering ──────────────────────────────────────────────
+    // Use the saved ordering from CardContent when available; fall back to the
+    // default order so the page always has something sensible to render with.
+    const extraSections: {
+      id: string;
+      type: string;
+      label: string;
+      enabled: boolean;
+      data: Record<string, unknown>;
+    }[] = content?.extraSections ?? [];
+
+    const savedSectionOrder: string[] | null =
+      Array.isArray(content?.sectionOrder) && content.sectionOrder.length > 0
+        ? content.sectionOrder
+        : null;
+
+    const sectionOrder: string[] = savedSectionOrder ?? [...DEFAULT_SECTION_ORDER];
+
+    const savedUnifiedOrder: string[] | null =
+      Array.isArray(content?.unifiedOrder) && content.unifiedOrder.length > 0
+        ? content.unifiedOrder
+        : null;
+
+    // Reconstruct a valid unifiedOrder: start from what was saved, ensure every
+    // known ID appears exactly once, append anything that is missing.
+    let unifiedOrder: string[];
+    if (savedUnifiedOrder) {
+      // Trust the saved order exactly — it reflects the user's drag-and-drop
+      // arrangement. Only append IDs that are genuinely new (extra sections
+      // added after the last save) and therefore absent from savedUnifiedOrder.
+      //
+      // Core section keys must NEVER be appended here: the frontend always
+      // includes all 8 of them when saving, so they are already present in
+      // savedUnifiedOrder at whatever position the user dragged them to.
+      // The old code iterated `allIds` (which included core keys) and would
+      // append any core key that happened to be "missing" from the filtered
+      // result — silently destroying the custom drag order.
+      const extraIds = new Set(extraSections.map((s) => s.id));
+      const coreIds = new Set(DEFAULT_SECTION_ORDER);
+      const allKnownIds = new Set([...coreIds, ...extraIds]);
+
+      const seen = new Set<string>();
+      const filtered = savedUnifiedOrder.filter((id) => {
+        if (!allKnownIds.has(id) || seen.has(id)) return false;
+        seen.add(id);
+        return true;
+      });
+
+      // Only append extra sections genuinely missing from the saved order
+      // (e.g. a new extra section added after the last save).
+      for (const id of extraIds) {
+        if (!seen.has(id)) filtered.push(id);
+      }
+
+      unifiedOrder = filtered;
+    } else {
+      const sections = content?.sections ?? defaultSections;
+      unifiedOrder = [
+        ...sectionOrder.filter(key => sections[key as keyof typeof sections] !== false),
+        ...extraSections.filter(s => s.enabled).map(s => s.id),
+      ];
+    }
+
+    console.log('[public-card] Retrieved from DB:');
+    console.log('[public-card] content.sectionOrder:', content?.sectionOrder);
+    console.log('[public-card] content.unifiedOrder:', content?.unifiedOrder);
+    console.log('[public-card] Returning ordering:');
+    console.log('[public-card] response sectionOrder:', sectionOrder);
+    console.log('[public-card] response unifiedOrder:', unifiedOrder);
+
     const response: PublicCardResponse = {
       id: card.id,
       name: card.name,
@@ -286,7 +374,10 @@ router.get("/:slug", async (req, res: Response) => {
         connectFields: content?.connectFields ?? [],
         sections: content?.sections ?? defaultSections,
         customLinks: content?.customLinks ?? [],
-        extraSections: content?.extraSections ?? [],
+        extraSections,
+        // ── ordering fields ──────────────────────────────────────────────────
+        sectionOrder,
+        unifiedOrder,
       },
       qrConfig: qrConfig ? {
         shapeId: qrConfig.shapeId,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState, useEffect, useMemo, memo } from 'react';
+import { useId, useState, useEffect, useMemo, memo, useCallback, Fragment } from 'react';
 import { useQrStore } from '@/components/dashboard/stores/Useqrstore';
 import { getCardQRConfig } from '@/lib/api';
 import { makeQRMatrix } from '@/components/dashboard/pages/qr-engine';
@@ -15,6 +15,16 @@ import { STICKER_DEFS } from '@/components/dashboard/pages/Qrrenderers';
 
 // ── Types ──────────────────────────────────────────────────────────
 export type LogoPosition = 'top-left' | 'top-right' | 'below-photo' | 'below-name';
+
+export type SectionKey = 
+  | 'profile'
+  | 'headingText'
+  | 'contactUs'
+  | 'businessDetails'
+  | 'socialLinks'
+  | 'links'
+  | 'appointment'
+  | 'collectContacts';
 
 interface FormData {
   name: string; title: string; company: string; tagline: string;
@@ -72,6 +82,10 @@ export interface PhonePreviewProps {
   onShareLink?: () => void;
   onSaveContact: () => void;
   themeOverride?: Partial<ThemeOverride>;
+  sectionOrder?: SectionKey[];
+  // Interleaved order of both core SectionKeys and extra section IDs.
+  // When provided, this drives the render order instead of sectionOrder + extras appended.
+  unifiedOrder?: string[];
 }
 
 // ── Constants ──────────────────────────────────────────────────────
@@ -95,6 +109,18 @@ const DEFAULT_T: ThemeOverride = {
   boldHeadings: true,
   cardRadius: 16,
 };
+
+// Default section order (fallback)
+const DEFAULT_SECTION_ORDER: SectionKey[] = [
+  'profile',
+  'headingText',
+  'contactUs',
+  'businessDetails',
+  'socialLinks',
+  'links',
+  'appointment',
+  'collectContacts',
+];
 
 // ── Helpers ────────────────────────────────────────────────────────
 function openLink(url: string) {
@@ -159,6 +185,265 @@ function Divider({ T }: { T: ThemeOverride }) {
   return <div style={{ height: 1, background: T.divider, margin: '0 16px' }} />;
 }
 
+// Section component to avoid conditional hooks
+function ProfileSection({ T, profileImage, formData, brandLogo, logoPosition, hasBrandLogo, contactItems }: any) {
+  return (
+    <>
+      <div className="relative" style={{ aspectRatio: '4/3', maxHeight: '200px' }}>
+        {profileImage ? (
+          <img
+            src={profileImage}
+            alt={formData.name}
+            className="w-full h-full object-contain object-center"
+            style={{ backgroundColor: '#000' }}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center"
+            style={{ background: `linear-gradient(135deg, ${T.green}66 0%, ${T.bg} 50%, ${T.greenLight}44 100%)` }}>
+            <div className="flex flex-col items-center gap-2 opacity-50">
+              <Upload className="w-8 h-8" style={{ color: T.greenLight }} />
+              <span style={{ fontSize: 10, color: T.textMuted, fontFamily: T.fontFamily }}>Add photo</span>
+            </div>
+          </div>
+        )}
+        <div className="absolute inset-0"
+          style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.75) 100%)' }} />
+        <div className="absolute bottom-0 left-0 right-0 h-[2px]"
+          style={{ background: `linear-gradient(90deg, transparent, ${T.green}, ${T.greenLight}, ${T.green}, transparent)` }} />
+        {hasBrandLogo && logoPosition === 'top-left' && (
+          <div className="absolute top-3 left-3 z-10">
+            <BrandLogoBadge src={brandLogo} maxSize={48} padding="5px" borderRadius={10} />
+          </div>
+        )}
+        {hasBrandLogo && logoPosition === 'top-right' && (
+          <div className="absolute top-3 right-3 z-10">
+            <BrandLogoBadge src={brandLogo} maxSize={48} padding="5px" borderRadius={10} />
+          </div>
+        )}
+        <div className="absolute bottom-0 left-0 right-0 px-4 pb-3 z-10">
+          <h1 style={{ fontWeight: T.boldHeadings ? 800 : 600, fontSize: T.nameFontSize, lineHeight: 1.2, color: '#fff', textShadow: '0 1px 8px rgba(0,0,0,0.7)', fontFamily: T.fontFamily, wordBreak: 'break-word', overflowWrap: 'anywhere', maxWidth: '100%' }}>
+            {formData.name}
+          </h1>
+          {formData.title && (
+            <p style={{ fontSize: T.bodyFontSize, marginTop: 2, color: T.greenLight, fontFamily: T.fontFamily, wordBreak: 'break-word', overflowWrap: 'break-word' }}>{formData.title}</p>
+          )}
+          {(formData.company || (hasBrandLogo && logoPosition === 'below-name')) && (
+            <div className="flex items-center gap-1.5 mt-0.5">
+              {hasBrandLogo && logoPosition === 'below-name' && (
+                <BrandLogoBadge src={brandLogo} bg="rgba(0,0,0,0.45)" blur={false} maxSize={22} padding="2px 4px" borderRadius={5} />
+              )}
+              {formData.company && (
+                <p style={{ fontSize: T.bodyFontSize, color: 'rgba(255,255,255,0.65)', fontFamily: T.fontFamily, wordBreak: 'break-word', overflowWrap: 'break-word' }}>{formData.company}</p>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {hasBrandLogo && logoPosition === 'below-photo' && (
+        <div className="flex justify-center py-2.5">
+          <BrandLogoBadge src={brandLogo} bg={T.card} blur={false} maxSize={80} padding="8px 12px" borderRadius={12} border={`1px solid ${T.cardBorder}`} />
+        </div>
+      )}
+
+      {formData.tagline && (
+        <div className="px-4 py-2.5 text-center">
+          <p style={{ fontSize: T.bodyFontSize, fontStyle: 'italic', lineHeight: 1.5, color: T.textMuted, fontFamily: T.fontFamily, wordBreak: 'break-word', overflowWrap: 'anywhere', maxWidth: '100%' }}>{formData.tagline}</p>
+        </div>
+      )}
+
+      {contactItems.length > 0 && (
+        <div className="flex justify-center gap-3 py-3 mx-3 mb-2.5"
+          style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: T.cardRadius }}>
+          {contactItems.slice(0, 4).map(({ href, Icon }: any, i: number) => (
+            <a key={i} href={href} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="flex flex-col items-center gap-1">
+              <div className="w-11 h-11 rounded-full flex items-center justify-center"
+                style={{ background: `linear-gradient(135deg,${T.green},${T.greenLight})`, boxShadow: `0 3px 10px ${T.green}66` }}>
+                <Icon className="w-4 h-4 text-white" />
+              </div>
+            </a>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
+function HeadingTextSection({ T, formData }: any) {
+  if (!formData.headingText && !formData.bodyText) return null;
+  return (
+    <CardBlock T={T}>
+      <div className="px-4 py-3">
+        {formData.headingText && <p style={{ fontWeight: T.boldHeadings ? 700 : 500, fontSize: T.bodyFontSize, marginBottom: 4, color: T.textPrimary, fontFamily: T.fontFamily, overflowWrap: 'break-word', wordBreak: 'break-word' }}>{formData.headingText}</p>}
+        {formData.bodyText && <p style={{ fontSize: T.bodyFontSize, lineHeight: 1.5, color: T.textMuted, fontFamily: T.fontFamily, overflowWrap: 'break-word', wordBreak: 'break-word' }}>{formData.bodyText}</p>}
+      </div>
+    </CardBlock>
+  );
+}
+
+function ContactUsSection({ T, contactItems, formData }: any) {
+  if (contactItems.length === 0) return null;
+  return (
+    <CardBlock T={T}>
+      <SectionHeader T={T} icon={<Phone className="w-3.5 h-3.5 text-white" />} title="Contact Us" />
+      {contactItems.map(({ label, sub, href, Icon }: any, i: number) => (
+        <div key={i}>
+          <a href={href} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
+            className="flex items-center gap-3 px-4 py-2.5 transition-colors" style={{ color: 'inherit' }}>
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+              style={{ background: `${T.green}26`, border: `1px solid ${T.green}40` }}>
+              <Icon className="w-3.5 h-3.5" style={{ color: T.greenLight }} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p style={{ fontWeight: T.boldHeadings ? 700 : 500, fontSize: T.bodyFontSize, color: T.textPrimary, fontFamily: T.fontFamily }}>{label}</p>
+              <p style={{ fontSize: Math.max(9, T.bodyFontSize - 1), color: T.textMuted, fontFamily: T.fontFamily }} className="truncate">{sub}</p>
+            </div>
+          </a>
+          {i < contactItems.length - 1 && <Divider T={T} />}
+        </div>
+      ))}
+      {formData.location && (
+        <div className="px-4 py-2.5">
+          <a href={`https://maps.google.com/?q=${encodeURIComponent(formData.location)}`}
+            target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
+            className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 font-semibold text-white"
+            style={{ background: `linear-gradient(135deg,${T.green},${T.greenLight})`, fontSize: T.bodyFontSize, fontFamily: T.fontFamily }}>
+            <MapPin className="w-3 h-3" /> Direction
+          </a>
+        </div>
+      )}
+    </CardBlock>
+  );
+}
+
+function BusinessDetailsSection({ T, formData }: any) {
+  const items = [
+    formData.company && { label: 'Company', val: formData.company },
+    formData.industry && { label: 'Industry', val: formData.industry },
+    formData.yearFounded && { label: 'Year Founded', val: formData.yearFounded },
+    formData.location && { label: 'Location', val: formData.location },
+  ].filter(Boolean);
+  
+  if (items.length === 0) return null;
+  
+  return (
+    <CardBlock T={T}>
+      <SectionHeader T={T} icon={<Briefcase className="w-3.5 h-3.5 text-white" />} title="Business Details" />
+      {items.map((row: any, i: number, arr: any[]) => (
+        <div key={row.label}>
+          <div className="flex items-center justify-between px-4 py-2.5">
+            <span style={{ fontSize: T.bodyFontSize, color: T.textMuted, fontFamily: T.fontFamily }}>{row.label}</span>
+            <span style={{ fontSize: T.bodyFontSize, fontWeight: T.boldHeadings ? 700 : 400, color: T.textPrimary, fontFamily: T.fontFamily, wordBreak: 'break-word', overflowWrap: 'anywhere', maxWidth: '55%', display: 'inline-block', textAlign: 'right' }}>{row.val}</span>
+          </div>
+          {i < arr.length - 1 && <Divider T={T} />}
+        </div>
+      ))}
+    </CardBlock>
+  );
+}
+
+function SocialLinksSection({ T, filledSocials }: any) {
+  if (filledSocials.length === 0) return null;
+  return (
+    <CardBlock T={T}>
+      <SectionHeader T={T} icon={<Share2 className="w-3.5 h-3.5 text-white" />} title="Social Links" />
+      {filledSocials.map((s: any, i: number) => {
+        const Icon = SOCIAL_ICONS[s.platform] ?? SOCIAL_ICONS[0];
+        const color = SOCIAL_COLORS[s.platform] ?? T.green;
+        const name = SOCIAL_NAMES[s.platform] ?? 'Social';
+        return (
+          <div key={i}>
+            <button type="button" onClick={e => { e.stopPropagation(); openLink(s.value); }}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-left">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: `${color}1a`, border: `1px solid ${color}35` }}>
+                <Icon className="w-4 h-4" style={{ color }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p style={{ fontWeight: T.boldHeadings ? 700 : 500, fontSize: T.bodyFontSize, color: T.textPrimary, fontFamily: T.fontFamily }}>{name}</p>
+                <p style={{ fontSize: Math.max(9, T.bodyFontSize - 1), color: T.textMuted, fontFamily: T.fontFamily }} className="truncate">{s.value}</p>
+              </div>
+              <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: T.muted }} />
+            </button>
+            {i < filledSocials.length - 1 && <Divider T={T} />}
+          </div>
+        );
+      })}
+    </CardBlock>
+  );
+}
+
+function LinksSection({ T, filledLinks }: any) {
+  if (filledLinks.length === 0) return null;
+  return (
+    <CardBlock T={T}>
+      <SectionHeader T={T} icon={<Link2 className="w-3.5 h-3.5 text-white" />} title="Web Links" />
+      {filledLinks.map((l: any, i: number) => (
+        <div key={i}>
+          <button type="button" onClick={e => { e.stopPropagation(); openLink(l.url); }}
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-left">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ background: `${T.green}1f`, border: `1px solid ${T.green}40` }}>
+              <Link2 className="w-4 h-4" style={{ color: T.greenLight }} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p style={{ fontWeight: T.boldHeadings ? 700 : 500, fontSize: T.bodyFontSize, color: T.textPrimary, fontFamily: T.fontFamily }}>{l.label || 'Title'}</p>
+              <p style={{ fontSize: Math.max(9, T.bodyFontSize - 1), color: T.textMuted, fontFamily: T.fontFamily }} className="truncate">{l.url || 'Sub Title'}</p>
+            </div>
+            <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: T.muted }} />
+          </button>
+          {i < filledLinks.length - 1 && <Divider T={T} />}
+        </div>
+      ))}
+    </CardBlock>
+  );
+}
+
+function AppointmentSection({ T, formData }: any) {
+  if (!formData.appointmentUrl) return null;
+  return (
+    <CardBlock T={T}>
+      <div className="px-4 pt-4 pb-2 text-center">
+        <div className="w-10 h-10 rounded-full mx-auto mb-2 flex items-center justify-center"
+          style={{ background: `linear-gradient(135deg,${T.green},${T.greenLight})` }}>
+          <Calendar className="w-5 h-5 text-white" />
+        </div>
+        <h3 style={{ fontWeight: T.boldHeadings ? 700 : 500, fontSize: T.bodyFontSize + 1, color: T.textPrimary, fontFamily: T.fontFamily }}>Schedule Meeting</h3>
+        <p style={{ fontSize: T.bodyFontSize, marginTop: 4, lineHeight: 1.5, color: T.textMuted, fontFamily: T.fontFamily }} className="px-2">
+          Book a time to discuss potential opportunities
+        </p>
+      </div>
+      <div className="px-4 pb-4 space-y-2">
+        {['Book on Calendly', 'Add to Calendar'].map((label, idx) => (
+          <button key={idx} type="button" onClick={e => { e.stopPropagation(); openLink(formData.appointmentUrl); }}
+            className="w-full py-2.5 rounded-full font-semibold"
+            style={{ border: `1px solid ${T.green}59`, color: T.greenLight, background: `${T.green}1a`, fontSize: T.bodyFontSize, fontFamily: T.fontFamily }}>
+            {label}
+          </button>
+        ))}
+      </div>
+    </CardBlock>
+  );
+}
+
+function CollectContactsSection({ T }: any) {
+  return (
+    <CardBlock T={T}>
+      <SectionHeader T={T} icon={<MessageSquare className="w-3.5 h-3.5 text-white" />} title="Get in Touch" />
+      <div className="px-4 py-3 space-y-2">
+        {['Your name', 'Email address', 'Phone number'].map((ph, i) => (
+          <input key={i} placeholder={ph} className="w-full px-3 py-2 rounded-xl outline-none"
+            style={{ background: T.bg, border: `1px solid ${T.green}33`, color: T.textPrimary, fontSize: T.bodyFontSize, fontFamily: T.fontFamily }} />
+        ))}
+        <button className="w-full py-2.5 rounded-full font-bold text-white"
+          style={{ background: `linear-gradient(135deg,${T.green},${T.greenLight})`, fontSize: T.bodyFontSize, fontFamily: T.fontFamily }}>
+          Submit
+        </button>
+      </div>
+    </CardBlock>
+  );
+}
+
 // ═══════════════════════════════════════════════════════════════════
 // Main PhonePreview
 // ═══════════════════════════════════════════════════════════════════
@@ -166,10 +451,12 @@ function PhonePreviewComponent({
   cardId,
   publishedLink,
   profileImage, brandLogo, logoPosition,
-  formData, socialLinks, customLinks, extraSections, sections, expanded,
+  formData, socialLinks, customLinks, extraSections, sections,
   savedContact, copied,
   onPreviewOpen, onShareLink, onSaveContact,
   themeOverride,
+  sectionOrder,
+  unifiedOrder,
 }: PhonePreviewProps) {
 
   const T: ThemeOverride = { ...DEFAULT_T, ...themeOverride };
@@ -247,7 +534,7 @@ function PhonePreviewComponent({
   const canShowCopy = Boolean(cardId && publishedLinkValue && onShareLink);
   const [copyPublishedEnabled, setCopyPublishedEnabled] = useState(true);
 
-  // Live clock — syncs to the real current time, updates on the minute
+  // Live clock
   const [liveTime, setLiveTime] = useState(() => {
     const now = new Date();
     return now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
@@ -260,7 +547,6 @@ function PhonePreviewComponent({
         hour: 'numeric', minute: '2-digit', hour12: true
       }));
     };
-    // Sync to next minute boundary so ticks happen exactly on the minute
     const now = new Date();
     const msUntilNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
     let interval: ReturnType<typeof setInterval>;
@@ -272,6 +558,38 @@ function PhonePreviewComponent({
   }, []);
 
   const showCopyButton = canShowCopy && copyPublishedEnabled;
+
+  // Map section keys to their components
+  const sectionComponentMap: Record<SectionKey, React.FC<any>> = {
+    profile: ProfileSection,
+    headingText: HeadingTextSection,
+    contactUs: ContactUsSection,
+    businessDetails: BusinessDetailsSection,
+    socialLinks: SocialLinksSection,
+    links: LinksSection,
+    appointment: AppointmentSection,
+    collectContacts: CollectContactsSection,
+  };
+
+  // Build a lookup map for extra sections by id for O(1) access
+  const extraSectionById = useMemo(() => {
+    const map = new Map<string, ExtraSection>();
+    extraSections.forEach(s => map.set(s.id, s));
+    return map;
+  }, [extraSections]);
+
+  // Determine render order:
+  // If unifiedOrder is provided, use it (supports interleaved core + extra).
+  // Otherwise fall back to legacy behaviour: ordered core sections, then extras appended.
+  const renderItems = useMemo(() => {
+    if (unifiedOrder && unifiedOrder.length > 0) {
+      return unifiedOrder;
+    }
+    const order = sectionOrder && sectionOrder.length > 0 ? sectionOrder : DEFAULT_SECTION_ORDER;
+    const coreIds = order.filter(key => sections[key]);
+    const extraIds = extraSections.filter(s => s.enabled).map(s => s.id);
+    return [...coreIds, ...extraIds];
+  }, [unifiedOrder, sectionOrder, sections, extraSections]);
 
   return (
     <>
@@ -317,7 +635,6 @@ function PhonePreviewComponent({
                 background: 'linear-gradient(160deg,#444,#1c1c1c)',
                 boxShadow: '0 0 0 1px rgba(255,255,255,0.06), 0 28px 70px rgba(0,0,0,0.95)',
               }}>
-              {/* <div className="rounded-[2.6rem] overflow-hidden" style={{ background: T.phoneBgStyle || T.bg }}> */}
               <div className="rounded-[2.6rem] overflow-hidden" style={{ background: T.phoneBgStyle || T.bg, overflowX: 'hidden' }}>
                 {/* Status bar */}
                 <div className="relative flex items-center justify-between px-5 pt-2 pb-1" style={{ background: T.bg }}>
@@ -346,249 +663,32 @@ function PhonePreviewComponent({
                   </div>
                 </div>
 
-                {/* Scrollable body */}
+                {/* Scrollable body - render sections in order */}
                 <div data-scrollid={uid} className="overflow-y-auto"
                   style={{ maxHeight: 560, overflowX: 'hidden', background: T.phoneBgStyle || T.bg, ...ff }}>
 
-                  {/* HERO */}
-                  {sections.profile && (
-                    <div className="relative" style={{ aspectRatio: '4/3', maxHeight: '200px' }}>
-                      {profileImage ? (
-                        <img
-                          src={profileImage}
-                          alt={formData.name}
-                          className="w-full h-full object-contain object-center"
-                          style={{ backgroundColor: '#000' }}
+                  {/* Render all sections in unified order (core + extra interleaved) */}
+                  {renderItems.map((id) => {
+                    // Core section?
+                    if (DEFAULT_SECTION_ORDER.includes(id as SectionKey)) {
+                      const sectionKey = id as SectionKey;
+                      if (!sections[sectionKey]) return null;
+                      const SectionComponent = sectionComponentMap[sectionKey];
+                      if (!SectionComponent) return null;
+                      return (
+                        <SectionComponent key={sectionKey} T={T}
+                          profileImage={profileImage} formData={formData}
+                          brandLogo={brandLogo} logoPosition={logoPosition}
+                          hasBrandLogo={hasBrandLogo} contactItems={contactItems}
+                          filledSocials={filledSocials} filledLinks={filledLinks}
                         />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center"
-                          style={{ background: `linear-gradient(135deg, ${T.green}66 0%, ${T.bg} 50%, ${T.greenLight}44 100%)` }}>
-                          <div className="flex flex-col items-center gap-2 opacity-50">
-                            <Upload className="w-8 h-8" style={{ color: T.greenLight }} />
-                            <span style={{ fontSize: 10, color: T.textMuted, fontFamily: T.fontFamily }}>Add photo</span>
-                          </div>
-                        </div>
-                      )}
-                      <div className="absolute inset-0"
-                        style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.75) 100%)' }} />
-                      <div className="absolute bottom-0 left-0 right-0 h-[2px]"
-                        style={{ background: `linear-gradient(90deg, transparent, ${T.green}, ${T.greenLight}, ${T.green}, transparent)` }} />
-                      {hasBrandLogo && logoPosition === 'top-left' && (
-                        <div className="absolute top-3 left-3 z-10">
-                          <BrandLogoBadge src={brandLogo} maxSize={48} padding="5px" borderRadius={10} />
-                        </div>
-                      )}
-                      {hasBrandLogo && logoPosition === 'top-right' && (
-                        <div className="absolute top-3 right-3 z-10">
-                          <BrandLogoBadge src={brandLogo} maxSize={48} padding="5px" borderRadius={10} />
-                        </div>
-                      )}
-                      <div className="absolute bottom-0 left-0 right-0 px-4 pb-3 z-10">
-                        <h1 style={{ fontWeight: T.boldHeadings ? 800 : 600, fontSize: T.nameFontSize, lineHeight: 1.2, color: '#fff', textShadow: '0 1px 8px rgba(0,0,0,0.7)', fontFamily: T.fontFamily, wordBreak: 'break-word', overflowWrap: 'anywhere', maxWidth: '100%' }}>
-                          {/* <h1 style={{ fontWeight: T.boldHeadings ? 800 : 600, fontSize: T.nameFontSize, lineHeight: 1.2, color: '#fff', textShadow: '0 1px 8px rgba(0,0,0,0.7)', fontFamily: T.fontFamily, wordBreak: 'break-word', overflowWrap: 'break-word' }}> */}
-                          {formData.name}
-                        </h1>
-                        {formData.title && (
-                          <p style={{ fontSize: T.bodyFontSize, marginTop: 2, color: T.greenLight, fontFamily: T.fontFamily, wordBreak: 'break-word', overflowWrap: 'break-word' }}>{formData.title}</p>
-                        )}
-                        {(formData.company || (hasBrandLogo && logoPosition === 'below-name')) && (
-                          <div className="flex items-center gap-1.5 mt-0.5">
-                            {hasBrandLogo && logoPosition === 'below-name' && (
-                              <BrandLogoBadge src={brandLogo} bg="rgba(0,0,0,0.45)" blur={false} maxSize={22} padding="2px 4px" borderRadius={5} />
-                            )}
-                            {formData.company && (
-                              <p style={{ fontSize: T.bodyFontSize, color: 'rgba(255,255,255,0.65)', fontFamily: T.fontFamily, wordBreak: 'break-word', overflowWrap: 'break-word' }}>{formData.company}</p>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>)}
-
-                  {sections.profile && hasBrandLogo && logoPosition === 'below-photo' && (
-                    <div className="flex justify-center py-2.5">
-                      <BrandLogoBadge src={brandLogo} bg={T.card} blur={false} maxSize={80} padding="8px 12px" borderRadius={12} border={`1px solid ${T.cardBorder}`} />
-                    </div>
-                  )}
-
-                  {sections.profile && formData.tagline && (
-                    <div className="px-4 py-2.5 text-center">
-                      <p style={{ fontSize: T.bodyFontSize, fontStyle: 'italic', lineHeight: 1.5, color: T.textMuted, fontFamily: T.fontFamily, wordBreak: 'break-word', overflowWrap: 'anywhere', maxWidth: '100%' }}>{formData.tagline}</p>
-                    </div>
-                  )}
-
-                  {sections.profile && contactItems.length > 0 && (
-                    <div className="flex justify-center gap-3 py-3 mx-3 mb-2.5"
-                      style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: T.cardRadius }}>
-                      {contactItems.slice(0, 4).map(({ href, Icon }, i) => (
-                        <a key={i} href={href} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="flex flex-col items-center gap-1">
-                          <div className="w-11 h-11 rounded-full flex items-center justify-center"
-                            style={{ background: `linear-gradient(135deg,${T.green},${T.greenLight})`, boxShadow: `0 3px 10px ${T.green}66` }}>
-                            <Icon className="w-4 h-4 text-white" />
-                          </div>
-                        </a>
-                      ))}
-                    </div>
-                  )}
-
-                  {sections.headingText && (formData.headingText || formData.bodyText) && (
-                    <CardBlock T={T}>
-                      <div className="px-4 py-3">
-                        {formData.headingText && <p style={{ fontWeight: T.boldHeadings ? 700 : 500, fontSize: T.bodyFontSize, marginBottom: 4, color: T.textPrimary, fontFamily: T.fontFamily, overflowWrap: 'break-word', wordBreak: 'break-word' }}>{formData.headingText}</p>}
-                        {formData.bodyText && <p style={{ fontSize: T.bodyFontSize, lineHeight: 1.5, color: T.textMuted, fontFamily: T.fontFamily, overflowWrap: 'break-word', wordBreak: 'break-word' }}>{formData.bodyText}</p>}
-                      </div>
-                    </CardBlock>
-                  )}
-
-                  {sections.contactUs && contactItems.length > 0 && (
-                    <CardBlock T={T}>
-                      <SectionHeader T={T} icon={<Phone className="w-3.5 h-3.5 text-white" />} title="Contact Us" />
-                      {contactItems.map(({ label, sub, href, Icon }, i) => (
-                        <div key={i}>
-                          <a href={href} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
-                            className="flex items-center gap-3 px-4 py-2.5 transition-colors" style={{ color: 'inherit' }}>
-                            <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                              style={{ background: `${T.green}26`, border: `1px solid ${T.green}40` }}>
-                              <Icon className="w-3.5 h-3.5" style={{ color: T.greenLight }} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p style={{ fontWeight: T.boldHeadings ? 700 : 500, fontSize: T.bodyFontSize, color: T.textPrimary, fontFamily: T.fontFamily }}>{label}</p>
-                              <p style={{ fontSize: Math.max(9, T.bodyFontSize - 1), color: T.textMuted, fontFamily: T.fontFamily }} className="truncate">{sub}</p>
-                            </div>
-                          </a>
-                          {i < contactItems.length - 1 && <Divider T={T} />}
-                        </div>
-                      ))}
-                      {formData.location && (
-                        <div className="px-4 py-2.5">
-                          <a href={`https://maps.google.com/?q=${encodeURIComponent(formData.location)}`}
-                            target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
-                            className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 font-semibold text-white"
-                            style={{ background: `linear-gradient(135deg,${T.green},${T.greenLight})`, fontSize: T.bodyFontSize, fontFamily: T.fontFamily }}>
-                            <MapPin className="w-3 h-3" /> Direction
-                          </a>
-                        </div>
-                      )}
-                    </CardBlock>
-                  )}
-
-                  {sections.businessDetails && (formData.company || formData.industry || formData.yearFounded || formData.location) && (
-                    <CardBlock T={T}>
-                      <SectionHeader T={T} icon={<Briefcase className="w-3.5 h-3.5 text-white" />} title="Business Details" />
-                      {[
-                        formData.company && { label: 'Company', val: formData.company },
-                        formData.industry && { label: 'Industry', val: formData.industry },
-                        formData.yearFounded && { label: 'Year Founded', val: formData.yearFounded },
-                        formData.location && { label: 'Location', val: formData.location },
-                      ].filter(Boolean).map((row, i, arr) => {
-                        const { label, val } = row as { label: string; val: string };
-                        return (
-                          <div key={label}>
-                            <div className="flex items-center justify-between px-4 py-2.5">
-                              <span style={{ fontSize: T.bodyFontSize, color: T.textMuted, fontFamily: T.fontFamily }}>{label}</span>
-                              <span style={{ fontSize: T.bodyFontSize, fontWeight: T.boldHeadings ? 700 : 400, color: T.textPrimary, fontFamily: T.fontFamily, wordBreak: 'break-word', overflowWrap: 'anywhere', maxWidth: '55%', display: 'inline-block', textAlign: 'right' }}>{val}</span>
-                              {/* <span style={{ fontSize: T.bodyFontSize, fontWeight: T.boldHeadings ? 700 : 400, color: T.textPrimary, fontFamily: T.fontFamily }} className="text-right max-w-[55%]">{val}</span> */}
-                            </div>
-                            {i < arr.length - 1 && <Divider T={T} />}
-                          </div>
-                        );
-                      })}
-                    </CardBlock>
-                  )}
-
-                  {sections.socialLinks && filledSocials.length > 0 && (
-                    <CardBlock T={T}>
-                      <SectionHeader T={T} icon={<Share2 className="w-3.5 h-3.5 text-white" />} title="Social Links" />
-                      {filledSocials.map((s, i) => {
-                        const Icon = SOCIAL_ICONS[s.platform] ?? SOCIAL_ICONS[0];
-                        const color = SOCIAL_COLORS[s.platform] ?? T.green;
-                        const name = SOCIAL_NAMES[s.platform] ?? 'Social';
-                        return (
-                          <div key={i}>
-                            <button type="button" onClick={e => { e.stopPropagation(); openLink(s.value); }}
-                              className="w-full flex items-center gap-3 px-4 py-2.5 text-left">
-                              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                                style={{ background: `${color}1a`, border: `1px solid ${color}35` }}>
-                                <Icon className="w-4 h-4" style={{ color }} />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p style={{ fontWeight: T.boldHeadings ? 700 : 500, fontSize: T.bodyFontSize, color: T.textPrimary, fontFamily: T.fontFamily }}>{name}</p>
-                                <p style={{ fontSize: Math.max(9, T.bodyFontSize - 1), color: T.textMuted, fontFamily: T.fontFamily }} className="truncate">{s.value}</p>
-                              </div>
-                              <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: T.muted }} />
-                            </button>
-                            {i < filledSocials.length - 1 && <Divider T={T} />}
-                          </div>
-                        );
-                      })}
-                    </CardBlock>
-                  )}
-
-                  {sections.links && filledLinks.length > 0 && (
-                    <CardBlock T={T}>
-                      <SectionHeader T={T} icon={<Link2 className="w-3.5 h-3.5 text-white" />} title="Web Links" />
-                      {filledLinks.map((l, i) => (
-                        <div key={i}>
-                          <button type="button" onClick={e => { e.stopPropagation(); openLink(l.url); }}
-                            className="w-full flex items-center gap-3 px-4 py-2.5 text-left">
-                            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                              style={{ background: `${T.green}1f`, border: `1px solid ${T.green}40` }}>
-                              <Link2 className="w-4 h-4" style={{ color: T.greenLight }} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p style={{ fontWeight: T.boldHeadings ? 700 : 500, fontSize: T.bodyFontSize, color: T.textPrimary, fontFamily: T.fontFamily }}>{l.label || 'Title'}</p>
-                              <p style={{ fontSize: Math.max(9, T.bodyFontSize - 1), color: T.textMuted, fontFamily: T.fontFamily }} className="truncate">{l.url || 'Sub Title'}</p>
-                            </div>
-                            <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: T.muted }} />
-                          </button>
-                          {i < filledLinks.length - 1 && <Divider T={T} />}
-                        </div>
-                      ))}
-                    </CardBlock>
-                  )}
-
-                  {sections.appointment && formData.appointmentUrl && (
-                    <CardBlock T={T}>
-                      <div className="px-4 pt-4 pb-2 text-center">
-                        <div className="w-10 h-10 rounded-full mx-auto mb-2 flex items-center justify-center"
-                          style={{ background: `linear-gradient(135deg,${T.green},${T.greenLight})` }}>
-                          <Calendar className="w-5 h-5 text-white" />
-                        </div>
-                        <h3 style={{ fontWeight: T.boldHeadings ? 700 : 500, fontSize: T.bodyFontSize + 1, color: T.textPrimary, fontFamily: T.fontFamily }}>Schedule Meeting</h3>
-                        <p style={{ fontSize: T.bodyFontSize, marginTop: 4, lineHeight: 1.5, color: T.textMuted, fontFamily: T.fontFamily }} className="px-2">
-                          Book a time to discuss potential opportunities
-                        </p>
-                      </div>
-                      <div className="px-4 pb-4 space-y-2">
-                        {['Book on Calendly', 'Add to Calendar'].map(label => (
-                          <button key={label} type="button" onClick={e => { e.stopPropagation(); openLink(formData.appointmentUrl); }}
-                            className="w-full py-2.5 rounded-full font-semibold"
-                            style={{ border: `1px solid ${T.green}59`, color: T.greenLight, background: `${T.green}1a`, fontSize: T.bodyFontSize, fontFamily: T.fontFamily }}>
-                            {label}
-                          </button>
-                        ))}
-                      </div>
-                    </CardBlock>
-                  )}
-
-                  {sections.collectContacts && (
-                    <CardBlock T={T}>
-                      <SectionHeader T={T} icon={<MessageSquare className="w-3.5 h-3.5 text-white" />} title="Get in Touch" />
-                      <div className="px-4 py-3 space-y-2">
-                        {['', '', ''].map((ph, i) => (
-                          <input key={i} placeholder={ph} className="w-full px-3 py-2 rounded-xl outline-none"
-                            style={{ background: T.bg, border: `1px solid ${T.green}33`, color: T.textPrimary, fontSize: T.bodyFontSize, fontFamily: T.fontFamily }} />
-                        ))}
-                        <button className="w-full py-2.5 rounded-full font-bold text-white"
-                          style={{ background: `linear-gradient(135deg,${T.green},${T.greenLight})`, fontSize: T.bodyFontSize, fontFamily: T.fontFamily }}>
-                          Submit
-                        </button>
-                      </div>
-                    </CardBlock>
-                  )}
-
-                  {extraSections.filter(s => s.enabled).map((section, index) => (
-                    <ExtraSectionPreview key={section.id || `extra-sec-${index}`} section={section} T={T} />
-                  ))}
+                      );
+                    }
+                    // Extra section
+                    const section = extraSectionById.get(id);
+                    if (!section || !section.enabled) return null;
+                    return <ExtraSectionPreview key={section.id} section={section} T={T} />;
+                  })}
 
                   <div style={{ height: 64 }} />
                 </div>
@@ -689,7 +789,7 @@ function ExtraSectionPreview({ section, T }: { section: ExtraSection; T: ThemeOv
     case 'extra-pdf': {
       const pdfTitle = str(d, 'pdfTitle'), pdfUrl = str(d, 'pdfUrl');
       return pdfTitle || pdfUrl ? (
-        <div className="mx-3 mb-2.5 overflow-hidden"
+        <div className="mx-3 mb-2.5 overflow-hidden" key={section.id}
           style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: T.cardRadius }}>
           <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ borderBottom: `1px solid ${T.divider}` }}>
             <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
@@ -714,9 +814,7 @@ function ExtraSectionPreview({ section, T }: { section: ExtraSection; T: ThemeOv
               <p style={{ fontWeight: T.boldHeadings ? 700 : 500, fontSize: T.bodyFontSize, color: T.textPrimary, ...ff }}>{pdfTitle || 'View PDF'}</p>
               <p style={{ fontSize: Math.max(9, T.bodyFontSize - 1), color: T.textMuted, ...ff }} className="truncate">{pdfUrl || 'Tap to open'}</p>
             </div>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 flex-shrink-0" style={{ color: T.muted }}>
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
+            <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: T.muted }} />
           </button>
         </div>
       ) : null;
@@ -724,7 +822,7 @@ function ExtraSectionPreview({ section, T }: { section: ExtraSection; T: ThemeOv
     case 'extra-button': {
       const btnLabel = str(d, 'btnLabel'), btnUrl = str(d, 'btnUrl');
       return btnLabel || btnUrl ? (
-        <div className="mx-3 mb-2.5">
+        <div className="mx-3 mb-2.5" key={section.id}>
           <button onClick={e => { e.stopPropagation(); if (btnUrl) openLink(btnUrl); }}
             className="w-full py-3 font-bold text-white"
             style={{ background: `linear-gradient(135deg,${T.green},${T.greenLight})`, borderRadius: T.cardRadius, fontSize: T.bodyFontSize, ...ff }}>
@@ -736,7 +834,7 @@ function ExtraSectionPreview({ section, T }: { section: ExtraSection; T: ThemeOv
     case 'extra-video': {
       const videoUrl = str(d, 'videoUrl');
       return videoUrl ? (
-        <div className="mx-3 mb-2.5 overflow-hidden"
+        <div className="mx-3 mb-2.5 overflow-hidden" key={section.id}
           style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: T.cardRadius }}>
           <button onClick={e => { e.stopPropagation(); openLink(videoUrl); }}
             className="w-full h-24 flex flex-col items-center justify-center gap-2">
@@ -753,7 +851,7 @@ function ExtraSectionPreview({ section, T }: { section: ExtraSection; T: ThemeOv
       const days = ['Monday–Friday', 'Saturday', 'Sunday'];
       const hasAny = days.some(day => str(d, day));
       return hasAny ? (
-        <div className="mx-3 mb-2.5 overflow-hidden"
+        <div className="mx-3 mb-2.5 overflow-hidden" key={section.id}
           style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: T.cardRadius }}>
           <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ borderBottom: `1px solid ${T.divider}` }}>
             <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-sm"
@@ -774,7 +872,7 @@ function ExtraSectionPreview({ section, T }: { section: ExtraSection; T: ThemeOv
     case 'extra-products': {
       const productName = str(d, 'productName'), price = str(d, 'price'), buyUrl = str(d, 'buyUrl');
       return productName ? (
-        <div className="mx-3 mb-2.5 overflow-hidden"
+        <div className="mx-3 mb-2.5 overflow-hidden" key={section.id}
           style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: T.cardRadius }}>
           <div className="px-4 py-3">
             <div className="flex items-center justify-between mb-2">
@@ -795,7 +893,7 @@ function ExtraSectionPreview({ section, T }: { section: ExtraSection; T: ThemeOv
     case 'extra-imagetext': {
       const heading = str(d, 'heading'), body = str(d, 'body'), imgUrl = str(d, 'imgUrl');
       return heading || body || imgUrl ? (
-        <div className="mx-3 mb-2.5 overflow-hidden"
+        <div className="mx-3 mb-2.5 overflow-hidden" key={section.id}
           style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: T.cardRadius }}>
           {imgUrl ? (
             <div className="w-full overflow-hidden" style={{ maxHeight: 140 }}>
@@ -819,10 +917,9 @@ function ExtraSectionPreview({ section, T }: { section: ExtraSection; T: ThemeOv
     }
     case 'extra-customer':
     case 'extra-team': {
-      // Editor stores these as 'title' + 'desc'
       const title = str(d, 'title'), desc = str(d, 'desc');
       return title || desc ? (
-        <div className="mx-3 mb-2.5 overflow-hidden"
+        <div className="mx-3 mb-2.5 overflow-hidden" key={section.id}
           style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: T.cardRadius }}>
           <div className="px-4 py-3">
             {title && <p style={{ fontWeight: T.boldHeadings ? 700 : 500, fontSize: T.bodyFontSize, marginBottom: 4, color: T.textPrimary, ...ff }}>{title}</p>}
@@ -834,7 +931,7 @@ function ExtraSectionPreview({ section, T }: { section: ExtraSection; T: ThemeOv
     default: {
       const title = str(d, 'title'), content = str(d, 'content');
       return title || content ? (
-        <div className="mx-3 mb-2.5 overflow-hidden"
+        <div className="mx-3 mb-2.5 overflow-hidden" key={section.id}
           style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: T.cardRadius }}>
           <div className="px-4 py-3">
             {title && <p style={{ fontWeight: T.boldHeadings ? 700 : 500, fontSize: T.bodyFontSize, marginBottom: 4, color: T.textPrimary, ...ff }}>{title}</p>}
