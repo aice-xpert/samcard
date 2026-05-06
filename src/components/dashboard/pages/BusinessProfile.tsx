@@ -25,6 +25,7 @@ import {
 import { CardPreviewModal } from '@/components/dashboard/pages/CardPreviewModal';
 import { QrPopup } from '@/components/dashboard/pages/Qrpopup';
 import { PhonePreview, ExtraSection, ThemeOverride } from '@/components/dashboard/pages/PhonePreview';
+import TemplatePicker from '@/components/TemplatePicker/TemplatePicker';
 import { makeQRMatrix } from '@/components/dashboard/pages/qr-engine';
 import { useQrStore } from '@/components/dashboard/stores/Useqrstore';
 import {
@@ -32,6 +33,7 @@ import {
   getCustomLinks,
   getSocialLinks,
   getCardDesign,
+  updateCardDesign,
   CardDesignResponse,
   updateBusinessProfile,
   updateCustomLinks,
@@ -1278,6 +1280,8 @@ export default function BusinessProfile({
   const EditorContent = (
     <div className="space-y-4">
 
+      {/* Template picker - prefill profile + design */}
+      
       {/* Profile header card */}
       <Card className="bg-gradient-to-br from-[#000000] to-[#008001]/10 border-[#008001]/30">
         <CardContent className="p-4 sm:p-8">
@@ -1322,6 +1326,198 @@ export default function BusinessProfile({
           </div >
         </CardContent >
       </Card >
+
+<div className="mb-6">
+  <h2 className="text-white text-lg font-bold mb-1">Templates</h2>
+  <p className="text-[#7a9a7a] text-xs mb-3">Pick a template — fields and colors will be filled in. Edit anything below.</p>
+        <TemplatePicker
+          cardId={resolvedCardId ?? cardId ?? null}
+          onApply={(content) => {
+            try {
+              // merge known fields into formData
+              const incoming = content as Record<string, unknown>;
+              const updates: Partial<FormData> = {};
+              if (typeof incoming.name === 'string') updates.name = incoming.name;
+              if (typeof incoming.jobTitle === 'string') updates.title = incoming.jobTitle;
+              if (typeof incoming.company === 'string') updates.company = incoming.company;
+              if (typeof incoming.tagline === 'string') updates.tagline = incoming.tagline;
+              if (typeof incoming.headingText === 'string') updates.headingText = incoming.headingText;
+              if (typeof incoming.bio === 'string') updates.bodyText = incoming.bio;
+              if (typeof incoming.email === 'string') updates.email = incoming.email;
+              if (typeof incoming.phone === 'string') updates.phone = incoming.phone;
+              if (typeof incoming.website === 'string') updates.website = incoming.website;
+
+              setFormData(prev => ({ ...prev, ...updates }));
+
+              // profileImage and brandLogo
+              if (typeof incoming.profileImage === 'string') setProfileImage(incoming.profileImage);
+              if (typeof incoming.brandLogo === 'string') setBrandLogo(incoming.brandLogo);
+
+              // social links mapping: from {platform: string, url: string} to our SocialLink[] (platform index)
+              if (Array.isArray(incoming.socialLinks)) {
+                const arr = incoming.socialLinks as Array<Record<string, unknown>>;
+                const newSocial = [...socialLinks];
+                for (const item of arr) {
+                  const p = typeof item.platform === 'string' ? item.platform.toLowerCase() : undefined;
+                  const url = typeof item.url === 'string' ? item.url : (typeof item.value === 'string' ? item.value : '');
+                  if (!p) continue;
+                  const idx = SOCIAL_OPTIONS.findIndex(o => o.name.toLowerCase() === p || o.name.toLowerCase().includes(p));
+                  if (idx >= 0) newSocial[idx] = { platform: idx, value: url };
+                }
+                setSocialLinks(newSocial);
+              }
+
+              // sections enablement
+              if (Array.isArray(incoming.sections)) {
+                const sec = { ...sections };
+                for (const s of (incoming.sections as Array<Record<string, unknown>>)) {
+                  const t = typeof s.type === 'string' ? s.type.toLowerCase() : '';
+                  if (!t) continue;
+                  if (t === 'about') sec.profile = true;
+                  if (t === 'contact') sec.contactUs = true;
+                  if (t === 'social') sec.socialLinks = true;
+                  if (t === 'links') sec.links = true;
+                  if (t === 'heading' || t === 'headingtext') sec.headingText = true;
+                }
+                setSections(sec);
+              }
+
+              // custom links (from sections content)
+              if (Array.isArray(incoming.sections)) {
+                for (const s of (incoming.sections as Array<Record<string, unknown>>)) {
+                  const content = s.content as { links?: unknown } | undefined;
+                  if (s.type === 'links' && Array.isArray(content?.links)) {
+                    const links = (content!.links as Array<Record<string, unknown>>).map(l => ({ label: String(l.label ?? ''), url: String(l.url ?? '') }));
+                    if (links.length) setCustomLinks(links as any);
+                  }
+                }
+              }
+
+              // persist merged cache
+              try {
+                const ck = cacheKeyForEditor(cardId, resolvedCardId, allowFallbackToFirstCard);
+                const newCache: CacheShape = {
+                  profileImage: typeof incoming.profileImage === 'string' ? incoming.profileImage : profileImage,
+                  brandLogo: typeof incoming.brandLogo === 'string' ? incoming.brandLogo : brandLogo,
+                  logoPosition,
+                  formData: { ...formData, ...updates },
+                  socialLinks: socialLinks,
+                  connectFields: connectFields,
+                  sections: { ...sections },
+                  expanded: { ...expanded },
+                  customLinks: customLinks,
+                  extraSections: extraSections,
+                };
+                saveCacheForKey(newCache, ck);
+              } catch (e) {
+                // ignore persistence errors
+              }
+            } catch (err) {
+              console.error('Failed applying template content', err);
+            }
+          }}
+          onDesignApply={(design) => {
+            try {
+              const d = design as Record<string, unknown>;
+              const accent = (typeof d.accentColor === 'string' ? d.accentColor : '#008001');
+              const accentLight = (typeof d.accentLight === 'string' ? d.accentLight : accent);
+              const bgColor = (typeof d.bgColor === 'string' ? d.bgColor : '#0a0f0a');
+              const cardColor = (typeof d.cardColor === 'string' ? d.cardColor : '#111a11');
+              const textPrimary = (typeof d.textPrimary === 'string' ? d.textPrimary : '#f0f0f0');
+              const textMuted = (typeof d.textMuted === 'string' ? d.textMuted : '#7a9a7a');
+              const fontKey = (typeof d.font === 'string' ? d.font : 'inter').toLowerCase();
+              const phoneBgPreset = (typeof d.phoneBgPreset === 'string' ? d.phoneBgPreset : 'aurora');
+              const phoneBgColor1 = (typeof d.phoneBgColor1 === 'string' ? d.phoneBgColor1 : bgColor);
+              const phoneBgColor2 = (typeof d.phoneBgColor2 === 'string' ? d.phoneBgColor2 : bgColor);
+              const phoneBgAngle = (typeof d.phoneBgAngle === 'number' ? d.phoneBgAngle : 135);
+              const phoneBgType = (d.phoneBgType === 'solid' ? 'solid' : 'gradient') as 'solid' | 'gradient';
+              const palette = (typeof d.palette === 'string' ? d.palette : 'green');
+              const nameFontSize = (typeof d.nameFontSize === 'number' ? d.nameFontSize : 22);
+              const bodyFontSize = (typeof d.bodyFontSize === 'number' ? d.bodyFontSize : 11);
+              const boldHeadings = (typeof d.boldHeadings === 'boolean' ? d.boldHeadings : true);
+              const cardRadius = (typeof d.cardRadius === 'number' ? d.cardRadius : 16);
+
+              const phoneBgStyle = phoneBgPreset === 'custom'
+                ? (phoneBgType === 'gradient'
+                  ? `linear-gradient(${phoneBgAngle}deg, ${phoneBgColor1} 0%, ${phoneBgColor2} 100%)`
+                  : phoneBgColor1)
+                : (DESIGN_WALLPAPER_STYLES[phoneBgPreset] || `linear-gradient(${phoneBgAngle}deg, ${phoneBgColor1} 0%, ${phoneBgColor2} 100%)`);
+
+              const fontFamily = DESIGN_FONT_FAMILY[fontKey] ?? DESIGN_FONT_FAMILY.inter;
+
+              const themeForPreview: Partial<ThemeOverride> = {
+                green: accent,
+                greenLight: accentLight,
+                bg: bgColor,
+                card: cardColor,
+                cardBorder: `${accent}33`,
+                textPrimary,
+                textMuted,
+                divider: `${accent}1f`,
+                muted: `${accent}55`,
+                fontFamily,
+                nameFontSize,
+                bodyFontSize,
+                boldHeadings,
+                cardRadius,
+                phoneBgStyle,
+              };
+
+              const designKey = designCacheKeyForEditor(cardId, resolvedCardId, allowFallbackToFirstCard);
+              const cachePayload = {
+                ...d,
+                ...themeForPreview,
+                accentColor: accent,
+                accentLight,
+                bgColor,
+                cardColor,
+                textPrimary,
+                textMuted,
+                font: fontKey,
+                phoneBgPreset,
+                phoneBgColor1,
+                phoneBgColor2,
+                phoneBgAngle,
+                phoneBgType,
+                palette,
+                nameFontSize,
+                bodyFontSize,
+                boldHeadings,
+                cardRadius,
+              };
+              saveThemeOverride(designKey, cachePayload as any);
+              setThemeOverride(prev => ({ ...prev, ...themeForPreview }));
+
+              // Persist to backend so the published /[slug] page uses the template's design
+              if (resolvedCardId) {
+                updateCardDesign(resolvedCardId, {
+                  palette,
+                  accentColor: accent,
+                  accentLight,
+                  bgColor,
+                  cardColor,
+                  textPrimary,
+                  textMuted,
+                  phoneBgPreset,
+                  phoneBgColor1,
+                  phoneBgColor2,
+                  phoneBgAngle,
+                  phoneBgType,
+                  font: fontKey,
+                  nameFontSize,
+                  bodyFontSize,
+                  boldHeadings,
+                  cardRadius,
+                  shadowIntensity: (typeof d.shadowIntensity === 'string' ? d.shadowIntensity : 'soft') as any,
+                  glowEffect: typeof d.glowEffect === 'boolean' ? d.glowEffect : false,
+                }).catch((err) => console.error('Failed to persist template design', err));
+              }
+            } catch (e) {
+              console.error('Failed to apply template design', e);
+            }
+          }}
+        />
+      </div>
 
       {/* PROFILE section */}
       < SectionBlock id="section-profile" title="Profile" icon={User}
