@@ -133,6 +133,7 @@ export interface DesignSettings {
   textPrimary: string;
   textMuted: string;
   palette: string;
+  heroLayout: string;
   // Phone wallpaper
   phoneBgPreset: string;
   phoneBgColor1: string;
@@ -191,6 +192,7 @@ const DEFAULT_DESIGN: DesignSettings = {
   textPrimary: '#f0f0f0',
   textMuted: '#7a9a7a',
   palette: 'green',
+  heroLayout: 'default',
   phoneBgPreset: 'aurora',
   phoneBgColor1: '#0a0f0a',
   phoneBgColor2: '#003322',
@@ -329,8 +331,22 @@ function normalizeDesignSettings(value: Partial<DesignSettings> | null | undefin
     cardRadius: asNumber(source.cardRadius, DEFAULT_DESIGN.cardRadius),
     shadowIntensity,
     glowEffect: typeof source.glowEffect === 'boolean' ? source.glowEffect : DEFAULT_DESIGN.glowEffect,
+    heroLayout: typeof source.heroLayout === 'string' ? source.heroLayout : DEFAULT_DESIGN.heroLayout,
   };
 }
+
+const PALETTE_TO_HERO_LAYOUT: Record<string, string> = {
+  'medical-teal':    'wave-panel',
+  'teamwork-orange': 'side-panel',
+  'heritage-gold':   'wave-panel',
+  'team-pro':        'group-diagonal',
+  'royal-purple':    'circle-overlap',
+  'minimal-mono':    'circle-center',
+  'sunset-banner':   'top-banner',
+  'sky-circle':      'circle-overlap',
+  'onyx-pro':        'default',
+  'mocha-torn':      'torn-edge',
+};
 
 function buildThemeOverride(d: DesignSettings): Partial<ThemeOverride> {
   return {
@@ -349,6 +365,11 @@ function buildThemeOverride(d: DesignSettings): Partial<ThemeOverride> {
     boldHeadings: d.boldHeadings,
     cardRadius: d.cardRadius,
     phoneBgStyle: getPhoneBgStyle(d),
+    // heroLayout: use stored value first (preserves template layout when palette becomes 'custom'),
+    // fall back to palette map, then default
+    heroLayout: d.heroLayout && d.heroLayout !== 'default'
+      ? d.heroLayout
+      : (PALETTE_TO_HERO_LAYOUT[d.palette] ?? d.heroLayout ?? 'default'),
   };
 }
 
@@ -855,8 +876,8 @@ export function DesignNew({
       cardColor: p.card,
       textPrimary: p.textPrimary,
       textMuted: p.textMuted,
-      // ── NEW: auto-switch wallpaper to the palette's matching preset ──
       phoneBgPreset: p.wallpaper,
+      heroLayout: PALETTE_TO_HERO_LAYOUT[key] ?? 'default',
     }));
   }, []);
 

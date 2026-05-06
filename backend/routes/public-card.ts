@@ -43,6 +43,7 @@ interface PublicCardResponse {
   headingText?: string;
   headingBodyText?: string;
   design: {
+    palette: string;
     accentColor: string;
     accentLight: string;
     bgColor: string;
@@ -247,6 +248,7 @@ router.get("/:slug", async (req, res: Response) => {
       headingText: card.headingText ?? content?.formData?.headingText ?? "",
       headingBodyText: card.headingBodyText ?? content?.formData?.bodyText ?? "",
       design: {
+        palette: design?.palette ?? "",
         accentColor: design?.accentColor ?? card.accentColor,
         accentLight: design?.accentLight ?? card.accentLight,
         bgColor: design?.bgColor ?? card.backgroundColor,

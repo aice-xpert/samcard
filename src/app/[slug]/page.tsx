@@ -94,6 +94,7 @@ interface PublicCard {
   headingText?: string;
   headingBodyText?: string;
   design: {
+    palette: string;
     accentColor: string;
     accentLight: string;
     bgColor: string;
@@ -1315,6 +1316,83 @@ export default function PublicCardPage() {
 
   const hasBrandLogo = !!content.brandLogo?.trim();
 
+  // Map template palette names to hero layout variants
+  const PALETTE_TO_HERO: Record<string, string> = {
+    'medical-teal':    'wave-panel',
+    'teamwork-orange': 'side-panel',
+    'heritage-gold':   'wave-panel',
+    'team-pro':        'group-diagonal',
+    'royal-purple':    'circle-overlap',
+    'minimal-mono':    'circle-center',
+    'sunset-banner':   'top-banner',
+    'sky-circle':      'circle-overlap',
+    'onyx-pro':        'default',
+    'mocha-torn':      'torn-edge',
+  };
+  const heroLayout = PALETTE_TO_HERO[D.palette] ?? 'default';
+
+  const name = fd.name || businessProfile.name || '';
+  const title = fd.title || businessProfile.title || '';
+  const company = fd.company || businessProfile.company || '';
+  const profileImg = content.profileImage || '';
+
+  const PhotoEl = ({ height, objectFit = 'cover', className = '' }: { height?: number | string; objectFit?: string; className?: string }) =>
+    profileImg ? (
+      <img src={profileImg} alt={name}
+        style={{ width: '100%', height: height ?? '100%', objectFit: objectFit as 'cover', display: 'block' }}
+        className={className}
+      />
+    ) : (
+      <div style={{
+        width: '100%', height: height ?? '100%',
+        background: `linear-gradient(135deg, ${T.green}88 0%, ${T.bg} 50%, ${T.greenLight}66 100%)`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <div style={{ fontSize: 72, fontWeight: 900, color: T.green, opacity: 0.3, lineHeight: 1 }}>
+          {(name || '?')[0].toUpperCase()}
+        </div>
+      </div>
+    );
+
+  const NameInfo = ({ color = '#fff', titleColor = T.greenLight, companyColor = 'rgba(255,255,255,0.65)', align = 'left' as 'left'|'center' }) => (
+    <div style={{ textAlign: align }}>
+      {name && <h1 style={{ color, fontSize: T.nameFontSize, lineHeight: 1.2, fontWeight: T.boldHeadings ? 800 : 600, fontFamily: T.fontFamily, wordBreak: 'break-word' }}>{name}</h1>}
+      {title && <p style={{ color: titleColor, fontSize: T.bodyFontSize + 1, marginTop: 4, fontFamily: T.fontFamily }}>{title}</p>}
+      {(company || (hasBrandLogo && content.logoPosition === 'below-name')) && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2, justifyContent: align === 'center' ? 'center' : 'flex-start' }}>
+          {hasBrandLogo && content.logoPosition === 'below-name' && (
+            <div style={{ background: 'rgba(0,0,0,0.45)', padding: '2px 4px', borderRadius: 5, lineHeight: 0, flexShrink: 0 }}>
+              <img src={content.brandLogo} alt="Brand" style={{ maxWidth: 22, maxHeight: 22, objectFit: 'contain', borderRadius: 3 }} />
+            </div>
+          )}
+          {company && <p style={{ color: companyColor, fontSize: T.bodyFontSize - 1, fontFamily: T.fontFamily, fontWeight: T.boldHeadings ? 700 : 500 }}>{company}</p>}
+        </div>
+      )}
+    </div>
+  );
+
+  const LogoBadge = ({ size = 48, pos }: { size?: number; pos?: string }) => hasBrandLogo && content.logoPosition === pos ? (
+    <div style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)', padding: 5, borderRadius: 10, lineHeight: 0 }}>
+      <img src={content.brandLogo} alt="Brand" style={{ maxWidth: size, maxHeight: size, objectFit: 'contain', borderRadius: 7 }} />
+    </div>
+  ) : null;
+
+  const LogoCircle = ({ sz = 52 }: { sz?: number }) => (
+    <div style={{
+      width: sz, height: sz, borderRadius: '50%', background: '#fff',
+      border: `3px solid ${T.green}`, display: 'flex', alignItems: 'center',
+      justifyContent: 'center', boxShadow: '0 2px 12px rgba(0,0,0,0.2)',
+    }}>
+      {hasBrandLogo ? (
+        <img src={content.brandLogo} alt="Brand" style={{ width: sz - 16, height: sz - 16, borderRadius: '50%', objectFit: 'contain' }} />
+      ) : (
+        <div style={{ width: sz - 14, height: sz - 14, borderRadius: '50%', background: T.green, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: sz * 0.4 }}>
+          {(company || name || 'T')[0]?.toUpperCase()}
+        </div>
+      )}
+    </div>
+  );
+
   const contactItems = [
     fd.phone && {
       label: "Call Us",
@@ -1403,8 +1481,175 @@ export default function PublicCardPage() {
           overflowX: "hidden",
           borderRadius: T.cardRadius,
         }}>
-          {/* ── HERO ── */}
-          {S.profile && (
+          {/* ── HERO — layout-aware ── */}
+          {S.profile && heroLayout === 'wave-panel' && (
+            <div style={{ position: 'relative', fontFamily: T.fontFamily }}>
+              <div style={{ width: '100%', height: 240, position: 'relative', overflow: 'hidden' }}>
+                <PhotoEl height="100%" />
+              </div>
+              {/* Wave SVG */}
+              <svg viewBox="0 0 200 40" preserveAspectRatio="none"
+                style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 48, zIndex: 2 }}>
+                <path d="M0,40 L0,24 Q100,0 200,24 L200,40 Z" fill={T.bg} />
+              </svg>
+              {/* Logo circle at wave peak */}
+              <div style={{ position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)', zIndex: 4 }}>
+                <LogoCircle sz={52} />
+              </div>
+              {/* Top-positioned brand logo */}
+              {hasBrandLogo && content.logoPosition === 'top-right' && (
+                <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }}><LogoBadge pos="top-right" /></div>
+              )}
+              {hasBrandLogo && content.logoPosition === 'top-left' && (
+                <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 10 }}><LogoBadge pos="top-left" /></div>
+              )}
+              {/* Info panel */}
+              <div style={{ background: T.bg, paddingTop: 36, paddingBottom: 16, paddingLeft: 20, paddingRight: 20, textAlign: 'center' }}>
+                <NameInfo align="center" companyColor={T.textMuted} titleColor={T.greenLight} />
+              </div>
+            </div>
+          )}
+
+          {S.profile && heroLayout === 'side-panel' && (
+            <div style={{ fontFamily: T.fontFamily }}>
+              {/* Logo bar */}
+              <div style={{ display: 'flex', alignItems: 'center', padding: '12px 20px', gap: 10, background: T.bg }}>
+                {hasBrandLogo ? (
+                  <img src={content.brandLogo} alt="Brand" style={{ width: 36, height: 36, objectFit: 'contain', borderRadius: 8 }} />
+                ) : (
+                  <div style={{ width: 32, height: 32, borderRadius: '50%', background: T.green, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 14, flexShrink: 0 }}>
+                    {(company || name || 'T')[0]?.toUpperCase()}
+                  </div>
+                )}
+                {company && <span style={{ fontWeight: 700, fontSize: 15, color: T.textPrimary, fontFamily: T.fontFamily }}>{company}</span>}
+              </div>
+              {/* Side card */}
+              <div style={{ margin: '0 12px 12px', borderRadius: T.cardRadius, overflow: 'hidden', display: 'flex', height: 140 }}>
+                <div style={{ width: '45%', flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
+                  <PhotoEl height="100%" />
+                </div>
+                <div style={{ flex: 1, background: T.card, padding: '14px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  <NameInfo color={T.textPrimary} titleColor={T.greenLight} companyColor={T.textMuted} />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {S.profile && heroLayout === 'group-diagonal' && (
+            <div style={{ fontFamily: T.fontFamily }}>
+              <div style={{ width: '100%', height: 180, position: 'relative', overflow: 'hidden' }}>
+                <PhotoEl height="100%" />
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.5) 100%)' }} />
+                {/* T logo / brand top-right */}
+                <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 3 }}>
+                  {hasBrandLogo ? (
+                    <div style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)', padding: 5, borderRadius: 10, lineHeight: 0 }}>
+                      <img src={content.brandLogo} alt="Brand" style={{ maxWidth: 40, maxHeight: 40, objectFit: 'contain', borderRadius: 6 }} />
+                    </div>
+                  ) : (
+                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: T.green, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 16 }}>
+                      {(company || name || 'T')[0]?.toUpperCase()}
+                    </div>
+                  )}
+                </div>
+                {/* Diagonal accent stripes */}
+                <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} viewBox="0 0 100 180" preserveAspectRatio="none">
+                  <line x1="65" y1="0" x2="100" y2="120" stroke={T.green} strokeWidth="12" opacity="0.65" />
+                  <line x1="80" y1="0" x2="100" y2="60" stroke={T.greenLight} strokeWidth="8" opacity="0.45" />
+                </svg>
+              </div>
+              {/* Panel with small portrait inset */}
+              <div style={{ position: 'relative', background: T.card, padding: '10px 16px 16px 90px', minHeight: 80 }}>
+                <div style={{ position: 'absolute', top: -28, left: 16, width: 64, height: 80, borderRadius: 8, overflow: 'hidden', border: `2px solid ${T.green}` }}>
+                  <PhotoEl height="100%" />
+                </div>
+                <NameInfo color={T.textPrimary} titleColor={T.greenLight} companyColor={T.textMuted} />
+              </div>
+            </div>
+          )}
+
+          {S.profile && heroLayout === 'circle-overlap' && (
+            <div style={{ fontFamily: T.fontFamily }}>
+              <div style={{ width: '100%', height: 180, position: 'relative', overflow: 'hidden' }}>
+                <PhotoEl height="100%" />
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.55) 100%)' }} />
+                {hasBrandLogo && content.logoPosition === 'top-right' && (
+                  <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 5 }}><LogoBadge pos="top-right" /></div>
+                )}
+                {hasBrandLogo && content.logoPosition === 'top-left' && (
+                  <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 5 }}><LogoBadge pos="top-left" /></div>
+                )}
+              </div>
+              <div style={{ background: T.bg, paddingBottom: 16, textAlign: 'center' }}>
+                {/* Overlapping circular portrait */}
+                <div style={{ marginTop: -52, display: 'flex', justifyContent: 'center', position: 'relative', zIndex: 2 }}>
+                  <div style={{ width: 100, height: 100, borderRadius: '50%', overflow: 'hidden', border: '4px solid #fff', boxShadow: '0 4px 20px rgba(0,0,0,0.3)', background: T.card }}>
+                    <PhotoEl height="100%" />
+                  </div>
+                </div>
+                <div style={{ padding: '12px 20px 0' }}>
+                  <NameInfo align="center" companyColor={T.textMuted} titleColor={T.greenLight} />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {S.profile && heroLayout === 'circle-center' && (
+            <div style={{ background: T.bg, padding: '48px 20px 16px', fontFamily: T.fontFamily }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+                <div style={{ width: 110, height: 110, borderRadius: '50%', overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.18)', background: T.card }}>
+                  <PhotoEl height="100%" />
+                </div>
+              </div>
+              <NameInfo color={T.textPrimary} titleColor={T.textMuted} companyColor={T.green} />
+            </div>
+          )}
+
+          {S.profile && heroLayout === 'top-banner' && (
+            <div style={{ fontFamily: T.fontFamily }}>
+              {/* Logo bar */}
+              <div style={{ display: 'flex', alignItems: 'center', padding: '12px 20px', gap: 10, background: T.bg }}>
+                {hasBrandLogo ? (
+                  <img src={content.brandLogo} alt="Brand" style={{ width: 34, height: 34, objectFit: 'contain', borderRadius: 8 }} />
+                ) : (
+                  <div style={{ width: 30, height: 30, borderRadius: '50%', background: T.green, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 14, flexShrink: 0 }}>
+                    {(company || name || 'T')[0]?.toUpperCase()}
+                  </div>
+                )}
+                {company && <span style={{ fontWeight: 700, color: T.textPrimary, fontFamily: T.fontFamily }}>{company}</span>}
+              </div>
+              {/* Accent name banner */}
+              <div style={{ background: T.green, padding: '18px 20px' }}>
+                <NameInfo color="#fff" titleColor="rgba(255,255,255,0.9)" companyColor="rgba(255,255,255,0.7)" />
+              </div>
+              {/* Photo below */}
+              <div style={{ width: '100%', height: 220, overflow: 'hidden', position: 'relative' }}>
+                <PhotoEl height="100%" />
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 60%, rgba(0,0,0,0.4) 100%)' }} />
+              </div>
+            </div>
+          )}
+
+          {S.profile && heroLayout === 'torn-edge' && (
+            <div style={{ fontFamily: T.fontFamily }}>
+              {/* Photo with torn bottom edge */}
+              <div style={{
+                width: '100%', height: 220, position: 'relative',
+                clipPath: 'polygon(0 0, 100% 0, 100% 82%, 97% 70%, 93% 84%, 89% 70%, 85% 83%, 81% 68%, 77% 82%, 73% 70%, 69% 84%, 65% 70%, 61% 83%, 57% 69%, 53% 83%, 49% 70%, 45% 83%, 41% 70%, 37% 82%, 33% 68%, 29% 80%, 25% 68%, 21% 80%, 17% 67%, 13% 79%, 9% 67%, 5% 78%, 2% 67%, 0 76%)',
+              }}>
+                <PhotoEl height="100%" />
+              </div>
+              {/* Circular avatar at torn edge */}
+              <div style={{ position: 'relative', background: T.bg, paddingTop: 8, paddingLeft: 72, paddingRight: 20, paddingBottom: 16, minHeight: 80 }}>
+                <div style={{ position: 'absolute', top: -32, left: 20, width: 64, height: 64, borderRadius: '50%', overflow: 'hidden', border: '3px solid #fff', boxShadow: '0 2px 12px rgba(0,0,0,0.2)', background: T.card }}>
+                  <PhotoEl height="100%" />
+                </div>
+                <NameInfo color={T.textPrimary} titleColor={T.textMuted} companyColor={T.green} />
+              </div>
+            </div>
+          )}
+
+          {S.profile && heroLayout === 'default' && (
             <div
               style={{
                 position: "relative",
@@ -1414,200 +1659,17 @@ export default function PublicCardPage() {
                 background: "#000",
               }}
             >
-              {content.profileImage ? (
-                <img
-                  src={content.profileImage}
-                  alt={fd.name || businessProfile.name}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    display: "block",
-                  }}
-                />
-              ) : (
-                <div
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    background: `linear-gradient(135deg, ${T.green}88 0%, ${T.bg} 50%, ${T.greenLight}66 100%)`,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 72,
-                      fontWeight: 900,
-                      color: T.green,
-                      opacity: 0.3,
-                      lineHeight: 1,
-                    }}
-                  >
-                    {(fd.name || businessProfile.name || "?")[0].toUpperCase()}
-                  </div>
-                </div>
-              )}
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  background:
-                    "linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.78) 100%)",
-                }}
-              />
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  height: 2,
-                  background: `linear-gradient(90deg, transparent, ${T.green}, ${T.greenLight}, ${T.green}, transparent)`,
-                }}
-              />
-
+              <PhotoEl height="100%" />
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.78) 100%)" }} />
+              <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, ${T.green}, ${T.greenLight}, ${T.green}, transparent)` }} />
               {hasBrandLogo && content.logoPosition === "top-right" && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: 12,
-                    right: 12,
-                    zIndex: 10,
-                  }}
-                >
-                  <div
-                    style={{
-                      background: "rgba(0,0,0,0.5)",
-                      backdropFilter: "blur(6px)",
-                      padding: 5,
-                      borderRadius: 10,
-                      lineHeight: 0,
-                    }}
-                  >
-                    <img
-                      src={content.brandLogo}
-                      alt="Brand"
-                      style={{
-                        maxWidth: 48,
-                        maxHeight: 48,
-                        objectFit: "contain",
-                        borderRadius: 7,
-                      }}
-                    />
-                  </div>
-                </div>
+                <div style={{ position: "absolute", top: 12, right: 12, zIndex: 10 }}><LogoBadge pos="top-right" /></div>
               )}
               {hasBrandLogo && content.logoPosition === "top-left" && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: 12,
-                    left: 12,
-                    zIndex: 10,
-                  }}
-                >
-                  <div
-                    style={{
-                      background: "rgba(0,0,0,0.5)",
-                      backdropFilter: "blur(6px)",
-                      padding: 5,
-                      borderRadius: 10,
-                      lineHeight: 0,
-                    }}
-                  >
-                    <img
-                      src={content.brandLogo}
-                      alt="Brand"
-                      style={{
-                        maxWidth: 48,
-                        maxHeight: 48,
-                        objectFit: "contain",
-                        borderRadius: 7,
-                      }}
-                    />
-                  </div>
-                </div>
+                <div style={{ position: "absolute", top: 12, left: 12, zIndex: 10 }}><LogoBadge pos="top-left" /></div>
               )}
-
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  padding: "12px 20px 16px",
-                  zIndex: 10,
-                }}
-              >
-                <h1
-                  style={{
-                    color: "#fff",
-                    fontSize: T.nameFontSize,
-                    lineHeight: 1.15,
-                    fontWeight: T.boldHeadings ? 800 : 600,
-                    textShadow: "0 2px 12px rgba(0,0,0,0.8)",
-                    wordBreak: "break-all",
-                    overflowWrap: "break-word",
-                  }}
-                >
-                  {fd.name || businessProfile.name}
-                </h1>
-                {(fd.title || businessProfile.title) && (
-                  <p
-                    style={{
-                      color: T.greenLight,
-                      fontSize: T.bodyFontSize,
-                      marginTop: 3,
-                      fontWeight: 500,
-                      wordBreak: "break-all",
-                      overflowWrap: "break-word",
-                    }}
-                  >
-                    {fd.title || businessProfile.title}
-                  </p>
-                )}
-                {(fd.company || businessProfile.company || (hasBrandLogo && content.logoPosition === "below-name")) && (
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 6,
-                      marginTop: 2,
-                    }}
-                  >
-                    {hasBrandLogo && content.logoPosition === "below-name" && (
-                      <div
-                        style={{
-                          background: "rgba(0,0,0,0.45)",
-                          padding: "2px 4px",
-                          borderRadius: 5,
-                          lineHeight: 0,
-                          flexShrink: 0,
-                        }}
-                      >
-                        <img
-                          src={content.brandLogo}
-                          alt="Brand"
-                          style={{ maxWidth: 22, maxHeight: 22, objectFit: "contain", borderRadius: 3 }}
-                        />
-                      </div>
-                    )}
-                    {(fd.company || businessProfile.company) && (
-                      <p
-                        style={{
-                          color: "rgba(255,255,255,0.6)",
-                          fontSize: T.bodyFontSize - 1,
-                          wordBreak: "break-all",
-                          overflowWrap: "break-word",
-                        }}
-                      >
-                        {fd.company || businessProfile.company}
-                      </p>
-                    )}
-                  </div>
-                )}
+              <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "12px 20px 16px", zIndex: 10 }}>
+                <NameInfo color="#fff" titleColor={T.greenLight} companyColor="rgba(255,255,255,0.6)" />
               </div>
             </div>
           )}

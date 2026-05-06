@@ -301,6 +301,7 @@ function loadThemeOverride(cacheKey: string = DESIGN_KEY): Partial<ThemeOverride
     if (typeof p.boldHeadings === 'boolean') direct.boldHeadings = p.boldHeadings;
     if (typeof p.cardRadius === 'number') direct.cardRadius = p.cardRadius;
     if (typeof p.phoneBgStyle === 'string') direct.phoneBgStyle = p.phoneBgStyle;
+    if (typeof p.heroLayout === 'string') direct.heroLayout = p.heroLayout;
 
     if (!direct.green && typeof p.accentColor === 'string') {
       const accent = p.accentColor as string;
@@ -1445,6 +1446,14 @@ export default function BusinessProfile({
 
               const fontFamily = DESIGN_FONT_FAMILY[fontKey] ?? DESIGN_FONT_FAMILY.inter;
 
+              const PALETTE_HERO_MAP: Record<string, string> = {
+                'medical-teal': 'wave-panel', 'teamwork-orange': 'side-panel',
+                'heritage-gold': 'wave-panel', 'team-pro': 'group-diagonal',
+                'royal-purple': 'circle-overlap', 'minimal-mono': 'circle-center',
+                'sunset-banner': 'top-banner', 'sky-circle': 'circle-overlap',
+                'onyx-pro': 'default', 'mocha-torn': 'torn-edge',
+              };
+
               const themeForPreview: Partial<ThemeOverride> = {
                 green: accent,
                 greenLight: accentLight,
@@ -1461,6 +1470,7 @@ export default function BusinessProfile({
                 boldHeadings,
                 cardRadius,
                 phoneBgStyle,
+                heroLayout: PALETTE_HERO_MAP[palette] ?? 'default',
               };
 
               const designKey = designCacheKeyForEditor(cardId, resolvedCardId, allowFallbackToFirstCard);

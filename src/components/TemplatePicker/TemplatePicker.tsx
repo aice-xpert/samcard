@@ -52,10 +52,13 @@ export default function TemplatePicker({ cardId, onApply, onDesignApply, classNa
     <div className={className}>
       <div
         style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
+          display: 'flex',
+          overflowX: 'auto',
           gap: 12,
-          padding: 4,
+          padding: '4px 4px 12px',
+          scrollSnapType: 'x mandatory',
+          WebkitOverflowScrolling: 'touch',
+          msOverflowStyle: 'none',
         }}
       >
         {cardTemplates.map((t) => {
@@ -69,6 +72,9 @@ export default function TemplatePicker({ cardId, onApply, onDesignApply, classNa
               aria-label={`Apply ${t.name} template`}
               style={{
                 position: 'relative',
+                flexShrink: 0,
+                width: 150,
+                scrollSnapAlign: 'start',
                 background: '#0D0D0D',
                 border: isSelected ? '2px solid #49B618' : '1px solid rgba(73,182,24,0.2)',
                 borderRadius: 14,
