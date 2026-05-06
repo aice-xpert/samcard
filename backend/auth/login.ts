@@ -1,76 +1,90 @@
 import express, { Request, Response } from "express";
-import admin from "../config/firebase";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 import { supabase } from "../config/supabase";
 
 const router = express.Router();
 
-const getErrorMessage = (error: unknown): string =>
-  error instanceof Error ? error.message : "UNAUTHORIZED REQUEST!";
+const JWT_SECRET = process.env.JWT_SECRET!;
+const JWT_EXPIRES_IN = "5d";
+const COOKIE_MAX_AGE = 60 * 60 * 24 * 5 * 1000; // 5 days in ms
 
 router.post("/", async (req: Request, res: Response) => {
-  const { idToken } = req.body;
+  const { email, password } = req.body;
 
-  if (!idToken) {
-    return res.status(400).json({ error: "ID Token is required, get itg" });
+  if (!email || !password) {
+    return res.status(400).json({ success: false, error: "Email and password are required" });
   }
 
-  const expiresIn = 60 * 60 * 24 * 5 * 1000;
+  const emailTrimmed = email.trim().toLowerCase();
+  const passwordTrimmed = password.trim();
 
   try {
-    const decodedToken = await admin.auth().verifyIdToken(idToken);
-    const uid = decodedToken.uid;
-    const email = decodedToken.email || "";
-    const name = decodedToken.name || "";
+    // ── Fetch user from Supabase ──────────────────────────────────────────────
+    const { data: user, error: fetchError } = await supabase
+      .from("User")
+      .select("id, email, name, passwordHash, emailVerified")
+      .eq("email", emailTrimmed)
+      .maybeSingle();
 
-    // Sync user to Supabase
-    const { error: supabaseError } = await supabase.from("User").upsert(
-      {
-        id: uid,
-        email,
-        name,
-        updatedAt: new Date().toISOString(),
-        lastLoginAt: new Date().toISOString(),
-      },
-      { onConflict: "id" }
-    );
-
-    if (supabaseError) {
-      console.error("Supabase sync error on login:", {
-        code: supabaseError.code,
-        message: supabaseError.message,
-        details: supabaseError.details,
-        hint: supabaseError.hint,
-      });
-    } else {
-      console.log(`[login] User ${uid} synced to Supabase`);
+    if (fetchError) {
+      console.error("Supabase fetch error on login:", fetchError);
+      return res.status(500).json({ success: false, error: "Something went wrong. Please try again." });
     }
 
-    const sessionCookie = await admin
-      .auth()
-      .createSessionCookie(idToken, { expiresIn });
+    if (!user) {
+      return res.status(404).json({ success: false, error: "No account found with this email. Please sign up first." });
+    }
 
-    const options = {
-      maxAge: expiresIn,
+    const invalidCredentials = () =>
+      res.status(401).json({ success: false, error: "Invalid email or password" });
+
+    if (!user.emailVerified) {
+      return res.status(403).json({ success: false, error: "Please verify your email before logging in." });
+    }
+
+    // ── Guard: social-only accounts have no password ──────────────────────────
+    if (!user.passwordHash) {
+      return res.status(400).json({
+        success: false,
+        error: "This account was created with Google or GitHub. Please sign in with that provider.",
+      });
+    }
+
+    // ── Verify password ───────────────────────────────────────────────────────
+    const passwordMatch = await bcrypt.compare(passwordTrimmed, user.passwordHash);
+    if (!passwordMatch) return invalidCredentials();
+
+    // ── Update lastLoginAt ────────────────────────────────────────────────────
+    await supabase
+      .from("User")
+      .update({ lastLoginAt: new Date().toISOString(), updatedAt: new Date().toISOString() })
+      .eq("id", user.id);
+
+    // ── Issue JWT ─────────────────────────────────────────────────────────────
+    const payload = { uid: user.id, email: user.email, name: user.name };
+    const sessionToken = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+
+    res.cookie("session", sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" as const : "lax" as const,
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: COOKIE_MAX_AGE,
       path: "/",
-    };
+    });
 
-    res.cookie("session", sessionCookie, options);
+    console.log(`[login] User ${user.id} logged in`);
 
-    // Return the session token so the frontend can store it in localStorage
-    // This is used by api.ts as a Bearer token for cross-origin requests in dev
     return res.status(200).json({
       success: true,
-      uid,
-      email,
-      name,
-      sessionToken: sessionCookie,
+      uid: user.id,
+      email: user.email,
+      name: user.name,
+      sessionToken,
     });
   } catch (error) {
-    console.error("Session Login Error:", error);
-    return res.status(401).json({ error: getErrorMessage(error) });
+    console.error("Login error:", error);
+    return res.status(500).json({ success: false, error: "Internal server error" });
   }
 });
 
