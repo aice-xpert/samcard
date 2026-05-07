@@ -62,6 +62,47 @@ const resolveAssetUrl = (value: unknown): string | null => {
   return `${base.replace(/\/$/, "")}/${cleaned}`;
 };
 
+const parseJsonbArray = (value: unknown): string[] | null => {
+  if (Array.isArray(value)) {
+    const items = value.filter((item): item is string => typeof item === "string");
+    return items.length > 0 ? items : null;
+  }
+
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+    const inner = trimmed.slice(1, -1);
+    if (!inner) return null;
+    const items = inner
+      .split(",")
+      .map((item) => item.replace(/^"(.*)"$/, "$1").trim())
+      .filter((item): item is string => item.length > 0);
+    return items.length > 0 ? items : null;
+  }
+
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (typeof parsed === "string") {
+      const inner = JSON.parse(parsed);
+      if (Array.isArray(inner)) {
+        const items = inner.filter((item): item is string => typeof item === "string");
+        return items.length > 0 ? items : null;
+      }
+      return null;
+    }
+    if (Array.isArray(parsed)) {
+      const items = parsed.filter((item): item is string => typeof item === "string");
+      return items.length > 0 ? items : null;
+    }
+  } catch {
+    // ignore malformed JSON
+  }
+
+  return null;
+};
+
 // ── Types ──────────────────────────────────────────────────────────
 
 interface QRConfig {
@@ -1098,7 +1139,7 @@ export default function PublicCardPage() {
       new URLSearchParams(window.location.search).get("preview") === "true";
     const url = `${BACKEND_URL}/api/public/cards/${slug}${isPreview ? "?preview=true" : ""}`;
     console.log("[public-card-page] fetching card", { slug, url, isPreview });
-    fetch(url)
+    fetch(url, { cache: "no-store" })
       .then((r) => {
         console.log("[public-card-page] fetch status", {
           slug,
@@ -1718,12 +1759,15 @@ export default function PublicCardPage() {
             // Use saved unifiedOrder when available (written by backend on save).
             // Fall back to sectionOrder or DEFAULT_ORDER + extra section IDs for old
             // records that pre-date this feature (i.e. unifiedOrder is still empty).
-            const savedOrder = Array.isArray(content.unifiedOrder) && content.unifiedOrder.length > 0
-              ? content.unifiedOrder
-              : Array.isArray(content.sectionOrder) && content.sectionOrder.length > 0
+            const savedUnifiedOrder = parseJsonbArray(content.unifiedOrder);
+            const savedSectionOrder = parseJsonbArray(content.sectionOrder);
+
+            const savedOrder = savedUnifiedOrder
+              ? savedUnifiedOrder
+              : savedSectionOrder && savedSectionOrder.length > 0
                 ? [
-                    ...content.sectionOrder,
-                    ...content.extraSections.map(s => s.id).filter(id => !content.sectionOrder!.includes(id)),
+                    ...savedSectionOrder,
+                    ...content.extraSections.map(s => s.id).filter(id => !savedSectionOrder.includes(id)),
                   ]
                 : [
                     // Last resort: use default order filtered by enabled sections,

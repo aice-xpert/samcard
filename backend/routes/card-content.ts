@@ -26,7 +26,55 @@ interface ExtraSection {
   data: Record<string, unknown>;
 }
 
-// Valid core section keys – must match the SectionKey union on the frontend.
+/**
+ * Robustly parse a sectionOrder / unifiedOrder value coming back from Supabase.
+ *
+ * Column history:
+ *   - Originally created as text[]  (migration 003) → PostgREST returns a
+ *     PostgreSQL array literal string like '{"a","b"}' or '{}' for empty.
+ *   - Fixed to jsonb               (migration 004) → PostgREST returns a real
+ *     JS array OR (for rows not yet migrated) possibly a JSON-encoded string.
+ *
+ * This helper handles all three cases and always returns a non-empty string[]
+ * or null (null = "no saved order, use default").
+ */
+const parseJsonbArray = (value: unknown): string[] | null => {
+  // Case 1: PostgREST already deserialised the jsonb column to a JS array ✓
+  if (Array.isArray(value)) return value.length > 0 ? (value as string[]) : null;
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+
+    // Case 2: PostgreSQL text[] literal e.g. '{"profile","headingText"}' or '{}'
+    if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+      const inner = trimmed.slice(1, -1);
+      if (!inner) return null; // empty: '{}'
+      // Split on commas that are outside quoted strings (simple PG array format)
+      const items = inner
+        .split(',')
+        .map(s => s.replace(/^"(.*)"$/, '$1').trim())
+        .filter(Boolean);
+      return items.length > 0 ? items : null;
+    }
+
+    // Case 3: JSON-encoded string (double-stringified or stored as text)
+    try {
+      const parsed = JSON.parse(trimmed);
+      // Double-stringified: JSON.parse('"[]"') → "[]" (still a string)
+      if (typeof parsed === 'string') {
+        try {
+          const inner = JSON.parse(parsed);
+          if (Array.isArray(inner) && inner.length > 0) return inner as string[];
+        } catch { /* ignore */ }
+        return null;
+      }
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed as string[];
+    } catch { /* ignore */ }
+  }
+
+  return null;
+};
+
 const CORE_SECTION_KEYS = new Set([
   "profile",
   "headingText",
@@ -77,9 +125,17 @@ const normalizeSectionOrder = (value: unknown): string[] => {
 
 /**
  * Validate and sanitise a unifiedOrder array coming from the client.
- * A unifiedOrder may contain both core section keys AND extra-section IDs,
- * so we only strip obvious non-string values and deduplicate – we don't
- * restrict to CORE_SECTION_KEYS here.
+ * A unifiedOrder may contain both core section keys AND extra-section IDs.
+ *
+ * Allowed IDs are:
+ *   1. Core section keys (the 8 known keys)
+ *   2. IDs that exist in the extraSections array passed in
+ *   3. Any string that starts with "extra-" — these are dynamically-created
+ *      extra section IDs. We trust them even if extraSections is empty or
+ *      out-of-sync (e.g. race between save and reload), so they are never
+ *      silently stripped.
+ *
+ * Only truly unknown IDs (no "extra-" prefix and not a core key) are removed.
  */
 const normalizeUnifiedOrder = (
   value: unknown,
@@ -92,13 +148,20 @@ const normalizeUnifiedOrder = (
   );
 
   const extraIds = new Set(extraSections.map((s) => s.id));
-  const allAllowed = new Set([...CORE_SECTION_KEYS, ...extraIds]);
 
   const seen = new Set<string>();
   return incoming.filter((id) => {
-    if (!allAllowed.has(id) || seen.has(id)) return false;
-    seen.add(id);
-    return true;
+    if (seen.has(id)) return false;
+    // Allow core keys
+    if (CORE_SECTION_KEYS.has(id)) { seen.add(id); return true; }
+    // Allow IDs that are explicitly in extraSections
+    if (extraIds.has(id)) { seen.add(id); return true; }
+    // Allow any dynamically-generated extra-section ID by prefix convention.
+    // This prevents silent data loss when extraSections is empty/stale at
+    // save time while unifiedOrder already contains the extra IDs.
+    if (id.startsWith("extra-")) { seen.add(id); return true; }
+    // Unknown ID — strip it
+    return false;
   });
 };
 
@@ -220,15 +283,22 @@ router.put("/", verifySession, async (req: AuthRequest, res: Response) => {
       .limit(1)
       .maybeSingle();
 
-    const existingSectionOrder = Array.isArray(existing?.sectionOrder)
-      ? existing.sectionOrder
-      : undefined;
-    const existingUnifiedOrder = Array.isArray(existing?.unifiedOrder)
-      ? existing.unifiedOrder
-      : undefined;
+    const existingSectionOrder = parseJsonbArray(existing?.sectionOrder) ?? undefined;
+    const existingUnifiedOrder = parseJsonbArray(existing?.unifiedOrder) ?? undefined;
     const existingExtraSections = Array.isArray(existing?.extraSections)
       ? existing.extraSections
       : [];
+
+    const parseIncomingOrderArray = (value: unknown): string[] | null => {
+      const parsed = parseJsonbArray(value);
+      if (parsed) return parsed;
+      if (Array.isArray(value)) {
+        return (value as unknown[])
+          .filter((item): item is string => typeof item === "string")
+          .filter(Boolean);
+      }
+      return null;
+    };
 
     const defaultFormData = {
       name: "",
@@ -264,22 +334,44 @@ router.put("/", verifySession, async (req: AuthRequest, res: Response) => {
     const extraSections: ExtraSection[] =
       contentData.extraSections ?? existingExtraSections;
 
-    const sectionOrder = contentData.sectionOrder
-      ? normalizeSectionOrder(contentData.sectionOrder)
-      : existingSectionOrder ?? normalizeSectionOrder(undefined);
+    // Use explicit undefined/null check rather than truthiness so that an
+    // empty array sent by the client (new card, no drags yet) still triggers
+    // normalizeSectionOrder and produces the full default order instead of
+    // silently falling back to existingSectionOrder.
+    const sectionOrder =
+      contentData.sectionOrder != null
+        ? normalizeSectionOrder(parseIncomingOrderArray(contentData.sectionOrder) ?? contentData.sectionOrder)
+        : existingSectionOrder ?? normalizeSectionOrder(undefined);
 
+    // Prefer the client-sent unifiedOrder; fall back to the existing DB value.
+    // IMPORTANT: use != null so that when the client explicitly sends
+    // unifiedOrder: [] we use it (triggering the rebuild below), rather than
+    // accidentally using existingUnifiedOrder which could be stale.
     const rawUnified =
-      contentData.unifiedOrder ?? existingUnifiedOrder;
+      contentData.unifiedOrder != null
+        ? parseIncomingOrderArray(contentData.unifiedOrder) ?? contentData.unifiedOrder
+        : existingUnifiedOrder;      // client omitted it — use DB value
     const unifiedOrder =
       rawUnified && Array.isArray(rawUnified) && rawUnified.length > 0
         ? normalizeUnifiedOrder(rawUnified, extraSections)
-        : // Fall back: core order first, then extra sections appended at the end
+        : // No saved order yet — build from sectionOrder + all extraSections
           [
             ...sectionOrder,
             ...extraSections
               .map((s) => s.id)
               .filter((id) => !sectionOrder.includes(id)),
           ];
+
+    console.log('[card-content PUT] About to save with ordering:');
+    console.log('[card-content PUT] Final sectionOrder:', sectionOrder);
+    console.log('[card-content PUT] Final unifiedOrder:', unifiedOrder);
+
+    // Ensure these are always plain arrays before writing to Supabase
+    const safeSectionOrder = Array.isArray(sectionOrder) ? sectionOrder :
+      (typeof sectionOrder === 'string' ? JSON.parse(sectionOrder) : []);
+
+    const safeUnifiedOrder = Array.isArray(unifiedOrder) ? unifiedOrder :
+      (typeof unifiedOrder === 'string' ? JSON.parse(unifiedOrder) : []);
 
     const insertData = {
       cardId,
@@ -292,14 +384,10 @@ router.put("/", verifySession, async (req: AuthRequest, res: Response) => {
       customLinks: contentData.customLinks ?? [],
       extraSections,
       // ── persisted ordering ──
-      sectionOrder,
-      unifiedOrder,
+      sectionOrder: safeSectionOrder,
+      unifiedOrder: safeUnifiedOrder,
       updatedAt: new Date().toISOString(),
     };
-
-    console.log('[card-content PUT] About to save with ordering:');
-    console.log('[card-content PUT] Final sectionOrder:', sectionOrder);
-    console.log('[card-content PUT] Final unifiedOrder:', unifiedOrder);
 
     let result;
     if (existing) {

@@ -247,6 +247,7 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
     const [activeCardId, setActiveCardId] = useState<string | undefined>(cardId);
     const [isSaving, setIsSaving] = useState(false);
     const [saveError, setSaveError] = useState<string | null>(null);
+    const [hasLoadedCardContent, setHasLoadedCardContent] = useState(false);
 
     // ── FIX: Keep a ref that always holds the latest cardContent ──────────────
     // onContentChange fires on every state change in BusinessProfile, so by the
@@ -261,6 +262,7 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
     useEffect(() => {
         setStep(1);
         setActiveCardId(cardId);
+        setHasLoadedCardContent(false);
 
         if (!cardId) {
             try {
@@ -508,6 +510,7 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
                         cardId={activeCardId}
                         allowFallbackToFirstCard={false}
                         onContentChange={handleContentChange}
+                        onContentLoaded={() => setHasLoadedCardContent(true)}
                     />
                 )}
                 {step === 2 && (
@@ -551,10 +554,11 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
                 ) : (
                     <button
                         onClick={handleSaveFinish}
-                        disabled={isSaving}
+                        disabled={isSaving || (!!activeCardId && !hasLoadedCardContent)}
+                        title={activeCardId && !hasLoadedCardContent ? "Waiting for card content to finish loading" : undefined}
                         className="px-5 py-2 rounded-lg bg-[#49B618] text-white text-sm font-semibold hover:bg-[#008001] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                        {isSaving ? "Saving..." : "Save & Finish ✓"}
+                        {isSaving ? "Saving..." : activeCardId && !hasLoadedCardContent ? "Loading…" : "Save & Finish ✓"}
                     </button>
                 )}
             </div>

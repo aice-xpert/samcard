@@ -678,10 +678,12 @@ function DraggableSectionBlock({
 export default function BusinessProfile({
   cardId,
   onContentChange,
+  onContentLoaded,
   allowFallbackToFirstCard = true,
 }: {
   cardId?: string;
   onContentChange?: (content: CardContentPayload & { sectionOrder?: SectionKey[] }) => void;
+  onContentLoaded?: () => void;
   allowFallbackToFirstCard?: boolean;
 }) {
   const [initial] = useState(() => loadCache(cacheKeyForEditor(cardId, undefined, allowFallbackToFirstCard)));
@@ -705,6 +707,12 @@ export default function BusinessProfile({
   const dragOverIndexRef = useRef<number | null>(null);
   // Snapshot of unifiedOrder captured at drag-start to avoid stale closures
   const unifiedOrderSnapshotRef = useRef<string[]>([]);
+  // Prevents loadCardContent from overwriting sectionOrder/unifiedOrder with a
+  // stale API response in the reload that fires immediately after a save.
+  const suppressOrderReloadRef = useRef(false);
+  // Prevents cache loading from overwriting backend-loaded content once
+  // API content has already been hydrated.
+  const hasLoadedCardContentRef = useRef(false);
 
   useEffect(() => {
     let active = true;
@@ -846,6 +854,8 @@ export default function BusinessProfile({
   const previewUnifiedOrder = useDeferredValue(unifiedOrder);
 
   useEffect(() => {
+    if (hasLoadedCardContentRef.current) return;
+
     const cached = loadCache(cacheKeyForEditor(cardId, resolvedCardId, allowFallbackToFirstCard));
     setProfileImage(cached.profileImage);
     setBrandLogo(cached.brandLogo);
@@ -967,6 +977,8 @@ export default function BusinessProfile({
         setExtraSections(fallback.extraSections);
         setSectionOrder(fallback.sectionOrder);
         setUnifiedOrder(fallback.unifiedOrder ?? [...fallback.sectionOrder, ...fallback.extraSections.map(s => s.id)]);
+        hasLoadedCardContentRef.current = true;
+        onContentLoaded?.();
         return;
       }
 
@@ -1005,28 +1017,32 @@ export default function BusinessProfile({
       }
 
       // ── Restore drag-and-drop order from the API ────────────────────────────
-      // The backend now persists sectionOrder and unifiedOrder. Restore them so
-      // the editor immediately reflects the saved drag order on every page load.
-      // Falls back gracefully for old records that pre-date this feature.
-      const apiSectionOrder = Array.isArray(content.sectionOrder) && content.sectionOrder.length > 0
-        ? (content.sectionOrder as SectionKey[])
-        : null;
+      // Skip if a save just fired — the in-memory state already holds the correct
+      // order and the reload triggered by setReloadTrigger can race the DB write.
+      if (suppressOrderReloadRef.current) {
+        suppressOrderReloadRef.current = false;
+      } else {
+        const apiSectionOrder = Array.isArray(content.sectionOrder) && content.sectionOrder.length > 0
+          ? (content.sectionOrder as SectionKey[])
+          : null;
 
-      if (apiSectionOrder) {
-        setSectionOrder(apiSectionOrder);
+        if (apiSectionOrder) {
+          setSectionOrder(apiSectionOrder);
+        }
+
+        const apiUnifiedOrder = Array.isArray(content.unifiedOrder) && content.unifiedOrder.length > 0
+          ? (content.unifiedOrder as string[])
+          : null;
+
+        if (apiUnifiedOrder) {
+          setUnifiedOrder(apiUnifiedOrder);
+        } else if (apiSectionOrder) {
+          const extraIds = ((content.extraSections ?? []) as ExtraSection[]).map(s => s.id);
+          setUnifiedOrder([...apiSectionOrder, ...extraIds]);
+        }
       }
-
-      const apiUnifiedOrder = Array.isArray(content.unifiedOrder) && content.unifiedOrder.length > 0
-        ? (content.unifiedOrder as string[])
-        : null;
-
-      if (apiUnifiedOrder) {
-        setUnifiedOrder(apiUnifiedOrder);
-      } else if (apiSectionOrder) {
-        // Fallback: core order + extra section IDs appended at the end
-        const extraIds = ((content.extraSections ?? []) as ExtraSection[]).map(s => s.id);
-        setUnifiedOrder([...apiSectionOrder, ...extraIds]);
-      }
+      hasLoadedCardContentRef.current = true;
+      onContentLoaded?.();
       // ── End restore ─────────────────────────────────────────────────────────
 
     } catch {
@@ -1207,6 +1223,7 @@ export default function BusinessProfile({
       ]);
 
       if (cardId) {
+        suppressOrderReloadRef.current = true;
         await updateCardContent(cardId, {
           profileImage: updatedProfileImage,
           brandLogo: updatedBrandLogo,

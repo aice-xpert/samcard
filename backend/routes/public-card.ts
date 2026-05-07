@@ -34,6 +34,43 @@ const createLeadId = (): string =>
   `lead_${randomUUID().replace(/-/g, "")}`;
 
 // ── Default section order (must match DEFAULT_SECTION_ORDER in the frontend) ──
+/**
+ * Supabase can return jsonb array columns as a double-stringified string
+ * (e.g. `"\"[]\""` instead of `[]`) when the value was inserted as a string.
+ * This helper unwraps that and always returns a plain array or null.
+ */
+const parseJsonbArray = (value: unknown): string[] | null => {
+  if (Array.isArray(value)) return value.length > 0 ? (value as string[]) : null;
+
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+    const inner = trimmed.slice(1, -1);
+    if (!inner) return null;
+    const items = inner
+      .split(',')
+      .map(item => item.replace(/^"(.*)"$/, '$1').trim())
+      .filter(Boolean);
+    return items.length > 0 ? items : null;
+  }
+
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (typeof parsed === 'string') {
+      const inner = JSON.parse(parsed);
+      if (Array.isArray(inner) && inner.length > 0) return inner as string[];
+      return null;
+    }
+    if (Array.isArray(parsed) && parsed.length > 0) return parsed as string[];
+  } catch {
+    // ignore malformed JSON
+  }
+
+  return null;
+};
+
 const DEFAULT_SECTION_ORDER = [
   "profile",
   "headingText",
@@ -266,17 +303,11 @@ router.get("/:slug", async (req, res: Response) => {
       data: Record<string, unknown>;
     }[] = content?.extraSections ?? [];
 
-    const savedSectionOrder: string[] | null =
-      Array.isArray(content?.sectionOrder) && content.sectionOrder.length > 0
-        ? content.sectionOrder
-        : null;
+    const savedSectionOrder: string[] | null = parseJsonbArray(content?.sectionOrder);
 
     const sectionOrder: string[] = savedSectionOrder ?? [...DEFAULT_SECTION_ORDER];
 
-    const savedUnifiedOrder: string[] | null =
-      Array.isArray(content?.unifiedOrder) && content.unifiedOrder.length > 0
-        ? content.unifiedOrder
-        : null;
+    const savedUnifiedOrder: string[] | null = parseJsonbArray(content?.unifiedOrder);
 
     // Reconstruct a valid unifiedOrder: start from what was saved, ensure every
     // known ID appears exactly once, append anything that is missing.
@@ -427,6 +458,7 @@ router.get("/:slug", async (req, res: Response) => {
       },
     });
 
+    res.set("Cache-Control", "no-store");
     return res.json(response);
   } catch (error) {
     console.error("Error fetching public card:", error);
