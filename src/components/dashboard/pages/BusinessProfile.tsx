@@ -714,6 +714,14 @@ export default function BusinessProfile({
   // API content has already been hydrated.
   const hasLoadedCardContentRef = useRef(false);
 
+  // Ref that stays current with the onContentChange prop so handleDragEnd can
+  // call it synchronously without the callback being in its deps (stale closure).
+  const onContentChangeRef = useRef(onContentChange);
+  useEffect(() => { onContentChangeRef.current = onContentChange; });
+  // Latest full payload — kept current by the onContentChange useEffect below so
+  // handleDragEnd can merge in the new order and fire onContentChange immediately.
+  const latestPayloadRef = useRef<(CardContentPayload & { sectionOrder?: SectionKey[] }) | null>(null);
+
   useEffect(() => {
     let active = true;
 
@@ -811,6 +819,17 @@ export default function BusinessProfile({
       setUnifiedOrder(reordered);
       setSectionOrder(newSectionOrder);
       // extraSections data doesn't change — only their position in unifiedOrder changes
+
+      // Immediately propagate new order upward without waiting for the async useEffect.
+      // Uses refs to avoid stale closures — onContentChangeRef and latestPayloadRef are
+      // always current regardless of handleDragEnd's captured deps.
+      if (onContentChangeRef.current && latestPayloadRef.current) {
+        onContentChangeRef.current({
+          ...latestPayloadRef.current,
+          unifiedOrder: reordered,
+          sectionOrder: newSectionOrder,
+        });
+      }
 
       // Persist
       const cacheKey = cacheKeyForEditor(cardId, resolvedCardId, allowFallbackToFirstCard);
@@ -1096,10 +1115,7 @@ export default function BusinessProfile({
   }, [activeDesignCacheKey]);
 
   useEffect(() => {
-    if (!onContentChange) return;
-    console.log('[BusinessProfile] sectionOrder:', sectionOrder);
-    console.log('[BusinessProfile] unifiedOrder:', unifiedOrder);
-    onContentChange({
+    const payload = {
       profileImage,
       brandLogo,
       logoPosition,
@@ -1116,7 +1132,12 @@ export default function BusinessProfile({
       extraSections,
       sectionOrder,
       unifiedOrder,
-    });
+    };
+    latestPayloadRef.current = payload;
+    if (!onContentChange) return;
+    console.log('[BusinessProfile] sectionOrder:', sectionOrder);
+    console.log('[BusinessProfile] unifiedOrder:', unifiedOrder);
+    onContentChange(payload);
   }, [onContentChange, profileImage, brandLogo, logoPosition, formData, socialLinks, connectFields, sections, customLinks, extraSections, sectionOrder, unifiedOrder]);
 
   const handleSaveChanges = useCallback(async () => {

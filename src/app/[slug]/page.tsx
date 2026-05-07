@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef, Fragment } from "react";
 import { useParams } from "next/navigation";
 import {
   Phone,
@@ -1447,304 +1447,6 @@ export default function PublicCardPage() {
           overflowX: "hidden",
           borderRadius: T.cardRadius,
         }}>
-          {/* ── HERO ── */}
-          {S.profile && (
-            <div
-              style={{
-                position: "relative",
-                aspectRatio: "16/9",
-                overflow: "hidden",
-                clipPath: "inset(0)",
-                background: "#000",
-              }}
-            >
-              {content.profileImage ? (
-                <img
-                  src={content.profileImage}
-                  alt={fd.name || businessProfile.name}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    display: "block",
-                  }}
-                />
-              ) : (
-                <div
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    background: `linear-gradient(135deg, ${T.green}88 0%, ${T.bg} 50%, ${T.greenLight}66 100%)`,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 72,
-                      fontWeight: 900,
-                      color: T.green,
-                      opacity: 0.3,
-                      lineHeight: 1,
-                    }}
-                  >
-                    {(fd.name || businessProfile.name || "?")[0].toUpperCase()}
-                  </div>
-                </div>
-              )}
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  background:
-                    "linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.78) 100%)",
-                }}
-              />
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  height: 2,
-                  background: `linear-gradient(90deg, transparent, ${T.green}, ${T.greenLight}, ${T.green}, transparent)`,
-                }}
-              />
-
-              {hasBrandLogo && content.logoPosition === "top-right" && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: 12,
-                    right: 12,
-                    zIndex: 10,
-                  }}
-                >
-                  <div
-                    style={{
-                      background: "rgba(0,0,0,0.5)",
-                      backdropFilter: "blur(6px)",
-                      padding: 5,
-                      borderRadius: 10,
-                      lineHeight: 0,
-                    }}
-                  >
-                    <img
-                      src={content.brandLogo}
-                      alt="Brand"
-                      style={{
-                        maxWidth: 48,
-                        maxHeight: 48,
-                        objectFit: "contain",
-                        borderRadius: 7,
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
-              {hasBrandLogo && content.logoPosition === "top-left" && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: 12,
-                    left: 12,
-                    zIndex: 10,
-                  }}
-                >
-                  <div
-                    style={{
-                      background: "rgba(0,0,0,0.5)",
-                      backdropFilter: "blur(6px)",
-                      padding: 5,
-                      borderRadius: 10,
-                      lineHeight: 0,
-                    }}
-                  >
-                    <img
-                      src={content.brandLogo}
-                      alt="Brand"
-                      style={{
-                        maxWidth: 48,
-                        maxHeight: 48,
-                        objectFit: "contain",
-                        borderRadius: 7,
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  padding: "12px 20px 16px",
-                  zIndex: 10,
-                }}
-              >
-                <h1
-                  style={{
-                    color: "#fff",
-                    fontSize: T.nameFontSize,
-                    lineHeight: 1.15,
-                    fontWeight: T.boldHeadings ? 800 : 600,
-                    textShadow: "0 2px 12px rgba(0,0,0,0.8)",
-                    wordBreak: "break-all",
-                    overflowWrap: "break-word",
-                  }}
-                >
-                  {fd.name || businessProfile.name}
-                </h1>
-                {(fd.title || businessProfile.title) && (
-                  <p
-                    style={{
-                      color: T.greenLight,
-                      fontSize: T.bodyFontSize,
-                      marginTop: 3,
-                      fontWeight: 500,
-                      wordBreak: "break-all",
-                      overflowWrap: "break-word",
-                    }}
-                  >
-                    {fd.title || businessProfile.title}
-                  </p>
-                )}
-                {(fd.company || businessProfile.company || (hasBrandLogo && content.logoPosition === "below-name")) && (
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 6,
-                      marginTop: 2,
-                    }}
-                  >
-                    {hasBrandLogo && content.logoPosition === "below-name" && (
-                      <div
-                        style={{
-                          background: "rgba(0,0,0,0.45)",
-                          padding: "2px 4px",
-                          borderRadius: 5,
-                          lineHeight: 0,
-                          flexShrink: 0,
-                        }}
-                      >
-                        <img
-                          src={content.brandLogo}
-                          alt="Brand"
-                          style={{ maxWidth: 22, maxHeight: 22, objectFit: "contain", borderRadius: 3 }}
-                        />
-                      </div>
-                    )}
-                    {(fd.company || businessProfile.company) && (
-                      <p
-                        style={{
-                          color: "rgba(255,255,255,0.6)",
-                          fontSize: T.bodyFontSize - 1,
-                          wordBreak: "break-all",
-                          overflowWrap: "break-word",
-                        }}
-                      >
-                        {fd.company || businessProfile.company}
-                      </p>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {hasBrandLogo && content.logoPosition === "below-photo" && (
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                padding: "12px 0",
-              }}
-            >
-              <div
-                style={{
-                  background: T.card,
-                  border: `1px solid ${T.cardBorder}`,
-                  borderRadius: 12,
-                  padding: "8px 14px",
-                  lineHeight: 0,
-                }}
-              >
-                <img
-                  src={content.brandLogo}
-                  alt="Brand"
-                  style={{ maxWidth: 80, maxHeight: 40, objectFit: "contain" }}
-                />
-              </div>
-            </div>
-          )}
-
-          {S.profile && (fd.tagline || businessProfile.tagline) && (
-            <p
-              style={{
-                padding: "10px 20px",
-                textAlign: "center",
-                color: T.textMuted,
-                fontSize: T.bodyFontSize,
-                fontStyle: "italic",
-                lineHeight: 1.6,
-                wordBreak: "break-word",
-                overflowWrap: "anywhere",
-              }}
-            >
-              {fd.tagline || businessProfile.tagline}
-            </p>
-          )}
-
-          {S.profile && contactItems.length > 0 && (
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                gap: 12,
-                margin: "0 12px 10px",
-                background: T.card,
-                border: `1px solid ${T.cardBorder}`,
-                borderRadius: T.cardRadius,
-                padding: "12px 16px",
-              }}
-            >
-              {contactItems.slice(0, 4).map(({ href, Icon }, i) => (
-                <a
-                  key={i}
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => track(slug, "link_click")}
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    gap: 4,
-                  }}
-                >
-                  <div
-                    style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: "50%",
-                      background: `linear-gradient(135deg, ${T.green}, ${T.greenLight})`,
-                      boxShadow: `0 4px 12px ${T.green}55`,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Icon size={18} color="#fff" />
-                  </div>
-                </a>
-              ))}
-            </div>
-          )}
-
           {/* ── Ordered sections – respects unifiedOrder from the backend ── */}
           {(() => {
             // Build the render order from unifiedOrder (preferred) or fall back to
@@ -1974,7 +1676,307 @@ export default function PublicCardPage() {
                     </CardBlock>
                   );
 
-                // 'profile' is rendered above in the header block — skip here
+                case 'profile':
+                  if (!S.profile) return null;
+                  return (
+                    <Fragment key="profile">
+                      <div
+                        style={{
+                          position: "relative",
+                          aspectRatio: "16/9",
+                          overflow: "hidden",
+                          clipPath: "inset(0)",
+                          background: "#000",
+                        }}
+                      >
+                        {content.profileImage ? (
+                          <img
+                            src={content.profileImage}
+                            alt={fd.name || businessProfile.name}
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                              display: "block",
+                            }}
+                          />
+                        ) : (
+                          <div
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              background: `linear-gradient(135deg, ${T.green}88 0%, ${T.bg} 50%, ${T.greenLight}66 100%)`,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                          >
+                            <div
+                              style={{
+                                fontSize: 72,
+                                fontWeight: 900,
+                                color: T.green,
+                                opacity: 0.3,
+                                lineHeight: 1,
+                              }}
+                            >
+                              {(fd.name || businessProfile.name || "?")[0].toUpperCase()}
+                            </div>
+                          </div>
+                        )}
+                        <div
+                          style={{
+                            position: "absolute",
+                            inset: 0,
+                            background:
+                              "linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.78) 100%)",
+                          }}
+                        />
+                        <div
+                          style={{
+                            position: "absolute",
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            height: 2,
+                            background: `linear-gradient(90deg, transparent, ${T.green}, ${T.greenLight}, ${T.green}, transparent)`,
+                          }}
+                        />
+
+                        {hasBrandLogo && content.logoPosition === "top-right" && (
+                          <div
+                            style={{
+                              position: "absolute",
+                              top: 12,
+                              right: 12,
+                              zIndex: 10,
+                            }}
+                          >
+                            <div
+                              style={{
+                                background: "rgba(0,0,0,0.5)",
+                                backdropFilter: "blur(6px)",
+                                padding: 5,
+                                borderRadius: 10,
+                                lineHeight: 0,
+                              }}
+                            >
+                              <img
+                                src={content.brandLogo}
+                                alt="Brand"
+                                style={{
+                                  maxWidth: 48,
+                                  maxHeight: 48,
+                                  objectFit: "contain",
+                                  borderRadius: 7,
+                                }}
+                              />
+                            </div>
+                          </div>
+                        )}
+                        {hasBrandLogo && content.logoPosition === "top-left" && (
+                          <div
+                            style={{
+                              position: "absolute",
+                              top: 12,
+                              left: 12,
+                              zIndex: 10,
+                            }}
+                          >
+                            <div
+                              style={{
+                                background: "rgba(0,0,0,0.5)",
+                                backdropFilter: "blur(6px)",
+                                padding: 5,
+                                borderRadius: 10,
+                                lineHeight: 0,
+                              }}
+                            >
+                              <img
+                                src={content.brandLogo}
+                                alt="Brand"
+                                style={{
+                                  maxWidth: 48,
+                                  maxHeight: 48,
+                                  objectFit: "contain",
+                                  borderRadius: 7,
+                                }}
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        <div
+                          style={{
+                            position: "absolute",
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            padding: "12px 20px 16px",
+                            zIndex: 10,
+                          }}
+                        >
+                          <h1
+                            style={{
+                              color: "#fff",
+                              fontSize: T.nameFontSize,
+                              lineHeight: 1.15,
+                              fontWeight: T.boldHeadings ? 800 : 600,
+                              textShadow: "0 2px 12px rgba(0,0,0,0.8)",
+                              wordBreak: "break-all",
+                              overflowWrap: "break-word",
+                            }}
+                          >
+                            {fd.name || businessProfile.name}
+                          </h1>
+                          {(fd.title || businessProfile.title) && (
+                            <p
+                              style={{
+                                color: T.greenLight,
+                                fontSize: T.bodyFontSize,
+                                marginTop: 3,
+                                fontWeight: 500,
+                                wordBreak: "break-all",
+                                overflowWrap: "break-word",
+                              }}
+                            >
+                              {fd.title || businessProfile.title}
+                            </p>
+                          )}
+                          {(fd.company || businessProfile.company || (hasBrandLogo && content.logoPosition === "below-name")) && (
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 6,
+                                marginTop: 2,
+                              }}
+                            >
+                              {hasBrandLogo && content.logoPosition === "below-name" && (
+                                <div
+                                  style={{
+                                    background: "rgba(0,0,0,0.45)",
+                                    padding: "2px 4px",
+                                    borderRadius: 5,
+                                    lineHeight: 0,
+                                    flexShrink: 0,
+                                  }}
+                                >
+                                  <img
+                                    src={content.brandLogo}
+                                    alt="Brand"
+                                    style={{ maxWidth: 22, maxHeight: 22, objectFit: "contain", borderRadius: 3 }}
+                                  />
+                                </div>
+                              )}
+                              {(fd.company || businessProfile.company) && (
+                                <p
+                                  style={{
+                                    color: "rgba(255,255,255,0.6)",
+                                    fontSize: T.bodyFontSize - 1,
+                                    wordBreak: "break-all",
+                                    overflowWrap: "break-word",
+                                  }}
+                                >
+                                  {fd.company || businessProfile.company}
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {hasBrandLogo && content.logoPosition === "below-photo" && (
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "center",
+                            padding: "12px 0",
+                          }}
+                        >
+                          <div
+                            style={{
+                              background: T.card,
+                              border: `1px solid ${T.cardBorder}`,
+                              borderRadius: 12,
+                              padding: "8px 14px",
+                              lineHeight: 0,
+                            }}
+                          >
+                            <img
+                              src={content.brandLogo}
+                              alt="Brand"
+                              style={{ maxWidth: 80, maxHeight: 40, objectFit: "contain" }}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {(fd.tagline || businessProfile.tagline) && (
+                        <p
+                          style={{
+                            padding: "10px 20px",
+                            textAlign: "center",
+                            color: T.textMuted,
+                            fontSize: T.bodyFontSize,
+                            fontStyle: "italic",
+                            lineHeight: 1.6,
+                            wordBreak: "break-word",
+                            overflowWrap: "anywhere",
+                          }}
+                        >
+                          {fd.tagline || businessProfile.tagline}
+                        </p>
+                      )}
+
+                      {contactItems.length > 0 && (
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "center",
+                            gap: 12,
+                            margin: "0 12px 10px",
+                            background: T.card,
+                            border: `1px solid ${T.cardBorder}`,
+                            borderRadius: T.cardRadius,
+                            padding: "12px 16px",
+                          }}
+                        >
+                          {contactItems.slice(0, 4).map(({ href, Icon }, i) => (
+                            <a
+                              key={i}
+                              href={href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={() => track(slug, "link_click")}
+                              style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "center",
+                                gap: 4,
+                              }}
+                            >
+                              <div
+                                style={{
+                                  width: 44,
+                                  height: 44,
+                                  borderRadius: "50%",
+                                  background: `linear-gradient(135deg, ${T.green}, ${T.greenLight})`,
+                                  boxShadow: `0 4px 12px ${T.green}55`,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                              >
+                                <Icon size={18} color="#fff" />
+                              </div>
+                            </a>
+                          ))}
+                        </div>
+                      )}
+                    </Fragment>
+                  );
+
                 default:
                   return null;
               }
