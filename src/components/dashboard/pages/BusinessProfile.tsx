@@ -348,6 +348,19 @@ function pickNumber(source: Record<string, unknown>, keys: string[], fallback: n
   return fallback;
 }
 
+const TEMPLATE_PALETTE_TO_HERO: Record<string, string> = {
+  'medical-teal':    'wave-panel',
+  'teamwork-orange': 'side-panel',
+  'heritage-gold':   'wave-panel',
+  'team-pro':        'group-diagonal',
+  'royal-purple':    'circle-overlap',
+  'minimal-mono':    'circle-center',
+  'sunset-banner':   'top-banner',
+  'sky-circle':      'circle-overlap',
+  'onyx-pro':        'default',
+  'mocha-torn':      'torn-edge',
+};
+
 function buildThemeOverrideFromCardDesign(design: Partial<CardDesignResponse>): Partial<ThemeOverride> {
   const source = design as Record<string, unknown>;
   const accent = pickString(source, ['accentColor', 'green'], '#008001');
@@ -359,6 +372,7 @@ function buildThemeOverrideFromCardDesign(design: Partial<CardDesignResponse>): 
   const bgColor2 = pickString(source, ['phoneBgColor2'], '#003322');
   const bgAngle = pickNumber(source, ['phoneBgAngle'], 135);
   const normalizedFont = pickString(source, ['font', 'fontFamily'], 'inter').toLowerCase();
+  const palette = pickString(source, ['palette'], '');
 
   const phoneBgStyle =
     preset === 'custom'
@@ -366,6 +380,13 @@ function buildThemeOverrideFromCardDesign(design: Partial<CardDesignResponse>): 
         ? `linear-gradient(${bgAngle}deg, ${bgColor1} 0%, ${bgColor2} 100%)`
         : bgColor1)
       : (DESIGN_WALLPAPER_STYLES[preset] || undefined);
+
+  // Derive heroLayout from palette (template palettes map to specific layouts)
+  const storedHeroLayout = typeof source.heroLayout === 'string' ? source.heroLayout : null;
+  const heroLayout =
+    (storedHeroLayout && storedHeroLayout !== 'default')
+      ? storedHeroLayout
+      : (TEMPLATE_PALETTE_TO_HERO[palette] ?? storedHeroLayout ?? 'default');
 
   return {
     green: accent,
@@ -383,6 +404,7 @@ function buildThemeOverrideFromCardDesign(design: Partial<CardDesignResponse>): 
     boldHeadings: typeof source.boldHeadings === 'boolean' ? source.boldHeadings : true,
     cardRadius: pickNumber(source, ['cardRadius'], 16),
     phoneBgStyle,
+    heroLayout,
   };
 }
 

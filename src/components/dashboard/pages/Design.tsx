@@ -331,7 +331,11 @@ function normalizeDesignSettings(value: Partial<DesignSettings> | null | undefin
     cardRadius: asNumber(source.cardRadius, DEFAULT_DESIGN.cardRadius),
     shadowIntensity,
     glowEffect: typeof source.glowEffect === 'boolean' ? source.glowEffect : DEFAULT_DESIGN.glowEffect,
-    heroLayout: typeof source.heroLayout === 'string' ? source.heroLayout : DEFAULT_DESIGN.heroLayout,
+    heroLayout: (() => {
+      const stored = typeof source.heroLayout === 'string' ? source.heroLayout : null;
+      if (stored && stored !== 'default') return stored;
+      return PALETTE_TO_HERO_LAYOUT[paletteRaw] ?? stored ?? DEFAULT_DESIGN.heroLayout;
+    })(),
   };
 }
 
@@ -877,7 +881,7 @@ export function DesignNew({
       textPrimary: p.textPrimary,
       textMuted: p.textMuted,
       phoneBgPreset: p.wallpaper,
-      heroLayout: PALETTE_TO_HERO_LAYOUT[key] ?? 'default',
+      // Preserve the existing heroLayout — color palette changes should not reset the template layout
     }));
   }, []);
 

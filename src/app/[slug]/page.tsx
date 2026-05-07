@@ -95,6 +95,7 @@ interface PublicCard {
   headingBodyText?: string;
   design: {
     palette: string;
+    heroLayout?: string;
     accentColor: string;
     accentLight: string;
     bgColor: string;
@@ -1316,7 +1317,7 @@ export default function PublicCardPage() {
 
   const hasBrandLogo = !!content.brandLogo?.trim();
 
-  // Map template palette names to hero layout variants
+  // Map template palette names to hero layout variants (fallback when heroLayout not stored)
   const PALETTE_TO_HERO: Record<string, string> = {
     'medical-teal':    'wave-panel',
     'teamwork-orange': 'side-panel',
@@ -1329,7 +1330,10 @@ export default function PublicCardPage() {
     'onyx-pro':        'default',
     'mocha-torn':      'torn-edge',
   };
-  const heroLayout = PALETTE_TO_HERO[D.palette] ?? 'default';
+  // Use stored heroLayout from DB first; fall back to palette-based derivation for legacy rows
+  const heroLayout = (typeof D.heroLayout === 'string' && D.heroLayout && D.heroLayout !== 'default')
+    ? D.heroLayout
+    : (PALETTE_TO_HERO[D.palette] ?? D.heroLayout ?? 'default');
 
   const name = fd.name || businessProfile.name || '';
   const title = fd.title || businessProfile.title || '';
@@ -1486,15 +1490,11 @@ export default function PublicCardPage() {
             <div style={{ position: 'relative', fontFamily: T.fontFamily }}>
               <div style={{ width: '100%', height: 240, position: 'relative', overflow: 'hidden' }}>
                 <PhotoEl height="100%" />
-              </div>
-              {/* Wave SVG */}
-              <svg viewBox="0 0 200 40" preserveAspectRatio="none"
-                style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 48, zIndex: 2 }}>
-                <path d="M0,40 L0,24 Q100,0 200,24 L200,40 Z" fill={T.bg} />
-              </svg>
-              {/* Logo circle at wave peak */}
-              <div style={{ position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)', zIndex: 4 }}>
-                <LogoCircle sz={52} />
+                {/* Wave SVG inside photo div so bottom:0 is relative to photo */}
+                <svg viewBox="0 0 200 36" preserveAspectRatio="none"
+                  style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 42, zIndex: 2 }}>
+                  <path d="M0,0 Q100,28 200,0 L200,36 L0,36 Z" fill={T.bg} />
+                </svg>
               </div>
               {/* Top-positioned brand logo */}
               {hasBrandLogo && content.logoPosition === 'top-right' && (
@@ -1504,7 +1504,7 @@ export default function PublicCardPage() {
                 <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 10 }}><LogoBadge pos="top-left" /></div>
               )}
               {/* Info panel */}
-              <div style={{ background: T.bg, paddingTop: 36, paddingBottom: 16, paddingLeft: 20, paddingRight: 20, textAlign: 'center' }}>
+              <div style={{ background: T.bg, paddingTop: 16, paddingBottom: 16, paddingLeft: 20, paddingRight: 20, textAlign: 'center' }}>
                 <NameInfo align="center" companyColor={T.textMuted} titleColor={T.greenLight} />
               </div>
             </div>
@@ -1639,10 +1639,10 @@ export default function PublicCardPage() {
               }}>
                 <PhotoEl height="100%" />
               </div>
-              {/* Circular avatar at torn edge */}
-              <div style={{ position: 'relative', background: T.bg, paddingTop: 8, paddingLeft: 72, paddingRight: 20, paddingBottom: 16, minHeight: 80 }}>
-                <div style={{ position: 'absolute', top: -32, left: 20, width: 64, height: 64, borderRadius: '50%', overflow: 'hidden', border: '3px solid #fff', boxShadow: '0 2px 12px rgba(0,0,0,0.2)', background: T.card }}>
-                  <PhotoEl height="100%" />
+              {/* Brand logo circle at torn edge (matches PhonePreview) */}
+              <div style={{ position: 'relative', background: T.bg, paddingTop: 8, paddingLeft: 80, paddingRight: 20, paddingBottom: 16, minHeight: 80 }}>
+                <div style={{ position: 'absolute', top: -32, left: 20 }}>
+                  <LogoCircle sz={64} />
                 </div>
                 <NameInfo color={T.textPrimary} titleColor={T.textMuted} companyColor={T.green} />
               </div>
