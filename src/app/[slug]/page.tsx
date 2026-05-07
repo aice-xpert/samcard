@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef, Fragment } from "react";
 import { useParams } from "next/navigation";
 import {
   Phone,
@@ -62,6 +62,47 @@ const resolveAssetUrl = (value: unknown): string | null => {
   return `${base.replace(/\/$/, "")}/${cleaned}`;
 };
 
+const parseJsonbArray = (value: unknown): string[] | null => {
+  if (Array.isArray(value)) {
+    const items = value.filter((item): item is string => typeof item === "string");
+    return items.length > 0 ? items : null;
+  }
+
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+    const inner = trimmed.slice(1, -1);
+    if (!inner) return null;
+    const items = inner
+      .split(",")
+      .map((item) => item.replace(/^"(.*)"$/, "$1").trim())
+      .filter((item): item is string => item.length > 0);
+    return items.length > 0 ? items : null;
+  }
+
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (typeof parsed === "string") {
+      const inner = JSON.parse(parsed);
+      if (Array.isArray(inner)) {
+        const items = inner.filter((item): item is string => typeof item === "string");
+        return items.length > 0 ? items : null;
+      }
+      return null;
+    }
+    if (Array.isArray(parsed)) {
+      const items = parsed.filter((item): item is string => typeof item === "string");
+      return items.length > 0 ? items : null;
+    }
+  } catch {
+    // ignore malformed JSON
+  }
+
+  return null;
+};
+
 // ── Types ──────────────────────────────────────────────────────────
 
 interface QRConfig {
@@ -94,6 +135,8 @@ interface PublicCard {
   headingText?: string;
   headingBodyText?: string;
   design: {
+    palette: string;
+    heroLayout?: string;
     accentColor: string;
     accentLight: string;
     bgColor: string;
@@ -151,6 +194,9 @@ interface PublicCard {
       enabled: boolean;
       data: Record<string, unknown>;
     }[];
+    // Drag-and-drop section ordering persisted by the backend
+    sectionOrder?: string[];
+    unifiedOrder?: string[];
   };
   socialLinks: {
     platform: string;
@@ -1095,7 +1141,7 @@ export default function PublicCardPage() {
       new URLSearchParams(window.location.search).get("preview") === "true";
     const url = `${BACKEND_URL}/api/public/cards/${slug}${isPreview ? "?preview=true" : ""}`;
     console.log("[public-card-page] fetching card", { slug, url, isPreview });
-    fetch(url)
+    fetch(url, { cache: "no-store" })
       .then((r) => {
         console.log("[public-card-page] fetch status", {
           slug,
@@ -1315,6 +1361,86 @@ export default function PublicCardPage() {
 
   const hasBrandLogo = !!content.brandLogo?.trim();
 
+  // Map template palette names to hero layout variants (fallback when heroLayout not stored)
+  const PALETTE_TO_HERO: Record<string, string> = {
+    'medical-teal':    'wave-panel',
+    'teamwork-orange': 'side-panel',
+    'heritage-gold':   'wave-panel',
+    'team-pro':        'group-diagonal',
+    'royal-purple':    'circle-overlap',
+    'minimal-mono':    'circle-center',
+    'sunset-banner':   'top-banner',
+    'sky-circle':      'circle-overlap',
+    'onyx-pro':        'default',
+    'mocha-torn':      'torn-edge',
+  };
+  // Use stored heroLayout from DB first; fall back to palette-based derivation for legacy rows
+  const heroLayout = (typeof D.heroLayout === 'string' && D.heroLayout && D.heroLayout !== 'default')
+    ? D.heroLayout
+    : (PALETTE_TO_HERO[D.palette] ?? D.heroLayout ?? 'default');
+
+  const name = fd.name || businessProfile.name || '';
+  const title = fd.title || businessProfile.title || '';
+  const company = fd.company || businessProfile.company || '';
+  const profileImg = content.profileImage || '';
+
+  const PhotoEl = ({ height, objectFit = 'cover', className = '' }: { height?: number | string; objectFit?: string; className?: string }) =>
+    profileImg ? (
+      <img src={profileImg} alt={name}
+        style={{ width: '100%', height: height ?? '100%', objectFit: objectFit as 'cover', display: 'block' }}
+        className={className}
+      />
+    ) : (
+      <div style={{
+        width: '100%', height: height ?? '100%',
+        background: `linear-gradient(135deg, ${T.green}88 0%, ${T.bg} 50%, ${T.greenLight}66 100%)`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <div style={{ fontSize: 72, fontWeight: 900, color: T.green, opacity: 0.3, lineHeight: 1 }}>
+          {(name || '?')[0].toUpperCase()}
+        </div>
+      </div>
+    );
+
+  const NameInfo = ({ color = '#fff', titleColor = T.greenLight, companyColor = 'rgba(255,255,255,0.65)', align = 'left' as 'left'|'center' }) => (
+    <div style={{ textAlign: align }}>
+      {name && <h1 style={{ color, fontSize: T.nameFontSize, lineHeight: 1.2, fontWeight: T.boldHeadings ? 800 : 600, fontFamily: T.fontFamily, wordBreak: 'break-word' }}>{name}</h1>}
+      {title && <p style={{ color: titleColor, fontSize: T.bodyFontSize + 1, marginTop: 4, fontFamily: T.fontFamily }}>{title}</p>}
+      {(company || (hasBrandLogo && content.logoPosition === 'below-name')) && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2, justifyContent: align === 'center' ? 'center' : 'flex-start' }}>
+          {hasBrandLogo && content.logoPosition === 'below-name' && (
+            <div style={{ background: 'rgba(0,0,0,0.45)', padding: '2px 4px', borderRadius: 5, lineHeight: 0, flexShrink: 0 }}>
+              <img src={content.brandLogo} alt="Brand" style={{ maxWidth: 22, maxHeight: 22, objectFit: 'contain', borderRadius: 3 }} />
+            </div>
+          )}
+          {company && <p style={{ color: companyColor, fontSize: T.bodyFontSize - 1, fontFamily: T.fontFamily, fontWeight: T.boldHeadings ? 700 : 500 }}>{company}</p>}
+        </div>
+      )}
+    </div>
+  );
+
+  const LogoBadge = ({ size = 48, pos }: { size?: number; pos?: string }) => hasBrandLogo && content.logoPosition === pos ? (
+    <div style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)', padding: 5, borderRadius: 10, lineHeight: 0 }}>
+      <img src={content.brandLogo} alt="Brand" style={{ maxWidth: size, maxHeight: size, objectFit: 'contain', borderRadius: 7 }} />
+    </div>
+  ) : null;
+
+  const LogoCircle = ({ sz = 52 }: { sz?: number }) => (
+    <div style={{
+      width: sz, height: sz, borderRadius: '50%', background: '#fff',
+      border: `3px solid ${T.green}`, display: 'flex', alignItems: 'center',
+      justifyContent: 'center', boxShadow: '0 2px 12px rgba(0,0,0,0.2)',
+    }}>
+      {hasBrandLogo ? (
+        <img src={content.brandLogo} alt="Brand" style={{ width: sz - 16, height: sz - 16, borderRadius: '50%', objectFit: 'contain' }} />
+      ) : (
+        <div style={{ width: sz - 14, height: sz - 14, borderRadius: '50%', background: T.green, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: sz * 0.4 }}>
+          {(company || name || 'T')[0]?.toUpperCase()}
+        </div>
+      )}
+    </div>
+  );
+
   const contactItems = [
     fd.phone && {
       label: "Call Us",
@@ -1403,8 +1529,171 @@ export default function PublicCardPage() {
           overflowX: "hidden",
           borderRadius: T.cardRadius,
         }}>
-          {/* ── HERO ── */}
-          {S.profile && (
+          {/* ── HERO — layout-aware ── */}
+          {S.profile && heroLayout === 'wave-panel' && (
+            <div style={{ position: 'relative', fontFamily: T.fontFamily }}>
+              <div style={{ width: '100%', height: 240, position: 'relative', overflow: 'hidden' }}>
+                <PhotoEl height="100%" />
+                {/* Wave SVG inside photo div so bottom:0 is relative to photo */}
+                <svg viewBox="0 0 200 36" preserveAspectRatio="none"
+                  style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 42, zIndex: 2 }}>
+                  <path d="M0,0 Q100,28 200,0 L200,36 L0,36 Z" fill={T.bg} />
+                </svg>
+              </div>
+              {/* Top-positioned brand logo */}
+              {hasBrandLogo && content.logoPosition === 'top-right' && (
+                <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }}><LogoBadge pos="top-right" /></div>
+              )}
+              {hasBrandLogo && content.logoPosition === 'top-left' && (
+                <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 10 }}><LogoBadge pos="top-left" /></div>
+              )}
+              {/* Info panel */}
+              <div style={{ background: T.bg, paddingTop: 16, paddingBottom: 16, paddingLeft: 20, paddingRight: 20, textAlign: 'center' }}>
+                <NameInfo align="center" companyColor={T.textMuted} titleColor={T.greenLight} />
+              </div>
+            </div>
+          )}
+
+          {S.profile && heroLayout === 'side-panel' && (
+            <div style={{ fontFamily: T.fontFamily }}>
+              {/* Logo bar */}
+              <div style={{ display: 'flex', alignItems: 'center', padding: '12px 20px', gap: 10, background: T.bg }}>
+                {hasBrandLogo ? (
+                  <img src={content.brandLogo} alt="Brand" style={{ width: 36, height: 36, objectFit: 'contain', borderRadius: 8 }} />
+                ) : (
+                  <div style={{ width: 32, height: 32, borderRadius: '50%', background: T.green, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 14, flexShrink: 0 }}>
+                    {(company || name || 'T')[0]?.toUpperCase()}
+                  </div>
+                )}
+                {company && <span style={{ fontWeight: 700, fontSize: 15, color: T.textPrimary, fontFamily: T.fontFamily }}>{company}</span>}
+              </div>
+              {/* Side card */}
+              <div style={{ margin: '0 12px 12px', borderRadius: T.cardRadius, overflow: 'hidden', display: 'flex', height: 140 }}>
+                <div style={{ width: '45%', flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
+                  <PhotoEl height="100%" />
+                </div>
+                <div style={{ flex: 1, background: T.card, padding: '14px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  <NameInfo color={T.textPrimary} titleColor={T.greenLight} companyColor={T.textMuted} />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {S.profile && heroLayout === 'group-diagonal' && (
+            <div style={{ fontFamily: T.fontFamily }}>
+              <div style={{ width: '100%', height: 180, position: 'relative', overflow: 'hidden' }}>
+                <PhotoEl height="100%" />
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.5) 100%)' }} />
+                {/* T logo / brand top-right */}
+                <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 3 }}>
+                  {hasBrandLogo ? (
+                    <div style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)', padding: 5, borderRadius: 10, lineHeight: 0 }}>
+                      <img src={content.brandLogo} alt="Brand" style={{ maxWidth: 40, maxHeight: 40, objectFit: 'contain', borderRadius: 6 }} />
+                    </div>
+                  ) : (
+                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: T.green, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 16 }}>
+                      {(company || name || 'T')[0]?.toUpperCase()}
+                    </div>
+                  )}
+                </div>
+                {/* Diagonal accent stripes */}
+                <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} viewBox="0 0 100 180" preserveAspectRatio="none">
+                  <line x1="65" y1="0" x2="100" y2="120" stroke={T.green} strokeWidth="12" opacity="0.65" />
+                  <line x1="80" y1="0" x2="100" y2="60" stroke={T.greenLight} strokeWidth="8" opacity="0.45" />
+                </svg>
+              </div>
+              {/* Panel with small portrait inset */}
+              <div style={{ position: 'relative', background: T.card, padding: '10px 16px 16px 90px', minHeight: 80 }}>
+                <div style={{ position: 'absolute', top: -28, left: 16, width: 64, height: 80, borderRadius: 8, overflow: 'hidden', border: `2px solid ${T.green}` }}>
+                  <PhotoEl height="100%" />
+                </div>
+                <NameInfo color={T.textPrimary} titleColor={T.greenLight} companyColor={T.textMuted} />
+              </div>
+            </div>
+          )}
+
+          {S.profile && heroLayout === 'circle-overlap' && (
+            <div style={{ fontFamily: T.fontFamily }}>
+              <div style={{ width: '100%', height: 180, position: 'relative', overflow: 'hidden' }}>
+                <PhotoEl height="100%" />
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.55) 100%)' }} />
+                {hasBrandLogo && content.logoPosition === 'top-right' && (
+                  <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 5 }}><LogoBadge pos="top-right" /></div>
+                )}
+                {hasBrandLogo && content.logoPosition === 'top-left' && (
+                  <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 5 }}><LogoBadge pos="top-left" /></div>
+                )}
+              </div>
+              <div style={{ background: T.bg, paddingBottom: 16, textAlign: 'center' }}>
+                {/* Overlapping circular portrait */}
+                <div style={{ marginTop: -52, display: 'flex', justifyContent: 'center', position: 'relative', zIndex: 2 }}>
+                  <div style={{ width: 100, height: 100, borderRadius: '50%', overflow: 'hidden', border: '4px solid #fff', boxShadow: '0 4px 20px rgba(0,0,0,0.3)', background: T.card }}>
+                    <PhotoEl height="100%" />
+                  </div>
+                </div>
+                <div style={{ padding: '12px 20px 0' }}>
+                  <NameInfo align="center" companyColor={T.textMuted} titleColor={T.greenLight} />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {S.profile && heroLayout === 'circle-center' && (
+            <div style={{ background: T.bg, padding: '48px 20px 16px', fontFamily: T.fontFamily }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+                <div style={{ width: 110, height: 110, borderRadius: '50%', overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.18)', background: T.card }}>
+                  <PhotoEl height="100%" />
+                </div>
+              </div>
+              <NameInfo color={T.textPrimary} titleColor={T.textMuted} companyColor={T.green} />
+            </div>
+          )}
+
+          {S.profile && heroLayout === 'top-banner' && (
+            <div style={{ fontFamily: T.fontFamily }}>
+              {/* Logo bar */}
+              <div style={{ display: 'flex', alignItems: 'center', padding: '12px 20px', gap: 10, background: T.bg }}>
+                {hasBrandLogo ? (
+                  <img src={content.brandLogo} alt="Brand" style={{ width: 34, height: 34, objectFit: 'contain', borderRadius: 8 }} />
+                ) : (
+                  <div style={{ width: 30, height: 30, borderRadius: '50%', background: T.green, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 14, flexShrink: 0 }}>
+                    {(company || name || 'T')[0]?.toUpperCase()}
+                  </div>
+                )}
+                {company && <span style={{ fontWeight: 700, color: T.textPrimary, fontFamily: T.fontFamily }}>{company}</span>}
+              </div>
+              {/* Accent name banner */}
+              <div style={{ background: T.green, padding: '18px 20px' }}>
+                <NameInfo color="#fff" titleColor="rgba(255,255,255,0.9)" companyColor="rgba(255,255,255,0.7)" />
+              </div>
+              {/* Photo below */}
+              <div style={{ width: '100%', height: 220, overflow: 'hidden', position: 'relative' }}>
+                <PhotoEl height="100%" />
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 60%, rgba(0,0,0,0.4) 100%)' }} />
+              </div>
+            </div>
+          )}
+
+          {S.profile && heroLayout === 'torn-edge' && (
+            <div style={{ fontFamily: T.fontFamily }}>
+              {/* Photo with torn bottom edge */}
+              <div style={{
+                width: '100%', height: 220, position: 'relative',
+                clipPath: 'polygon(0 0, 100% 0, 100% 82%, 97% 70%, 93% 84%, 89% 70%, 85% 83%, 81% 68%, 77% 82%, 73% 70%, 69% 84%, 65% 70%, 61% 83%, 57% 69%, 53% 83%, 49% 70%, 45% 83%, 41% 70%, 37% 82%, 33% 68%, 29% 80%, 25% 68%, 21% 80%, 17% 67%, 13% 79%, 9% 67%, 5% 78%, 2% 67%, 0 76%)',
+              }}>
+                <PhotoEl height="100%" />
+              </div>
+              {/* Brand logo circle at torn edge (matches PhonePreview) */}
+              <div style={{ position: 'relative', background: T.bg, paddingTop: 8, paddingLeft: 80, paddingRight: 20, paddingBottom: 16, minHeight: 80 }}>
+                <div style={{ position: 'absolute', top: -32, left: 20 }}>
+                  <LogoCircle sz={64} />
+                </div>
+                <NameInfo color={T.textPrimary} titleColor={T.textMuted} companyColor={T.green} />
+              </div>
+            </div>
+          )}
+
+          {S.profile && heroLayout === 'default' && (
             <div
               style={{
                 position: "relative",
@@ -1414,779 +1703,251 @@ export default function PublicCardPage() {
                 background: "#000",
               }}
             >
-              {content.profileImage ? (
-                <img
-                  src={content.profileImage}
-                  alt={fd.name || businessProfile.name}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    display: "block",
-                  }}
-                />
-              ) : (
-                <div
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    background: `linear-gradient(135deg, ${T.green}88 0%, ${T.bg} 50%, ${T.greenLight}66 100%)`,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 72,
-                      fontWeight: 900,
-                      color: T.green,
-                      opacity: 0.3,
-                      lineHeight: 1,
-                    }}
-                  >
-                    {(fd.name || businessProfile.name || "?")[0].toUpperCase()}
-                  </div>
-                </div>
-              )}
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  background:
-                    "linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.78) 100%)",
-                }}
-              />
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  height: 2,
-                  background: `linear-gradient(90deg, transparent, ${T.green}, ${T.greenLight}, ${T.green}, transparent)`,
-                }}
-              />
-
+              <PhotoEl height="100%" />
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.78) 100%)" }} />
+              <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, ${T.green}, ${T.greenLight}, ${T.green}, transparent)` }} />
               {hasBrandLogo && content.logoPosition === "top-right" && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: 12,
-                    right: 12,
-                    zIndex: 10,
-                  }}
-                >
-                  <div
-                    style={{
-                      background: "rgba(0,0,0,0.5)",
-                      backdropFilter: "blur(6px)",
-                      padding: 5,
-                      borderRadius: 10,
-                      lineHeight: 0,
-                    }}
-                  >
-                    <img
-                      src={content.brandLogo}
-                      alt="Brand"
-                      style={{
-                        maxWidth: 48,
-                        maxHeight: 48,
-                        objectFit: "contain",
-                        borderRadius: 7,
-                      }}
-                    />
-                  </div>
-                </div>
+                <div style={{ position: "absolute", top: 12, right: 12, zIndex: 10 }}><LogoBadge pos="top-right" /></div>
               )}
               {hasBrandLogo && content.logoPosition === "top-left" && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: 12,
-                    left: 12,
-                    zIndex: 10,
-                  }}
-                >
-                  <div
-                    style={{
-                      background: "rgba(0,0,0,0.5)",
-                      backdropFilter: "blur(6px)",
-                      padding: 5,
-                      borderRadius: 10,
-                      lineHeight: 0,
-                    }}
-                  >
-                    <img
-                      src={content.brandLogo}
-                      alt="Brand"
-                      style={{
-                        maxWidth: 48,
-                        maxHeight: 48,
-                        objectFit: "contain",
-                        borderRadius: 7,
-                      }}
-                    />
-                  </div>
-                </div>
+                <div style={{ position: "absolute", top: 12, left: 12, zIndex: 10 }}><LogoBadge pos="top-left" /></div>
               )}
-
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  padding: "12px 20px 16px",
-                  zIndex: 10,
-                }}
-              >
-                <h1
-                  style={{
-                    color: "#fff",
-                    fontSize: T.nameFontSize,
-                    lineHeight: 1.15,
-                    fontWeight: T.boldHeadings ? 800 : 600,
-                    textShadow: "0 2px 12px rgba(0,0,0,0.8)",
-                    wordBreak: "break-all",
-                    overflowWrap: "break-word",
-                  }}
-                >
-                  {fd.name || businessProfile.name}
-                </h1>
-                {(fd.title || businessProfile.title) && (
-                  <p
-                    style={{
-                      color: T.greenLight,
-                      fontSize: T.bodyFontSize,
-                      marginTop: 3,
-                      fontWeight: 500,
-                      wordBreak: "break-all",
-                      overflowWrap: "break-word",
-                    }}
-                  >
-                    {fd.title || businessProfile.title}
-                  </p>
-                )}
-                {(fd.company || businessProfile.company || (hasBrandLogo && content.logoPosition === "below-name")) && (
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 6,
-                      marginTop: 2,
-                    }}
-                  >
-                    {hasBrandLogo && content.logoPosition === "below-name" && (
-                      <div
-                        style={{
-                          background: "rgba(0,0,0,0.45)",
-                          padding: "2px 4px",
-                          borderRadius: 5,
-                          lineHeight: 0,
-                          flexShrink: 0,
-                        }}
-                      >
-                        <img
-                          src={content.brandLogo}
-                          alt="Brand"
-                          style={{ maxWidth: 22, maxHeight: 22, objectFit: "contain", borderRadius: 3 }}
-                        />
-                      </div>
-                    )}
-                    {(fd.company || businessProfile.company) && (
-                      <p
-                        style={{
-                          color: "rgba(255,255,255,0.6)",
-                          fontSize: T.bodyFontSize - 1,
-                          wordBreak: "break-all",
-                          overflowWrap: "break-word",
-                        }}
-                      >
-                        {fd.company || businessProfile.company}
-                      </p>
-                    )}
-                  </div>
-                )}
+              <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "12px 20px 16px", zIndex: 10 }}>
+                <NameInfo color="#fff" titleColor={T.greenLight} companyColor="rgba(255,255,255,0.6)" />
               </div>
             </div>
           )}
 
-          {hasBrandLogo && content.logoPosition === "below-photo" && (
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                padding: "12px 0",
-              }}
-            >
-              <div
-                style={{
-                  background: T.card,
-                  border: `1px solid ${T.cardBorder}`,
-                  borderRadius: 12,
-                  padding: "8px 14px",
-                  lineHeight: 0,
-                }}
-              >
-                <img
-                  src={content.brandLogo}
-                  alt="Brand"
-                  style={{ maxWidth: 80, maxHeight: 40, objectFit: "contain" }}
-                />
-              </div>
-            </div>
-          )}
+          {/* ── Ordered sections – respects unifiedOrder from the backend ── */}
+          {(() => {
+            const DEFAULT_ORDER = [
+              'profile', 'headingText', 'contactUs', 'businessDetails',
+              'socialLinks', 'links', 'appointment', 'collectContacts',
+            ];
+            const extraIds = new Set(content.extraSections.map(s => s.id));
+            const coreKeys = new Set(DEFAULT_ORDER);
 
-          {S.profile && (fd.tagline || businessProfile.tagline) && (
-            <p
-              style={{
-                padding: "10px 20px",
-                textAlign: "center",
-                color: T.textMuted,
-                fontSize: T.bodyFontSize,
-                fontStyle: "italic",
-                lineHeight: 1.6,
-                wordBreak: "break-word",
-                overflowWrap: "anywhere",
-              }}
-            >
-              {fd.tagline || businessProfile.tagline}
-            </p>
-          )}
+            const savedUnifiedOrder = parseJsonbArray(content.unifiedOrder);
+            const savedSectionOrder = parseJsonbArray(content.sectionOrder);
 
-          {S.profile && contactItems.length > 0 && (
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                gap: 12,
-                margin: "0 12px 10px",
-                background: T.card,
-                border: `1px solid ${T.cardBorder}`,
-                borderRadius: T.cardRadius,
-                padding: "12px 16px",
-              }}
-            >
-              {contactItems.slice(0, 4).map(({ href, Icon }, i) => (
-                <a
-                  key={i}
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => track(slug, "link_click")}
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    gap: 4,
-                  }}
-                >
-                  <div
-                    style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: "50%",
-                      background: `linear-gradient(135deg, ${T.green}, ${T.greenLight})`,
-                      boxShadow: `0 4px 12px ${T.green}55`,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Icon size={18} color="#fff" />
-                  </div>
-                </a>
-              ))}
-            </div>
-          )}
+            const savedOrder = savedUnifiedOrder
+              ? savedUnifiedOrder
+              : savedSectionOrder && savedSectionOrder.length > 0
+                ? [
+                    ...savedSectionOrder,
+                    ...content.extraSections.map(s => s.id).filter(id => !savedSectionOrder.includes(id)),
+                  ]
+                : [
+                    ...DEFAULT_ORDER.filter(key => S[key as keyof typeof S] !== false),
+                    ...content.extraSections.filter(s => s.enabled).map(s => s.id),
+                  ];
 
-          {S.headingText && (card.headingText || card.headingBodyText || fd.headingText || fd.bodyText) && (
-            <CardBlock T={T}>
-              <div style={{ padding: "12px 16px" }}>
-                {(card.headingText || fd.headingText) && (
-                  <p
-                    style={{
-                      fontWeight: T.boldHeadings ? 700 : 500,
-                      fontSize: T.bodyFontSize + 1,
-                      color: T.textPrimary,
-                      marginBottom: 4,
-                    }}
-                  >
-                    {card.headingText || fd.headingText}
-                  </p>
-                )}
-                {(card.headingBodyText || fd.bodyText) && (
-                  <p
-                    style={{
-                      fontSize: T.bodyFontSize,
-                      lineHeight: 1.6,
-                      color: T.textMuted,
-                    }}
-                  >
-                    {card.headingBodyText || fd.bodyText}
-                  </p>
-                )}
-              </div>
-            </CardBlock>
-          )}
+            // Ensure no duplicates and no unknown ids slip through
+            const allKnown = new Set([...coreKeys, ...extraIds]);
+            const seen = new Set<string>();
+            const order = savedOrder.filter(id => {
+              if (!allKnown.has(id) || seen.has(id)) return false;
+              seen.add(id); return true;
+            });
+            // Append anything missing
+            for (const id of allKnown) { if (!seen.has(id)) order.push(id); }
 
-          {S.contactUs && contactItems.length > 0 && (
-            <CardBlock T={T}>
-              <SectionHeader
-                T={T}
-                icon={<Phone size={14} color="#fff" />}
-                title="Contact Us"
-              />
-              {contactItems.map(({ label, sub, href, Icon }, i) => (
-                <div key={i}>
-                  <a
-                    href={href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => track(slug, "link_click")}
-                    className="sc-row"
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 12,
-                      padding: "10px 16px",
-                      color: "inherit",
-                      transition: "background .15s",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: 28,
-                        height: 28,
-                        borderRadius: 8,
-                        flexShrink: 0,
-                        background: `${T.green}28`,
-                        border: `1px solid ${T.green}44`,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <Icon size={13} color={T.greenLight} />
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p
-                        style={{
-                          fontWeight: T.boldHeadings ? 600 : 500,
-                          fontSize: T.bodyFontSize,
-                          color: T.textPrimary,
-                        }}
-                      >
-                        {label}
-                      </p>
-                      <p
-                        style={{
-                          fontSize: T.bodyFontSize - 1,
-                          color: T.textMuted,
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {sub}
-                      </p>
-                    </div>
-                    <ChevronRight size={14} color={T.muted} />
-                  </a>
-                  {i < contactItems.length - 1 && <Divider color={T.divider} />}
-                </div>
-              ))}
-            </CardBlock>
-          )}
-
-          {S.businessDetails && (fd.company || businessProfile.company || fd.industry || fd.yearFounded || fd.location) && (
-            <CardBlock T={T}>
-              <SectionHeader
-                T={T}
-                icon={<Briefcase size={14} color="#fff" />}
-                title="Business Details"
-              />
-              {[
-                (fd.company || businessProfile.company) && {
-                  label: "Company",
-                  val: fd.company || businessProfile.company!,
-                },
-                fd.industry && { label: "Industry", val: fd.industry },
-                fd.yearFounded && { label: "Year Founded", val: fd.yearFounded },
-                fd.location && { label: "Location", val: fd.location },
-              ]
-                .filter(Boolean)
-                .map((row, i, arr) => {
-                  const { label, val } = row as { label: string; val: string };
-                  return (
-                    <div key={label}>
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          padding: "10px 16px",
-                        }}
-                      >
-                        <span
-                          style={{
-                            fontSize: T.bodyFontSize,
-                            color: T.textMuted,
-                          }}
-                        >
-                          {label}
-                        </span>
-                        <span
-                          style={{
-                            fontSize: T.bodyFontSize,
-                            fontWeight: T.boldHeadings ? 600 : 400,
-                            color: T.textPrimary,
-                            maxWidth: "55%",
-                            textAlign: "right",
-                            wordBreak: "break-word",
-                            overflowWrap: "anywhere",
-                            display: "inline-block",
-                          }}
-                        >
-                          {val}
-                        </span>
-                      </div>
-                      {i < arr.length - 1 && <Divider color={T.divider} />}
-                    </div>
-                  );
-                })}
-            </CardBlock>
-          )}
-
-          {S.socialLinks && socialLinks.filter(sl => sl.enabled !== false).length > 0 && (
-            <CardBlock T={T}>
-              <SectionHeader
-                T={T}
-                icon={<Share2 size={14} color="#fff" />}
-                title="Social Links"
-              />
-              {socialLinks.filter(sl => sl.enabled !== false).map((sl, i, arr) => {
-                const meta = SOCIAL_META[sl.platform?.toLowerCase()] ?? {
-                  Icon: Link2,
-                  color: T.green,
-                  label: sl.platform,
-                };
-                const { Icon, color, label } = meta;
+            return order.map(id => {
+              // ── Extra section ──────────────────────────────────────────────
+              if (extraIds.has(id)) {
+                const section = content.extraSections.find(s => s.id === id);
+                if (!section || !section.enabled) return null;
                 return (
-                  <div key={i}>
-                    <button
-                      onClick={() => {
-                        track(slug, "link_click");
-                        openLink(sl.url);
-                      }}
-                      className="sc-row"
-                      style={{
-                        width: "100%",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 12,
-                        padding: "10px 16px",
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        textAlign: "left",
-                        transition: "background .15s",
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: 36,
-                          height: 36,
-                          borderRadius: 10,
-                          flexShrink: 0,
-                          background: `${color}1a`,
-                          border: `1px solid ${color}35`,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <Icon size={16} color={color} />
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p
-                          style={{
-                            fontWeight: T.boldHeadings ? 600 : 500,
-                            fontSize: T.bodyFontSize,
-                            color: T.textPrimary,
-                          }}
-                        >
-                          {sl.label || label}
-                        </p>
-                        <p
-                          style={{
-                            fontSize: T.bodyFontSize - 1,
-                            color: T.textMuted,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {sl.handle || sl.url}
-                        </p>
-                      </div>
-                      <ChevronRight size={14} color={T.muted} />
-                    </button>
-                    {i < arr.length - 1 && (
-                      <Divider color={T.divider} />
-                    )}
-                  </div>
-                );
-              })}
-            </CardBlock>
-          )}
-
-          {S.links && content.customLinks.length > 0 && (
-            <CardBlock T={T}>
-              <SectionHeader
-                T={T}
-                icon={<Link2 size={14} color="#fff" />}
-                title="Web Links"
-              />
-              {content.customLinks.map((cl, i) => (
-                <div key={i}>
-                  <button
-                    onClick={() => {
-                      track(slug, "link_click");
-                      openLink(cl.url);
-                    }}
-                    className="sc-row"
-                    style={{
-                      width: "100%",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 12,
-                      padding: "10px 16px",
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      textAlign: "left",
-                      transition: "background .15s",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: 10,
-                        flexShrink: 0,
-                        background: `${T.green}1f`,
-                        border: `1px solid ${T.green}40`,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <Link2 size={15} color={T.greenLight} />
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p
-                        style={{
-                          fontWeight: T.boldHeadings ? 600 : 500,
-                          fontSize: T.bodyFontSize,
-                          color: T.textPrimary,
-                        }}
-                      >
-                        {cl.label || "Link"}
-                      </p>
-                      <p
-                        style={{
-                          fontSize: T.bodyFontSize - 1,
-                          color: T.textMuted,
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {cl.url}
-                      </p>
-                    </div>
-                    <ChevronRight size={14} color={T.muted} />
-                  </button>
-                  {i < content.customLinks.length - 1 && (
-                    <Divider color={T.divider} />
-                  )}
-                </div>
-              ))}
-            </CardBlock>
-          )}
-
-          {S.appointment && fd.appointmentUrl && (
-            <CardBlock T={T}>
-              <div
-                style={{
-                  padding: "16px",
-                  textAlign: "center",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  gap: 8,
-                }}
-              >
-                <div
-                  style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: "50%",
-                    background: `linear-gradient(135deg, ${T.green}, ${T.greenLight})`,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Calendar size={20} color="#fff" />
-                </div>
-                <p
-                  style={{
-                    fontWeight: T.boldHeadings ? 700 : 500,
-                    fontSize: T.bodyFontSize + 1,
-                    color: T.textPrimary,
-                  }}
-                >
-                  Schedule Meeting
-                </p>
-                <p
-                  style={{
-                    fontSize: T.bodyFontSize,
-                    lineHeight: 1.5,
-                    color: T.textMuted,
-                    padding: "0 8px",
-                  }}
-                >
-                  Book a time to discuss potential opportunities
-                </p>
-              </div>
-              <div
-                style={{
-                  padding: "0 16px 16px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 8,
-                }}
-              >
-                {["Book on Calendly", "Add to Calendar"].map((label) => (
-                  <button
-                    key={label}
-                    onClick={() => {
-                      track(slug, "link_click");
-                      openLink(fd.appointmentUrl!);
-                    }}
-                    style={{
-                      width: "100%",
-                      padding: "10px",
-                      borderRadius: 999,
-                      border: `1px solid ${T.green}59`,
-                      color: T.greenLight,
-                      background: `${T.green}1a`,
-                      fontWeight: 600,
-                      fontSize: T.bodyFontSize,
-                      cursor: "pointer",
-                      fontFamily: T.fontFamily,
-                    }}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </CardBlock>
-          )}
-
-          {content.extraSections
-            .filter((s) => s.enabled)
-            .map((section, index) => (
-              <ExtraSectionBlock
-                key={section.id || `extra-sec-${index}`}
-                section={section}
-                T={T}
-                onLinkClick={() => track(slug, "link_click")}
-              />
-            ))}
-
-          {S.collectContacts && (
-            <CardBlock T={T}>
-              <SectionHeader
-                T={T}
-                icon={<MessageSquare size={14} color="#fff" />}
-                title="Get in Touch"
-              />
-              <div
-                style={{
-                  padding: "12px 16px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 8,
-                }}
-              >
-                {[
-                  { key: "name" as const, placeholder: "Your name", type: "text" },
-                  { key: "email" as const, placeholder: "Email address", type: "email" },
-                  { key: "phone" as const, placeholder: "Phone number", type: "tel" },
-                ].map((field) => (
-                  <input
-                    key={field.key}
-                    type={field.type}
-                    value={leadForm[field.key]}
-                    placeholder={field.placeholder}
-                    onChange={(e) =>
-                      setLeadForm((prev) => ({
-                        ...prev,
-                        [field.key]: e.target.value,
-                      }))
-                    }
-                    style={{
-                      width: "100%",
-                      padding: "9px 12px",
-                      borderRadius: 10,
-                      background: T.bg,
-                      border: `1px solid ${T.green}33`,
-                      color: T.textPrimary,
-                      fontSize: T.bodyFontSize,
-                      outline: "none",
-                      fontFamily: T.fontFamily,
-                    }}
+                  <ExtraSectionBlock
+                    key={section.id}
+                    section={section}
+                    T={T}
+                    onLinkClick={() => track(slug, "link_click")}
                   />
-                ))}
-                <button
-                  onClick={submitLead}
-                  disabled={leadSubmitting}
-                  style={{
-                    width: "100%",
-                    padding: "10px",
-                    borderRadius: 999,
-                    border: "none",
-                    background: `linear-gradient(135deg, ${T.green}, ${T.greenLight})`,
-                    color: "#fff",
-                    fontWeight: 700,
-                    fontSize: T.bodyFontSize,
-                    cursor: leadSubmitting ? "not-allowed" : "pointer",
-                    opacity: leadSubmitting ? 0.8 : 1,
-                    fontFamily: T.fontFamily,
-                  }}
-                >
-                  {leadSubmitting ? "Submitting..." : "Submit"}
-                </button>
-                {leadSubmitFeedback.type && (
-                  <p
-                    style={{
-                      marginTop: 4,
-                      fontSize: T.bodyFontSize - 1,
-                      color:
-                        leadSubmitFeedback.type === "success"
-                          ? T.greenLight
-                          : "#ff7a7a",
-                    }}
-                  >
-                    {leadSubmitFeedback.message}
-                  </p>
-                )}
-              </div>
-            </CardBlock>
-          )}
+                );
+              }
+
+              // ── Core sections ──────────────────────────────────────────────
+              switch (id) {
+
+                case 'headingText':
+                  if (!S.headingText) return null;
+                  if (!card.headingText && !card.headingBodyText && !fd.headingText && !fd.bodyText) return null;
+                  return (
+                    <CardBlock key="headingText" T={T}>
+                      <div style={{ padding: "12px 16px" }}>
+                        {(card.headingText || fd.headingText) && (
+                          <p style={{ fontWeight: T.boldHeadings ? 700 : 500, fontSize: T.bodyFontSize + 1, color: T.textPrimary, marginBottom: 4 }}>
+                            {card.headingText || fd.headingText}
+                          </p>
+                        )}
+                        {(card.headingBodyText || fd.bodyText) && (
+                          <p style={{ fontSize: T.bodyFontSize, lineHeight: 1.6, color: T.textMuted }}>
+                            {card.headingBodyText || fd.bodyText}
+                          </p>
+                        )}
+                      </div>
+                    </CardBlock>
+                  );
+
+                case 'contactUs':
+                  if (!S.contactUs || contactItems.length === 0) return null;
+                  return (
+                    <CardBlock key="contactUs" T={T}>
+                      <SectionHeader T={T} icon={<Phone size={14} color="#fff" />} title="Contact Us" />
+                      {contactItems.map(({ label, sub, href, Icon }, i) => (
+                        <div key={i}>
+                          <a href={href} target="_blank" rel="noopener noreferrer"
+                            onClick={() => track(slug, "link_click")} className="sc-row"
+                            style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", color: "inherit", transition: "background .15s" }}>
+                            <div style={{ width: 28, height: 28, borderRadius: 8, flexShrink: 0, background: `${T.green}28`, border: `1px solid ${T.green}44`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                              <Icon size={13} color={T.greenLight} />
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <p style={{ fontWeight: T.boldHeadings ? 600 : 500, fontSize: T.bodyFontSize, color: T.textPrimary }}>{label}</p>
+                              <p style={{ fontSize: T.bodyFontSize - 1, color: T.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sub}</p>
+                            </div>
+                            <ChevronRight size={14} color={T.muted} />
+                          </a>
+                          {i < contactItems.length - 1 && <Divider color={T.divider} />}
+                        </div>
+                      ))}
+                    </CardBlock>
+                  );
+
+                case 'businessDetails': {
+                  if (!S.businessDetails) return null;
+                  if (!fd.company && !businessProfile.company && !fd.industry && !fd.yearFounded && !fd.location) return null;
+                  const rows = [
+                    (fd.company || businessProfile.company) && { label: "Company", val: fd.company || businessProfile.company! },
+                    fd.industry && { label: "Industry", val: fd.industry },
+                    fd.yearFounded && { label: "Year Founded", val: fd.yearFounded },
+                    fd.location && { label: "Location", val: fd.location },
+                  ].filter(Boolean) as { label: string; val: string }[];
+                  return (
+                    <CardBlock key="businessDetails" T={T}>
+                      <SectionHeader T={T} icon={<Briefcase size={14} color="#fff" />} title="Business Details" />
+                      {rows.map((row, i) => (
+                        <div key={row.label}>
+                          <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 16px" }}>
+                            <span style={{ fontSize: T.bodyFontSize, color: T.textMuted }}>{row.label}</span>
+                            <span style={{ fontSize: T.bodyFontSize, fontWeight: T.boldHeadings ? 600 : 400, color: T.textPrimary, maxWidth: "55%", textAlign: "right", wordBreak: "break-word", overflowWrap: "anywhere", display: "inline-block" }}>{row.val}</span>
+                          </div>
+                          {i < rows.length - 1 && <Divider color={T.divider} />}
+                        </div>
+                      ))}
+                    </CardBlock>
+                  );
+                }
+
+                case 'socialLinks': {
+                  const activeSocials = socialLinks.filter(sl => sl.enabled !== false);
+                  if (!S.socialLinks || activeSocials.length === 0) return null;
+                  return (
+                    <CardBlock key="socialLinks" T={T}>
+                      <SectionHeader T={T} icon={<Share2 size={14} color="#fff" />} title="Social Links" />
+                      {activeSocials.map((sl, i, arr) => {
+                        const meta = SOCIAL_META[sl.platform?.toLowerCase()] ?? { Icon: Link2, color: T.green, label: sl.platform };
+                        const { Icon, color, label } = meta;
+                        return (
+                          <div key={i}>
+                            <button onClick={() => { track(slug, "link_click"); openLink(sl.url); }} className="sc-row"
+                              style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", background: "none", border: "none", cursor: "pointer", textAlign: "left", transition: "background .15s" }}>
+                              <div style={{ width: 36, height: 36, borderRadius: 10, background: `${color}22`, border: `1px solid ${color}44`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                <Icon size={16} color={color} />
+                              </div>
+                              <span style={{ flex: 1, fontSize: T.bodyFontSize, fontWeight: T.boldHeadings ? 500 : 400, color: T.textPrimary }}>{label}</span>
+                              <ChevronRight size={14} color={T.muted} />
+                            </button>
+                            {i < arr.length - 1 && <Divider color={T.divider} />}
+                          </div>
+                        );
+                      })}
+                    </CardBlock>
+                  );
+                }
+
+                case 'links': {
+                  const activeLinks = content.customLinks.filter(l => l.label || l.url);
+                  if (!S.links || activeLinks.length === 0) return null;
+                  return (
+                    <CardBlock key="links" T={T}>
+                      <SectionHeader T={T} icon={<Link2 size={14} color="#fff" />} title="Links" />
+                      {activeLinks.map((l, i) => (
+                        <div key={i}>
+                          <button onClick={() => { track(slug, "link_click"); openLink(l.url); }} className="sc-row"
+                            style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", background: "none", border: "none", cursor: "pointer", textAlign: "left", transition: "background .15s" }}>
+                            <div style={{ width: 32, height: 32, borderRadius: 8, background: `${T.green}22`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                              <Link2 size={14} color={T.greenLight} />
+                            </div>
+                            <span style={{ flex: 1, fontSize: T.bodyFontSize, color: T.textPrimary, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.label || l.url}</span>
+                            <ChevronRight size={14} color={T.muted} />
+                          </button>
+                          {i < activeLinks.length - 1 && <Divider color={T.divider} />}
+                        </div>
+                      ))}
+                    </CardBlock>
+                  );
+                }
+
+                case 'appointment':
+                  if (!S.appointment || !fd.appointmentUrl) return null;
+                  return (
+                    <CardBlock key="appointment" T={T}>
+                      <div style={{ padding: "16px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+                        <div style={{ width: 40, height: 40, borderRadius: "50%", background: `linear-gradient(135deg, ${T.green}, ${T.greenLight})`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <Calendar size={20} color="#fff" />
+                        </div>
+                        <p style={{ fontWeight: T.boldHeadings ? 700 : 500, fontSize: T.bodyFontSize + 1, color: T.textPrimary }}>Schedule Meeting</p>
+                        <p style={{ fontSize: T.bodyFontSize, lineHeight: 1.5, color: T.textMuted, padding: "0 8px" }}>Book a time to discuss potential opportunities</p>
+                      </div>
+                      <div style={{ padding: "0 16px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
+                        {["Book on Calendly", "Add to Calendar"].map((label) => (
+                          <button key={label} onClick={() => { track(slug, "link_click"); openLink(fd.appointmentUrl!); }}
+                            style={{ width: "100%", padding: "10px", borderRadius: 999, border: `1px solid ${T.green}59`, color: T.greenLight, background: `${T.green}1a`, fontWeight: 600, fontSize: T.bodyFontSize, cursor: "pointer", fontFamily: T.fontFamily }}>
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </CardBlock>
+                  );
+
+                case 'collectContacts':
+                  if (!S.collectContacts) return null;
+                  return (
+                    <CardBlock key="collectContacts" T={T}>
+                      <SectionHeader T={T} icon={<MessageSquare size={14} color="#fff" />} title="Get in Touch" />
+                      <div style={{ padding: "12px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
+                        {[
+                          { key: "name" as const, placeholder: "Your name", type: "text" },
+                          { key: "email" as const, placeholder: "Email address", type: "email" },
+                          { key: "phone" as const, placeholder: "Phone number", type: "tel" },
+                        ].map((field) => (
+                          <input key={field.key} type={field.type} value={leadForm[field.key]} placeholder={field.placeholder}
+                            onChange={(e) => setLeadForm((prev) => ({ ...prev, [field.key]: e.target.value }))}
+                            style={{ width: "100%", padding: "9px 12px", borderRadius: 10, background: T.bg, border: `1px solid ${T.green}33`, color: T.textPrimary, fontSize: T.bodyFontSize, outline: "none", fontFamily: T.fontFamily }} />
+                        ))}
+                        <button onClick={submitLead} disabled={leadSubmitting}
+                          style={{ width: "100%", padding: "10px", borderRadius: 999, border: "none", background: `linear-gradient(135deg, ${T.green}, ${T.greenLight})`, color: "#fff", fontWeight: 700, fontSize: T.bodyFontSize, cursor: leadSubmitting ? "not-allowed" : "pointer", opacity: leadSubmitting ? 0.8 : 1, fontFamily: T.fontFamily }}>
+                          {leadSubmitting ? "Submitting..." : "Submit"}
+                        </button>
+                        {leadSubmitFeedback.type && (
+                          <p style={{ marginTop: 4, fontSize: T.bodyFontSize - 1, color: leadSubmitFeedback.type === "success" ? T.greenLight : "#ff7a7a" }}>
+                            {leadSubmitFeedback.message}
+                          </p>
+                        )}
+                      </div>
+                    </CardBlock>
+                  );
+
+                case 'profile':
+                  return null;
+
+                default:
+                  return null;
+              }
+            });
+          })()}
 
           <div style={{ height: 80 }} />
         </div>

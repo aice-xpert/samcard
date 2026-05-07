@@ -337,6 +337,9 @@ export interface CardContentPayload {
   sections?: CardContentSectionConfig;
   customLinks?: { label: string; url: string }[];
   extraSections?: CardContentExtraSection[];
+  // Drag-and-drop section ordering
+  sectionOrder?: string[];
+  unifiedOrder?: string[];
 }
 
 export interface CardContentResponse extends CardContentPayload {
@@ -383,6 +386,7 @@ export async function updateCardQR(cardId: string, qrConfig: CardQRConfigPayload
 
 export interface CardDesignPayload {
   palette: string;
+  heroLayout?: string;
   accentColor: string;
   accentLight: string;
   bgColor: string;
