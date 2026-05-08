@@ -19,6 +19,7 @@ import {
   getMonthlyGoal,
   getWeeklyChallenge,
   getLeads,
+  deleteLeads,
   AnalyticsData,
   MonthOverMonthPerformance,
   GoalProgressData,
@@ -914,9 +915,17 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
             )}
             {selected.length > 0 && (
               <button
-                onClick={() => {
-                  showToast(`Deleted ${selected.length} lead(s)`);
-                  setSelected([]);
+                onClick={async () => {
+                  try {
+                    const deleted = selected;
+                    await deleteLeads(deleted);
+                    setLeads((prev) => prev.filter((l) => !deleted.includes(l.id)));
+                    setLeadsTotal((prev) => prev - deleted.length);
+                    showToast(`Deleted ${deleted.length} lead(s)`);
+                    setSelected([]);
+                  } catch {
+                    showToast("Failed to delete leads");
+                  }
                 }}
                 className="text-xs text-red-400 hover:text-red-300 transition-colors"
               >

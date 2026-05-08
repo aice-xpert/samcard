@@ -134,4 +134,29 @@ router.put("/:id", verifySession, async (req: AuthRequest, res: Response) => {
   }
 });
 
+router.delete("/", verifySession, async (req: AuthRequest, res: Response) => {
+  const idsParam = req.query.ids;
+  if (!idsParam || typeof idsParam !== "string") {
+    return res.status(400).json({ error: "Missing or invalid ids parameter" });
+  }
+
+  const ids = idsParam.split(",");
+
+  try {
+    const { error } = await supabase
+      .from("Lead")
+      .delete()
+      .in("id", ids)
+      .eq("userId", req.user!.uid);
+
+    if (error) {
+      return res.status(500).json({ error: error.message });
+    }
+
+    return res.json({ success: true, deletedCount: ids.length });
+  } catch (error: unknown) {
+    return res.status(500).json({ error: getErrorMessage(error) });
+  }
+});
+
 export default router;

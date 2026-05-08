@@ -624,6 +624,12 @@ export async function updateLead(id: string, payload: { status?: string; notes?:
   });
 }
 
+export async function deleteLeads(ids: string[]) {
+  return apiRequest<{ success: boolean; deletedCount: number }>(`/api/user/leads?ids=${ids.join(",")}`, {
+    method: "DELETE",
+  });
+}
+
 // ─── Orders ─────────────────────────────────────────────────────────
 export interface Order {
   id: string;
