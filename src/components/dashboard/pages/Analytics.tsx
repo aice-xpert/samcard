@@ -1076,30 +1076,46 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
                         </td>
                         <td className="py-4 px-4">
                           <div className="flex items-center gap-2">
-                            <a
-                              href={lead.phone ? `sms:${lead.phone}` : undefined}
-                              onClick={!lead.phone ? (e) => { e.preventDefault(); showToast("No phone number for this lead"); } : undefined}
+                            {/* WhatsApp Web - works on both laptop and mobile */}
+                            <button
+                              onClick={() => {
+                                if (!lead.phone) { showToast("No phone number for this lead"); return; }
+                                const cleaned = lead.phone.replace(/\D/g, "");
+                                window.open(`https://web.whatsapp.com/send?phone=${cleaned}`, "_blank");
+                              }}
                               className="w-8 h-8 rounded-full bg-[#49B618] hover:bg-[#009200] flex items-center justify-center transition-colors"
-                              title="Message"
+                              title="WhatsApp"
                             >
                               <MessageSquare className="w-4 h-4 text-white" />
-                            </a>
-                            <a
-                              href={lead.email ? `mailto:${lead.email}` : undefined}
-                              onClick={!lead.email ? (e) => { e.preventDefault(); showToast("No email for this lead"); } : undefined}
+                            </button>
+
+                            {/* Gmail Web - works on both laptop and mobile */}
+                            <button
+                              onClick={() => {
+                                if (!lead.email) { showToast("No email for this lead"); return; }
+                                window.open(
+                                  `https://mail.google.com/mail/?view=cm&to=${encodeURIComponent(lead.email)}`,
+                                  "_blank"
+                                );
+                              }}
                               className="w-8 h-8 rounded-full bg-[#008001] hover:bg-[#006312] flex items-center justify-center transition-colors"
                               title="Email"
                             >
                               <Mail className="w-4 h-4 text-white" />
-                            </a>
-                            <a
-                              href={lead.phone ? `tel:${lead.phone}` : undefined}
-                              onClick={!lead.phone ? (e) => { e.preventDefault(); showToast("No phone number for this lead"); } : undefined}
+                            </button>
+
+                            {/* WhatsApp Call - works on both laptop and mobile */}
+                            <button
+                              onClick={() => {
+                                if (!lead.phone) { showToast("No phone number for this lead"); return; }
+                                const cleaned = lead.phone.replace(/\D/g, "");
+                                window.open(`https://web.whatsapp.com/send?phone=${cleaned}&call=true`, "_blank");
+                              }}
                               className="w-8 h-8 rounded-full bg-[#009200] hover:bg-[#006312] flex items-center justify-center transition-colors"
                               title="Call"
                             >
                               <Phone className="w-4 h-4 text-white" />
-                            </a>
+                            </button>
                           </div>
                         </td>
                       </tr>
