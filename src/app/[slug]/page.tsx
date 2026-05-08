@@ -1317,6 +1317,8 @@ export default function PublicCardPage() {
   const { design: D, content, socialLinks, businessProfile } = card;
   const fd = content.formData;
   const S = content.sections;
+  // Treat undefined S.profile as true (default visible)
+  const profileVisible = (S?.profile as boolean | undefined) !== false;
 
   const T = {
     bg: D.bgColor || "#0a0f0a",
@@ -1374,10 +1376,11 @@ export default function PublicCardPage() {
     'onyx-pro':        'default',
     'mocha-torn':      'torn-edge',
   };
-  // Use stored heroLayout from DB first; fall back to palette-based derivation for legacy rows
+  // Use stored heroLayout from DB first; fall back to palette-based derivation for legacy rows.
+  // Use || not ?? so empty string from DB also falls back to 'default'.
   const heroLayout = (typeof D.heroLayout === 'string' && D.heroLayout && D.heroLayout !== 'default')
     ? D.heroLayout
-    : (PALETTE_TO_HERO[D.palette] ?? D.heroLayout ?? 'default');
+    : (PALETTE_TO_HERO[D.palette] || D.heroLayout || 'default');
 
   const name = fd.name || businessProfile.name || '';
   const title = fd.title || businessProfile.title || '';
@@ -1530,7 +1533,7 @@ export default function PublicCardPage() {
           borderRadius: T.cardRadius,
         }}>
           {/* ── HERO — layout-aware ── */}
-          {S.profile && heroLayout === 'wave-panel' && (
+          {profileVisible && heroLayout === 'wave-panel' && (
             <div style={{ position: 'relative', fontFamily: T.fontFamily }}>
               <div style={{ width: '100%', height: 240, position: 'relative', overflow: 'hidden' }}>
                 <PhotoEl height="100%" />
@@ -1554,17 +1557,17 @@ export default function PublicCardPage() {
             </div>
           )}
 
-          {S.profile && heroLayout === 'side-panel' && (
+          {profileVisible && heroLayout === 'side-panel' && (
             <div style={{ fontFamily: T.fontFamily }}>
               {/* Logo bar */}
               <div style={{ display: 'flex', alignItems: 'center', padding: '12px 20px', gap: 10, background: T.bg }}>
-                {hasBrandLogo ? (
+                {hasBrandLogo && !['below-photo','below-name'].includes(content.logoPosition) ? (
                   <img src={content.brandLogo} alt="Brand" style={{ width: 36, height: 36, objectFit: 'contain', borderRadius: 8 }} />
-                ) : (
+                ) : !hasBrandLogo ? (
                   <div style={{ width: 32, height: 32, borderRadius: '50%', background: T.green, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 14, flexShrink: 0 }}>
                     {(company || name || 'T')[0]?.toUpperCase()}
                   </div>
-                )}
+                ) : null}
                 {company && <span style={{ fontWeight: 700, fontSize: 15, color: T.textPrimary, fontFamily: T.fontFamily }}>{company}</span>}
               </div>
               {/* Side card */}
@@ -1579,23 +1582,28 @@ export default function PublicCardPage() {
             </div>
           )}
 
-          {S.profile && heroLayout === 'group-diagonal' && (
+          {profileVisible && heroLayout === 'group-diagonal' && (
             <div style={{ fontFamily: T.fontFamily }}>
               <div style={{ width: '100%', height: 180, position: 'relative', overflow: 'hidden' }}>
                 <PhotoEl height="100%" />
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.5) 100%)' }} />
-                {/* T logo / brand top-right */}
-                <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 3 }}>
-                  {hasBrandLogo ? (
-                    <div style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)', padding: 5, borderRadius: 10, lineHeight: 0 }}>
-                      <img src={content.brandLogo} alt="Brand" style={{ maxWidth: 40, maxHeight: 40, objectFit: 'contain', borderRadius: 6 }} />
-                    </div>
-                  ) : (
-                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: T.green, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 16 }}>
-                      {(company || name || 'T')[0]?.toUpperCase()}
-                    </div>
-                  )}
-                </div>
+                {/* T logo / brand — top-right or top-left */}
+                {(!hasBrandLogo || content.logoPosition === 'top-right') && (
+                  <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 3 }}>
+                    {hasBrandLogo ? (
+                      <div style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)', padding: 5, borderRadius: 10, lineHeight: 0 }}>
+                        <img src={content.brandLogo} alt="Brand" style={{ maxWidth: 40, maxHeight: 40, objectFit: 'contain', borderRadius: 6 }} />
+                      </div>
+                    ) : (
+                      <div style={{ width: 36, height: 36, borderRadius: '50%', background: T.green, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 16 }}>
+                        {(company || name || 'T')[0]?.toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+                )}
+                {hasBrandLogo && content.logoPosition === 'top-left' && (
+                  <div style={{ position: 'absolute', top: 10, left: 10, zIndex: 3 }}><LogoBadge pos="top-left" /></div>
+                )}
                 {/* Diagonal accent stripes */}
                 <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} viewBox="0 0 100 180" preserveAspectRatio="none">
                   <line x1="65" y1="0" x2="100" y2="120" stroke={T.green} strokeWidth="12" opacity="0.65" />
@@ -1612,7 +1620,7 @@ export default function PublicCardPage() {
             </div>
           )}
 
-          {S.profile && heroLayout === 'circle-overlap' && (
+          {profileVisible && heroLayout === 'circle-overlap' && (
             <div style={{ fontFamily: T.fontFamily }}>
               <div style={{ width: '100%', height: 180, position: 'relative', overflow: 'hidden' }}>
                 <PhotoEl height="100%" />
@@ -1638,8 +1646,14 @@ export default function PublicCardPage() {
             </div>
           )}
 
-          {S.profile && heroLayout === 'circle-center' && (
-            <div style={{ background: T.bg, padding: '48px 20px 16px', fontFamily: T.fontFamily }}>
+          {profileVisible && heroLayout === 'circle-center' && (
+            <div style={{ position: 'relative', background: T.bg, padding: '48px 20px 16px', fontFamily: T.fontFamily }}>
+              {hasBrandLogo && content.logoPosition === 'top-left' && (
+                <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 5 }}><LogoBadge pos="top-left" /></div>
+              )}
+              {hasBrandLogo && content.logoPosition === 'top-right' && (
+                <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 5 }}><LogoBadge pos="top-right" /></div>
+              )}
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
                 <div style={{ width: 110, height: 110, borderRadius: '50%', overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.18)', background: T.card }}>
                   <PhotoEl height="100%" />
@@ -1649,17 +1663,17 @@ export default function PublicCardPage() {
             </div>
           )}
 
-          {S.profile && heroLayout === 'top-banner' && (
+          {profileVisible && heroLayout === 'top-banner' && (
             <div style={{ fontFamily: T.fontFamily }}>
               {/* Logo bar */}
               <div style={{ display: 'flex', alignItems: 'center', padding: '12px 20px', gap: 10, background: T.bg }}>
-                {hasBrandLogo ? (
+                {hasBrandLogo && !['below-photo','below-name'].includes(content.logoPosition) ? (
                   <img src={content.brandLogo} alt="Brand" style={{ width: 34, height: 34, objectFit: 'contain', borderRadius: 8 }} />
-                ) : (
+                ) : !hasBrandLogo ? (
                   <div style={{ width: 30, height: 30, borderRadius: '50%', background: T.green, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 14, flexShrink: 0 }}>
                     {(company || name || 'T')[0]?.toUpperCase()}
                   </div>
-                )}
+                ) : null}
                 {company && <span style={{ fontWeight: 700, color: T.textPrimary, fontFamily: T.fontFamily }}>{company}</span>}
               </div>
               {/* Accent name banner */}
@@ -1674,7 +1688,7 @@ export default function PublicCardPage() {
             </div>
           )}
 
-          {S.profile && heroLayout === 'torn-edge' && (
+          {profileVisible && heroLayout === 'torn-edge' && (
             <div style={{ fontFamily: T.fontFamily }}>
               {/* Photo with torn bottom edge */}
               <div style={{
@@ -1693,7 +1707,7 @@ export default function PublicCardPage() {
             </div>
           )}
 
-          {S.profile && heroLayout === 'default' && (
+          {profileVisible && heroLayout === 'default' && (
             <div
               style={{
                 position: "relative",
@@ -1714,6 +1728,19 @@ export default function PublicCardPage() {
               )}
               <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "12px 20px 16px", zIndex: 10 }}>
                 <NameInfo color="#fff" titleColor={T.greenLight} companyColor="rgba(255,255,255,0.6)" />
+              </div>
+            </div>
+          )}
+
+          {/* ── Below-photo brand logo (all layouts) ── */}
+          {profileVisible && hasBrandLogo && content.logoPosition === 'below-photo' && (
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0' }}>
+              <div style={{
+                background: T.card, border: `1px solid ${T.cardBorder}`,
+                borderRadius: 12, padding: '8px 14px', lineHeight: 0,
+              }}>
+                <img src={content.brandLogo} alt="Brand"
+                  style={{ maxWidth: 80, maxHeight: 80, objectFit: 'contain', display: 'block', borderRadius: 8 }} />
               </div>
             </div>
           )}
