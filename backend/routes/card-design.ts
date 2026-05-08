@@ -10,6 +10,7 @@ const getErrorMessage = (error: unknown): string =>
 interface CardDesignData {
   cardId?: string;
   palette: string;
+  heroLayout?: string;
   accentColor: string;
   accentLight: string;
   bgColor: string;
@@ -93,6 +94,7 @@ router.put("/", verifySession, async (req: AuthRequest, res: Response) => {
         .from("CardDesign")
         .update({
           palette: designData.palette ?? "green",
+          heroLayout: designData.heroLayout ?? "default",
           accentColor: designData.accentColor ?? "#008001",
           accentLight: designData.accentLight ?? "#49B618",
           bgColor: designData.bgColor ?? "#0a0f0a",
@@ -124,6 +126,7 @@ router.put("/", verifySession, async (req: AuthRequest, res: Response) => {
         .insert({
           cardId,
           palette: designData.palette ?? "green",
+          heroLayout: designData.heroLayout ?? "default",
           accentColor: designData.accentColor ?? "#008001",
           accentLight: designData.accentLight ?? "#49B618",
           bgColor: designData.bgColor ?? "#0a0f0a",
