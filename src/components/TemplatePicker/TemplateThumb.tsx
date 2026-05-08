@@ -18,12 +18,9 @@ const PhoneFrame: React.FC<{ children: React.ReactNode; bg: string }> = ({ child
   </div>
 );
 
-const PROFILE_IMG = '/profileImages/alex-morgan.jpg';
-
-// Real photo portrait — uses the public dummy profile image
-const Portrait: React.FC<{ style?: React.CSSProperties; filter?: string }> = ({ style, filter }) => (
+const Portrait: React.FC<{ src: string; style?: React.CSSProperties; filter?: string }> = ({ src, style, filter }) => (
   <img
-    src={PROFILE_IMG}
+    src={src}
     alt="Profile"
     style={{
       width: '100%', height: '100%',
@@ -35,15 +32,48 @@ const Portrait: React.FC<{ style?: React.CSSProperties; filter?: string }> = ({ 
   />
 );
 
-// Icon ring (phone / mail / chat)
-const IconRing: React.FC<{ color: string; size?: number; glyph?: string }> = ({ color, size = 11, glyph = '○' }) => (
-  <div style={{
-    width: size, height: size, borderRadius: '50%',
-    border: `1.5px solid ${color}`,
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontSize: 4, color, flexShrink: 0,
-  }}>{glyph}</div>
-);
+// Renders the brand logo image, or a plain colored square if no logo is provided.
+const LogoBadge: React.FC<{ src: string | null | undefined; size: number; accent: string; radius?: number }> = ({
+  src, size, accent, radius = 2,
+}) => {
+  if (src) {
+    return (
+      <img
+        src={src}
+        alt="Brand"
+        style={{ width: size, height: size, objectFit: 'contain', borderRadius: radius, display: 'block' }}
+      />
+    );
+  }
+  return <div style={{ width: size, height: size, borderRadius: radius, background: accent }} />;
+};
+
+// Renders the brand logo inside a circle (replaces the "T" / "A" letter circles).
+const LogoCircle: React.FC<{ src: string | null | undefined; size: number; accent: string; border?: string; bg?: string }> = ({
+  src, size, accent, border, bg = 'rgba(255,255,255,0.12)',
+}) => {
+  if (src) {
+    return (
+      <div style={{
+        width: size, height: size, borderRadius: '50%', overflow: 'hidden',
+        background: '#fff',
+        border: border ?? `1px solid ${accent}`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        flexShrink: 0,
+      }}>
+        <img src={src} alt="Brand" style={{ width: '80%', height: '80%', objectFit: 'contain', display: 'block' }} />
+      </div>
+    );
+  }
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: '50%', background: accent,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      color: '#fff', fontSize: size * 0.38, fontWeight: 700,
+      border: border ?? 'none', flexShrink: 0,
+    }}>B</div>
+  );
+};
 
 const IconRow: React.FC<{ color: string; filled?: boolean }> = ({ color, filled }) => (
   <div style={{ display: 'flex', gap: 5, justifyContent: 'center', marginTop: 5 }}>
@@ -67,14 +97,13 @@ const AboutCard: React.FC<{ bg: string; textColor: string; accent: string }> = (
   </div>
 );
 
-const LogoBar: React.FC<{ accent: string; textColor: string; label: string }> = ({ accent, textColor, label }) => (
+const LogoBar: React.FC<{ accent: string; textColor: string; label: string; logo?: string | null }> = ({ accent, textColor, label, logo }) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 8px 3px' }}>
-    <div style={{ width: 10, height: 10, borderRadius: '50%', background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 5, fontWeight: 700 }}>T</div>
+    <LogoCircle src={logo} size={10} accent={accent} border="none" bg={accent} />
     <div style={{ fontSize: 5, fontWeight: 700, color: textColor }}>{label}</div>
   </div>
 );
 
-// Name/Title/Company text block
 const NameBlock: React.FC<{ name?: string; title?: string; company?: string; textColor: string; accent: string; muteColor?: string; align?: 'left'|'center' }> = ({
   name = 'Name', title = 'Title', company = 'Company', textColor, accent, muteColor, align = 'left'
 }) => (
@@ -86,23 +115,22 @@ const NameBlock: React.FC<{ name?: string; title?: string; company?: string; tex
 );
 
 export default function TemplateThumb({ template }: { template: CardTemplate }) {
-  const { preview: p } = template;
+  const { preview: p, defaultContent: c } = template;
   const layout = p.layout;
+  const profileImg = c.profileImage ?? '/profileImages/alex-morgan.jpg';
+  const brandLogo = c.brandLogo ?? null;
 
   // ── 1. full-photo-wave — Medical Teal ──────────────────────────
   if (layout === 'full-photo-wave') {
     return (
       <PhoneFrame bg={p.bg}>
-        {/* Photo top ~52% with concave inward curve at bottom */}
         <div style={{ width: '100%', height: '52%', position: 'relative', overflow: 'hidden' }}>
-          <Portrait />
-          {/* Concave wave — curved inward from below */}
+          <Portrait src={profileImg} />
           <svg viewBox="0 0 200 32" preserveAspectRatio="none"
             style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 20, zIndex: 2 }}>
             <path d="M0,0 Q100,20 200,0 L200,32 L0,32 Z" fill={p.panel} />
           </svg>
         </div>
-        {/* Info panel */}
         <div style={{ background: p.panel, padding: '8px 8px 6px', textAlign: 'center' }}>
           <NameBlock textColor={p.text} accent={p.accentLight} muteColor={p.accentLight} align="center" />
           <IconRow color={p.accentLight} filled />
@@ -116,15 +144,13 @@ export default function TemplateThumb({ template }: { template: CardTemplate }) 
   if (layout === 'side-panel') {
     return (
       <PhoneFrame bg={p.bg}>
-        <LogoBar accent={p.accent} textColor={p.text} label="Teamwork.Co" />
-        {/* Side card */}
+        <LogoBar accent={p.accent} textColor={p.text} label={c.company ?? 'Company'} logo={brandLogo} />
         <div style={{ display: 'flex', margin: '4px 6px', borderRadius: 6, overflow: 'hidden', height: '36%' }}>
-          <div style={{ width: '44%', flexShrink: 0 }}><Portrait /></div>
+          <div style={{ width: '44%', flexShrink: 0 }}><Portrait src={profileImg} /></div>
           <div style={{ flex: 1, background: p.panel, padding: '5px 6px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <NameBlock textColor={p.text} accent={p.accentLight} muteColor={p.text} />
           </div>
         </div>
-        {/* Orange icon pill */}
         <div style={{ margin: '5px 6px', background: p.accent, borderRadius: 999, padding: '4px 0', display: 'flex', justifyContent: 'center', gap: 5 }}>
           {['☎','✉','💬'].map((g, i) => (
             <div key={i} style={{ width: 10, height: 10, borderRadius: '50%', border: '1.5px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 4, color: '#fff' }}>{g}</div>
@@ -139,26 +165,28 @@ export default function TemplateThumb({ template }: { template: CardTemplate }) 
   if (layout === 'group-photo') {
     return (
       <PhoneFrame bg={p.panel}>
-        {/* Group photo banner */}
         <div style={{ width: '100%', height: '38%', position: 'relative', overflow: 'hidden' }}>
-          <Portrait />
-          {/* T logo circle top-right */}
-          <div style={{ position: 'absolute', top: 4, right: 4, width: 13, height: 13, borderRadius: '50%', background: p.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 5, fontWeight: 700, zIndex: 2 }}>T</div>
-          {/* Diagonal accent stripes */}
+          <Portrait src={profileImg} />
+          {/* Brand logo circle top-right */}
+          <div style={{ position: 'absolute', top: 4, right: 4, zIndex: 2 }}>
+            <LogoCircle src={brandLogo} size={13} accent={p.accent} border="none" bg={p.accent} />
+          </div>
+          {/* Brand logo badge top-left */}
+          <div style={{ position: 'absolute', top: 4, left: 4, width: 13, height: 13, borderRadius: 3, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3 }}>
+            <LogoBadge src={brandLogo} size={9} accent={p.accentLight} />
+          </div>
           <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} viewBox="0 0 100 80">
             <line x1="65" y1="0" x2="100" y2="60" stroke={p.accent} strokeWidth="8" opacity="0.75" />
             <line x1="80" y1="0" x2="100" y2="32" stroke={p.accentLight} strokeWidth="5" opacity="0.55" />
           </svg>
         </div>
-        {/* Panel with small portrait inset */}
         <div style={{ position: 'relative', padding: '28px 8px 6px 8px' }}>
-          {/* Small portrait card */}
           <div style={{
             position: 'absolute', top: -16, left: 6,
             width: 26, height: 34, borderRadius: 3, overflow: 'hidden',
             border: `1.5px solid ${p.accent}`,
           }}>
-            <Portrait />
+            <Portrait src={profileImg} />
           </div>
           <div style={{ paddingLeft: 36 }}>
             <NameBlock textColor="#fff" accent={p.accentLight} muteColor="rgba(255,255,255,0.6)" />
@@ -174,10 +202,11 @@ export default function TemplateThumb({ template }: { template: CardTemplate }) 
   if (layout === 'gold-curve') {
     return (
       <PhoneFrame bg={p.bg}>
-        {/* Photo top ~50% with concave inward curve at bottom */}
         <div style={{ width: '100%', height: '50%', position: 'relative', overflow: 'hidden' }}>
-          <Portrait />
-          {/* Concave wave — curved inward from below */}
+          <Portrait src={profileImg} />
+          <div style={{ position: 'absolute', top: 4, left: 4, background: 'rgba(0,0,0,0.5)', padding: 2, borderRadius: 3, lineHeight: 0, zIndex: 3 }}>
+            <LogoBadge src={brandLogo} size={9} accent={p.accentLight} />
+          </div>
           <svg viewBox="0 0 200 32" preserveAspectRatio="none"
             style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 20, zIndex: 2 }}>
             <path d="M0,0 Q100,20 200,0 L200,32 L0,32 Z" fill={p.panel} />
@@ -197,23 +226,24 @@ export default function TemplateThumb({ template }: { template: CardTemplate }) 
     return (
       <PhoneFrame bg={p.bg}>
         <div style={{ width: '100%', height: '42%', overflow: 'hidden', position: 'relative' }}>
-          <Portrait />
+          <Portrait src={profileImg} />
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 50%, rgba(28,13,58,0.6) 100%)' }} />
+          <div style={{ position: 'absolute', top: 4, left: 4, background: 'rgba(0,0,0,0.5)', padding: 2, borderRadius: 3, lineHeight: 0, zIndex: 4 }}>
+            <LogoBadge src={brandLogo} size={9} accent={p.accentLight} />
+          </div>
         </div>
-        {/* Asymmetric curve — sweeps from left high to right lower */}
         <svg viewBox="0 0 200 28" preserveAspectRatio="none"
           style={{ position: 'absolute', top: 'calc(42% - 15px)', left: 0, width: '100%', height: 18, zIndex: 2 }}>
           <path d="M0,28 L0,8 Q80,28 200,6 L200,28 Z" fill={p.panel} />
         </svg>
-        {/* T circle at right edge of curve */}
+        {/* Brand logo circle at right edge of curve */}
         <div style={{
-          position: 'absolute', top: 'calc(42% - 20px)', right: 10,
-          width: 18, height: 18, borderRadius: '50%', background: p.accentLight,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 6, fontWeight: 700, zIndex: 4,
-        }}>T</div>
+          position: 'absolute', top: 'calc(42% - 20px)', right: 10, zIndex: 4,
+        }}>
+          <LogoCircle src={brandLogo} size={18} accent={p.accentLight} border="none" bg={p.accentLight} />
+        </div>
         <div style={{ position: 'absolute', top: 'calc(42% + 3px)', left: 0, right: 0, bottom: 0, padding: '14px 8px 6px', zIndex: 1 }}>
           <NameBlock textColor="#fff" accent={p.accentLight} muteColor="rgba(255,255,255,0.55)" />
-          {/* Icon circles with accent color */}
           <div style={{ display: 'flex', gap: 4, marginTop: 5 }}>
             {['☎','✉','💬'].map((g, i) => (
               <div key={i} style={{ width: 13, height: 13, borderRadius: '50%', background: p.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 5, color: '#fff' }}>{g}</div>
@@ -229,17 +259,22 @@ export default function TemplateThumb({ template }: { template: CardTemplate }) 
   if (layout === 'circle-center') {
     return (
       <PhoneFrame bg={p.bg}>
-        {/* Circular portrait centered high */}
-        <div style={{ paddingTop: '18%', display: 'flex', justifyContent: 'center' }}>
-          <div style={{ width: '36%', aspectRatio: '1', borderRadius: '50%', overflow: 'hidden', border: `2px solid ${p.accent}44`, boxShadow: '0 2px 8px rgba(0,0,0,0.4)' }}>
-            <Portrait />
+        <div style={{ position: 'relative' }}>
+          <div style={{ position: 'absolute', top: 5, left: 5, background: 'rgba(255,255,255,0.15)', padding: 2, borderRadius: 3, lineHeight: 0, zIndex: 5 }}>
+            <LogoBadge src={brandLogo} size={9} accent={p.accent} />
+          </div>
+          <div style={{ position: 'absolute', top: 5, right: 5, background: 'rgba(255,255,255,0.15)', padding: 2, borderRadius: 3, lineHeight: 0, zIndex: 5 }}>
+            <LogoBadge src={brandLogo} size={9} accent={p.accent} />
+          </div>
+          <div style={{ paddingTop: '18%', display: 'flex', justifyContent: 'center' }}>
+            <div style={{ width: '36%', aspectRatio: '1', borderRadius: '50%', overflow: 'hidden', border: `2px solid ${p.accent}44`, boxShadow: '0 2px 8px rgba(0,0,0,0.4)' }}>
+              <Portrait src={profileImg} />
+            </div>
           </div>
         </div>
-        {/* Left-aligned text */}
         <div style={{ padding: '8px 10px 4px' }}>
           <NameBlock textColor={p.text} accent={p.accent} muteColor={p.accentLight} />
         </div>
-        {/* Icon row */}
         <div style={{ display: 'flex', gap: 4, padding: '3px 10px' }}>
           {['☎','✉','💬'].map((g, i) => (
             <div key={i} style={{ width: 11, height: 11, borderRadius: '50%', border: `1.5px solid ${p.accent}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 4, color: p.accent }}>{g}</div>
@@ -254,14 +289,12 @@ export default function TemplateThumb({ template }: { template: CardTemplate }) 
   if (layout === 'top-banner') {
     return (
       <PhoneFrame bg={p.bg}>
-        <LogoBar accent={p.accent} textColor="rgba(255,255,255,0.85)" label="Teamwork.Co" />
-        {/* Name banner */}
+        <LogoBar accent={p.accent} textColor="rgba(255,255,255,0.85)" label={c.company ?? 'Company'} logo={brandLogo} />
         <div style={{ margin: '0 6px', background: p.accent, borderRadius: 6, padding: '5px 7px' }}>
           <NameBlock textColor="#fff" accent="rgba(255,255,255,0.85)" muteColor="rgba(255,255,255,0.65)" />
         </div>
-        {/* Photo below */}
         <div style={{ margin: '5px 6px', height: '32%', borderRadius: 5, overflow: 'hidden' }}>
-          <Portrait />
+          <Portrait src={profileImg} />
         </div>
         <IconRow color={p.accent} filled />
         <AboutCard bg="rgba(255,255,255,0.07)" textColor="#fff" accent={p.accentLight} />
@@ -273,18 +306,15 @@ export default function TemplateThumb({ template }: { template: CardTemplate }) 
   if (layout === 'sky-circle') {
     return (
       <PhoneFrame bg={p.panel}>
-        {/* Banner photo */}
         <div style={{ width: '100%', height: '30%', overflow: 'hidden', position: 'relative' }}>
-          <Portrait />
+          <Portrait src={profileImg} />
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 40%, rgba(91,120,255,0.6) 100%)' }} />
         </div>
-        {/* Overlapping circular portrait */}
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: -16, position: 'relative', zIndex: 2 }}>
           <div style={{ width: '26%', aspectRatio: '1', borderRadius: '50%', overflow: 'hidden', border: '2px solid #fff' }}>
-            <Portrait />
+            <Portrait src={profileImg} />
           </div>
         </div>
-        {/* Centered name */}
         <div style={{ padding: '4px 8px', textAlign: 'center' }}>
           <NameBlock textColor="#fff" accent={p.accentLight} muteColor="rgba(255,255,255,0.7)" align="center" />
         </div>
@@ -303,10 +333,12 @@ export default function TemplateThumb({ template }: { template: CardTemplate }) 
     return (
       <PhoneFrame bg={p.bg}>
         <div style={{ width: '100%', height: '55%', position: 'relative', overflow: 'hidden' }}>
-          <Portrait filter="grayscale(80%)" />
+          <Portrait src={profileImg} filter="grayscale(80%)" />
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 35%, rgba(0,0,0,0.88) 100%)' }} />
-          {/* T logo at bottom */}
-          <div style={{ position: 'absolute', bottom: 22, left: '50%', transform: 'translateX(-50%)', width: 16, height: 16, borderRadius: '50%', background: 'rgba(255,255,255,0.12)', border: `1px solid ${p.accent}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: p.accent, fontSize: 6, fontWeight: 700 }}>T</div>
+          {/* Brand logo circle centered above name */}
+          <div style={{ position: 'absolute', bottom: 22, left: '50%', transform: 'translateX(-50%)', zIndex: 3 }}>
+            <LogoCircle src={brandLogo} size={16} accent={p.accent} border={`1px solid ${p.accent}`} bg="rgba(255,255,255,0.12)" />
+          </div>
           <div style={{ position: 'absolute', bottom: 4, left: 8, right: 8 }}>
             <NameBlock textColor="#fff" accent={p.accentLight} muteColor="rgba(255,255,255,0.5)" />
           </div>
@@ -331,11 +363,11 @@ export default function TemplateThumb({ template }: { template: CardTemplate }) 
           width: '100%', height: '38%', position: 'relative', overflow: 'visible',
           clipPath: 'polygon(0 0, 100% 0, 100% 84%, 95% 70%, 90% 86%, 85% 70%, 80% 84%, 74% 68%, 68% 82%, 62% 68%, 56% 83%, 50% 68%, 44% 84%, 38% 70%, 32% 83%, 26% 68%, 20% 80%, 14% 68%, 8% 78%, 3% 66%, 0 76%)',
         }}>
-          <Portrait />
+          <Portrait src={profileImg} />
         </div>
-        {/* Brand logo circle at torn edge (Fix 4) */}
+        {/* Brand logo circle at torn edge */}
         <div style={{ position: 'absolute', top: 'calc(38% - 18px)', left: 8, width: 22, height: 22, borderRadius: '50%', background: '#fff', border: '2px solid #fff', zIndex: 3, boxShadow: '0 1px 4px rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ width: 14, height: 14, borderRadius: '50%', background: p.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 6, fontWeight: 700 }}>A</div>
+          <LogoCircle src={brandLogo} size={16} accent={p.accent} border="none" bg={p.accent} />
         </div>
         <div style={{ padding: '6px 8px 4px 36px', marginTop: -4 }}>
           <NameBlock textColor={p.text} accent={p.accent} muteColor={p.accentLight} />
@@ -345,7 +377,6 @@ export default function TemplateThumb({ template }: { template: CardTemplate }) 
             <div key={i} style={{ width: 12, height: 12, borderRadius: '50%', background: p.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 4, color: '#fff' }}>{g}</div>
           ))}
         </div>
-        {/* Pill button */}
         <div style={{ margin: '4px 6px', background: p.accent, borderRadius: 999, padding: '3px 0', textAlign: 'center' }}>
           <span style={{ fontSize: 4, color: '#fff', fontWeight: 700 }}>About Me</span>
         </div>
@@ -356,7 +387,7 @@ export default function TemplateThumb({ template }: { template: CardTemplate }) 
   // Fallback
   return (
     <PhoneFrame bg={p.bg}>
-      <div style={{ width: '100%', height: '50%' }}><Portrait /></div>
+      <div style={{ width: '100%', height: '50%' }}><Portrait src={profileImg} /></div>
       <div style={{ padding: 8 }}>
         <NameBlock textColor={p.text} accent={p.accentLight} />
       </div>

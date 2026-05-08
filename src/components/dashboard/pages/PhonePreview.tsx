@@ -190,7 +190,7 @@ function Divider({ T }: { T: ThemeOverride }) {
 function ProfileSection({ T, profileImage, formData, brandLogo, logoPosition, hasBrandLogo, contactItems }: any) {
   return (
     <>
-      <div className="relative" style={{ aspectRatio: '4/3', maxHeight: '200px' }}>
+      <div className="relative" style={{ aspectRatio: '4/3', width: '100%' }}>
         {profileImage ? (
           <img
             src={profileImage}
@@ -523,8 +523,10 @@ function PhonePreviewComponent({
   const filledSocials = socialLinks.filter(s => s.value.trim());
   const filledLinks = customLinks.filter(l => l.label || l.url);
 
-  const heroLayout = T.heroLayout ?? 'default';
+  const heroLayout = T.heroLayout || 'default';
   const hasBrandLogo = !!brandLogo?.trim();
+  // Treat undefined sections.profile as true (default visible)
+  const profileEnabled = (sections?.profile as boolean | undefined) !== false;
   const pName = formData.name;
   const pTitle = formData.title;
   const pCompany = formData.company;
@@ -719,7 +721,7 @@ function PhonePreviewComponent({
 
                   {/* ── HERO — layout-aware ── */}
 
-                  {sections.profile && heroLayout === 'wave-panel' && (
+                  {profileEnabled && heroLayout === 'wave-panel' && (
                     <div style={{ position: 'relative', fontFamily: T.fontFamily }}>
                       {/* Photo with concave curve at bottom — curved inward from below */}
                       <div style={{ width: '100%', height: 160, overflow: 'hidden', position: 'relative' }}>
@@ -741,41 +743,52 @@ function PhonePreviewComponent({
                     </div>
                   )}
 
-                  {sections.profile && heroLayout === 'side-panel' && (
+                  {profileEnabled && heroLayout === 'side-panel' && (
                     <div style={{ fontFamily: T.fontFamily }}>
                       <div style={{ display: 'flex', alignItems: 'center', padding: '10px 14px', gap: 8, background: T.bg }}>
-                        {hasBrandLogo ? (
+                        {hasBrandLogo && !['below-photo','below-name','top-right','top-left'].includes(logoPosition) ? (
                           <img src={brandLogo} alt="Brand" style={{ width: 28, height: 28, objectFit: 'contain', borderRadius: 6 }} />
-                        ) : (
+                        ) : !hasBrandLogo ? (
                           <div style={{ width: 26, height: 26, borderRadius: '50%', background: T.green, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 12, flexShrink: 0 }}>
                             {(pCompany || pName || 'T')[0]?.toUpperCase()}
                           </div>
-                        )}
+                        ) : null}
                         {pCompany && <span style={{ fontWeight: 700, fontSize: 12, color: T.textPrimary, fontFamily: T.fontFamily }}>{pCompany}</span>}
                       </div>
-                      <div style={{ margin: '0 10px 10px', borderRadius: T.cardRadius, overflow: 'hidden', display: 'flex', height: 110 }}>
+                      <div style={{ margin: '0 10px 10px', borderRadius: T.cardRadius, overflow: 'hidden', display: 'flex', height: 110, position: 'relative' }}>
                         <div style={{ width: '45%', flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
                           <PPhoto h="100%" />
+                          {hasBrandLogo && logoPosition === 'top-left' && (
+                            <div style={{ position: 'absolute', top: 6, left: 6, zIndex: 5 }}><PLogo pos="top-left" /></div>
+                          )}
                         </div>
-                        <div style={{ flex: 1, background: T.card, padding: '10px 12px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                        <div style={{ flex: 1, background: T.card, padding: '10px 12px', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative' }}>
+                          {hasBrandLogo && logoPosition === 'top-right' && (
+                            <div style={{ position: 'absolute', top: 6, right: 6, zIndex: 5 }}><PLogo pos="top-right" /></div>
+                          )}
                           <PNameInfo color={T.textPrimary} titleColor={T.greenLight} companyColor={T.textMuted} />
                         </div>
                       </div>
                     </div>
                   )}
 
-                  {sections.profile && heroLayout === 'group-diagonal' && (
+                  {profileEnabled && heroLayout === 'group-diagonal' && (
                     <div style={{ fontFamily: T.fontFamily }}>
                       <div style={{ width: '100%', height: 130, position: 'relative', overflow: 'hidden' }}>
                         <PPhoto h="100%" />
                         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.5) 100%)' }} />
-                        <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 3 }}>
-                          {hasBrandLogo ? <PLogo pos="top-right" /> : (
-                            <div style={{ width: 28, height: 28, borderRadius: '50%', background: T.green, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 12 }}>
-                              {(pCompany || pName || 'T')[0]?.toUpperCase()}
-                            </div>
-                          )}
-                        </div>
+                        {(!hasBrandLogo || logoPosition === 'top-right') && (
+                          <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 3 }}>
+                            {hasBrandLogo ? <PLogo pos="top-right" /> : (
+                              <div style={{ width: 28, height: 28, borderRadius: '50%', background: T.green, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 12 }}>
+                                {(pCompany || pName || 'T')[0]?.toUpperCase()}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        {hasBrandLogo && logoPosition === 'top-left' && (
+                          <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 3 }}><PLogo pos="top-left" /></div>
+                        )}
                         <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} viewBox="0 0 100 130" preserveAspectRatio="none">
                           <line x1="65" y1="0" x2="100" y2="90" stroke={T.green} strokeWidth="10" opacity="0.65" />
                           <line x1="80" y1="0" x2="100" y2="45" stroke={T.greenLight} strokeWidth="7" opacity="0.45" />
@@ -790,13 +803,16 @@ function PhonePreviewComponent({
                     </div>
                   )}
 
-                  {sections.profile && heroLayout === 'circle-overlap' && (
+                  {profileEnabled && heroLayout === 'circle-overlap' && (
                     <div style={{ fontFamily: T.fontFamily }}>
                       <div style={{ width: '100%', height: 140, position: 'relative', overflow: 'hidden' }}>
                         <PPhoto h="100%" />
                         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.5) 100%)' }} />
                         {hasBrandLogo && logoPosition === 'top-right' && (
                           <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 5 }}><PLogo pos="top-right" /></div>
+                        )}
+                        {hasBrandLogo && logoPosition === 'top-left' && (
+                          <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 5 }}><PLogo pos="top-left" /></div>
                         )}
                       </div>
                       <div style={{ background: T.bg, paddingBottom: 12, textAlign: 'center' }}>
@@ -812,8 +828,14 @@ function PhonePreviewComponent({
                     </div>
                   )}
 
-                  {sections.profile && heroLayout === 'circle-center' && (
-                    <div style={{ background: T.bg, padding: '32px 16px 12px', fontFamily: T.fontFamily }}>
+                  {profileEnabled && heroLayout === 'circle-center' && (
+                    <div style={{ position: 'relative', background: T.bg, padding: '32px 16px 12px', fontFamily: T.fontFamily }}>
+                      {hasBrandLogo && logoPosition === 'top-left' && (
+                        <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 5 }}><PLogo pos="top-left" /></div>
+                      )}
+                      {hasBrandLogo && logoPosition === 'top-right' && (
+                        <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 5 }}><PLogo pos="top-right" /></div>
+                      )}
                       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
                         <div style={{ width: 86, height: 86, borderRadius: '50%', overflow: 'hidden', boxShadow: '0 4px 18px rgba(0,0,0,0.15)', background: T.card }}>
                           <PPhoto h="100%" />
@@ -823,16 +845,16 @@ function PhonePreviewComponent({
                     </div>
                   )}
 
-                  {sections.profile && heroLayout === 'top-banner' && (
+                  {profileEnabled && heroLayout === 'top-banner' && (
                     <div style={{ fontFamily: T.fontFamily }}>
                       <div style={{ display: 'flex', alignItems: 'center', padding: '10px 14px', gap: 8, background: T.bg }}>
-                        {hasBrandLogo ? (
+                        {hasBrandLogo && !['below-photo','below-name','top-right','top-left'].includes(logoPosition) ? (
                           <img src={brandLogo} alt="Brand" style={{ width: 26, height: 26, objectFit: 'contain', borderRadius: 6 }} />
-                        ) : (
+                        ) : !hasBrandLogo ? (
                           <div style={{ width: 24, height: 24, borderRadius: '50%', background: T.green, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 11, flexShrink: 0 }}>
                             {(pCompany || pName || 'T')[0]?.toUpperCase()}
                           </div>
-                        )}
+                        ) : null}
                         {pCompany && <span style={{ fontWeight: 700, fontSize: 11, color: T.textPrimary, fontFamily: T.fontFamily }}>{pCompany}</span>}
                       </div>
                       <div style={{ background: T.green, padding: '12px 16px' }}>
@@ -841,11 +863,17 @@ function PhonePreviewComponent({
                       <div style={{ width: '100%', height: 160, overflow: 'hidden', position: 'relative' }}>
                         <PPhoto h="100%" />
                         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 60%, rgba(0,0,0,0.4) 100%)' }} />
+                        {hasBrandLogo && logoPosition === 'top-left' && (
+                          <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 5 }}><PLogo pos="top-left" /></div>
+                        )}
+                        {hasBrandLogo && logoPosition === 'top-right' && (
+                          <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 5 }}><PLogo pos="top-right" /></div>
+                        )}
                       </div>
                     </div>
                   )}
 
-                  {sections.profile && heroLayout === 'torn-edge' && (
+                  {profileEnabled && heroLayout === 'torn-edge' && (
                     <div style={{ fontFamily: T.fontFamily }}>
                       <div style={{
                         width: '100%', height: 170, position: 'relative',
@@ -874,38 +902,43 @@ function PhonePreviewComponent({
                     </div>
                   )}
 
-                  {sections.profile && heroLayout === 'default' && (
-                    <div className="relative" style={{ aspectRatio: '4/3', maxHeight: '200px' }}>
-                      <PPhoto h="100%" style={{ objectFit: 'cover', objectPosition: 'center' }} />
-                      <div className="absolute inset-0"
-                        style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.75) 100%)' }} />
-                      <div className="absolute bottom-0 left-0 right-0 h-[2px]"
-                        style={{ background: `linear-gradient(90deg, transparent, ${T.green}, ${T.greenLight}, ${T.green}, transparent)` }} />
+                  {profileEnabled && heroLayout === 'default' && (
+                    <div style={{ position: 'relative', aspectRatio: '4/3', width: '100%', overflow: 'hidden', background: '#000' }}>
+                      {/* Use absolute inset so the photo fills the aspect-ratio container reliably */}
+                      {profileImage ? (
+                        <img src={profileImage} alt={pName} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }} />
+                      ) : (
+                        <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, ${T.green}66 0%, ${T.bg} 50%, ${T.greenLight}44 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Upload className="w-7 h-7 opacity-30" style={{ color: T.greenLight }} />
+                        </div>
+                      )}
+                      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.75) 100%)' }} />
+                      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, ${T.green}, ${T.greenLight}, ${T.green}, transparent)` }} />
                       {hasBrandLogo && logoPosition === 'top-left' && (
-                        <div className="absolute top-3 left-3 z-10"><BrandLogoBadge src={brandLogo} maxSize={48} padding="5px" borderRadius={10} /></div>
+                        <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 10 }}><BrandLogoBadge src={brandLogo} maxSize={48} padding="5px" borderRadius={10} /></div>
                       )}
                       {hasBrandLogo && logoPosition === 'top-right' && (
-                        <div className="absolute top-3 right-3 z-10"><BrandLogoBadge src={brandLogo} maxSize={48} padding="5px" borderRadius={10} /></div>
+                        <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }}><BrandLogoBadge src={brandLogo} maxSize={48} padding="5px" borderRadius={10} /></div>
                       )}
-                      <div className="absolute bottom-0 left-0 right-0 px-4 pb-3 z-10">
+                      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '0 16px 12px', zIndex: 10 }}>
                         <PNameInfo color="#fff" titleColor={T.greenLight} companyColor="rgba(255,255,255,0.65)" />
                       </div>
                     </div>
                   )}
 
-                  {sections.profile && hasBrandLogo && logoPosition === 'below-photo' && (
+                  {profileEnabled && hasBrandLogo && logoPosition === 'below-photo' && (
                     <div className="flex justify-center py-2.5">
                       <BrandLogoBadge src={brandLogo} bg={T.card} blur={false} maxSize={80} padding="8px 12px" borderRadius={12} border={`1px solid ${T.cardBorder}`} />
                     </div>
                   )}
 
-                  {sections.profile && formData.tagline && (
+                  {profileEnabled && formData.tagline && (
                     <div className="px-4 py-2.5 text-center">
                       <p style={{ fontSize: T.bodyFontSize, fontStyle: 'italic', lineHeight: 1.5, color: T.textMuted, fontFamily: T.fontFamily, wordBreak: 'break-word', overflowWrap: 'anywhere', maxWidth: '100%' }}>{formData.tagline}</p>
                     </div>
                   )}
 
-                  {sections.profile && contactItems.length > 0 && (
+                  {profileEnabled && contactItems.length > 0 && (
                     <div className="flex justify-center gap-3 py-3 mx-3 mb-2.5"
                       style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: T.cardRadius }}>
                       {contactItems.slice(0, 4).map(({ href, Icon }, i) => (

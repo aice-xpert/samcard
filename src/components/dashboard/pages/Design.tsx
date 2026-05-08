@@ -693,7 +693,32 @@ export function DesignNew({
               saveDesign(normalizedDesign, activeDesignCacheKey);
             }
             if (!allowFallbackToFirstCard) {
-              setProfile(loadProfile(activeProfileCacheKey));
+              // Load from cache first, then overlay any API-supplied media/content
+              const cached = loadProfile(activeProfileCacheKey);
+              setProfile(prev => {
+                let next = { ...cached, ...prev };
+                if (contentData) {
+                  next = {
+                    ...next,
+                    profileImage: contentData.profileImage || next.profileImage,
+                    brandLogo: contentData.brandLogo || next.brandLogo,
+                    logoPosition: ((contentData.logoPosition as LogoPosition) || next.logoPosition),
+                    formData: { ...next.formData, ...(contentData.formData ?? {}) },
+                    sectionOrder: (contentData as any).sectionOrder || next.sectionOrder,
+                    unifiedOrder: (contentData as any).unifiedOrder || next.unifiedOrder,
+                    extraSections: (contentData as any).extraSections || next.extraSections,
+                  };
+                }
+                if (profileData) {
+                  next = {
+                    ...next,
+                    profileImage: profileData.profileImageUrl || next.profileImage,
+                    brandLogo: profileData.brandLogoUrl || next.brandLogo,
+                    logoPosition: ((profileData.logoPosition as LogoPosition) || next.logoPosition),
+                  };
+                }
+                return next;
+              });
               return;
             }
             if (contentData) {
@@ -788,7 +813,32 @@ export function DesignNew({
         }
 
         if (!allowFallbackToFirstCard) {
-          setProfile(loadProfile(activeProfileCacheKey));
+          // Load from cache first, then overlay any API-supplied media/content
+          const cached = loadProfile(activeProfileCacheKey);
+          setProfile(prev => {
+            let next = { ...cached, ...prev };
+            if (contentData) {
+              next = {
+                ...next,
+                profileImage: contentData.profileImage || next.profileImage,
+                brandLogo: contentData.brandLogo || next.brandLogo,
+                logoPosition: ((contentData.logoPosition as LogoPosition) || next.logoPosition),
+                formData: { ...next.formData, ...(contentData.formData ?? {}) },
+                sectionOrder: (contentData as any).sectionOrder || next.sectionOrder,
+                unifiedOrder: (contentData as any).unifiedOrder || next.unifiedOrder,
+                extraSections: (contentData as any).extraSections || next.extraSections,
+              };
+            }
+            if (profileData) {
+              next = {
+                ...next,
+                profileImage: profileData.profileImageUrl || next.profileImage,
+                brandLogo: profileData.brandLogoUrl || next.brandLogo,
+                logoPosition: ((profileData.logoPosition as LogoPosition) || next.logoPosition),
+              };
+            }
+            return next;
+          });
           return;
         }
 

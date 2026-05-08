@@ -420,7 +420,11 @@ function buildThemeOverrideFromCardDesign(design: Partial<CardDesignResponse>): 
       : (DESIGN_WALLPAPER_STYLES[preset] || undefined);
 
   // Derive heroLayout from palette (template palettes map to specific layouts)
-  const storedHeroLayout = typeof source.heroLayout === 'string' ? source.heroLayout : null;
+  // Treat empty string the same as null/undefined so we always fall back to 'default'.
+  const storedHeroLayout =
+    typeof source.heroLayout === 'string' && source.heroLayout.trim()
+      ? source.heroLayout.trim()
+      : null;
   const heroLayout =
     (storedHeroLayout && storedHeroLayout !== 'default')
       ? storedHeroLayout
