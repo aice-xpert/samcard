@@ -53,6 +53,77 @@ const isCardNameConflictError = (error: unknown): boolean => {
   return combined.includes("card_userid_name_normalized_unique");
 };
 
+const isSlugConflictError = (error: unknown): boolean => {
+  if (!error || typeof error !== "object") return false;
+
+  const parsed = error as {
+    code?: string;
+    constraint?: string;
+    message?: string;
+    details?: string;
+    hint?: string;
+  };
+
+  if (parsed.code !== "23505") return false;
+  const combined = [
+    parsed.constraint,
+    parsed.message,
+    parsed.details,
+    parsed.hint,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  return combined.includes("slug");
+};
+
+
+// ── Slug helpers ──────────────────────────────────────────────────────────────
+
+/**
+ * Normalizes a raw custom-slug input into a URL-safe slug, or returns null if
+ * the input is invalid / empty.
+ *
+ * Rules:
+ *   - Must be a non-empty string
+ *   - Lowercased, spaces → hyphens, strip non-alphanumeric except hyphens
+ *   - Collapsed consecutive hyphens → single hyphen
+ *   - Trimmed leading / trailing hyphens
+ *   - Length between 3 and 60 characters
+ */
+const normalizeSlug = (value: unknown): string | null => {
+  if (typeof value !== "string") return null;
+  const slug = value
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "")
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  if (slug.length < 3 || slug.length > 60) return null;
+  return slug;
+};
+
+/**
+ * Checks whether a given slug is already taken in the Card table.
+ * Optionally excludes a card (for update flows).
+ */
+const isSlugTaken = async (
+  slug: string,
+  excludeCardId?: string
+): Promise<{ taken: boolean; error: string | null }> => {
+  let query = supabase.from("Card").select("id").eq("slug", slug);
+  if (excludeCardId) {
+    query = query.neq("id", excludeCardId);
+  }
+  const { data, error } = await query;
+  if (error) return { taken: false, error: error.message };
+  return { taken: (data ?? []).length > 0, error: null };
+};
+
+// ── Name uniqueness check ─────────────────────────────────────────────────────
+
 const cardNameExistsForUser = async (
   userId: string,
   name: string,
@@ -112,6 +183,8 @@ const createBusinessProfileId = (): string =>
 const createCardId = (): string =>
   `card_${randomUUID().replace(/-/g, "")}`;
 
+// ── Routes ────────────────────────────────────────────────────────────────────
+
 router.get("/", verifySession, async (req: AuthRequest, res: Response) => {
   try {
     const { data: cards, error } = await supabase
@@ -153,12 +226,59 @@ router.get("/", verifySession, async (req: AuthRequest, res: Response) => {
   }
 });
 
+// ── GET /slug-check?slug=<slug>[&excludeCardId=<id>] ─────────────────────────
+// Public availability check — no auth required so the frontend can call it
+// before the user is even creating a card, but we still want it under this
+// router so it lives at /api/user/cards/slug-check.
+router.get("/check-slug", verifySession, async (req: AuthRequest, res: Response) => {
+  const raw = req.query.slug;
+  const excludeCardId = typeof req.query.excludeCardId === "string"
+    ? req.query.excludeCardId
+    : undefined;
+
+  const slug = normalizeSlug(raw);
+  if (!slug) {
+    return res.status(400).json({
+      available: false,
+      error:
+        "Invalid slug. Use 3–60 characters: lowercase letters, numbers, and hyphens only.",
+    });
+  }
+
+  const { taken, error } = await isSlugTaken(slug, excludeCardId);
+  if (error) {
+    return res.status(500).json({ available: false, error });
+  }
+
+  return res.json({ available: !taken, slug });
+});
+
 router.post("/", verifySession, async (req: AuthRequest, res: Response) => {
-  const { name, cardType, ...otherFields } = req.body;
+  const { name, cardType, customSlug, ...otherFields } = req.body;
   const normalizedName = normalizeCardName(name);
 
   if (!normalizedName) {
     return res.status(400).json({ error: "Card name is required" });
+  }
+
+  // ── Validate custom slug if provided ────────────────────────────────────────
+  let resolvedCustomSlug: string | undefined;
+  if (customSlug !== undefined && customSlug !== "") {
+    const normalized = normalizeSlug(customSlug);
+    if (!normalized) {
+      return res.status(400).json({
+        error:
+          "Invalid custom URL. Use 3–60 characters: lowercase letters, numbers, and hyphens only.",
+      });
+    }
+    const { taken, error: slugErr } = await isSlugTaken(normalized);
+    if (slugErr) return res.status(500).json({ error: slugErr });
+    if (taken) {
+      return res.status(409).json({
+        error: "This custom URL is already taken. Please choose another.",
+      });
+    }
+    resolvedCustomSlug = normalized;
   }
 
   try {
@@ -176,7 +296,6 @@ router.post("/", verifySession, async (req: AuthRequest, res: Response) => {
     if (duplicateCheck.exists) {
       return res.status(409).json({ error: "You already have a card with this name" });
     }
-
 
     // 2. Resolve or Create Business Profile
     const { data: existingProfile } = await supabase
@@ -207,9 +326,9 @@ router.post("/", verifySession, async (req: AuthRequest, res: Response) => {
       businessProfileId = createdProfile.id;
     }
 
-    // 3. Create the Card — use the cardId itself as the slug
+    // 3. Create the Card — use custom slug if provided, otherwise card ID
     const cardId = createCardId();
-    const slug = cardId; // ← card ID IS the slug: samcard.vercel.app/{cardId}
+    const slug = resolvedCustomSlug ?? cardId;
     const shareUrl = `/${slug}`;
 
     const cardData: Record<string, unknown> = {
@@ -258,6 +377,12 @@ router.post("/", verifySession, async (req: AuthRequest, res: Response) => {
       if (isCardNameConflictError(error)) {
         return res.status(409).json({ error: "You already have a card with this name" });
       }
+      // Surface slug unique-constraint violations clearly
+      if (isSlugConflictError(error)) {
+        return res.status(409).json({
+          error: "This custom URL is already taken. Please choose another.",
+        });
+      }
       return res.status(500).json({ error: error.message });
     }
 
@@ -277,7 +402,7 @@ router.post("/", verifySession, async (req: AuthRequest, res: Response) => {
 
 router.put("/:id", verifySession, async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
-  const { name, status, themeOverride, designId, ...otherFields } = req.body;
+  const { name, status, themeOverride, designId, customSlug, ...otherFields } = req.body;
 
   try {
     const { data: existing } = await supabase
@@ -310,14 +435,33 @@ router.put("/:id", verifySession, async (req: AuthRequest, res: Response) => {
 
       updateData.name = normalizedName;
     }
+
+    // ── Custom slug update ────────────────────────────────────────────────────
+    if (customSlug !== undefined && customSlug !== "") {
+      const normalized = normalizeSlug(customSlug);
+      if (!normalized) {
+        return res.status(400).json({
+          error:
+            "Invalid custom URL. Use 3–60 characters: lowercase letters, numbers, and hyphens only.",
+        });
+      }
+      const { taken, error: slugErr } = await isSlugTaken(normalized, String(id));
+      if (slugErr) return res.status(500).json({ error: slugErr });
+      if (taken) {
+        return res.status(409).json({
+          error: "This custom URL is already taken. Please choose another.",
+        });
+      }
+      updateData.slug = normalized;
+      updateData.shareUrl = `/${normalized}`;
+    }
+
     if (status) {
       const normalizedStatus = normalizeCardStatus(status);
       if (!normalizedStatus) {
         return res.status(400).json({ error: "Invalid status value" });
       }
 
-      // If already in requested status, return current state without writing
-      // to prevent redundant updates from rapid/concurrent toggles.
       const { data: currentCard, error: currentCardError } = await supabase
         .from("Card")
         .select("status")
@@ -379,6 +523,11 @@ router.put("/:id", verifySession, async (req: AuthRequest, res: Response) => {
     if (error) {
       if (isCardNameConflictError(error)) {
         return res.status(409).json({ error: "You already have a card with this name" });
+      }
+      if (isSlugConflictError(error)) {
+        return res.status(409).json({
+          error: "This custom URL is already taken. Please choose another.",
+        });
       }
       return res.status(500).json({ error: error.message });
     }
