@@ -26,7 +26,7 @@ function CampaignNameModal({
     onClearError: () => void;
 }) {
     const [campaignName, setCampaignName] = useState("");
-    const [folder, setFolder] = useState("");
+   
 
     const handleSave = async () => {
         onClearError();
