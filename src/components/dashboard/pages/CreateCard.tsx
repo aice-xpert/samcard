@@ -65,28 +65,7 @@ function CampaignNameModal({
                     />
                 </div>
 
-                {/* Folder */}
-                <div className="mb-7">
-                    <label className="block text-xs font-medium text-[#A0A0A0] mb-2 uppercase tracking-wide">
-                        Folder <span className="normal-case text-[#555]">(Optional)</span>
-                    </label>
-                    <select
-                        value={folder}
-                        onChange={(e) => setFolder(e.target.value)}
-                        className="w-full px-3 py-2.5 rounded-xl border border-[#008001]/25 bg-[#111811] text-sm text-[#A0A0A0] outline-none focus:border-[#008001]/60 transition-colors appearance-none cursor-pointer"
-                    >
-                        <option value="">Select Folder</option>
-                        <option value="folder1">Folder 1</option>
-                        <option value="folder2">Folder 2</option>
-                    </select>
-                </div>
-
-                {errorMessage && (
-                    <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
-                        {errorMessage}
-                    </div>
-                )}
-
+          
                 {/* Actions */}
                 <div className="flex justify-between gap-3">
                     <button
