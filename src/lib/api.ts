@@ -21,10 +21,10 @@ async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
   if (sessionToken) {
     (headers as Record<string, string>)["Authorization"] = `Bearer ${sessionToken}`;
   }
-  
+
   const fullUrl = BACKEND_URL ? `${BACKEND_URL}${path}` : path;
   console.log('→ API call:', fullUrl);
-  
+
   const response = await fetch(fullUrl, {
     credentials: "include",
     cache: "no-store",
@@ -270,6 +270,12 @@ export async function createCard(payload: CreateCardPayload) {
     method: "POST",
     body: JSON.stringify(payload),
   });
+}
+
+export async function checkSlugAvailable(slug: string, excludeCardId?: string): Promise<{ available: boolean; slug?: string; error?: string }> {
+  const params = new URLSearchParams({ slug });
+  if (excludeCardId) params.set("excludeCardId", excludeCardId);
+  return apiRequest<{ available: boolean; slug?: string; error?: string }>(`/api/user/cards/check-slug?${params}`, { method: "GET" });
 }
 
 export async function updateCard(id: string, payload: Partial<ApiCard>) {
@@ -732,7 +738,7 @@ export async function uploadFile(file: File, bucket?: string): Promise<{ url: st
   if (sessionToken) {
     (headers as Record<string, string>)["Authorization"] = `Bearer ${sessionToken}`;
   }
-  
+
   const formData = new FormData();
   formData.append('file', file);
   if (bucket) {
