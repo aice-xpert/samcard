@@ -190,16 +190,16 @@ function Divider({ T }: { T: ThemeOverride }) {
 function ProfileSection({ T, profileImage, formData, brandLogo, logoPosition, hasBrandLogo, contactItems }: any) {
   return (
     <>
-      <div className="relative" style={{ aspectRatio: '4/3', width: '100%' }}>
+      <div className="relative flex flex-col justify-end" style={{ minHeight: 220, width: '100%', overflow: 'hidden' }}>
         {profileImage ? (
           <img
             src={profileImage}
             alt={formData.name}
-            className="w-full h-full object-contain object-center"
+            className="absolute inset-0 w-full h-full object-contain object-center"
             style={{ backgroundColor: '#000' }}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center"
+          <div className="absolute inset-0 w-full h-full flex items-center justify-center"
             style={{ background: `linear-gradient(135deg, ${T.green}66 0%, ${T.bg} 50%, ${T.greenLight}44 100%)` }}>
             <div className="flex flex-col items-center gap-2 opacity-50">
               <Upload className="w-8 h-8" style={{ color: T.greenLight }} />
@@ -208,7 +208,7 @@ function ProfileSection({ T, profileImage, formData, brandLogo, logoPosition, ha
           </div>
         )}
         <div className="absolute inset-0"
-          style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.75) 100%)' }} />
+          style={{ background: 'linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.75) 100%)' }} />
         <div className="absolute bottom-0 left-0 right-0 h-[2px]"
           style={{ background: `linear-gradient(90deg, transparent, ${T.green}, ${T.greenLight}, ${T.green}, transparent)` }} />
         {hasBrandLogo && logoPosition === 'top-left' && (
@@ -221,7 +221,7 @@ function ProfileSection({ T, profileImage, formData, brandLogo, logoPosition, ha
             <BrandLogoBadge src={brandLogo} maxSize={48} padding="5px" borderRadius={10} />
           </div>
         )}
-        <div className="absolute bottom-0 left-0 right-0 px-4 pb-3 z-10">
+        <div className="relative px-4 pb-3 pt-12 z-10">
           <h1 style={{ fontWeight: T.boldHeadings ? 800 : 600, fontSize: T.nameFontSize, lineHeight: 1.2, color: '#fff', textShadow: '0 1px 8px rgba(0,0,0,0.7)', fontFamily: T.fontFamily, wordBreak: 'break-word', overflowWrap: 'anywhere', maxWidth: '100%' }}>
             {formData.name}
           </h1>
@@ -874,13 +874,19 @@ function PhonePreviewComponent({
                   )}
 
                   {profileEnabled && heroLayout === 'torn-edge' && (
-                    <div style={{ fontFamily: T.fontFamily }}>
+                    <div style={{ fontFamily: T.fontFamily, position: 'relative' }}>
                       <div style={{
                         width: '100%', height: 170, position: 'relative',
                         clipPath: 'polygon(0 0, 100% 0, 100% 80%, 97% 68%, 93% 82%, 89% 68%, 85% 81%, 81% 66%, 77% 80%, 73% 68%, 69% 82%, 65% 68%, 61% 81%, 57% 67%, 53% 81%, 49% 68%, 45% 81%, 41% 68%, 37% 80%, 33% 66%, 29% 78%, 25% 66%, 21% 78%, 17% 65%, 13% 77%, 9% 65%, 5% 76%, 2% 65%, 0 74%)',
                       }}>
                         <PPhoto h="100%" />
                       </div>
+                      {hasBrandLogo && logoPosition === 'top-left' && (
+                        <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 10 }}><PLogo pos="top-left" /></div>
+                      )}
+                      {hasBrandLogo && logoPosition === 'top-right' && (
+                        <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 10 }}><PLogo pos="top-right" /></div>
+                      )}
                       <div style={{ position: 'relative', background: T.bg, paddingTop: 6, paddingLeft: 64, paddingRight: 14, paddingBottom: 12, minHeight: 68 }}>
                         {/* Brand logo circle at torn edge (Fix 4) */}
                         <div style={{
@@ -903,8 +909,8 @@ function PhonePreviewComponent({
                   )}
 
                   {profileEnabled && heroLayout === 'default' && (
-                    <div style={{ position: 'relative', aspectRatio: '4/3', width: '100%', overflow: 'hidden', background: '#000' }}>
-                      {/* Use absolute inset so the photo fills the aspect-ratio container reliably */}
+                    <div style={{ position: 'relative', minHeight: 220, width: '100%', overflow: 'hidden', background: '#000', display: 'flex', flexDirection: 'column', justifyItems: 'flex-end', justifyContent: 'flex-end' }}>
+                      {/* Use absolute inset so the photo fills the container reliably */}
                       {profileImage ? (
                         <img src={profileImage} alt={pName} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }} />
                       ) : (
@@ -912,7 +918,7 @@ function PhonePreviewComponent({
                           <Upload className="w-7 h-7 opacity-30" style={{ color: T.greenLight }} />
                         </div>
                       )}
-                      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.75) 100%)' }} />
+                      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.75) 100%)' }} />
                       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, ${T.green}, ${T.greenLight}, ${T.green}, transparent)` }} />
                       {hasBrandLogo && logoPosition === 'top-left' && (
                         <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 10 }}><BrandLogoBadge src={brandLogo} maxSize={48} padding="5px" borderRadius={10} /></div>
@@ -920,7 +926,7 @@ function PhonePreviewComponent({
                       {hasBrandLogo && logoPosition === 'top-right' && (
                         <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }}><BrandLogoBadge src={brandLogo} maxSize={48} padding="5px" borderRadius={10} /></div>
                       )}
-                      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '0 16px 12px', zIndex: 10 }}>
+                      <div style={{ position: 'relative', padding: '40px 16px 12px', zIndex: 10 }}>
                         <PNameInfo color="#fff" titleColor={T.greenLight} companyColor="rgba(255,255,255,0.65)" />
                       </div>
                     </div>
@@ -994,7 +1000,8 @@ function PhonePreviewComponent({
                   </div>
                   <div className="flex items-center gap-2">
                     <button onClick={e => { e.stopPropagation(); onSaveContact(); }}
-                      disabled={!formData.name.trim()}
+                      disabled={!cardId || !formData.name.trim()}
+                      title={!cardId ? 'Save your card first to enable this' : undefined}
                       className="flex items-center gap-1.5 rounded-full px-3.5 py-2 font-bold text-white disabled:opacity-40 disabled:cursor-not-allowed"
                       style={{ background: savedContact ? T.greenLight : `linear-gradient(135deg,${T.green},${T.greenLight})`, fontSize: T.bodyFontSize, fontFamily: T.fontFamily }}>
                       {savedContact ? '✓ Saved!' : 'Add to Contact'}

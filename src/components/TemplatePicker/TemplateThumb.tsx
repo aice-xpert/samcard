@@ -67,7 +67,7 @@ const LogoCircle: React.FC<{ src: string | null | undefined; size: number; accen
   }
   return (
     <div style={{
-      width: size, height: size, borderRadius: '50%', background: accent,
+      width: size, height: size, borderRadius: '50%', background: bg,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       color: '#fff', fontSize: size * 0.38, fontWeight: 700,
       border: border ?? 'none', flexShrink: 0,
@@ -75,15 +75,15 @@ const LogoCircle: React.FC<{ src: string | null | undefined; size: number; accen
   );
 };
 
-const IconRow: React.FC<{ color: string; filled?: boolean }> = ({ color, filled }) => (
+const IconRow: React.FC<{ gradient: string; accent: string; filled?: boolean }> = ({ gradient, accent, filled }) => (
   <div style={{ display: 'flex', gap: 5, justifyContent: 'center', marginTop: 5 }}>
     {['☎','✉','💬'].map((g, i) => (
       <div key={i} style={{
         width: 12, height: 12, borderRadius: '50%',
-        background: filled ? color : 'transparent',
-        border: `1.5px solid ${color}`,
+        background: filled ? gradient : 'transparent',
+        border: `1.5px solid ${accent}`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: 5, color: filled ? '#fff' : color,
+        fontSize: 5, color: filled ? '#fff' : accent,
       }}>{g}</div>
     ))}
   </div>
@@ -97,9 +97,9 @@ const AboutCard: React.FC<{ bg: string; textColor: string; accent: string }> = (
   </div>
 );
 
-const LogoBar: React.FC<{ accent: string; textColor: string; label: string; logo?: string | null }> = ({ accent, textColor, label, logo }) => (
+const LogoBar: React.FC<{ accent: string; accentGradient: string; textColor: string; label: string; logo?: string | null }> = ({ accent, accentGradient, textColor, label, logo }) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 8px 3px' }}>
-    <LogoCircle src={logo} size={10} accent={accent} border="none" bg={accent} />
+    <LogoCircle src={logo} size={10} accent={accent} border="none" bg={accentGradient} />
     <div style={{ fontSize: 5, fontWeight: 700, color: textColor }}>{label}</div>
   </div>
 );
@@ -126,14 +126,22 @@ export default function TemplateThumb({ template }: { template: CardTemplate }) 
       <PhoneFrame bg={p.bg}>
         <div style={{ width: '100%', height: '52%', position: 'relative', overflow: 'hidden' }}>
           <Portrait src={profileImg} />
+          {/* Flowing colour wash over the photo bottom */}
+          <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, transparent 45%, ${p.accent}55 100%)` }} />
           <svg viewBox="0 0 200 32" preserveAspectRatio="none"
             style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 20, zIndex: 2 }}>
+            <defs>
+              <linearGradient id="waveGrad1" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor={p.accent} stopOpacity="1" />
+                <stop offset="100%" stopColor={p.accentLight} stopOpacity="0.85" />
+              </linearGradient>
+            </defs>
             <path d="M0,0 Q100,20 200,0 L200,32 L0,32 Z" fill={p.panel} />
           </svg>
         </div>
-        <div style={{ background: p.panel, padding: '8px 8px 6px', textAlign: 'center' }}>
+        <div style={{ background: p.panelGradient, padding: '8px 8px 6px', textAlign: 'center' }}>
           <NameBlock textColor={p.text} accent={p.accentLight} muteColor={p.accentLight} align="center" />
-          <IconRow color={p.accentLight} filled />
+          <IconRow accent={p.accentLight} gradient={p.accentGradient} filled />
         </div>
         <AboutCard bg="rgba(255,255,255,0.07)" textColor={p.text} accent={p.accentLight} />
       </PhoneFrame>
@@ -144,19 +152,24 @@ export default function TemplateThumb({ template }: { template: CardTemplate }) 
   if (layout === 'side-panel') {
     return (
       <PhoneFrame bg={p.bg}>
-        <LogoBar accent={p.accent} textColor={p.text} label={c.company ?? 'Company'} logo={brandLogo} />
+        <LogoBar accent={p.accent} accentGradient={p.accentGradient} textColor={p.text} label={c.company ?? 'Company'} logo={brandLogo} />
         <div style={{ display: 'flex', margin: '4px 6px', borderRadius: 6, overflow: 'hidden', height: '36%' }}>
-          <div style={{ width: '44%', flexShrink: 0 }}><Portrait src={profileImg} /></div>
-          <div style={{ flex: 1, background: p.panel, padding: '5px 6px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <div style={{ width: '44%', flexShrink: 0, position: 'relative' }}>
+            <Portrait src={profileImg} />
+            {/* Warm gradient bleed into side panel */}
+            <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(90deg, transparent 60%, ${p.accent}44 100%)` }} />
+          </div>
+          <div style={{ flex: 1, background: p.panelGradient, padding: '5px 6px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <NameBlock textColor={p.text} accent={p.accentLight} muteColor={p.text} />
           </div>
         </div>
-        <div style={{ margin: '5px 6px', background: p.accent, borderRadius: 999, padding: '4px 0', display: 'flex', justifyContent: 'center', gap: 5 }}>
+        {/* Gradient pill button */}
+        <div style={{ margin: '5px 6px', background: p.accentGradient, borderRadius: 999, padding: '4px 0', display: 'flex', justifyContent: 'center', gap: 5 }}>
           {['☎','✉','💬'].map((g, i) => (
             <div key={i} style={{ width: 10, height: 10, borderRadius: '50%', border: '1.5px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 4, color: '#fff' }}>{g}</div>
           ))}
         </div>
-        <AboutCard bg={p.panel} textColor={p.text} accent={p.accent} />
+        <AboutCard bg={p.panelGradient} textColor={p.text} accent={p.accent} />
       </PhoneFrame>
     );
   }
@@ -164,21 +177,30 @@ export default function TemplateThumb({ template }: { template: CardTemplate }) 
   // ── 3. group-photo — Team Pro ──────────────────────────────────
   if (layout === 'group-photo') {
     return (
-      <PhoneFrame bg={p.panel}>
+      <PhoneFrame bg={p.panelGradient}>
         <div style={{ width: '100%', height: '38%', position: 'relative', overflow: 'hidden' }}>
           <Portrait src={profileImg} />
+          {/* Gradient ribbon lines */}
+          <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} viewBox="0 0 100 80">
+            <defs>
+              <linearGradient id="ribbonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor={p.accent} stopOpacity="0.9" />
+                <stop offset="100%" stopColor={p.accentLight} stopOpacity="0.5" />
+              </linearGradient>
+            </defs>
+            <line x1="65" y1="0" x2="100" y2="60" stroke="url(#ribbonGrad)" strokeWidth="8" />
+            <line x1="80" y1="0" x2="100" y2="32" stroke={p.accentLight} strokeWidth="5" opacity="0.55" />
+          </svg>
           {/* Brand logo circle top-right */}
           <div style={{ position: 'absolute', top: 4, right: 4, zIndex: 2 }}>
-            <LogoCircle src={brandLogo} size={13} accent={p.accent} border="none" bg={p.accent} />
+            <LogoCircle src={brandLogo} size={13} accent={p.accent} border="none" bg={p.accentGradient} />
           </div>
           {/* Brand logo badge top-left */}
           <div style={{ position: 'absolute', top: 4, left: 4, width: 13, height: 13, borderRadius: 3, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3 }}>
             <LogoBadge src={brandLogo} size={9} accent={p.accentLight} />
           </div>
-          <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} viewBox="0 0 100 80">
-            <line x1="65" y1="0" x2="100" y2="60" stroke={p.accent} strokeWidth="8" opacity="0.75" />
-            <line x1="80" y1="0" x2="100" y2="32" stroke={p.accentLight} strokeWidth="5" opacity="0.55" />
-          </svg>
+          {/* Bottom fade into panel */}
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '35%', background: `linear-gradient(180deg, transparent 0%, ${p.panel}cc 100%)` }} />
         </div>
         <div style={{ position: 'relative', padding: '28px 8px 6px 8px' }}>
           <div style={{
@@ -191,7 +213,7 @@ export default function TemplateThumb({ template }: { template: CardTemplate }) 
           <div style={{ paddingLeft: 36 }}>
             <NameBlock textColor="#fff" accent={p.accentLight} muteColor="rgba(255,255,255,0.6)" />
           </div>
-          <IconRow color={p.accent} filled />
+          <IconRow accent={p.accent} gradient={p.accentGradient} filled />
         </div>
         <AboutCard bg="rgba(255,255,255,0.06)" textColor="#fff" accent={p.accentLight} />
       </PhoneFrame>
@@ -207,14 +229,22 @@ export default function TemplateThumb({ template }: { template: CardTemplate }) 
           <div style={{ position: 'absolute', top: 4, left: 4, background: 'rgba(0,0,0,0.5)', padding: 2, borderRadius: 3, lineHeight: 0, zIndex: 3 }}>
             <LogoBadge src={brandLogo} size={9} accent={p.accentLight} />
           </div>
+          {/* Gold shimmer wash at bottom */}
+          <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, transparent 50%, ${p.accent}66 100%)` }} />
           <svg viewBox="0 0 200 32" preserveAspectRatio="none"
             style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 20, zIndex: 2 }}>
+            <defs>
+              <linearGradient id="goldWave" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor={p.panel} />
+                <stop offset="100%" stopColor={p.accent + '33'} />
+              </linearGradient>
+            </defs>
             <path d="M0,0 Q100,20 200,0 L200,32 L0,32 Z" fill={p.panel} />
           </svg>
         </div>
-        <div style={{ background: p.panel, padding: '8px 8px 6px', textAlign: 'center' }}>
+        <div style={{ background: p.panelGradient, padding: '8px 8px 6px', textAlign: 'center' }}>
           <NameBlock textColor={p.text} accent={p.accentLight} muteColor="rgba(255,255,255,0.6)" align="center" />
-          <IconRow color={p.accent} filled />
+          <IconRow accent={p.accent} gradient={p.accentGradient} filled />
         </div>
         <AboutCard bg="rgba(255,255,255,0.06)" textColor={p.text} accent={p.accentLight} />
       </PhoneFrame>
@@ -227,26 +257,33 @@ export default function TemplateThumb({ template }: { template: CardTemplate }) 
       <PhoneFrame bg={p.bg}>
         <div style={{ width: '100%', height: '42%', overflow: 'hidden', position: 'relative' }}>
           <Portrait src={profileImg} />
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 50%, rgba(28,13,58,0.6) 100%)' }} />
+          {/* Purple colour wash over photo */}
+          <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, transparent 30%, ${p.accent}88 100%)` }} />
           <div style={{ position: 'absolute', top: 4, left: 4, background: 'rgba(0,0,0,0.5)', padding: 2, borderRadius: 3, lineHeight: 0, zIndex: 4 }}>
             <LogoBadge src={brandLogo} size={9} accent={p.accentLight} />
           </div>
         </div>
         <svg viewBox="0 0 200 28" preserveAspectRatio="none"
           style={{ position: 'absolute', top: 'calc(42% - 15px)', left: 0, width: '100%', height: 18, zIndex: 2 }}>
+          <defs>
+            <linearGradient id="purveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={p.panel} />
+              <stop offset="100%" stopColor={p.accentLight + '44'} />
+            </linearGradient>
+          </defs>
           <path d="M0,28 L0,8 Q80,28 200,6 L200,28 Z" fill={p.panel} />
         </svg>
         {/* Brand logo circle at right edge of curve */}
         <div style={{
           position: 'absolute', top: 'calc(42% - 20px)', right: 10, zIndex: 4,
         }}>
-          <LogoCircle src={brandLogo} size={18} accent={p.accentLight} border="none" bg={p.accentLight} />
+          <LogoCircle src={brandLogo} size={18} accent={p.accentLight} border="none" bg={p.accentGradient} />
         </div>
-        <div style={{ position: 'absolute', top: 'calc(42% + 3px)', left: 0, right: 0, bottom: 0, padding: '14px 8px 6px', zIndex: 1 }}>
+        <div style={{ position: 'absolute', top: 'calc(42% + 3px)', left: 0, right: 0, bottom: 0, padding: '14px 8px 6px', background: p.panelGradient, zIndex: 1 }}>
           <NameBlock textColor="#fff" accent={p.accentLight} muteColor="rgba(255,255,255,0.55)" />
           <div style={{ display: 'flex', gap: 4, marginTop: 5 }}>
             {['☎','✉','💬'].map((g, i) => (
-              <div key={i} style={{ width: 13, height: 13, borderRadius: '50%', background: p.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 5, color: '#fff' }}>{g}</div>
+              <div key={i} style={{ width: 13, height: 13, borderRadius: '50%', background: p.accentGradient, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 5, color: '#fff' }}>{g}</div>
             ))}
           </div>
         </div>
@@ -267,7 +304,12 @@ export default function TemplateThumb({ template }: { template: CardTemplate }) 
             <LogoBadge src={brandLogo} size={9} accent={p.accent} />
           </div>
           <div style={{ paddingTop: '18%', display: 'flex', justifyContent: 'center' }}>
-            <div style={{ width: '36%', aspectRatio: '1', borderRadius: '50%', overflow: 'hidden', border: `2px solid ${p.accent}44`, boxShadow: '0 2px 8px rgba(0,0,0,0.4)' }}>
+            <div style={{
+              width: '36%', aspectRatio: '1', borderRadius: '50%', overflow: 'hidden',
+              border: `2px solid transparent`,
+              background: `${p.accentGradient} border-box`,
+              boxShadow: `0 0 12px ${p.accent}55`,
+            }}>
               <Portrait src={profileImg} />
             </div>
           </div>
@@ -277,10 +319,10 @@ export default function TemplateThumb({ template }: { template: CardTemplate }) 
         </div>
         <div style={{ display: 'flex', gap: 4, padding: '3px 10px' }}>
           {['☎','✉','💬'].map((g, i) => (
-            <div key={i} style={{ width: 11, height: 11, borderRadius: '50%', border: `1.5px solid ${p.accent}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 4, color: p.accent }}>{g}</div>
+            <div key={i} style={{ width: 11, height: 11, borderRadius: '50%', background: p.accentGradient, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 4, color: '#fff' }}>{g}</div>
           ))}
         </div>
-        <AboutCard bg={p.panel} textColor={p.text} accent={p.accent} />
+        <AboutCard bg={p.panelGradient} textColor={p.text} accent={p.accent} />
       </PhoneFrame>
     );
   }
@@ -289,15 +331,18 @@ export default function TemplateThumb({ template }: { template: CardTemplate }) 
   if (layout === 'top-banner') {
     return (
       <PhoneFrame bg={p.bg}>
-        <LogoBar accent={p.accent} textColor="rgba(255,255,255,0.85)" label={c.company ?? 'Company'} logo={brandLogo} />
-        <div style={{ margin: '0 6px', background: p.accent, borderRadius: 6, padding: '5px 7px' }}>
-          <NameBlock textColor="#fff" accent="rgba(255,255,255,0.85)" muteColor="rgba(255,255,255,0.65)" />
+        <LogoBar accent={p.accent} accentGradient={p.accentGradient} textColor="rgba(255,255,255,0.85)" label={c.company ?? 'Company'} logo={brandLogo} />
+        {/* Gradient name banner */}
+        <div style={{ margin: '0 6px', background: p.accentGradient, borderRadius: 6, padding: '5px 7px' }}>
+          <NameBlock textColor="#fff" accent="rgba(255,255,255,0.9)" muteColor="rgba(255,255,255,0.65)" />
         </div>
-        <div style={{ margin: '5px 6px', height: '32%', borderRadius: 5, overflow: 'hidden' }}>
+        <div style={{ margin: '5px 6px', height: '32%', borderRadius: 5, overflow: 'hidden', position: 'relative' }}>
           <Portrait src={profileImg} />
+          {/* Warm sunset overlay */}
+          <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, ${p.accent}22 0%, transparent 60%)` }} />
         </div>
-        <IconRow color={p.accent} filled />
-        <AboutCard bg="rgba(255,255,255,0.07)" textColor="#fff" accent={p.accentLight} />
+        <IconRow accent={p.accent} gradient={p.accentGradient} filled />
+        <AboutCard bg={p.panelGradient} textColor="#fff" accent={p.accentLight} />
       </PhoneFrame>
     );
   }
@@ -305,13 +350,17 @@ export default function TemplateThumb({ template }: { template: CardTemplate }) 
   // ── 8. sky-circle — Sky Circle ────────────────────────────────
   if (layout === 'sky-circle') {
     return (
-      <PhoneFrame bg={p.panel}>
+      <PhoneFrame bg={p.panelGradient}>
         <div style={{ width: '100%', height: '30%', overflow: 'hidden', position: 'relative' }}>
           <Portrait src={profileImg} />
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 40%, rgba(91,120,255,0.6) 100%)' }} />
+          <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, transparent 40%, ${p.accent}88 100%)` }} />
         </div>
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: -16, position: 'relative', zIndex: 2 }}>
-          <div style={{ width: '26%', aspectRatio: '1', borderRadius: '50%', overflow: 'hidden', border: '2px solid #fff' }}>
+          <div style={{
+            width: '26%', aspectRatio: '1', borderRadius: '50%', overflow: 'hidden',
+            border: '2px solid #fff',
+            boxShadow: `0 0 10px ${p.accent}88`,
+          }}>
             <Portrait src={profileImg} />
           </div>
         </div>
@@ -320,7 +369,7 @@ export default function TemplateThumb({ template }: { template: CardTemplate }) 
         </div>
         <div style={{ display: 'flex', justifyContent: 'center', gap: 5, marginTop: 3 }}>
           {['☎','✉','💬'].map((g, i) => (
-            <div key={i} style={{ width: 13, height: 13, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', border: '1.5px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 5, color: '#fff' }}>{g}</div>
+            <div key={i} style={{ width: 13, height: 13, borderRadius: '50%', background: p.accentGradient, border: '1.5px solid rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 5, color: '#fff' }}>{g}</div>
           ))}
         </div>
         <AboutCard bg="rgba(255,255,255,0.12)" textColor="#fff" accent="#fff" />
@@ -334,19 +383,21 @@ export default function TemplateThumb({ template }: { template: CardTemplate }) 
       <PhoneFrame bg={p.bg}>
         <div style={{ width: '100%', height: '55%', position: 'relative', overflow: 'hidden' }}>
           <Portrait src={profileImg} filter="grayscale(80%)" />
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 35%, rgba(0,0,0,0.88) 100%)' }} />
+          <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, transparent 30%, rgba(0,0,0,0.75) 75%, ${p.panel} 100%)` }} />
+          {/* Neon glow accent at bottom */}
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 3, background: p.accentGradient, opacity: 0.8 }} />
           {/* Brand logo circle centered above name */}
           <div style={{ position: 'absolute', bottom: 22, left: '50%', transform: 'translateX(-50%)', zIndex: 3 }}>
-            <LogoCircle src={brandLogo} size={16} accent={p.accent} border={`1px solid ${p.accent}`} bg="rgba(255,255,255,0.12)" />
+            <LogoCircle src={brandLogo} size={16} accent={p.accent} border={`1px solid ${p.accent}`} bg={p.accentGradient} />
           </div>
           <div style={{ position: 'absolute', bottom: 4, left: 8, right: 8 }}>
             <NameBlock textColor="#fff" accent={p.accentLight} muteColor="rgba(255,255,255,0.5)" />
           </div>
         </div>
-        <div style={{ padding: '6px 8px' }}>
+        <div style={{ padding: '6px 8px', background: p.panelGradient }}>
           <div style={{ display: 'flex', gap: 4 }}>
             {['☎','✉','💬'].map((g, i) => (
-              <div key={i} style={{ width: 11, height: 11, borderRadius: '50%', border: `1.5px solid ${p.accentLight}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 4, color: p.accentLight }}>{g}</div>
+              <div key={i} style={{ width: 11, height: 11, borderRadius: '50%', background: p.accentGradient, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 4, color: '#000' }}>{g}</div>
             ))}
           </div>
         </div>
@@ -364,20 +415,23 @@ export default function TemplateThumb({ template }: { template: CardTemplate }) 
           clipPath: 'polygon(0 0, 100% 0, 100% 84%, 95% 70%, 90% 86%, 85% 70%, 80% 84%, 74% 68%, 68% 82%, 62% 68%, 56% 83%, 50% 68%, 44% 84%, 38% 70%, 32% 83%, 26% 68%, 20% 80%, 14% 68%, 8% 78%, 3% 66%, 0 76%)',
         }}>
           <Portrait src={profileImg} />
+          {/* Warm mocha gradient wash at bottom of torn image */}
+          <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, transparent 55%, ${p.accent}66 100%)` }} />
         </div>
         {/* Brand logo circle at torn edge */}
-        <div style={{ position: 'absolute', top: 'calc(38% - 18px)', left: 8, width: 22, height: 22, borderRadius: '50%', background: '#fff', border: '2px solid #fff', zIndex: 3, boxShadow: '0 1px 4px rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <LogoCircle src={brandLogo} size={16} accent={p.accent} border="none" bg={p.accent} />
+        <div style={{ position: 'absolute', top: 'calc(38% - 18px)', left: 8, width: 22, height: 22, borderRadius: '50%', background: p.accentGradient, border: '2px solid #fff', zIndex: 3, boxShadow: '0 1px 4px rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <LogoCircle src={brandLogo} size={16} accent={p.accent} border="none" bg={p.accentGradient} />
         </div>
         <div style={{ padding: '6px 8px 4px 36px', marginTop: -4 }}>
           <NameBlock textColor={p.text} accent={p.accent} muteColor={p.accentLight} />
         </div>
         <div style={{ display: 'flex', gap: 4, padding: '3px 8px' }}>
           {['☎','✉','💬'].map((g, i) => (
-            <div key={i} style={{ width: 12, height: 12, borderRadius: '50%', background: p.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 4, color: '#fff' }}>{g}</div>
+            <div key={i} style={{ width: 12, height: 12, borderRadius: '50%', background: p.accentGradient, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 4, color: '#fff' }}>{g}</div>
           ))}
         </div>
-        <div style={{ margin: '4px 6px', background: p.accent, borderRadius: 999, padding: '3px 0', textAlign: 'center' }}>
+        {/* Gradient "About Me" pill */}
+        <div style={{ margin: '4px 6px', background: p.accentGradient, borderRadius: 999, padding: '3px 0', textAlign: 'center' }}>
           <span style={{ fontSize: 4, color: '#fff', fontWeight: 700 }}>About Me</span>
         </div>
       </PhoneFrame>

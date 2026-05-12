@@ -1689,7 +1689,7 @@ export default function PublicCardPage() {
           )}
 
           {profileVisible && heroLayout === 'torn-edge' && (
-            <div style={{ fontFamily: T.fontFamily }}>
+            <div style={{ fontFamily: T.fontFamily, position: 'relative' }}>
               {/* Photo with torn bottom edge */}
               <div style={{
                 width: '100%', height: 220, position: 'relative',
@@ -1697,6 +1697,12 @@ export default function PublicCardPage() {
               }}>
                 <PhotoEl height="100%" />
               </div>
+              {hasBrandLogo && content.logoPosition === 'top-left' && (
+                <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 10 }}><LogoBadge pos="top-left" /></div>
+              )}
+              {hasBrandLogo && content.logoPosition === 'top-right' && (
+                <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }}><LogoBadge pos="top-right" /></div>
+              )}
               {/* Brand logo circle at torn edge (matches PhonePreview) */}
               <div style={{ position: 'relative', background: T.bg, paddingTop: 8, paddingLeft: 80, paddingRight: 20, paddingBottom: 16, minHeight: 80 }}>
                 <div style={{ position: 'absolute', top: -32, left: 20 }}>
@@ -1711,14 +1717,19 @@ export default function PublicCardPage() {
             <div
               style={{
                 position: "relative",
-                aspectRatio: "16/9",
+                minHeight: 240,
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "flex-end",
                 overflow: "hidden",
                 clipPath: "inset(0)",
                 background: "#000",
               }}
             >
-              <PhotoEl height="100%" />
-              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.78) 100%)" }} />
+              <div style={{ position: 'absolute', inset: 0 }}>
+                <PhotoEl height="100%" />
+              </div>
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.78) 100%)" }} />
               <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, ${T.green}, ${T.greenLight}, ${T.green}, transparent)` }} />
               {hasBrandLogo && content.logoPosition === "top-right" && (
                 <div style={{ position: "absolute", top: 12, right: 12, zIndex: 10 }}><LogoBadge pos="top-right" /></div>
@@ -1726,7 +1737,7 @@ export default function PublicCardPage() {
               {hasBrandLogo && content.logoPosition === "top-left" && (
                 <div style={{ position: "absolute", top: 12, left: 12, zIndex: 10 }}><LogoBadge pos="top-left" /></div>
               )}
-              <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "12px 20px 16px", zIndex: 10 }}>
+              <div style={{ position: "relative", padding: "40px 20px 16px", zIndex: 10 }}>
                 <NameInfo color="#fff" titleColor={T.greenLight} companyColor="rgba(255,255,255,0.6)" />
               </div>
             </div>
