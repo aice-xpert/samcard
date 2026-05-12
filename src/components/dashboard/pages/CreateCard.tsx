@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import BusinessProfile from "./BusinessProfile";
 import { DesignNew } from "./Design";
 import { NfcQr } from "./NfcQR";
-import { createCard, updateCard, updateCardQR, updateCardContent, updateCardDesign, CardContentPayload, getCards, uploadFile } from "@/lib/api";
+import { createCard, updateCard, updateCardQR, updateCardContent, updateCardDesign, CardContentPayload, getCards, uploadFile, checkSlugAvailable } from "@/lib/api";
 import { makeQRMatrix } from "@/components/dashboard/pages/qr-engine";
 import { rebuildDecoratedComposite } from "@/components/dashboard/pages/qr-download-utils";
 
