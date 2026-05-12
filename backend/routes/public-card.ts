@@ -174,6 +174,7 @@ interface PublicCardResponse {
     customLogoUrl: string;
     logoBg: string;
     stickerId: string | null;
+    decorateImageUrl: string | null;
   };
   socialLinks: {
     platform: string;
@@ -431,6 +432,7 @@ router.get("/:slug", async (req, res: Response) => {
         customLogoUrl: qrConfig.customLogoUrl,
         logoBg: qrConfig.logoBg,
         stickerId: qrConfig.stickerId,
+        decorateImageUrl: qrConfig.decorateImageUrl || null,
       } : undefined,
       socialLinks: socialLinks ?? [],
       businessProfile: {

@@ -438,6 +438,45 @@ export default function TemplateThumb({ template }: { template: CardTemplate }) 
     );
   }
 
+  // ── 11/12. wave-logo-curve — Navy Gold / Emerald Wave ───────────
+  if (layout === 'wave-logo-curve') {
+    return (
+      <PhoneFrame bg={p.bg}>
+        <div style={{ width: '100%', height: '46%', position: 'relative', overflow: 'hidden' }}>
+          <Portrait src={profileImg} />
+          {/* Colour wash at bottom of photo */}
+          <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, transparent 40%, ${p.accent}55 100%)` }} />
+          {/* S-curve wave SVG */}
+          <svg viewBox="0 0 200 40" preserveAspectRatio="none"
+            style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 22, zIndex: 2 }}>
+            <path d="M0,24 C50,0 150,40 200,16 L200,40 L0,40 Z" fill={p.panel} />
+          </svg>
+          {/* Secondary wave for depth */}
+          <svg viewBox="0 0 200 40" preserveAspectRatio="none"
+            style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 26, zIndex: 1, opacity: 0.35 }}>
+            <path d="M0,28 C60,8 140,36 200,12 L200,40 L0,40 Z" fill={p.accent} />
+          </svg>
+        </div>
+        {/* Circular logo overlapping wave */}
+        <div style={{ position: 'absolute', top: 'calc(46% - 14px)', left: 8, zIndex: 4 }}>
+          <div style={{
+            width: 22, height: 22, borderRadius: '50%',
+            background: '#fff', border: `2px solid ${p.accent}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+          }}>
+            <LogoCircle src={brandLogo} size={16} accent={p.accent} border="none" bg={p.accentGradient} />
+          </div>
+        </div>
+        <div style={{ background: p.panelGradient, padding: '10px 8px 4px 8px' }}>
+          <NameBlock textColor={p.text} accent={p.accentLight} muteColor="rgba(255,255,255,0.6)" />
+          <IconRow accent={p.accentLight} gradient={p.accentGradient} filled />
+        </div>
+        <AboutCard bg="rgba(255,255,255,0.06)" textColor={p.text} accent={p.accentLight} />
+      </PhoneFrame>
+    );
+  }
+
   // Fallback
   return (
     <PhoneFrame bg={p.bg}>

@@ -18,6 +18,7 @@ import {
   buildCustomizedQrSvgFromConfig,
   svgTextToPngBlob,
   triggerBlobDownload,
+  rebuildDecoratedComposite,
 } from '@/components/dashboard/pages/qr-download-utils';
 
 // ─── Persistence helpers ──────────────────────────────────────────────────────
@@ -348,7 +349,8 @@ export function NfcQr({
           qrMatrix: liveQrMatrix,
           qrN: liveQrN,
           decorateImageUrl: savedConfig.decorateImageUrl || localConfig?.decorateImageUrl || null,
- decorateCompositeDataUrl: localConfig?.decorateCompositeDataUrl || savedConfig.decorateImageUrl || null,       };
+          decorateCompositeDataUrl: localConfig?.decorateCompositeDataUrl || savedConfig.decorateImageUrl || null,
+        };
 
         setQrConfig(qrFromBackend);
         setQr(qrFromBackend, liveQrMatrix, liveQrN);
@@ -371,12 +373,27 @@ export function NfcQr({
 
   const downloadQR = useCallback(async () => {
     const filename = cardSlug ? `${cardSlug}-qr.png` : 'samcard-qr.png';
-    if (qrConfig?.decorateCompositeDataUrl) {
-      const res = await fetch(qrConfig.decorateCompositeDataUrl);
-      const blob = await res.blob();
-      triggerBlobDownload(blob, filename);
-      return;
+
+    // When a decorated image exists, always rebuild the composite fresh from the
+    // live QR matrix so the downloaded file encodes the correct card URL — not
+    // the placeholder URL ("…/…") that may have been baked in when the customizer
+    // was opened before the card was saved for the first time.
+    if (qrConfig?.decorateImageUrl) {
+      try {
+        const blob = await rebuildDecoratedComposite(
+          qrConfig.decorateImageUrl,
+          qrConfig,
+          liveQrMatrix,
+          liveQrN,
+          1200,
+        );
+        triggerBlobDownload(blob, filename);
+        return;
+      } catch {
+        // Fall through to standard SVG-based export if composite rebuild fails
+      }
     }
+
     const svgText = qrConfig
       ? buildCustomizedQrSvgFromConfig(qrConfig, liveQrMatrix, liveQrN, 1200)
       : buildQrSvgString(liveQrMatrix, liveQrN, '#000000', '#ffffff', 1200, 40);
@@ -389,26 +406,49 @@ export function NfcQr({
     else await copyLink();
   }, [copyLink, CARD_URL]);
 
-  const printQR = useCallback(() => {
+  const printQR = useCallback(async () => {
     const w = window.open('', '_blank');
     if (!w) return;
-    if (qrConfig?.decorateCompositeDataUrl) {
-      w.document.write(`<html><head><title>QR Code</title><style>
-        body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#fff;}
-        img{width:400px;height:auto;}
-      </style></head><body><img src="${qrConfig.decorateCompositeDataUrl}" /></body></html>`);
-    } else {
-      const svgEl = qrRef.current?.querySelector('svg');
-      if (!svgEl) { w.close(); return; }
-      w.document.write(`<html><head><title>QR Code</title><style>
-        body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0a0f0a;}
-        svg{width:400px;height:400px;}
-      </style></head><body>${svgEl.outerHTML}</body></html>`);
+
+    // Rebuild the composite fresh (same reason as downloadQR — avoid stale placeholder URL)
+    if (qrConfig?.decorateImageUrl) {
+      try {
+        const blob = await rebuildDecoratedComposite(
+          qrConfig.decorateImageUrl,
+          qrConfig,
+          liveQrMatrix,
+          liveQrN,
+          1200,
+        );
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => typeof reader.result === 'string' ? resolve(reader.result) : reject();
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+        w.document.write(`<html><head><title>QR Code</title><style>
+          body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#fff;}
+          img{width:400px;height:auto;}
+        </style></head><body><img src="${dataUrl}" /></body></html>`);
+        w.document.close();
+        w.focus();
+        setTimeout(() => w.print(), 500);
+        return;
+      } catch {
+        // Fall through to SVG print
+      }
     }
+
+    const svgEl = qrRef.current?.querySelector('svg');
+    if (!svgEl) { w.close(); return; }
+    w.document.write(`<html><head><title>QR Code</title><style>
+      body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0a0f0a;}
+      svg{width:400px;height:400px;}
+    </style></head><body>${svgEl.outerHTML}</body></html>`);
     w.document.close();
     w.focus();
     setTimeout(() => w.print(), 500);
-  }, [qrConfig]);
+  }, [qrConfig, liveQrMatrix, liveQrN]);
 
   const handleCustomizerApply = useCallback(async (cfg: QRCustomConfig) => {
     let finalCfg = cfg;

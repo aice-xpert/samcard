@@ -197,6 +197,84 @@ export const triggerBlobDownload = (blob: Blob, fileName: string): void => {
   URL.revokeObjectURL(url);
 };
 
+// ─── Decorated composite rebuild ─────────────────────────────────────────────
+//
+// Re-composites the background image with a freshly-rendered QR SVG so that
+// the downloaded file always encodes the *current* card URL — not the URL that
+// was baked into the composite when the user first opened the customizer (which
+// may have been a placeholder like "…/..." before the card was saved).
+//
+// Layout: the QR is centered on the image at 45 % of the image's shorter side,
+// matching the most common decoration placement.  The exact pixel position is
+// not persisted in the config, so we use this sensible default for regeneration.
+
+export const rebuildDecoratedComposite = async (
+  decorateImageUrl: string,
+  config: QRCustomConfig,
+  matrix: boolean[][],
+  N: number,
+  outputSize = 1200,
+): Promise<Blob> => {
+  // 1. Build the QR SVG string using the live matrix (correct URL)
+  const svgText = buildCustomizedQrSvgFromConfig(config, matrix, N, outputSize);
+  const sanitized = ensureSvgNamespaces(sanitizeExportSvg(svgText));
+
+  return new Promise((resolve, reject) => {
+    const canvas = document.createElement("canvas");
+    canvas.width = outputSize;
+    canvas.height = outputSize;
+    const ctx = canvas.getContext("2d")!;
+
+    const bg = new Image();
+    bg.crossOrigin = "anonymous";
+    bg.onerror = () => {
+      // Background failed to load — fall back to QR-only PNG
+      const svgBlob = new Blob([sanitized], { type: "image/svg+xml;charset=utf-8" });
+      const svgUrl = URL.createObjectURL(svgBlob);
+      const fallbackImg = new Image();
+      fallbackImg.onload = () => {
+        ctx.fillStyle = config.bg ?? "#ffffff";
+        ctx.fillRect(0, 0, outputSize, outputSize);
+        ctx.drawImage(fallbackImg, 0, 0, outputSize, outputSize);
+        URL.revokeObjectURL(svgUrl);
+        canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("PNG export failed"))), "image/png");
+      };
+      fallbackImg.onerror = () => {
+        URL.revokeObjectURL(svgUrl);
+        reject(new Error("Both background and QR SVG failed to load"));
+      };
+      fallbackImg.src = svgUrl;
+    };
+
+    bg.onload = () => {
+      // Draw background stretched to fill the canvas
+      ctx.drawImage(bg, 0, 0, outputSize, outputSize);
+
+      // Draw QR centered at 55% of the shorter edge, centered on canvas
+      const qrSize = Math.round(outputSize * 0.45);
+      const qrX = Math.round((outputSize - qrSize) / 2);
+      const qrY = Math.round((outputSize - qrSize) / 2);
+
+      const svgBlob = new Blob([sanitized], { type: "image/svg+xml;charset=utf-8" });
+      const svgUrl = URL.createObjectURL(svgBlob);
+      const qrImg = new Image();
+      qrImg.onload = () => {
+        ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
+        URL.revokeObjectURL(svgUrl);
+        canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("PNG export failed"))), "image/png");
+      };
+      qrImg.onerror = () => {
+        URL.revokeObjectURL(svgUrl);
+        // Return background without QR rather than failing entirely
+        canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("QR SVG load failed"))), "image/png");
+      };
+      qrImg.src = svgUrl;
+    };
+
+    bg.src = decorateImageUrl;
+  });
+};
+
 // ─── QR SVG builders ──────────────────────────────────────────────────────────
 
 export const buildQrSvgString = (

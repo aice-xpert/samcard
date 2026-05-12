@@ -358,6 +358,8 @@ const PALETTE_TO_HERO_LAYOUT: Record<string, string> = {
   'sky-circle':      'circle-overlap',
   'onyx-pro':        'default',
   'mocha-torn':      'torn-edge',
+  'navy-gold':       'wave-logo',
+  'emerald-wave':    'wave-logo',
 };
 
 function buildThemeOverride(d: DesignSettings): Partial<ThemeOverride> {

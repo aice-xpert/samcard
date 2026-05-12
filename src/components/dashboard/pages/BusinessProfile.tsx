@@ -416,6 +416,8 @@ const TEMPLATE_PALETTE_TO_HERO: Record<string, string> = {
   'sky-circle':      'circle-overlap',
   'onyx-pro':        'default',
   'mocha-torn':      'torn-edge',
+  'navy-gold':       'wave-logo',
+  'emerald-wave':    'wave-logo',
 };
 
 function buildThemeOverrideFromCardDesign(design: Partial<CardDesignResponse>): Partial<ThemeOverride> {

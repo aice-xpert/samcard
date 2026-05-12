@@ -1375,6 +1375,8 @@ export default function PublicCardPage() {
     'sky-circle':      'circle-overlap',
     'onyx-pro':        'default',
     'mocha-torn':      'torn-edge',
+    'navy-gold':       'wave-logo',
+    'emerald-wave':    'wave-logo',
   };
   // Use stored heroLayout from DB first; fall back to palette-based derivation for legacy rows.
   // Use || not ?? so empty string from DB also falls back to 'default'.
@@ -1551,9 +1553,11 @@ export default function PublicCardPage() {
                 <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 10 }}><LogoBadge pos="top-left" /></div>
               )}
               {/* Info panel */}
-              <div style={{ background: T.bg, paddingTop: 16, paddingBottom: 16, paddingLeft: 20, paddingRight: 20, textAlign: 'center' }}>
+              <div style={{ background: T.bg, paddingTop: 16, paddingBottom: 6, paddingLeft: 20, paddingRight: 20, textAlign: 'center' }}>
                 <NameInfo align="center" companyColor={T.textMuted} titleColor={T.greenLight} />
               </div>
+              {/* Seamless fade from hero bg into page bg */}
+              <div style={{ height: 48, background: `linear-gradient(to bottom, ${T.bg} 0%, ${T.bg}99 30%, ${T.bg}44 60%, transparent 100%)`, pointerEvents: 'none' }} />
             </div>
           )}
 
@@ -1579,6 +1583,8 @@ export default function PublicCardPage() {
                   <NameInfo color={T.textPrimary} titleColor={T.greenLight} companyColor={T.textMuted} />
                 </div>
               </div>
+              {/* Seamless fade into page bg */}
+              <div style={{ height: 48, background: `linear-gradient(to bottom, ${T.bg} 0%, ${T.bg}99 30%, ${T.bg}44 60%, transparent 100%)`, pointerEvents: 'none' }} />
             </div>
           )}
 
@@ -1611,12 +1617,14 @@ export default function PublicCardPage() {
                 </svg>
               </div>
               {/* Panel with small portrait inset */}
-              <div style={{ position: 'relative', background: T.card, padding: '10px 16px 16px 90px', minHeight: 80 }}>
+              <div style={{ position: 'relative', background: T.card, padding: '10px 16px 10px 90px', minHeight: 80 }}>
                 <div style={{ position: 'absolute', top: -28, left: 16, width: 64, height: 80, borderRadius: 8, overflow: 'hidden', border: `2px solid ${T.green}` }}>
                   <PhotoEl height="100%" />
                 </div>
                 <NameInfo color={T.textPrimary} titleColor={T.greenLight} companyColor={T.textMuted} />
               </div>
+              {/* Seamless fade from card into page bg */}
+              <div style={{ height: 48, background: `linear-gradient(to bottom, ${T.card} 0%, ${T.card}99 30%, ${T.card}44 60%, transparent 100%)`, pointerEvents: 'none' }} />
             </div>
           )}
 
@@ -1632,7 +1640,7 @@ export default function PublicCardPage() {
                   <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 5 }}><LogoBadge pos="top-left" /></div>
                 )}
               </div>
-              <div style={{ background: T.bg, paddingBottom: 16, textAlign: 'center' }}>
+              <div style={{ background: T.bg, paddingBottom: 6, textAlign: 'center' }}>
                 {/* Overlapping circular portrait */}
                 <div style={{ marginTop: -52, display: 'flex', justifyContent: 'center', position: 'relative', zIndex: 2 }}>
                   <div style={{ width: 100, height: 100, borderRadius: '50%', overflow: 'hidden', border: '4px solid #fff', boxShadow: '0 4px 20px rgba(0,0,0,0.3)', background: T.card }}>
@@ -1643,11 +1651,14 @@ export default function PublicCardPage() {
                   <NameInfo align="center" companyColor={T.textMuted} titleColor={T.greenLight} />
                 </div>
               </div>
+              {/* Seamless fade from hero bg into page bg */}
+              <div style={{ height: 48, background: `linear-gradient(to bottom, ${T.bg} 0%, ${T.bg}99 30%, ${T.bg}44 60%, transparent 100%)`, pointerEvents: 'none' }} />
             </div>
           )}
 
           {profileVisible && heroLayout === 'circle-center' && (
-            <div style={{ position: 'relative', background: T.bg, padding: '48px 20px 16px', fontFamily: T.fontFamily }}>
+            <div style={{ position: 'relative', fontFamily: T.fontFamily }}>
+            <div style={{ background: T.bg, padding: '48px 20px 8px' }}>
               {hasBrandLogo && content.logoPosition === 'top-left' && (
                 <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 5 }}><LogoBadge pos="top-left" /></div>
               )}
@@ -1660,6 +1671,9 @@ export default function PublicCardPage() {
                 </div>
               </div>
               <NameInfo color={T.textPrimary} titleColor={T.textMuted} companyColor={T.green} />
+            </div>
+            {/* Seamless fade from hero bg into page bg */}
+            <div style={{ height: 48, background: `linear-gradient(to bottom, ${T.bg} 0%, ${T.bg}99 30%, ${T.bg}44 60%, transparent 100%)`, pointerEvents: 'none' }} />
             </div>
           )}
 
@@ -1680,10 +1694,10 @@ export default function PublicCardPage() {
               <div style={{ background: T.green, padding: '18px 20px' }}>
                 <NameInfo color="#fff" titleColor="rgba(255,255,255,0.9)" companyColor="rgba(255,255,255,0.7)" />
               </div>
-              {/* Photo below */}
+              {/* Photo below — fades seamlessly into page bg */}
               <div style={{ width: '100%', height: 220, overflow: 'hidden', position: 'relative' }}>
                 <PhotoEl height="100%" />
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 60%, rgba(0,0,0,0.4) 100%)' }} />
+                <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to bottom, transparent 30%, ${T.bg}88 65%, ${T.bg}cc 80%, ${T.bg} 100%)` }} />
               </div>
             </div>
           )}
@@ -1704,42 +1718,87 @@ export default function PublicCardPage() {
                 <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }}><LogoBadge pos="top-right" /></div>
               )}
               {/* Brand logo circle at torn edge (matches PhonePreview) */}
-              <div style={{ position: 'relative', background: T.bg, paddingTop: 8, paddingLeft: 80, paddingRight: 20, paddingBottom: 16, minHeight: 80 }}>
+              <div style={{ position: 'relative', background: T.bg, paddingTop: 8, paddingLeft: 80, paddingRight: 20, paddingBottom: 8, minHeight: 80 }}>
                 <div style={{ position: 'absolute', top: -32, left: 20 }}>
                   <LogoCircle sz={64} />
                 </div>
                 <NameInfo color={T.textPrimary} titleColor={T.textMuted} companyColor={T.green} />
               </div>
+              {/* Seamless fade from hero bg into page bg */}
+              <div style={{ height: 48, background: `linear-gradient(to bottom, ${T.bg} 0%, ${T.bg}99 30%, ${T.bg}44 60%, transparent 100%)`, pointerEvents: 'none' }} />
+            </div>
+          )}
+
+          {profileVisible && heroLayout === 'wave-logo' && (
+            <div style={{ fontFamily: T.fontFamily, position: 'relative' }}>
+              {/* Full-bleed photo with S-curve wave */}
+              <div style={{ width: '100%', height: 260, position: 'relative', overflow: 'hidden' }}>
+                <PhotoEl height="100%" />
+                {/* Accent colour wash at bottom of photo */}
+                <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, transparent 35%, ${T.green}55 100%)` }} />
+                {/* Secondary wave for depth (behind main wave) */}
+                <svg viewBox="0 0 400 60" preserveAspectRatio="none"
+                  style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 48, zIndex: 1 }}>
+                  <path d="M0,40 C100,10 300,55 400,20 L400,60 L0,60 Z" fill={T.green} opacity="0.3" />
+                </svg>
+                {/* Main S-curve wave */}
+                <svg viewBox="0 0 400 60" preserveAspectRatio="none"
+                  style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 44, zIndex: 2 }}>
+                  <path d="M0,36 C100,6 300,54 400,22 L400,60 L0,60 Z" fill={T.bg} />
+                </svg>
+                {/* Brand logo top placements */}
+                {hasBrandLogo && content.logoPosition === 'top-left' && (
+                  <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 10 }}><LogoBadge pos="top-left" /></div>
+                )}
+                {hasBrandLogo && content.logoPosition === 'top-right' && (
+                  <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }}><LogoBadge pos="top-right" /></div>
+                )}
+              </div>
+              {/* Circular logo overlapping the wave boundary */}
+              <div style={{
+                position: 'absolute', top: 222, left: 20, zIndex: 5,
+              }}>
+                <LogoCircle sz={64} />
+              </div>
+              {/* Name/info panel */}
+              <div style={{ background: T.bg, paddingTop: 10, paddingLeft: 96, paddingRight: 20, paddingBottom: 8, minHeight: 80 }}>
+                <NameInfo color={T.textPrimary} titleColor={T.greenLight} companyColor={T.textMuted} />
+              </div>
+              {/* Seamless fade from hero bg into page bg */}
+              <div style={{ height: 48, background: `linear-gradient(to bottom, ${T.bg} 0%, ${T.bg}99 30%, ${T.bg}44 60%, transparent 100%)`, pointerEvents: 'none' }} />
             </div>
           )}
 
           {profileVisible && heroLayout === 'default' && (
-            <div
-              style={{
-                position: "relative",
-                minHeight: 240,
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "flex-end",
-                overflow: "hidden",
-                clipPath: "inset(0)",
-                background: "#000",
-              }}
-            >
-              <div style={{ position: 'absolute', inset: 0 }}>
-                <PhotoEl height="100%" />
+            <div style={{ position: 'relative' }}>
+              <div
+                style={{
+                  position: "relative",
+                  minHeight: 240,
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "flex-end",
+                  overflow: "hidden",
+                  clipPath: "inset(0)",
+                  background: "#000",
+                }}
+              >
+                <div style={{ position: 'absolute', inset: 0 }}>
+                  <PhotoEl height="100%" />
+                </div>
+                <div style={{ position: "absolute", inset: 0, background: `linear-gradient(to bottom, transparent 15%, ${T.bg}66 50%, ${T.bg}cc 75%, ${T.bg} 100%)` }} />
+                {hasBrandLogo && content.logoPosition === "top-right" && (
+                  <div style={{ position: "absolute", top: 12, right: 12, zIndex: 10 }}><LogoBadge pos="top-right" /></div>
+                )}
+                {hasBrandLogo && content.logoPosition === "top-left" && (
+                  <div style={{ position: "absolute", top: 12, left: 12, zIndex: 10 }}><LogoBadge pos="top-left" /></div>
+                )}
+                <div style={{ position: "relative", padding: "40px 20px 10px", zIndex: 10 }}>
+                  <NameInfo color="#fff" titleColor={T.greenLight} companyColor="rgba(255,255,255,0.6)" />
+                </div>
               </div>
-              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.78) 100%)" }} />
-              <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, ${T.green}, ${T.greenLight}, ${T.green}, transparent)` }} />
-              {hasBrandLogo && content.logoPosition === "top-right" && (
-                <div style={{ position: "absolute", top: 12, right: 12, zIndex: 10 }}><LogoBadge pos="top-right" /></div>
-              )}
-              {hasBrandLogo && content.logoPosition === "top-left" && (
-                <div style={{ position: "absolute", top: 12, left: 12, zIndex: 10 }}><LogoBadge pos="top-left" /></div>
-              )}
-              <div style={{ position: "relative", padding: "40px 20px 16px", zIndex: 10 }}>
-                <NameInfo color="#fff" titleColor={T.greenLight} companyColor="rgba(255,255,255,0.6)" />
-              </div>
+              {/* Seamless fade from hero into page bg — replaces the hard 2px accent line */}
+              <div style={{ height: 48, background: `linear-gradient(to bottom, ${T.bg} 0%, ${T.bg}99 30%, ${T.bg}44 60%, transparent 100%)`, pointerEvents: 'none', marginTop: -1 }} />
             </div>
           )}
 

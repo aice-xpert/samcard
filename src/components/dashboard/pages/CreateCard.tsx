@@ -4,7 +4,9 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import BusinessProfile from "./BusinessProfile";
 import { DesignNew } from "./Design";
 import { NfcQr } from "./NfcQR";
-import { createCard, updateCard, updateCardQR, updateCardContent, updateCardDesign, CardContentPayload, getCards } from "@/lib/api";
+import { createCard, updateCard, updateCardQR, updateCardContent, updateCardDesign, CardContentPayload, getCards, uploadFile } from "@/lib/api";
+import { makeQRMatrix } from "@/components/dashboard/pages/qr-engine";
+import { rebuildDecoratedComposite } from "@/components/dashboard/pages/qr-download-utils";
 
 const STEPS = [
     { id: 1, label: "Content" },
@@ -372,6 +374,33 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
             }
 
             if (qrConfig && targetCardId) {
+                // Rebuild decorated composite with the real card URL so the QR
+                // matrix encodes the correct slug instead of the placeholder
+                // ("…/…") that was used before the card existed.
+                let finalDecorateUrl = qrConfig.decorateCompositeDataUrl || '';
+                const realSlug = createdSlug ?? (await getCards().then(cs => cs.find(c => c.id === targetCardId)?.slug));
+                if (qrConfig.decorateImageUrl && realSlug) {
+                    try {
+                        const PUBLIC_BASE =
+                            process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') ||
+                            'https://samcard.vercel.app';
+                        const correctUrl = `${PUBLIC_BASE}/${realSlug}`;
+                        const { matrix, N } = makeQRMatrix(correctUrl);
+                        const blob = await rebuildDecoratedComposite(
+                            qrConfig.decorateImageUrl,
+                            qrConfig,
+                            matrix,
+                            N,
+                            1200,
+                        );
+                        const file = new File([blob], 'qr-decorated.png', { type: 'image/png' });
+                        const { url } = await uploadFile(file);
+                        finalDecorateUrl = url;
+                    } catch (err) {
+                        console.warn('[CreateCard] Failed to rebuild decorated composite with correct URL, using original', err);
+                    }
+                }
+
                 await updateCardQR(targetCardId, {
                     shapeId: qrConfig.shapeId,
                     dotShape: qrConfig.dotShape,
@@ -393,7 +422,7 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
                     stickerId: qrConfig.selectedSticker?.id ?? null,
                     designLabel: qrConfig.designLabel,
                     shapeLabel: qrConfig.shapeLabel,
-                    decorateImageUrl: qrConfig.decorateCompositeDataUrl || '',
+                    decorateImageUrl: finalDecorateUrl,
                 });
             }
 

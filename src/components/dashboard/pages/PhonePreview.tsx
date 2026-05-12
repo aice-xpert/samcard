@@ -720,6 +720,7 @@ function PhonePreviewComponent({
                   style={{ maxHeight: 560, overflowX: 'hidden', background: T.phoneBgStyle || T.bg, ...ff }}>
 
                   {/* ── HERO — layout-aware ── */}
+                  {/* Seamless gradient fade helper: renders a gradient from a source color to transparent at the bottom of each hero */}
 
                   {profileEnabled && heroLayout === 'wave-panel' && (
                     <div style={{ position: 'relative', fontFamily: T.fontFamily }}>
@@ -737,9 +738,11 @@ function PhonePreviewComponent({
                       {hasBrandLogo && logoPosition === 'top-left' && (
                         <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 5 }}><PLogo pos="top-left" /></div>
                       )}
-                      <div style={{ background: T.bg, paddingTop: 12, paddingBottom: 12, paddingLeft: 16, paddingRight: 16, textAlign: 'center' }}>
+                      <div style={{ background: T.bg, paddingTop: 12, paddingBottom: 4, paddingLeft: 16, paddingRight: 16, textAlign: 'center' }}>
                         <PNameInfo align="center" companyColor={T.textMuted} titleColor={T.greenLight} />
                       </div>
+                      {/* Seamless fade from hero bg into phone bg */}
+                      <div style={{ height: 40, background: `linear-gradient(to bottom, ${T.bg} 0%, ${T.bg}99 30%, ${T.bg}44 60%, transparent 100%)`, pointerEvents: 'none' }} />
                     </div>
                   )}
 
@@ -769,6 +772,8 @@ function PhonePreviewComponent({
                           <PNameInfo color={T.textPrimary} titleColor={T.greenLight} companyColor={T.textMuted} />
                         </div>
                       </div>
+                      {/* Seamless fade into phone bg */}
+                      <div style={{ height: 40, background: `linear-gradient(to bottom, ${T.bg} 0%, ${T.bg}99 30%, ${T.bg}44 60%, transparent 100%)`, pointerEvents: 'none' }} />
                     </div>
                   )}
 
@@ -794,12 +799,14 @@ function PhonePreviewComponent({
                           <line x1="80" y1="0" x2="100" y2="45" stroke={T.greenLight} strokeWidth="7" opacity="0.45" />
                         </svg>
                       </div>
-                      <div style={{ position: 'relative', background: T.card, padding: '8px 14px 12px 74px', minHeight: 70 }}>
+                      <div style={{ position: 'relative', background: T.card, padding: '8px 14px 6px 74px', minHeight: 70 }}>
                         <div style={{ position: 'absolute', top: -22, left: 12, width: 52, height: 64, borderRadius: 6, overflow: 'hidden', border: `2px solid ${T.green}` }}>
                           <PPhoto h="100%" />
                         </div>
                         <PNameInfo color={T.textPrimary} titleColor={T.greenLight} companyColor={T.textMuted} />
                       </div>
+                      {/* Seamless fade from card into phone bg */}
+                      <div style={{ height: 40, background: `linear-gradient(to bottom, ${T.card} 0%, ${T.card}99 30%, ${T.card}44 60%, transparent 100%)`, pointerEvents: 'none' }} />
                     </div>
                   )}
 
@@ -815,7 +822,7 @@ function PhonePreviewComponent({
                           <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 5 }}><PLogo pos="top-left" /></div>
                         )}
                       </div>
-                      <div style={{ background: T.bg, paddingBottom: 12, textAlign: 'center' }}>
+                      <div style={{ background: T.bg, paddingBottom: 4, textAlign: 'center' }}>
                         <div style={{ marginTop: -42, display: 'flex', justifyContent: 'center', position: 'relative', zIndex: 2 }}>
                           <div style={{ width: 80, height: 80, borderRadius: '50%', overflow: 'hidden', border: '3px solid #fff', boxShadow: '0 4px 16px rgba(0,0,0,0.3)', background: T.card }}>
                             <PPhoto h="100%" />
@@ -825,6 +832,8 @@ function PhonePreviewComponent({
                           <PNameInfo align="center" companyColor={T.textMuted} titleColor={T.greenLight} />
                         </div>
                       </div>
+                      {/* Seamless fade from hero bg into phone bg */}
+                      <div style={{ height: 40, background: `linear-gradient(to bottom, ${T.bg} 0%, ${T.bg}99 30%, ${T.bg}44 60%, transparent 100%)`, pointerEvents: 'none' }} />
                     </div>
                   )}
 
@@ -842,6 +851,8 @@ function PhonePreviewComponent({
                         </div>
                       </div>
                       <PNameInfo color={T.textPrimary} titleColor={T.textMuted} companyColor={T.green} />
+                      {/* Seamless fade from hero bg into phone bg */}
+                      <div style={{ position: 'absolute', bottom: -40, left: 0, right: 0, height: 40, background: `linear-gradient(to bottom, ${T.bg} 0%, ${T.bg}99 30%, ${T.bg}44 60%, transparent 100%)`, pointerEvents: 'none', zIndex: 1 }} />
                     </div>
                   )}
 
@@ -862,7 +873,7 @@ function PhonePreviewComponent({
                       </div>
                       <div style={{ width: '100%', height: 160, overflow: 'hidden', position: 'relative' }}>
                         <PPhoto h="100%" />
-                        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 60%, rgba(0,0,0,0.4) 100%)' }} />
+                        <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to bottom, transparent 30%, ${T.bg}88 65%, ${T.bg}cc 80%, ${T.bg} 100%)` }} />
                         {hasBrandLogo && logoPosition === 'top-left' && (
                           <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 5 }}><PLogo pos="top-left" /></div>
                         )}
@@ -887,7 +898,7 @@ function PhonePreviewComponent({
                       {hasBrandLogo && logoPosition === 'top-right' && (
                         <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 10 }}><PLogo pos="top-right" /></div>
                       )}
-                      <div style={{ position: 'relative', background: T.bg, paddingTop: 6, paddingLeft: 64, paddingRight: 14, paddingBottom: 12, minHeight: 68 }}>
+                      <div style={{ position: 'relative', background: T.bg, paddingTop: 6, paddingLeft: 64, paddingRight: 14, paddingBottom: 6, minHeight: 68 }}>
                         {/* Brand logo circle at torn edge (Fix 4) */}
                         <div style={{
                           position: 'absolute', top: -26, left: 14, width: 52, height: 52,
@@ -905,30 +916,88 @@ function PhonePreviewComponent({
                         </div>
                         <PNameInfo color={T.textPrimary} titleColor={T.textMuted} companyColor={T.green} />
                       </div>
+                      {/* Seamless fade from hero bg into phone bg */}
+                      <div style={{ height: 40, background: `linear-gradient(to bottom, ${T.bg} 0%, ${T.bg}99 30%, ${T.bg}44 60%, transparent 100%)`, pointerEvents: 'none' }} />
+                    </div>
+                  )}
+
+                  {profileEnabled && heroLayout === 'wave-logo' && (
+                    <div style={{ fontFamily: T.fontFamily, position: 'relative' }}>
+                      {/* Full-bleed photo with S-curve wave */}
+                      <div style={{ width: '100%', height: 190, position: 'relative', overflow: 'hidden' }}>
+                        <PPhoto h="100%" />
+                        {/* Accent colour wash at bottom of photo */}
+                        <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, transparent 35%, ${T.green}55 100%)` }} />
+                        {/* Secondary wave for depth (behind main wave) */}
+                        <svg viewBox="0 0 400 60" preserveAspectRatio="none"
+                          style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 38, zIndex: 1 }}>
+                          <path d="M0,40 C100,10 300,55 400,20 L400,60 L0,60 Z" fill={T.green} opacity="0.3" />
+                        </svg>
+                        {/* Main S-curve wave */}
+                        <svg viewBox="0 0 400 60" preserveAspectRatio="none"
+                          style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 34, zIndex: 2 }}>
+                          <path d="M0,36 C100,6 300,54 400,22 L400,60 L0,60 Z" fill={T.bg} />
+                        </svg>
+                        {/* Brand logo top placements */}
+                        {hasBrandLogo && logoPosition === 'top-left' && (
+                          <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 10 }}><PLogo pos="top-left" /></div>
+                        )}
+                        {hasBrandLogo && logoPosition === 'top-right' && (
+                          <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 10 }}><PLogo pos="top-right" /></div>
+                        )}
+                      </div>
+                      {/* Circular logo overlapping the wave boundary */}
+                      <div style={{
+                        position: 'absolute', top: 160, left: 16, zIndex: 5,
+                      }}>
+                        <div style={{
+                          width: 58, height: 58, borderRadius: '50%',
+                          border: `3px solid ${T.green}`, boxShadow: `0 3px 14px rgba(0,0,0,0.3)`,
+                          background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          overflow: 'hidden',
+                        }}>
+                          {hasBrandLogo ? (
+                            <img src={brandLogo} alt="Brand" style={{ width: 40, height: 40, objectFit: 'contain', borderRadius: '50%' }} />
+                          ) : (
+                            <div style={{ width: 50, height: 50, borderRadius: '50%', background: T.green, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 20 }}>
+                              {(pCompany || pName || 'T')[0]?.toUpperCase()}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      {/* Name/info panel */}
+                      <div style={{ background: T.bg, paddingTop: 10, paddingLeft: 82, paddingRight: 14, paddingBottom: 6, minHeight: 68 }}>
+                        <PNameInfo color={T.textPrimary} titleColor={T.greenLight} companyColor={T.textMuted} />
+                      </div>
+                      {/* Seamless fade from hero bg into phone bg */}
+                      <div style={{ height: 40, background: `linear-gradient(to bottom, ${T.bg} 0%, ${T.bg}99 30%, ${T.bg}44 60%, transparent 100%)`, pointerEvents: 'none' }} />
                     </div>
                   )}
 
                   {profileEnabled && heroLayout === 'default' && (
-                    <div style={{ position: 'relative', minHeight: 220, width: '100%', overflow: 'hidden', background: '#000', display: 'flex', flexDirection: 'column', justifyItems: 'flex-end', justifyContent: 'flex-end' }}>
-                      {/* Use absolute inset so the photo fills the container reliably */}
-                      {profileImage ? (
-                        <img src={profileImage} alt={pName} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }} />
-                      ) : (
-                        <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, ${T.green}66 0%, ${T.bg} 50%, ${T.greenLight}44 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <Upload className="w-7 h-7 opacity-30" style={{ color: T.greenLight }} />
+                    <div style={{ position: 'relative' }}>
+                      <div style={{ position: 'relative', minHeight: 220, width: '100%', overflow: 'hidden', background: '#000', display: 'flex', flexDirection: 'column', justifyItems: 'flex-end', justifyContent: 'flex-end' }}>
+                        {/* Use absolute inset so the photo fills the container reliably */}
+                        {profileImage ? (
+                          <img src={profileImage} alt={pName} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }} />
+                        ) : (
+                          <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, ${T.green}66 0%, ${T.bg} 50%, ${T.greenLight}44 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Upload className="w-7 h-7 opacity-30" style={{ color: T.greenLight }} />
+                          </div>
+                        )}
+                        <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to bottom, transparent 15%, ${T.bg}66 50%, ${T.bg}cc 75%, ${T.bg} 100%)` }} />
+                        {hasBrandLogo && logoPosition === 'top-left' && (
+                          <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 10 }}><BrandLogoBadge src={brandLogo} maxSize={48} padding="5px" borderRadius={10} /></div>
+                        )}
+                        {hasBrandLogo && logoPosition === 'top-right' && (
+                          <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }}><BrandLogoBadge src={brandLogo} maxSize={48} padding="5px" borderRadius={10} /></div>
+                        )}
+                        <div style={{ position: 'relative', padding: '40px 16px 8px', zIndex: 10 }}>
+                          <PNameInfo color="#fff" titleColor={T.greenLight} companyColor="rgba(255,255,255,0.65)" />
                         </div>
-                      )}
-                      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.75) 100%)' }} />
-                      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, ${T.green}, ${T.greenLight}, ${T.green}, transparent)` }} />
-                      {hasBrandLogo && logoPosition === 'top-left' && (
-                        <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 10 }}><BrandLogoBadge src={brandLogo} maxSize={48} padding="5px" borderRadius={10} /></div>
-                      )}
-                      {hasBrandLogo && logoPosition === 'top-right' && (
-                        <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }}><BrandLogoBadge src={brandLogo} maxSize={48} padding="5px" borderRadius={10} /></div>
-                      )}
-                      <div style={{ position: 'relative', padding: '40px 16px 12px', zIndex: 10 }}>
-                        <PNameInfo color="#fff" titleColor={T.greenLight} companyColor="rgba(255,255,255,0.65)" />
                       </div>
+                      {/* Seamless fade from hero into phone bg — replaces the hard 2px accent line */}
+                      <div style={{ height: 40, background: `linear-gradient(to bottom, ${T.bg} 0%, ${T.bg}99 30%, ${T.bg}44 60%, transparent 100%)`, pointerEvents: 'none', marginTop: -1 }} />
                     </div>
                   )}
 
