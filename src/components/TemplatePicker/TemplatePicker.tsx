@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { cardTemplates, type CardTemplate } from '@/data/cardTemplates';
 import TemplateThumb from './TemplateThumb';
-import { Check } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const SELECTED_TEMPLATE_KEY = 'selectedTemplate';
 
@@ -19,6 +19,9 @@ type Props = {
 
 export default function TemplatePicker({ cardId, onApply, onDesignApply, className }: Props) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     try {
@@ -28,6 +31,35 @@ export default function TemplatePicker({ cardId, onApply, onDesignApply, classNa
       // ignore
     }
   }, [cardId]);
+
+  const updateScrollState = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    setCanScrollLeft(scrollLeft > 4);
+    setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 4);
+  }, []);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    // Initial check after layout
+    const timer = setTimeout(updateScrollState, 50);
+    el.addEventListener('scroll', updateScrollState, { passive: true });
+    const ro = new ResizeObserver(updateScrollState);
+    ro.observe(el);
+    return () => {
+      clearTimeout(timer);
+      el.removeEventListener('scroll', updateScrollState);
+      ro.disconnect();
+    };
+  }, [updateScrollState]);
+
+  const scroll = (dir: 'left' | 'right') => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir === 'left' ? -320 : 320, behavior: 'smooth' });
+  };
 
   const applyTemplate = (t: CardTemplate) => {
     setSelectedId(t.id);
@@ -49,8 +81,107 @@ export default function TemplatePicker({ cardId, onApply, onDesignApply, classNa
   };
 
   return (
-    <div className={className}>
+    <div className={className} style={{ position: 'relative' }}>
+      {/* Left fade + arrow */}
       <div
+        style={{
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          bottom: 12, // match scroll container bottom padding
+          width: 56,
+          zIndex: 10,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'flex-start',
+          paddingLeft: 4,
+          pointerEvents: canScrollLeft ? 'auto' : 'none',
+          // Fade only appears once scrolled; button always visible
+          background: canScrollLeft
+            ? 'linear-gradient(to right, #0D0D0D 40%, transparent)'
+            : 'transparent',
+          transition: 'background 0.25s ease',
+          borderRadius: '14px 0 0 14px',
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => scroll('left')}
+          aria-label="Scroll left"
+          style={{
+            width: 28,
+            height: 28,
+            borderRadius: '50%',
+            border: '1px solid rgba(73,182,24,0.3)',
+            background: 'rgba(13,13,13,0.85)',
+            color: '#49B618',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: canScrollLeft ? 'pointer' : 'default',
+            opacity: canScrollLeft ? 1 : 0.35,
+            transition: 'opacity 0.2s ease, transform 0.15s ease, box-shadow 0.15s ease',
+            boxShadow: canScrollLeft ? '0 2px 8px rgba(0,0,0,0.5)' : 'none',
+            flexShrink: 0,
+          }}
+          onMouseEnter={(e) => { if (canScrollLeft) e.currentTarget.style.transform = 'scale(1.1)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+        >
+          <ChevronLeft size={15} strokeWidth={2.5} />
+        </button>
+      </div>
+
+      {/* Right fade + arrow */}
+      <div
+        style={{
+          position: 'absolute',
+          right: 0,
+          top: 0,
+          bottom: 12,
+          width: 56,
+          zIndex: 10,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'flex-end',
+          paddingRight: 4,
+          pointerEvents: canScrollRight ? 'auto' : 'none',
+          background: canScrollRight
+            ? 'linear-gradient(to left, #0D0D0D 40%, transparent)'
+            : 'transparent',
+          transition: 'background 0.25s ease',
+          borderRadius: '0 14px 14px 0',
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => scroll('right')}
+          aria-label="Scroll right"
+          style={{
+            width: 28,
+            height: 28,
+            borderRadius: '50%',
+            border: '1px solid rgba(73,182,24,0.3)',
+            background: 'rgba(13,13,13,0.85)',
+            color: '#49B618',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: canScrollRight ? 'pointer' : 'default',
+            opacity: canScrollRight ? 1 : 0.35,
+            transition: 'opacity 0.2s ease, transform 0.15s ease, box-shadow 0.15s ease',
+            boxShadow: canScrollRight ? '0 2px 8px rgba(0,0,0,0.5)' : 'none',
+            flexShrink: 0,
+          }}
+          onMouseEnter={(e) => { if (canScrollRight) e.currentTarget.style.transform = 'scale(1.1)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+        >
+          <ChevronRight size={15} strokeWidth={2.5} />
+        </button>
+      </div>
+
+      {/* Scroll container */}
+      <div
+        ref={scrollRef}
         style={{
           display: 'flex',
           overflowX: 'auto',
@@ -59,6 +190,7 @@ export default function TemplatePicker({ cardId, onApply, onDesignApply, classNa
           scrollSnapType: 'x mandatory',
           WebkitOverflowScrolling: 'touch',
           msOverflowStyle: 'none',
+          scrollbarWidth: 'none',
         }}
       >
         {cardTemplates.map((t) => {

@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import BusinessProfile from "./BusinessProfile";
 import { DesignNew } from "./Design";
 import { NfcQr } from "./NfcQR";
-import { createCard, updateCard, updateCardQR, updateCardContent, updateCardDesign, CardContentPayload, getCards } from "@/lib/api";
+import { createCard, updateCard, updateCardQR, updateCardContent, updateCardDesign, CardContentPayload, getCards, checkSlugAvailable } from "@/lib/api";
 
 const STEPS = [
     { id: 1, label: "Content" },
@@ -20,18 +20,76 @@ function CampaignNameModal({
     onClearError,
 }: {
     onCancel: () => void;
-    onSave: (campaignName: string) => void;
+    onSave: (campaignName: string, customSlug?: string) => void;
     isSaving: boolean;
     errorMessage?: string;
     onClearError: () => void;
 }) {
     const [campaignName, setCampaignName] = useState("");
-    const [folder, setFolder] = useState("");
+    const [customSlug, setCustomSlug] = useState("");
+    const [slugStatus, setSlugStatus] = useState<"idle" | "checking" | "available" | "taken" | "invalid">("idle");
+    const [slugMessage, setSlugMessage] = useState("");
+    const slugDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const PUBLIC_BASE =
+        process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
+        "https://samcard.vercel.app";
+
+    const handleSlugChange = (value: string) => {
+        const raw = value.toLowerCase().replace(/[^a-z0-9-]/g, "").replace(/^-+/, "");
+        setCustomSlug(raw);
+        setSlugStatus("idle");
+        setSlugMessage("");
+        if (errorMessage) onClearError();
+
+        if (slugDebounceRef.current) clearTimeout(slugDebounceRef.current);
+
+        if (!raw) return;
+
+        if (raw.length < 3) {
+            setSlugStatus("invalid");
+            setSlugMessage("At least 3 characters required");
+            return;
+        }
+        if (raw.length > 60) {
+            setSlugStatus("invalid");
+            setSlugMessage("60 characters maximum");
+            return;
+        }
+
+        setSlugStatus("checking");
+        slugDebounceRef.current = setTimeout(async () => {
+            try {
+                const result = await checkSlugAvailable(raw);
+                if (result.available) {
+                    setSlugStatus("available");
+                    setSlugMessage("✓ This URL is available");
+                } else {
+                    setSlugStatus("taken");
+                    setSlugMessage("✗ This URL is already taken");
+                }
+            } catch {
+                setSlugStatus("invalid");
+                setSlugMessage("Could not check availability");
+            }
+        }, 500);
+    };
 
     const handleSave = async () => {
         onClearError();
-        await onSave(campaignName);
+        const slugToUse = customSlug && slugStatus === "available" ? customSlug : undefined;
+        await onSave(campaignName, slugToUse);
     };
+
+    const slugBorderColor =
+        slugStatus === "available" ? "border-[#49B618]/60" :
+            slugStatus === "taken" || slugStatus === "invalid" ? "border-red-500/60" :
+                "border-[#008001]/25";
+
+    const slugMsgColor =
+        slugStatus === "available" ? "text-[#49B618]" :
+            slugStatus === "taken" || slugStatus === "invalid" ? "text-red-400" :
+                "text-[#A0A0A0]";
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
@@ -39,7 +97,7 @@ function CampaignNameModal({
 
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-lg font-bold text-white">Campaign Name</h2>
+                    <h2 className="text-lg font-bold text-white">Finish & Publish</h2>
                     <button
                         onClick={onCancel}
                         className="w-7 h-7 rounded-lg bg-[#1a1f1a] text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20 flex items-center justify-center transition-all text-lg"
@@ -65,20 +123,33 @@ function CampaignNameModal({
                     />
                 </div>
 
-                {/* Folder */}
-                <div className="mb-7">
+                {/* Custom URL */}
+                <div className="mb-5">
                     <label className="block text-xs font-medium text-[#A0A0A0] mb-2 uppercase tracking-wide">
-                        Folder <span className="normal-case text-[#555]">(Optional)</span>
+                        Custom URL <span className="text-[#555] normal-case font-normal">(optional)</span>
                     </label>
-                    <select
-                        value={folder}
-                        onChange={(e) => setFolder(e.target.value)}
-                        className="w-full px-3 py-2.5 rounded-xl border border-[#008001]/25 bg-[#111811] text-sm text-[#A0A0A0] outline-none focus:border-[#008001]/60 transition-colors appearance-none cursor-pointer"
-                    >
-                        <option value="">Select Folder</option>
-                        <option value="folder1">Folder 1</option>
-                        <option value="folder2">Folder 2</option>
-                    </select>
+                    <div className={`flex items-center rounded-xl border ${slugBorderColor} bg-[#111811] transition-colors focus-within:border-[#008001]/60 overflow-hidden`}>
+                        <span className="px-3 text-xs text-[#555] whitespace-nowrap border-r border-[#008001]/15 py-2.5 select-none">
+                            {PUBLIC_BASE}/
+                        </span>
+                        <input
+                            type="text"
+                            value={customSlug}
+                            onChange={(e) => handleSlugChange(e.target.value)}
+                            placeholder="your-custom-url"
+                            maxLength={60}
+                            className="flex-1 px-3 py-2.5 bg-transparent text-sm text-white outline-none placeholder-[#555]"
+                        />
+                        {slugStatus === "checking" && (
+                            <span className="px-3 text-xs text-[#A0A0A0] animate-pulse">checking…</span>
+                        )}
+                    </div>
+                    {slugMessage && (
+                        <p className={`text-xs mt-1.5 ${slugMsgColor}`}>{slugMessage}</p>
+                    )}
+                    {!customSlug && (
+                        <p className="text-xs mt-1.5 text-[#555]">Leave blank to use the auto-generated URL</p>
+                    )}
                 </div>
 
                 {errorMessage && (
@@ -97,10 +168,10 @@ function CampaignNameModal({
                     </button>
                     <button
                         onClick={handleSave}
-                        disabled={isSaving}
+                        disabled={isSaving || (!!customSlug && slugStatus !== "available")}
                         className="px-6 py-2.5 rounded-xl bg-[#008001] text-white text-sm font-semibold hover:bg-[#49B618] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                        {isSaving ? "Saving..." : "Save"}
+                        {isSaving ? "Saving..." : "Save & Publish"}
                     </button>
                 </div>
             </div>
@@ -248,6 +319,7 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
     const [isSaving, setIsSaving] = useState(false);
     const [saveError, setSaveError] = useState<string | null>(null);
     const [hasLoadedCardContent, setHasLoadedCardContent] = useState(false);
+    const [pendingCustomSlug, setPendingCustomSlug] = useState<string | undefined>(undefined);
 
     // ── FIX: Keep a ref that always holds the latest cardContent ──────────────
     // onContentChange fires on every state change in BusinessProfile, so by the
@@ -336,17 +408,18 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
     const handleSaveFinish = () => {
         setSaveError(null);
         if (activeCardId) {
-            void handleSaveCard(undefined);
+            void handleSaveCard(undefined, undefined);
         } else {
             setShowCampaignModal(true);
         }
     };
 
-    const handleCampaignSave = async (campaignName: string) => {
-        await handleSaveCard(campaignName);
+    const handleCampaignSave = async (campaignName: string, customSlug?: string) => {
+        setPendingCustomSlug(customSlug);
+        await handleSaveCard(campaignName, customSlug);
     };
 
-    const handleSaveCard = async (campaignName: string | undefined) => {
+    const handleSaveCard = async (campaignName: string | undefined, customSlug: string | undefined) => {
         setIsSaving(true);
         setSaveError(null);
 
@@ -382,7 +455,9 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
                 const edited = cards.find((c) => c.id === targetCardId);
                 setCreatedSlug(edited?.slug);
             } else {
-                const card = await createCard({ ...payload, name: campaignName || "My Card" });
+                const createPayload: any = { ...payload, name: campaignName || "My Card" };
+                if (customSlug) createPayload.customSlug = customSlug;
+                const card = await createCard(createPayload);
                 targetCardId = card.id;
                 setActiveCardId(card.id);
                 setCreatedSlug(card.slug);

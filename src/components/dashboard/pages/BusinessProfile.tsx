@@ -341,6 +341,25 @@ function loadThemeOverride(cacheKey: string = DESIGN_KEY): Partial<ThemeOverride
     if (typeof p.phoneBgStyle === 'string') direct.phoneBgStyle = p.phoneBgStyle;
     if (typeof p.heroLayout === 'string') direct.heroLayout = p.heroLayout;
 
+    // BUG 81 FIX: if phoneBgStyle wasn't stored (e.g. cache written before this
+    // field existed, or Design was never saved), derive it from the wallpaper
+    // fields so the Contents-screen preview matches the Design-screen preview.
+    if (!direct.phoneBgStyle) {
+      const preset = typeof p.phoneBgPreset === 'string' ? p.phoneBgPreset : 'custom';
+      const bgType = typeof p.phoneBgType === 'string' && p.phoneBgType === 'solid' ? 'solid' : 'gradient';
+      const bgColor1 = typeof p.phoneBgColor1 === 'string' ? p.phoneBgColor1 : '#0a0f0a';
+      const bgColor2 = typeof p.phoneBgColor2 === 'string' ? p.phoneBgColor2 : '#0a0f0a';
+      const bgAngle = typeof p.phoneBgAngle === 'number' ? p.phoneBgAngle : 135;
+      if (preset === 'custom') {
+        direct.phoneBgStyle = bgType === 'gradient'
+          ? `linear-gradient(${bgAngle}deg, ${bgColor1} 0%, ${bgColor2} 100%)`
+          : bgColor1;
+      } else {
+        direct.phoneBgStyle = DESIGN_WALLPAPER_STYLES[preset]
+          ?? `linear-gradient(${bgAngle}deg, ${bgColor1} 0%, ${bgColor2} 100%)`;
+      }
+    }
+
     if (!direct.green && typeof p.accentColor === 'string') {
       const accent = p.accentColor as string;
       direct.green = accent;
@@ -403,21 +422,30 @@ function buildThemeOverrideFromCardDesign(design: Partial<CardDesignResponse>): 
   const source = design as Record<string, unknown>;
   const accent = pickString(source, ['accentColor', 'green'], '#008001');
   const accentLight = pickString(source, ['accentLight', 'greenLight'], '#49B618');
-  const preset = pickString(source, ['phoneBgPreset'], 'aurora');
-  const bgTypeRaw = pickString(source, ['phoneBgType'], 'gradient').toLowerCase();
+  // BUG 81 FIX: pickString only substitutes the fallback when the field is absent/non-string,
+  // but the API can return an empty string — normalise that to the default preset here.
+  const presetRaw = pickString(source, ['phoneBgPreset'], 'custom');
+  const preset = presetRaw.trim() || 'custom';
+  const bgTypeRaw = pickString(source, ['phoneBgType'], 'solid').toLowerCase();
   const bgType = bgTypeRaw === 'solid' ? 'solid' : 'gradient';
   const bgColor1 = pickString(source, ['phoneBgColor1'], '#0a0f0a');
-  const bgColor2 = pickString(source, ['phoneBgColor2'], '#003322');
+  const bgColor2 = pickString(source, ['phoneBgColor2'], '#0a0f0a');
   const bgAngle = pickNumber(source, ['phoneBgAngle'], 135);
   const normalizedFont = pickString(source, ['font', 'fontFamily'], 'inter').toLowerCase();
   const palette = pickString(source, ['palette'], '');
 
-  const phoneBgStyle =
+  // BUG 81 FIX: always produce a defined phoneBgStyle so PhonePreview never
+  // falls back to the flat T.bg colour.  For named presets, use the gradient
+  // string from DESIGN_WALLPAPER_STYLES; if the preset is unrecognised (e.g. a
+  // future preset not yet in this map), fall back to a gradient built from the
+  // stored bgColor values rather than returning undefined.
+  const phoneBgStyle: string =
     preset === 'custom'
       ? (bgType === 'gradient'
         ? `linear-gradient(${bgAngle}deg, ${bgColor1} 0%, ${bgColor2} 100%)`
         : bgColor1)
-      : (DESIGN_WALLPAPER_STYLES[preset] || undefined);
+      : (DESIGN_WALLPAPER_STYLES[preset]
+          ?? `linear-gradient(${bgAngle}deg, ${bgColor1} 0%, ${bgColor2} 100%)`);
 
   // Derive heroLayout from palette (template palettes map to specific layouts)
   // Treat empty string the same as null/undefined so we always fall back to 'default'.

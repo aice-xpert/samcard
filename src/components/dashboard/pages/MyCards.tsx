@@ -117,22 +117,22 @@ interface MyCardsNewProps {
 }
 
 export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onViewAnalytics }: MyCardsNewProps = {}) {
-  const [cards, setCards]                   = useState<CardType[]>([]);
-  const [, setLoading]                      = useState(true);
-  const [search, setSearch]                 = useState('');
-  const [filter, setFilter]                 = useState('all');
-  const [sort, setSort]                     = useState('recent');
-  const [openMenu, setOpenMenu]             = useState<string | null>(null);
-  const [shareCard, setShareCard]           = useState<CardType | null>(null);
-  const [statsCard, setStatsCard]           = useState<CardType | null>(null);
-  const [editCard, setEditCard]             = useState<CardType | null>(null);
-  const [editTitle, setEditTitle]           = useState('');
-  const [toast, setToast]                   = useState<string | null>(null);
-  const [confirmDelete, setConfirmDelete]   = useState<string | null>(null);
-  const [showCreate, setShowCreate]         = useState(false);
-  const [newTitle, setNewTitle]             = useState('');
-  const [newCardType, setNewCardType]       = useState<'QR' | 'NFC' | 'HYBRID' | 'LINK'>('QR');
-  const [showFilters, setShowFilters]       = useState(false);
+  const [cards, setCards] = useState<CardType[]>([]);
+  const [, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState('all');
+  const [sort, setSort] = useState('recent');
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [shareCard, setShareCard] = useState<CardType | null>(null);
+  const [statsCard, setStatsCard] = useState<CardType | null>(null);
+  const [editCard, setEditCard] = useState<CardType | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [toast, setToast] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
+  const [newTitle, setNewTitle] = useState('');
+  const [newCardType, setNewCardType] = useState<'QR' | 'NFC' | 'HYBRID' | 'LINK'>('QR');
+  const [showFilters, setShowFilters] = useState(false);
   const [cardPreviewById, setCardPreviewById] = useState<Record<string, CardPreviewData>>({});
   const [cardQrById, setCardQrById] = useState<Record<string, CardQRConfigPayload | null>>({});
   const [downloadingQrId, setDownloadingQrId] = useState<string | null>(null);
@@ -227,50 +227,50 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onVie
     })
     .sort((a, b) => {
       if (sort === 'views') return (b.views ?? 0) - (a.views ?? 0);
-      if (sort === 'name')  return (a.title || '').localeCompare(b.title || '');
+      if (sort === 'name') return (a.title || '').localeCompare(b.title || '');
       return new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime();
     });
 
   // ── actions ──────────────────────────────────────────────────────
 
-const toggleStatus = useCallback(async (cardId: string) => {
-  // Bail immediately if already in-flight for this card
-  if (togglingIds.has(cardId)) return;
+  const toggleStatus = useCallback(async (cardId: string) => {
+    // Bail immediately if already in-flight for this card
+    if (togglingIds.has(cardId)) return;
 
-  // Read current card status from state (avoids stale closure bug)
-  let currentStatus: string | undefined;
-  setCards(prev => {
-    currentStatus = prev.find(c => c.id === cardId)?.status;
-    return prev; // no-op read
-  });
-  if (!currentStatus) return;
-
-  const newStatus = currentStatus === 'ACTIVE' ? 'DRAFT' : 'ACTIVE';
-
-  setTogglingIds(prev => new Set(prev).add(cardId));
-
-  // Optimistic update
-  setCards(prev =>
-    prev.map(c => c.id === cardId ? { ...c, status: newStatus } : c)
-  );
-
-  try {
-    await updateCard(cardId, { status: newStatus });
-    showToast(newStatus === 'ACTIVE' ? 'Card published!' : 'Card set to draft.');
-  } catch (err) {
-    // Rollback
-    setCards(prev =>
-      prev.map(c => c.id === cardId ? { ...c, status: currentStatus! } : c)
-    );
-    showToast(`Failed to update status: ${err instanceof Error ? err.message : 'Unknown error'}`);
-  } finally {
-    setTogglingIds(prev => {
-      const next = new Set(prev);
-      next.delete(cardId);
-      return next;
+    // Read current card status from state (avoids stale closure bug)
+    let currentStatus: string | undefined;
+    setCards(prev => {
+      currentStatus = prev.find(c => c.id === cardId)?.status;
+      return prev; // no-op read
     });
-  }
-}, [togglingIds, showToast]);
+    if (!currentStatus) return;
+
+    const newStatus = currentStatus === 'ACTIVE' ? 'DRAFT' : 'ACTIVE';
+
+    setTogglingIds(prev => new Set(prev).add(cardId));
+
+    // Optimistic update
+    setCards(prev =>
+      prev.map(c => c.id === cardId ? { ...c, status: newStatus } : c)
+    );
+
+    try {
+      await updateCard(cardId, { status: newStatus });
+      showToast(newStatus === 'ACTIVE' ? 'Card published!' : 'Card set to draft.');
+    } catch (err) {
+      // Rollback
+      setCards(prev =>
+        prev.map(c => c.id === cardId ? { ...c, status: currentStatus! } : c)
+      );
+      showToast(`Failed to update status: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } finally {
+      setTogglingIds(prev => {
+        const next = new Set(prev);
+        next.delete(cardId);
+        return next;
+      });
+    }
+  }, [togglingIds, showToast]);
 
   const deleteCard = async (id: string) => {
     try {
@@ -527,213 +527,213 @@ const toggleStatus = useCallback(async (cardId: string) => {
           const previewImage = preview?.profileImage?.trim() || '';
 
           return (
-          <Card
-            key={card.id}
-            className="bg-[#000000] rounded-2xl border shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
-            style={{
-              borderColor: `${theme.accent}4d`,
-              boxShadow: `0 8px 24px ${theme.accent}1a`,
-            }}
-          >
-            <CardHeader className="p-3 sm:p-4">
-              <div className="flex items-center justify-between gap-2">
-                <h3 className="text-sm sm:text-base font-bold text-white truncate">{card.title}</h3>
-                <div className="flex items-center gap-1.5 flex-shrink-0">
-                  <Badge className={`rounded-full px-2 sm:px-3 text-xs font-bold ${
-                    card.status === 'ACTIVE'
+            <Card
+              key={card.id}
+              className="bg-[#000000] rounded-2xl border shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+              style={{
+                borderColor: `${theme.accent}4d`,
+                boxShadow: `0 8px 24px ${theme.accent}1a`,
+              }}
+            >
+              <CardHeader className="p-3 sm:p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-sm sm:text-base font-bold text-white truncate">{card.title}</h3>
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <Badge className={`rounded-full px-2 sm:px-3 text-xs font-bold ${card.status === 'ACTIVE'
                       ? 'hover:opacity-95'
                       : 'bg-[#A0A0A0]/15 text-[#A0A0A0] hover:bg-[#A0A0A0]/15'
-                  }`}
-                  style={card.status === 'ACTIVE'
-                    ? {
-                        backgroundColor: `${theme.accent}26`,
-                        color: theme.accentLight,
-                      }
-                    : undefined
-                  }>
-                    {card.status === 'ACTIVE' ? 'Active' : 'Draft'}
-                  </Badge>
+                      }`}
+                      style={card.status === 'ACTIVE'
+                        ? {
+                          backgroundColor: `${theme.accent}26`,
+                          color: theme.accentLight,
+                        }
+                        : undefined
+                      }>
+                      {card.status === 'ACTIVE' ? 'Active' : 'Draft'}
+                    </Badge>
 
-                  {/* 3-dot menu */}
-                  <div className="relative" onClick={e => e.stopPropagation()}>
-                    <button
-                      onClick={() => setOpenMenu(openMenu === card.id ? null : card.id)}
-                      className="text-[#A0A0A0] hover:bg-[#1E1E1E] rounded-lg p-1"
-                    >
-                      <MoreVertical className="w-4 h-4" />
-                    </button>
-                    {openMenu === card.id && (
-                      <div className="absolute right-0 top-8 z-30 bg-[#0a0a0a] border border-[#008001]/30 rounded-xl shadow-2xl w-40 py-1">
-                        <button onClick={() => { setEditCard(card); setEditTitle(card.title || ''); setOpenMenu(null); }}
-                          className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#008001]/20 flex items-center gap-2">
-                          <Edit className="w-3 h-3" /> Rename
-                        </button>
-                        <button onClick={() => duplicateCard(card)} disabled={duplicatingId === card.id}
-                          className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#008001]/20 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-                          <Copy className="w-3 h-3" /> {duplicatingId === card.id ? 'Duplicating…' : 'Duplicate'}
-                        </button>
-                        <button onClick={() => { openPreview(card); setOpenMenu(null); }}
-                          className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#008001]/20 flex items-center gap-2">
-                          <Eye className="w-3 h-3" /> Preview
-                        </button>
-                        <button onClick={() => { setConfirmDelete(card.id); setOpenMenu(null); }}
-                          className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2">
-                          <Trash2 className="w-3 h-3" /> Delete
-                        </button>
-                      </div>
-                    )}
+                    {/* 3-dot menu */}
+                    <div className="relative" onClick={e => e.stopPropagation()}>
+                      <button
+                        onClick={() => setOpenMenu(openMenu === card.id ? null : card.id)}
+                        className="text-[#A0A0A0] hover:bg-[#1E1E1E] rounded-lg p-1"
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </button>
+                      {openMenu === card.id && (
+                        <div className="absolute right-0 top-8 z-30 bg-[#0a0a0a] border border-[#008001]/30 rounded-xl shadow-2xl w-40 py-1">
+                          <button onClick={() => { setEditCard(card); setEditTitle(card.title || ''); setOpenMenu(null); }}
+                            className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#008001]/20 flex items-center gap-2">
+                            <Edit className="w-3 h-3" /> Rename
+                          </button>
+                          <button onClick={() => duplicateCard(card)} disabled={duplicatingId === card.id}
+                            className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#008001]/20 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <Copy className="w-3 h-3" /> {duplicatingId === card.id ? 'Duplicating…' : 'Duplicate'}
+                          </button>
+                          <button onClick={() => { openPreview(card); setOpenMenu(null); }}
+                            className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#008001]/20 flex items-center gap-2">
+                            <Eye className="w-3 h-3" /> Preview
+                          </button>
+                          <button onClick={() => { setConfirmDelete(card.id); setOpenMenu(null); }}
+                            className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2">
+                            <Trash2 className="w-3 h-3" /> Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </CardHeader>
+              </CardHeader>
 
-            <CardContent className="p-3 sm:p-4 space-y-3 sm:space-y-4">
-              {/* Card thumbnail */}
-              <div className="relative rounded-xl overflow-hidden aspect-[16/9]"
-                style={{ background: theme.previewBg }}>
-                <div className="absolute inset-0 opacity-[0.08]" style={{
-                  backgroundImage: `radial-gradient(circle, ${theme.accentLight} 1px, transparent 1px)`,
-                  backgroundSize: '20px 20px',
-                }} />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
-                  <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-white/20 flex items-center justify-center mx-auto">
-                    {previewImage ? (
-                      <img src={previewImage} alt={previewName} className="w-full h-full object-cover" />
-                    ) : (
-                      <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              <CardContent className="p-3 sm:p-4 space-y-3 sm:space-y-4">
+                {/* Card thumbnail */}
+                <div className="relative rounded-xl overflow-hidden aspect-[16/9]"
+                  style={{ background: theme.previewBg }}>
+                  <div className="absolute inset-0 opacity-[0.08]" style={{
+                    backgroundImage: `radial-gradient(circle, ${theme.accentLight} 1px, transparent 1px)`,
+                    backgroundSize: '20px 20px',
+                  }} />
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
+                    <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-white/20 flex items-center justify-center mx-auto">
+                      {previewImage ? (
+                        <img src={previewImage} alt={previewName} className="w-full h-full object-cover" />
+                      ) : (
+                        <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                      )}
+                    </div>
+                    <p className="mt-1.5 text-xs sm:text-sm font-semibold text-white truncate max-w-[170px]">{previewName}</p>
+                    {previewTitle && (
+                      <p className="text-[10px] sm:text-xs text-white/80 truncate max-w-[170px] mt-0.5">{previewTitle}</p>
                     )}
                   </div>
-                  <p className="mt-1.5 text-xs sm:text-sm font-semibold text-white truncate max-w-[170px]">{previewName}</p>
-                  {previewTitle && (
-                    <p className="text-[10px] sm:text-xs text-white/80 truncate max-w-[170px] mt-0.5">{previewTitle}</p>
-                  )}
-                </div>
-                <div className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 px-2 sm:px-3 py-1 rounded-full bg-black/35 backdrop-blur-md flex items-center gap-1">
-                  <Eye className="w-3 h-3 text-white" />
-                  <span className="text-xs text-white font-medium">{(card.views ?? 0).toLocaleString()}</span>
-                </div>
-                <button
-                  onClick={() => copyLink(card)}
-                  className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white/15 backdrop-blur-md hover:bg-white/25 flex items-center justify-center transition-colors"
-                  title="Copy share link"
-                >
-                  <QrCode className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
-                </button>
-              </div>
-
-              {/* Stats row */}
-              <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
-                {[
-                  { label: 'Taps',  value: (card.taps ?? 0).toLocaleString(), onClick: undefined },
-                  { label: 'Views', value: (card.views ?? 0).toLocaleString(), onClick: undefined },
-                  { label: 'Leads', value: String(card.leads ?? 0), onClick: undefined },
-                ].map(({ label, value, onClick }) => (
-                  <div
-                    key={label}
-                    onClick={onClick}
-                    className={`rounded-xl p-2 sm:p-3 text-center${onClick ? ' cursor-pointer hover:ring-1 hover:ring-[#008001]/40 transition-all' : ''}`}
-                    style={{ backgroundColor: theme.panel }}
+                  <div className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 px-2 sm:px-3 py-1 rounded-full bg-black/35 backdrop-blur-md flex items-center gap-1">
+                    <Eye className="w-3 h-3 text-white" />
+                    <span className="text-xs text-white font-medium">{(card.views ?? 0).toLocaleString()}</span>
+                  </div>
+                  <button
+                    onClick={() => copyLink(card)}
+                    className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white/15 backdrop-blur-md hover:bg-white/25 flex items-center justify-center transition-colors"
+                    title="Copy share link"
                   >
-                    <p className="text-sm sm:text-lg font-bold text-white">{value}</p>
-                    <p className="text-[10px] sm:text-xs text-[#A0A0A0]">{label}</p>
+                    <QrCode className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                  </button>
+                </div>
+
+                {/* Stats row */}
+                <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
+                  {[
+                    { label: 'Taps', value: (card.taps ?? 0).toLocaleString(), onClick: undefined },
+                    { label: 'Views', value: (card.views ?? 0).toLocaleString(), onClick: undefined },
+                    { label: 'Leads', value: String(card.leads ?? 0), onClick: undefined },
+                  ].map(({ label, value, onClick }) => (
+                    <div
+                      key={label}
+                      onClick={onClick}
+                      className={`rounded-xl p-2 sm:p-3 text-center${onClick ? ' cursor-pointer hover:ring-1 hover:ring-[#008001]/40 transition-all' : ''}`}
+                      style={{ backgroundColor: theme.panel }}
+                    >
+                      <p className="text-sm sm:text-lg font-bold text-white">{value}</p>
+                      <p className="text-[10px] sm:text-xs text-[#A0A0A0]">{label}</p>
+                    </div>
+                  ))}
+                  <div className="rounded-xl p-2 sm:p-3 min-w-0" style={{ backgroundColor: theme.panel }}>
+                    <Sparkline data={card.trend ?? sparklineData} color={theme.accentLight} />
+                    <p className="text-[10px] sm:text-xs text-[#A0A0A0] text-center mt-1">7-day</p>
                   </div>
-                ))}
-                <div className="rounded-xl p-2 sm:p-3 min-w-0" style={{ backgroundColor: theme.panel }}>
-                  <Sparkline data={card.trend ?? sparklineData} color={theme.accentLight} />
-                  <p className="text-[10px] sm:text-xs text-[#A0A0A0] text-center mt-1">7-day</p>
                 </div>
-              </div>
 
-              {/* Completion bar */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-white">Profile Completion</span>
-                  <span className="text-xs font-bold" style={{ color: theme.accentLight }}>{card.completion}%</span>
+                {/* Completion bar */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-white">Profile Completion</span>
+                    <span className="text-xs font-bold" style={{ color: theme.accentLight }}>{card.completion}%</span>
+                  </div>
+                  <div className="relative h-1.5 bg-[#1E1E1E] rounded-full overflow-hidden">
+                    <div className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#49B618] to-[#008001] rounded-full transition-all"
+                      style={{
+                        width: `${card.completion}%`,
+                        backgroundImage: `linear-gradient(to right, ${theme.accentLight}, ${theme.accent})`,
+                      }} />
+                  </div>
                 </div>
-                <div className="relative h-1.5 bg-[#1E1E1E] rounded-full overflow-hidden">
-                  <div className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#49B618] to-[#008001] rounded-full transition-all"
-                    style={{
-                      width: `${card.completion}%`,
-                      backgroundImage: `linear-gradient(to right, ${theme.accentLight}, ${theme.accent})`,
-                    }} />
-                </div>
-              </div>
 
-              {/* Action buttons */}
-              <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
-                {[
-                  {
-                    icon: Edit,
-                    label: 'Edit',
-                    onClick: () => {
-                      if (onEditCard) {
-                        onEditCard(card.id);
-                        return;
-                      }
-                      setEditCard(card);
-                      setEditTitle(card.title || '');
+                {/* Action buttons */}
+                <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
+                  {[
+                    {
+                      icon: Edit,
+                      label: 'Edit',
+                      onClick: () => {
+                        if (onEditCard) {
+                          onEditCard(card.id);
+                          return;
+                        }
+                        setEditCard(card);
+                        setEditTitle(card.title || '');
+                      },
                     },
-                  },
-                  { icon: Eye,       label: 'Preview', onClick: () => openPreview(card) },
-                  { icon: Share2,    label: 'Share',   onClick: () => setShareCard(card)   },
-                  { icon: BarChart3, label: 'Stats',   onClick: () => setStatsCard(card)   },
-                  {
-                    icon: Download,
-                    label: downloadingQrId === card.id ? 'Downloading...' : 'Download QR',
-                    onClick: () => { void downloadVariantQr(card); },
-                    disabled: downloadingQrId === card.id,
-                  },
-                  {
-                    icon: Users,
-                    label: 'Leads',
-                    onClick: () => {
-                      onViewAnalytics?.(card.id, card.title ?? card.id);
+                    { icon: Eye, label: 'Preview', onClick: () => openPreview(card) },
+                    { icon: Share2, label: 'Share', onClick: () => setShareCard(card) },
+                    { icon: BarChart3, label: 'Stats', onClick: () => setStatsCard(card) },
+                    {
+                      icon: Download,
+                      label: downloadingQrId === card.id ? 'Downloading...' : 'Download QR',
+                      onClick: () => { void downloadVariantQr(card); },
+                      disabled: downloadingQrId === card.id,
                     },
-                  },
-                ].map(({ icon: Icon, label, onClick, disabled }) => (
-                  <Button key={label} onClick={onClick}
-                    disabled={Boolean(disabled)}
-                    variant="outline"
-                    className="border-[#008001]/30 text-white hover:bg-[#008001] hover:text-white h-8 sm:h-9 text-xs gap-1">
-                    <Icon className="w-3 h-3" /> {label}
-                  </Button>
-                ))}
-              </div>
-
-              {/* Bottom row: Publish toggle */}
-              <div className="flex items-center justify-between pt-2 sm:pt-3 border-t border-[#1E1E1E]">
-                <button onClick={() => duplicateCard(card)} disabled={duplicatingId === card.id}
-                  className="text-xs text-[#A0A0A0] flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ color: duplicatingId === card.id ? '#A0A0A0' : undefined }}
-                  onMouseEnter={(e) => { if (duplicatingId !== card.id) e.currentTarget.style.color = theme.accent; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = '#A0A0A0'; }}>
-                  <Copy className="w-3 h-3" /> {duplicatingId === card.id ? 'Duplicating…' : 'Duplicate'}
-                </button>
-
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                  <span className="text-xs text-white">
-                    {card.status === 'ACTIVE' ? 'Published' : 'Draft'}
-                  </span>
-                  <Switch
-                    checked={card.status === 'ACTIVE'}
-                    onCheckedChange={() => toggleStatus(card.id)}
-                    disabled={togglingIds.has(card.id)}
-                    className="scale-90 sm:scale-100"
-                    style={{
-                      ...(card.status === 'ACTIVE' ? { backgroundColor: theme.accentLight } : {}),
-                      pointerEvents: togglingIds.has(card.id) ? 'none' : undefined,
-                    }}
-                  />
+                    {
+                      icon: Users,
+                      label: 'Leads',
+                      onClick: () => {
+                        onViewAnalytics?.(card.id, card.title ?? card.id);
+                      },
+                    },
+                  ].map(({ icon: Icon, label, onClick, disabled }) => (
+                    <Button key={label} onClick={onClick}
+                      disabled={Boolean(disabled)}
+                      variant="outline"
+                      className="border-[#008001]/30 text-white hover:bg-[#008001] hover:text-white h-8 sm:h-9 text-xs gap-1">
+                      <Icon className="w-3 h-3" /> {label}
+                    </Button>
+                  ))}
                 </div>
 
-                <button onClick={() => setConfirmDelete(card.id)}
-                  className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1">
-                  <Trash2 className="w-3 h-3" /> Delete
-                </button>
-              </div>
-            </CardContent>
-          </Card>
-        );})}
+                {/* Bottom row: Publish toggle */}
+                <div className="flex items-center justify-between pt-2 sm:pt-3 border-t border-[#1E1E1E]">
+                  <button onClick={() => duplicateCard(card)} disabled={duplicatingId === card.id}
+                    className="text-xs text-[#A0A0A0] flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ color: duplicatingId === card.id ? '#A0A0A0' : undefined }}
+                    onMouseEnter={(e) => { if (duplicatingId !== card.id) e.currentTarget.style.color = theme.accent; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = '#A0A0A0'; }}>
+                    <Copy className="w-3 h-3" /> {duplicatingId === card.id ? 'Duplicating…' : 'Duplicate'}
+                  </button>
+
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <span className="text-xs text-white">
+                      {card.status === 'ACTIVE' ? 'Published' : 'Draft'}
+                    </span>
+                    <Switch
+                      checked={card.status === 'ACTIVE'}
+                      onCheckedChange={() => toggleStatus(card.id)}
+                      disabled={togglingIds.has(card.id)}
+                      className="scale-90 sm:scale-100"
+                      style={{
+                        ...(card.status === 'ACTIVE' ? { backgroundColor: theme.accentLight } : {}),
+                        pointerEvents: togglingIds.has(card.id) ? 'none' : undefined,
+                      }}
+                    />
+                  </div>
+
+                  <button onClick={() => setConfirmDelete(card.id)}
+                    className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1">
+                    <Trash2 className="w-3 h-3" /> Delete
+                  </button>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
 
         {/* Create new tile */}
         <Card
@@ -781,140 +781,171 @@ const toggleStatus = useCallback(async (cardId: string) => {
               value={cardPublicUrl(shareCard)}
               className="bg-[#1E1E1E] border-[#008001]/30 text-white text-xs sm:text-sm"
             />
-            <Button onClick={() => copyLink(shareCard)}
-              className="bg-[#008001] hover:bg-[#006312] text-white flex-shrink-0">
+            <Button
+              onClick={() => copyLink(shareCard)}
+              className="bg-[#008001] hover:bg-[#006312] text-white flex-shrink-0"
+            >
               <Copy className="w-4 h-4" />
             </Button>
           </div>
           <div className="grid grid-cols-3 gap-2">
-            {['WhatsApp', 'Email', 'Twitter'].map(platform => (
-              <button key={platform}
-                onClick={() => { showToast(`Shared via ${platform}!`); setShareCard(null); }}
-                className="py-2 px-2 sm:px-3 rounded-lg bg-[#1E1E1E] text-white text-xs sm:text-sm hover:bg-[#008001]/20 transition-colors">
-                {platform}
-              </button>
-            ))}
-          </div>
-        </Modal>
-      )}
-
-      {statsCard && (
-        <Modal onClose={() => setStatsCard(null)} title={`Stats — ${statsCard.title}`}>
-          <div className="space-y-4">
             {[
-              { label: 'Total Views', value: statsCard.views ?? 0, pct: 100 },
-              { label: 'NFC Taps',    value: statsCard.taps ?? 0,  pct: Math.round(((statsCard.taps ?? 0)  / Math.max(statsCard.views ?? 1, 1)) * 100) },
-              { label: 'Leads',       value: statsCard.leads ?? 0, pct: Math.round(((statsCard.leads ?? 0) / Math.max(statsCard.views ?? 1, 1)) * 100) },
-            ].map(({ label, value, pct }) => (
-              <div key={label}>
-                <div className="flex justify-between mb-1">
-                  <span className="text-white text-sm">{label}</span>
-                  <span className="text-[#49B618] font-bold">{value.toLocaleString()}</span>
-                </div>
-                <div className="h-2 bg-[#1E1E1E] rounded-full overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-[#49B618] to-[#008001] rounded-full" style={{ width: `${pct}%` }} />
-                </div>
-              </div>
+              {
+                label: 'WhatsApp',
+                href: (url: string) =>
+                  `https://wa.me/?text=${encodeURIComponent(url)}`,
+              },
+              {
+                label: 'Email',
+                href: (url: string) =>
+                  `mailto:?subject=${encodeURIComponent('Check out my digital card')}&body=${encodeURIComponent(url)}`,
+              },
+              {
+                label: 'Twitter',
+                href: (url: string) =>
+                  `https://twitter.com/intent/tweet?text=${encodeURIComponent(url)}`,
+              },
+            ].map(({ label, href }) => (
+              <a
+                key={label}
+                href={href(cardPublicUrl(shareCard))}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => { showToast(`Opened ${label}!`); setShareCard(null); }}
+                className="py-2 px-2 sm:px-3 rounded-lg bg-[#1E1E1E] text-white text-xs sm:text-sm hover:bg-[#008001]/20 transition-colors text-center"
+              >
+                {label}
+              </a>
             ))}
-            <div className="pt-2 border-t border-[#1E1E1E]">
-              <p className="text-[#A0A0A0] text-xs">
-                Profile completion: <span className="text-[#49B618] font-bold">{statsCard.completion}%</span>
-              </p>
-            </div>
           </div>
         </Modal>
-      )}
-
-
-      {editCard && (
-        <Modal onClose={() => setEditCard(null)} title="Edit Card">
-          <p className="text-[#A0A0A0] text-sm mb-2">Card name</p>
-          <Input
-            value={editTitle}
-            onChange={e => setEditTitle(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && saveEdit()}
-            className="bg-[#1E1E1E] border-[#008001]/30 text-white mb-4"
-            autoFocus
-          />
-          <div className="mb-4">
-            <p className="text-[#A0A0A0] text-xs mb-2">Card links</p>
-            <div className="space-y-2">
-              <Input
-                readOnly
-                value={cardPublicUrl(editCard)}
-                className="bg-[#1E1E1E] border-[#008001]/30 text-white text-xs"
-              />
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => navigator.clipboard.writeText(cardPublicUrl(editCard))}
-                  variant="outline"
-                  className="flex-1 border-[#008001]/30 text-white hover:bg-[#1E1E1E]"
-                >
-                  <Copy className="w-4 h-4 mr-1" /> Copy Public Link
-                </Button>
-                <Button
-                  onClick={() => openPreview(editCard)}
-                  variant="outline"
-                  className="flex-1 border-[#008001]/30 text-white hover:bg-[#1E1E1E]"
-                >
-                  <Eye className="w-4 h-4 mr-1" /> Preview
-                </Button>
+      )
+      }
+      {
+        statsCard && (
+          <Modal onClose={() => setStatsCard(null)} title={`Stats — ${statsCard.title}`}>
+            <div className="space-y-4">
+              {[
+                { label: 'Total Views', value: statsCard.views ?? 0, pct: 100 },
+                { label: 'NFC Taps', value: statsCard.taps ?? 0, pct: Math.round(((statsCard.taps ?? 0) / Math.max(statsCard.views ?? 1, 1)) * 100) },
+                { label: 'Leads', value: statsCard.leads ?? 0, pct: Math.round(((statsCard.leads ?? 0) / Math.max(statsCard.views ?? 1, 1)) * 100) },
+              ].map(({ label, value, pct }) => (
+                <div key={label}>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-white text-sm">{label}</span>
+                    <span className="text-[#49B618] font-bold">{value.toLocaleString()}</span>
+                  </div>
+                  <div className="h-2 bg-[#1E1E1E] rounded-full overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-[#49B618] to-[#008001] rounded-full" style={{ width: `${pct}%` }} />
+                  </div>
+                </div>
+              ))}
+              <div className="pt-2 border-t border-[#1E1E1E]">
+                <p className="text-[#A0A0A0] text-xs">
+                  Profile completion: <span className="text-[#49B618] font-bold">{statsCard.completion}%</span>
+                </p>
               </div>
             </div>
-          </div>
-          <Button onClick={saveEdit} className="w-full bg-[#008001] hover:bg-[#006312] text-white">
-            Save Changes
-          </Button>
-        </Modal>
-      )}
+          </Modal>
+        )
+      }
 
-      {confirmDelete !== null && (
-        <Modal onClose={() => setConfirmDelete(null)} title="Delete Card">
-          <p className="text-[#A0A0A0] mb-6">Are you sure? This cannot be undone.</p>
-          <div className="flex gap-3">
-            <Button onClick={() => setConfirmDelete(null)}
-              variant="outline" className="flex-1 border-[#008001]/30 text-white hover:bg-[#1E1E1E]">
-              Cancel
+
+      {
+        editCard && (
+          <Modal onClose={() => setEditCard(null)} title="Edit Card">
+            <p className="text-[#A0A0A0] text-sm mb-2">Card name</p>
+            <Input
+              value={editTitle}
+              onChange={e => setEditTitle(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && saveEdit()}
+              className="bg-[#1E1E1E] border-[#008001]/30 text-white mb-4"
+              autoFocus
+            />
+            <div className="mb-4">
+              <p className="text-[#A0A0A0] text-xs mb-2">Card links</p>
+              <div className="space-y-2">
+                <Input
+                  readOnly
+                  value={cardPublicUrl(editCard)}
+                  className="bg-[#1E1E1E] border-[#008001]/30 text-white text-xs"
+                />
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => navigator.clipboard.writeText(cardPublicUrl(editCard))}
+                    variant="outline"
+                    className="flex-1 border-[#008001]/30 text-white hover:bg-[#1E1E1E]"
+                  >
+                    <Copy className="w-4 h-4 mr-1" /> Copy Public Link
+                  </Button>
+                  <Button
+                    onClick={() => openPreview(editCard)}
+                    variant="outline"
+                    className="flex-1 border-[#008001]/30 text-white hover:bg-[#1E1E1E]"
+                  >
+                    <Eye className="w-4 h-4 mr-1" /> Preview
+                  </Button>
+                </div>
+              </div>
+            </div>
+            <Button onClick={saveEdit} className="w-full bg-[#008001] hover:bg-[#006312] text-white">
+              Save Changes
             </Button>
-            <Button onClick={() => deleteCard(confirmDelete)}
-              className="flex-1 bg-red-600 hover:bg-red-700 text-white">
-              Delete
+          </Modal>
+        )
+      }
+
+      {
+        confirmDelete !== null && (
+          <Modal onClose={() => setConfirmDelete(null)} title="Delete Card">
+            <p className="text-[#A0A0A0] mb-6">Are you sure? This cannot be undone.</p>
+            <div className="flex gap-3">
+              <Button onClick={() => setConfirmDelete(null)}
+                variant="outline" className="flex-1 border-[#008001]/30 text-white hover:bg-[#1E1E1E]">
+                Cancel
+              </Button>
+              <Button onClick={() => deleteCard(confirmDelete)}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white">
+                Delete
+              </Button>
+            </div>
+          </Modal>
+        )
+      }
+
+      {
+        showCreate && (
+          <Modal onClose={() => setShowCreate(false)} title="Create New Card">
+            <p className="text-[#A0A0A0] text-sm mb-2">Card name</p>
+            <Input
+              placeholder="e.g. Conference Card"
+              value={newTitle}
+              onChange={e => setNewTitle(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && createCard()}
+              className="bg-[#1E1E1E] border-[#008001]/30 text-white mb-4"
+              autoFocus
+            />
+            <p className="text-[#A0A0A0] text-sm mb-2">Card type</p>
+            <Select value={newCardType} onValueChange={(value) => setNewCardType(value as 'QR' | 'NFC' | 'HYBRID' | 'LINK')}>
+              <SelectTrigger className="w-full bg-[#1E1E1E] border-[#008001]/30 text-white mb-4">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-[#000000] border-[#008001]/30">
+                <SelectItem value="QR">QR</SelectItem>
+                <SelectItem value="NFC">NFC</SelectItem>
+                <SelectItem value="HYBRID">Hybrid</SelectItem>
+                <SelectItem value="LINK">Link</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button onClick={createCard}
+              className="w-full bg-gradient-to-r from-[#49B618] to-[#008001] hover:from-[#009200] hover:to-[#006312] text-white">
+              <Sparkles className="w-4 h-4 mr-2" /> Create Card
             </Button>
-          </div>
-        </Modal>
-      )}
+          </Modal>
+        )
+      }
 
-      {showCreate && (
-        <Modal onClose={() => setShowCreate(false)} title="Create New Card">
-          <p className="text-[#A0A0A0] text-sm mb-2">Card name</p>
-          <Input
-            placeholder="e.g. Conference Card"
-            value={newTitle}
-            onChange={e => setNewTitle(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && createCard()}
-            className="bg-[#1E1E1E] border-[#008001]/30 text-white mb-4"
-            autoFocus
-          />
-          <p className="text-[#A0A0A0] text-sm mb-2">Card type</p>
-          <Select value={newCardType} onValueChange={(value) => setNewCardType(value as 'QR' | 'NFC' | 'HYBRID' | 'LINK')}>
-            <SelectTrigger className="w-full bg-[#1E1E1E] border-[#008001]/30 text-white mb-4">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-[#000000] border-[#008001]/30">
-              <SelectItem value="QR">QR</SelectItem>
-              <SelectItem value="NFC">NFC</SelectItem>
-              <SelectItem value="HYBRID">Hybrid</SelectItem>
-              <SelectItem value="LINK">Link</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button onClick={createCard}
-            className="w-full bg-gradient-to-r from-[#49B618] to-[#008001] hover:from-[#009200] hover:to-[#006312] text-white">
-            <Sparkles className="w-4 h-4 mr-2" /> Create Card
-          </Button>
-        </Modal>
-      )}
-
-    </div>
+    </div >
   );
 }
 

@@ -63,12 +63,14 @@ export interface CardTemplate {
   description: string;
   // Used by TemplatePicker to render a real mini-preview tile (no images needed).
   preview: {
-    bg: string;            // background fill / gradient
-    accent: string;        // primary accent
-    accentLight: string;   // secondary accent
-    text: string;          // primary text color (on accent panel)
-    panel: string;         // bottom info panel color
-    layout:                // structural variant for the mini-preview
+    bg: string;             // background CSS value (gradient or solid)
+    accent: string;         // primary accent solid color (for SVG paths, borders)
+    accentLight: string;    // secondary accent solid color
+    accentGradient: string; // gradient for buttons, pills, highlights
+    text: string;           // primary text color (on accent panel)
+    panel: string;          // panel solid color (for SVG fill paths)
+    panelGradient: string;  // gradient for info panels / bottom sections
+    layout:                 // structural variant for the mini-preview
       | 'full-photo-wave'
       | 'side-panel'
       | 'top-banner'
@@ -98,11 +100,13 @@ export const cardTemplates: CardTemplate[] = [
     name: 'Medical Teal',
     description: 'Clean medical & wellness — teal accents with a soft wave divider',
     preview: {
-      bg: '#1f4d4a',
+      bg: 'linear-gradient(160deg, #0d5c54 0%, #1f4d4a 45%, #0e2e38 100%)',
       accent: '#0fa68a',
       accentLight: '#48d3b6',
+      accentGradient: 'linear-gradient(135deg, #0fa68a 0%, #48d3b6 100%)',
       text: '#ffffff',
       panel: '#143835',
+      panelGradient: 'linear-gradient(180deg, #1a4d47 0%, #0d2e2b 100%)',
       layout: 'full-photo-wave',
     },
     defaultContent: {
@@ -153,11 +157,13 @@ export const cardTemplates: CardTemplate[] = [
     name: 'Teamwork Orange',
     description: 'Corporate side-panel layout — orange highlights on deep navy',
     preview: {
-      bg: '#0a1428',
+      bg: 'linear-gradient(150deg, #0a1428 0%, #12213d 60%, #1a1830 100%)',
       accent: '#ff6a2c',
       accentLight: '#ffa472',
+      accentGradient: 'linear-gradient(135deg, #ff4500 0%, #ffa472 100%)',
       text: '#ffffff',
       panel: '#162250',
+      panelGradient: 'linear-gradient(180deg, #1e2f6a 0%, #0e1840 100%)',
       layout: 'side-panel',
     },
     defaultContent: {
@@ -187,10 +193,10 @@ export const cardTemplates: CardTemplate[] = [
       textPrimary: '#ffffff',
       textMuted: '#c8d0e8',
       phoneBgPreset: 'custom',
-      phoneBgColor1: '#0a1428',
-      phoneBgColor2: '#091020',
-      phoneBgAngle: 180,
-      phoneBgType: 'solid',
+      phoneBgColor1: '#1a2a4a',
+      phoneBgColor2: '#050c1a',
+      phoneBgAngle: 160,
+      phoneBgType: 'gradient',
       font: 'poppins',
       bodyFontSize: 12,
       nameFontSize: 22,
@@ -207,11 +213,13 @@ export const cardTemplates: CardTemplate[] = [
     name: 'Heritage Gold',
     description: 'Real-estate flair — gold curve over deep navy',
     preview: {
-      bg: '#0f1a2e',
+      bg: 'linear-gradient(160deg, #0f1a2e 0%, #1a2845 55%, #0c1220 100%)',
       accent: '#e8b339',
       accentLight: '#ffd866',
+      accentGradient: 'linear-gradient(135deg, #c9922a 0%, #ffd866 100%)',
       text: '#ffffff',
       panel: '#0a1220',
+      panelGradient: 'linear-gradient(180deg, #14203a 0%, #080e1a 100%)',
       layout: 'gold-curve',
     },
     defaultContent: {
@@ -261,11 +269,13 @@ export const cardTemplates: CardTemplate[] = [
     name: 'Team Pro',
     description: 'Showcase a team — orange ribbon highlights over deep navy',
     preview: {
-      bg: '#0f1c3d',
+      bg: 'linear-gradient(155deg, #0f1c3d 0%, #172950 50%, #0a1225 100%)',
       accent: '#ff7e3d',
       accentLight: '#ffae80',
+      accentGradient: 'linear-gradient(135deg, #ff5500 0%, #ffae80 100%)',
       text: '#ffffff',
       panel: '#0f1c3d',
+      panelGradient: 'linear-gradient(180deg, #172950 0%, #0a1225 100%)',
       layout: 'group-photo',
     },
     defaultContent: {
@@ -293,10 +303,10 @@ export const cardTemplates: CardTemplate[] = [
       textPrimary: '#ffffff',
       textMuted: '#aab3cf',
       phoneBgPreset: 'custom',
-      phoneBgColor1: '#0f1c3d',
-      phoneBgColor2: '#0a1428',
-      phoneBgAngle: 180,
-      phoneBgType: 'solid',
+      phoneBgColor1: '#1f3060',
+      phoneBgColor2: '#060e20',
+      phoneBgAngle: 170,
+      phoneBgType: 'gradient',
       font: 'sora',
       bodyFontSize: 11,
       nameFontSize: 22,
@@ -313,11 +323,13 @@ export const cardTemplates: CardTemplate[] = [
     name: 'Royal Purple',
     description: 'Editorial vibe — purple curve under a monochrome portrait',
     preview: {
-      bg: '#1c0d3a',
+      bg: 'linear-gradient(160deg, #1c0d3a 0%, #2e1560 55%, #130828 100%)',
       accent: '#7a4cd9',
       accentLight: '#a884f0',
+      accentGradient: 'linear-gradient(135deg, #5e2fc0 0%, #c084fc 100%)',
       text: '#ffffff',
       panel: '#2a1455',
+      panelGradient: 'linear-gradient(180deg, #3a1c72 0%, #1c0d3a 100%)',
       layout: 'curve-photo',
     },
     defaultContent: {
@@ -367,11 +379,13 @@ export const cardTemplates: CardTemplate[] = [
     name: 'Minimal Mono',
     description: 'Less is more — circular avatar centered on a dark mono canvas',
     preview: {
-      bg: '#1a1a1a',
+      bg: 'linear-gradient(145deg, #1a1a1a 0%, #242424 50%, #111111 100%)',
       accent: '#e0e0e0',
       accentLight: '#ffffff',
+      accentGradient: 'linear-gradient(135deg, #888888 0%, #ffffff 100%)',
       text: '#ffffff',
       panel: '#282828',
+      panelGradient: 'linear-gradient(180deg, #323232 0%, #1c1c1c 100%)',
       layout: 'circle-center',
     },
     defaultContent: {
@@ -400,10 +414,10 @@ export const cardTemplates: CardTemplate[] = [
       textPrimary: '#ffffff',
       textMuted: '#888888',
       phoneBgPreset: 'custom',
-      phoneBgColor1: '#1a1a1a',
-      phoneBgColor2: '#111111',
-      phoneBgAngle: 180,
-      phoneBgType: 'solid',
+      phoneBgColor1: '#2a2a2a',
+      phoneBgColor2: '#0a0a0a',
+      phoneBgAngle: 150,
+      phoneBgType: 'gradient',
       font: 'dm-sans',
       bodyFontSize: 12,
       nameFontSize: 24,
@@ -420,11 +434,13 @@ export const cardTemplates: CardTemplate[] = [
     name: 'Sunset Banner',
     description: 'Top banner over a hero photo — energetic orange on navy',
     preview: {
-      bg: '#142243',
+      bg: 'linear-gradient(160deg, #142243 0%, #1e3060 50%, #0a1430 100%)',
       accent: '#ff7a3a',
       accentLight: '#ffb380',
+      accentGradient: 'linear-gradient(135deg, #ff4500 0%, #ffb380 100%)',
       text: '#ffffff',
       panel: '#142243',
+      panelGradient: 'linear-gradient(180deg, #1e3060 0%, #0a1430 100%)',
       layout: 'top-banner',
     },
     defaultContent: {
@@ -472,11 +488,13 @@ export const cardTemplates: CardTemplate[] = [
     name: 'Sky Circle',
     description: 'Friendly bright-blue card with circular portrait',
     preview: {
-      bg: '#1a2148',
+      bg: 'linear-gradient(160deg, #1a2148 0%, #262e62 50%, #111830 100%)',
       accent: '#5b78ff',
       accentLight: '#a8b8ff',
+      accentGradient: 'linear-gradient(135deg, #3a5bff 0%, #c0cbff 100%)',
       text: '#ffffff',
       panel: '#262e62',
+      panelGradient: 'linear-gradient(180deg, #333f80 0%, #1a2148 100%)',
       layout: 'sky-circle',
     },
     defaultContent: {
@@ -506,10 +524,10 @@ export const cardTemplates: CardTemplate[] = [
       textPrimary: '#ffffff',
       textMuted: '#b8c0e8',
       phoneBgPreset: 'custom',
-      phoneBgColor1: '#1a2148',
-      phoneBgColor2: '#111830',
-      phoneBgAngle: 180,
-      phoneBgType: 'solid',
+      phoneBgColor1: '#2a3268',
+      phoneBgColor2: '#080d1e',
+      phoneBgAngle: 165,
+      phoneBgType: 'gradient',
       font: 'inter',
       bodyFontSize: 12,
       nameFontSize: 24,
@@ -526,11 +544,13 @@ export const cardTemplates: CardTemplate[] = [
     name: 'Onyx Pro',
     description: 'Tech executive — deep onyx with neon green accents',
     preview: {
-      bg: '#0c1a14',
+      bg: 'linear-gradient(160deg, #0c1a14 0%, #122212 50%, #060e0a 100%)',
       accent: '#22d3a8',
       accentLight: '#7af0c8',
+      accentGradient: 'linear-gradient(135deg, #0aaf88 0%, #7af0c8 100%)',
       text: '#ffffff',
       panel: '#0c1a14',
+      panelGradient: 'linear-gradient(180deg, #152a1e 0%, #060e0a 100%)',
       layout: 'dark-hero',
     },
     defaultContent: {
@@ -580,11 +600,13 @@ export const cardTemplates: CardTemplate[] = [
     name: 'Mocha Torn',
     description: 'Boutique fashion — warm mocha with a torn-paper hero',
     preview: {
-      bg: '#2a1a10',
+      bg: 'linear-gradient(160deg, #2a1a10 0%, #3d2516 55%, #1a0e08 100%)',
       accent: '#c4883c',
       accentLight: '#e8b97a',
+      accentGradient: 'linear-gradient(135deg, #a0622a 0%, #f0c878 100%)',
       text: '#f5e8d8',
       panel: '#3d2516',
+      panelGradient: 'linear-gradient(180deg, #50321e 0%, #2a1a10 100%)',
       layout: 'torn-paper',
     },
     defaultContent: {
@@ -613,10 +635,10 @@ export const cardTemplates: CardTemplate[] = [
       textPrimary: '#f5e8d8',
       textMuted: '#c4a882',
       phoneBgPreset: 'custom',
-      phoneBgColor1: '#2a1a10',
-      phoneBgColor2: '#1a0e08',
-      phoneBgAngle: 0,
-      phoneBgType: 'solid',
+      phoneBgColor1: '#3d2516',
+      phoneBgColor2: '#0e0704',
+      phoneBgAngle: 155,
+      phoneBgType: 'gradient',
       font: 'playfair',
       bodyFontSize: 12,
       nameFontSize: 26,
