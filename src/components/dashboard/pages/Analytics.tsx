@@ -1,5 +1,5 @@
 "use client";
-
+import { Trash2 } from 'lucide-react';
 import { useState, useEffect, useRef, useMemo } from "react";
 import {
   AreaChart, Area, PieChart, Pie, Cell,
@@ -32,12 +32,12 @@ type Period = "7" | "30" | "90";
 
 // ── Helpers ────────────────────────────────────────────────────────────
 const srcBadgeClass = (s: string): string =>
-  ({
-    NFC:    "bg-[#008001]/20 text-[#49B618] border-[#008001]/30",
-    QR:     "bg-[#49B618]/20 text-[#49B618] border-[#49B618]/30",
-    DIRECT: "bg-[#009200]/20 text-[#009200] border-[#009200]/30",
-    LINK:   "bg-[#006312]/20 text-[#49B618] border-[#006312]/30",
-  }[s?.toUpperCase()] ?? "bg-gray-500/20 text-gray-300 border-gray-500/30");
+({
+  NFC: "bg-[#008001]/20 text-[#49B618] border-[#008001]/30",
+  QR: "bg-[#49B618]/20 text-[#49B618] border-[#49B618]/30",
+  DIRECT: "bg-[#009200]/20 text-[#009200] border-[#009200]/30",
+  LINK: "bg-[#006312]/20 text-[#49B618] border-[#006312]/30",
+}[s?.toUpperCase()] ?? "bg-gray-500/20 text-gray-300 border-gray-500/30");
 
 const srcIcon = (s: string): string =>
   ({ NFC: "📱", QR: "⬜", LINK: "🔗", DIRECT: "🌐" }[s?.toUpperCase()] ?? "•");
@@ -927,9 +927,10 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
                     showToast("Failed to delete leads");
                   }
                 }}
-                className="text-xs text-red-400 hover:text-red-300 transition-colors"
+                className="text-red-400 hover:text-red-300 transition-colors"
+                title="Delete selected"
               >
-                Delete selected
+                <Trash2 className="w-4 h-4" />
               </button>
             )}
           </div>
@@ -1151,11 +1152,10 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
                   <button
                     key={p}
                     onClick={() => setLeadsPage(p)}
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-medium transition-colors ${
-                      p === leadsPage
-                        ? "bg-[#008001] text-white"
-                        : "text-[#A0A0A0] hover:bg-[#1E1E1E]"
-                    }`}
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-medium transition-colors ${p === leadsPage
+                      ? "bg-[#008001] text-white"
+                      : "text-[#A0A0A0] hover:bg-[#1E1E1E]"
+                      }`}
                   >
                     {p}
                   </button>
