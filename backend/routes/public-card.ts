@@ -207,27 +207,35 @@ router.get("/:slug", async (req, res: Response) => {
   const isPreview = req.query.preview === "true";
 
   try {
-    let query = supabase
-      .from("Card")
-      .select(`
-        id, name, slug, cardType, status, shareUrl, headingText, headingBodyText,
+    const CARD_SELECT = `
+        id, name, slug, customSlug, cardType, status, shareUrl, headingText, headingBodyText,
         accentColor, accentLight, backgroundColor, cardColor, textColor,
         phoneBgType, phoneBgPreset, phoneBgColor1, phoneBgColor2, phoneBgAngle,
         fontFamily, nameFontSize, bodyFontSize, boldHeadings, cardRadius,
         shadowIntensity, glowEffect, showProfile, showHeading, showContact,
         showSocial, showLinks, showAppointment, showBusinessDetails, showExtraSections,
         businessProfileId
-      `)
-      .eq("slug", slug);
+      `;
 
-    // Only enforce ACTIVE status for public (non-preview) visits
-    if (!isPreview) {
-      query = query.eq("status", "ACTIVE");
+    // Try slug first, then fall back to customSlug — avoids PostgREST OR filter
+    // issues with camelCase column names.
+    const buildQuery = (field: "slug" | "customSlug") => {
+      let q = supabase.from("Card").select(CARD_SELECT).eq(field, slug);
+      if (!isPreview) q = q.eq("status", "ACTIVE");
+      return q.maybeSingle();
+    };
+
+    const { data: bySlug, error: slugError } = await buildQuery("slug");
+    if (slugError) return res.status(500).json({ error: slugError.message });
+
+    let card = bySlug;
+    if (!card) {
+      const { data: byCustomSlug, error: customSlugError } = await buildQuery("customSlug");
+      if (customSlugError) return res.status(500).json({ error: customSlugError.message });
+      card = byCustomSlug;
     }
 
-    const { data: card, error: cardError } = await query.single();
-
-    if (cardError || !card) {
+    if (!card) {
       return res.status(404).json({ error: "Card not found" });
     }
 

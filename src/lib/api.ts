@@ -234,6 +234,7 @@ export interface ApiCard {
   cardType: string;
   status: string;
   slug: string;
+  customSlug?: string | null;
   shareUrl: string;
   thumbnailUrl: string | null;
   accentColor?: string;
