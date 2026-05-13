@@ -4,30 +4,48 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Lock, Eye, EyeOff, CheckCircle2, ArrowRight } from "lucide-react";
+import { Lock, Eye, EyeOff, CheckCircle2, ArrowRight, Mail } from "lucide-react";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
 
 function ResetPasswordForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const token = searchParams.get("token");
-
+  // Supabase recovery links use URL hash fragments: #type=recovery&code=XXX
+  // We need to extract from both hash and query params for flexibility
+  const codeFromParams = searchParams.get("code");
+  
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [code, setCode] = useState<string | null>(codeFromParams);
 
   useEffect(() => {
-    if (!token) setError("Invalid or missing reset token. Please request a new reset link.");
-  }, [token]);
+    // Try to extract code from URL hash if not in query params
+    if (!codeFromParams && typeof window !== "undefined") {
+      const hash = window.location.hash.substring(1);
+      const params = new URLSearchParams(hash);
+      const hashCode = params.get("code");
+      if (hashCode) {
+        setCode(hashCode);
+      } else {
+        setError("Invalid or missing recovery code. Please request a new reset link.");
+      }
+    }
+  }, [codeFromParams]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
 
+    if (!email || !email.trim()) {
+      setError("Email is required.");
+      return;
+    }
     if (password.length < 8) {
       setError("Password must be at least 8 characters.");
       return;
@@ -39,16 +57,18 @@ function ResetPasswordForm() {
 
     setLoading(true);
     try {
+      // Send the recovery code, email, and new password to the backend
       const res = await fetch(`${BACKEND_URL}/api/auth/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, newPassword: password }),
+        body: JSON.stringify({ code, email: email.trim(), newPassword: password }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to reset password");
       setSuccess(true);
       setTimeout(() => router.push("/login"), 3000);
     } catch (err: any) {
+      console.error("[reset-password]", err);
       setError(err.message || "Failed to reset password. Please try again.");
     } finally {
       setLoading(false);
@@ -88,8 +108,38 @@ function ResetPasswordForm() {
                 Go to login now
               </Link>
             </div>
+          ) : error && error.includes("Invalid or missing") ? (
+            <div className="text-center space-y-4">
+              <div className="px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+                {error}
+              </div>
+              <p className="text-gray-400 text-sm">
+                The reset link may have expired. Please request a new one.
+              </p>
+              <Link
+                href="/forgot-password"
+                className="inline-block px-6 py-2 bg-gradient-to-r from-primary to-theme-strong-green text-white rounded-xl hover:scale-105 transition-all"
+              >
+                Request New Reset Link
+              </Link>
+            </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
+              <div>
+                <label className="block text-sm font-medium text-white mb-2">Email Address</label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => { setEmail(e.target.value); setError(null); }}
+                    placeholder="you@example.com"
+                    required
+                    className="w-full pl-11 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
+                  />
+                </div>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-white mb-2">New Password</label>
                 <div className="relative">
@@ -135,7 +185,7 @@ function ResetPasswordForm() {
 
               <button
                 type="submit"
-                disabled={loading || !token}
+                disabled={loading || !code}
                 className="w-full py-3 bg-gradient-to-r from-primary to-theme-strong-green text-white rounded-xl hover:scale-105 hover:shadow-2xl hover:shadow-theme-digital-green/30 transition-all flex items-center justify-center gap-2 group disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
                 {loading ? (

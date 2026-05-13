@@ -72,8 +72,11 @@ export default function SignupPage() {
 
       if (!response.ok) throw new Error(data.error || "Signup failed");
 
-      // Redirect to check-email page to inform user to verify their account
-      window.location.href = `/check-email?email=${encodeURIComponent(formData.email)}`;
+      // Persist session token and redirect to dashboard
+      if (data.sessionToken) {
+        persistSession(data.sessionToken);
+      }
+      window.location.href = "/dashboard";
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Something went wrong!");
     } finally {

@@ -1,10 +1,8 @@
 import express from "express";
-import crypto from "crypto";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 import { supabase } from "../config/supabase";
-import { sendVerificationEmail } from "../services/email";
 
 const router = express.Router();
 
@@ -65,15 +63,33 @@ router.post("/", async (req, res) => {
     // ── Hash password ─────────────────────────────────────────────────────────
     const passwordHash = await bcrypt.hash(passwordTrimmed, SALT_ROUNDS);
 
-    // ── Insert user into Supabase ─────────────────────────────────────────────
+    // ── Create user in Supabase Auth first ────────────────────────────────────
+    const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
+      email: emailTrimmed,
+      password: passwordTrimmed,
+      email_confirm: true, // Auto-confirm email on signup
+    });
+
+    if (authError || !authUser?.user?.id) {
+      console.error("Supabase Auth creation error during signup:", authError);
+      // If email already exists in Auth, that's expected if re-signing up
+      if (authError?.message?.includes("already")) {
+        return res.status(400).json({ success: false, error: "Email already in use" });
+      }
+      return res.status(500).json({ success: false, error: "Failed to create auth user" });
+    }
+
+    // ── Insert user into custom User table ────────────────────────────────────
     const now = new Date().toISOString();
     const { data: newUser, error: insertError } = await supabase
       .from("User")
       .insert({
-        id: uuidv4(),
+        id: authUser.user.id, // Use the same ID from Auth
         email: emailTrimmed,
         name: nameTrimmed,
         passwordHash,
+        emailVerified: true,
+        emailVerifiedAt: now,
         createdAt: now,
         updatedAt: now,
         lastLoginAt: now,
@@ -83,39 +99,32 @@ router.post("/", async (req, res) => {
 
     if (insertError || !newUser) {
       console.error("Supabase insert error during signup:", insertError);
+      // Clean up: delete the auth user if table insert fails
+      await supabase.auth.admin.deleteUser(authUser.user.id).catch(console.error);
       return res.status(500).json({ success: false, error: "Failed to create user" });
     }
 
-    // ── Send verification email ───────────────────────────────────────────────
-    const verificationToken = crypto.randomBytes(32).toString("hex");
-    const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-    const { error: tokenInsertError } = await supabase.from("EmailToken").insert({
-      userId: newUser.id,
-      token: verificationToken,
-      type: "email_verification",
-      expiresAt: tokenExpiry,
-    });
-    if (tokenInsertError) {
-      console.error("[signup] EmailToken insert failed:", tokenInsertError);
-    } else {
-      sendVerificationEmail(newUser.email, newUser.name ?? "there", verificationToken).catch((err) =>
-        console.error("[signup] sendVerificationEmail failed:", err)
-      );
-    }
+    // ── Issue JWT ────────────────────────────────────────────────────────────
+    const payload = { uid: newUser.id, email: newUser.email, name: newUser.name };
+    const sessionToken = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 
-    // Do not issue a session token until the email is verified.
-    console.log(`[signup] User created: ${newUser.id}, awaiting email verification.`);
+    res.cookie("session", sessionToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: COOKIE_MAX_AGE,
+      path: "/",
+    });
 
     console.log(`[signup] User created: ${newUser.id}`);
 
     return res.status(201).json({
       success: true,
-      message: "User created successfully. Please check your email to verify your account.",
-      user: {
-        uid: newUser.id,
-        email: newUser.email,
-        name: newUser.name,
-      },
+      message: "User created successfully.",
+      uid: newUser.id,
+      email: newUser.email,
+      name: newUser.name,
+      sessionToken,
     });
   } catch (err: unknown) {
     console.error("Signup error:", err);

@@ -1,16 +1,17 @@
 import express from "express";
-import bcrypt from "bcrypt";
 import { supabase } from "../config/supabase";
 
 const router = express.Router();
 
-const SALT_ROUNDS = 12;
-
 router.post("/", async (req, res) => {
-  const { token, newPassword } = req.body;
+  const { code, email, newPassword } = req.body;
 
-  if (!token || typeof token !== "string") {
-    return res.status(400).json({ success: false, error: "Reset token is required" });
+  if (!code || typeof code !== "string") {
+    return res.status(400).json({ success: false, error: "Recovery code is required" });
+  }
+
+  if (!email || typeof email !== "string") {
+    return res.status(400).json({ success: false, error: "Email is required" });
   }
 
   if (!newPassword || typeof newPassword !== "string" || newPassword.trim().length < 8) {
@@ -18,41 +19,45 @@ router.post("/", async (req, res) => {
   }
 
   try {
-    const { data: emailToken, error: tokenError } = await supabase
-      .from("EmailToken")
-      .select("id, userId, expiresAt, usedAt")
-      .eq("token", token)
-      .eq("type", "password_reset")
-      .maybeSingle();
+    const emailTrimmed = email.trim().toLowerCase();
+    
+    console.log(`[reset-password] Processing reset for: ${emailTrimmed}`);
 
-    if (tokenError || !emailToken) {
-      return res.status(400).json({ success: false, error: "Invalid or expired reset link" });
+    // Verify the recovery OTP using the code and email
+    const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
+      email: emailTrimmed,
+      token: code,
+      type: "recovery",
+    });
+
+    console.log(`[reset-password] verifyOtp response:`, { verifyData, verifyError });
+    console.log(`[reset-password] verifyData user:`, verifyData?.user);
+
+    if (verifyError || !verifyData.user?.id) {
+      console.error("[reset-password] Token verification error:", verifyError);
+      return res.status(400).json({ success: false, error: "Invalid or expired recovery link" });
     }
 
-    if (emailToken.usedAt) {
-      return res.status(400).json({ success: false, error: "This reset link has already been used" });
-    }
+    console.log(`[reset-password] Token verified for user: ${verifyData.user.id}`);
 
-    if (new Date(emailToken.expiresAt) < new Date()) {
-      return res.status(400).json({ success: false, error: "Reset link has expired. Please request a new one." });
-    }
+    // Now update the password for this user using the admin API
+    const { data: updateData, error: updateError } = await supabase.auth.admin.updateUserById(
+      verifyData.user.id,
+      { password: newPassword.trim() }
+    );
 
-    const passwordHash = await bcrypt.hash(newPassword.trim(), SALT_ROUNDS);
-    const now = new Date().toISOString();
-
-    const { error: updateError } = await supabase
-      .from("User")
-      .update({ passwordHash, updatedAt: now })
-      .eq("id", emailToken.userId);
+    console.log(`[reset-password] updateUserById response:`, { updateData, updateError });
 
     if (updateError) {
-      console.error("Password update error:", updateError);
-      return res.status(500).json({ success: false, error: "Failed to reset password" });
+      console.error("[reset-password] Password update error:", updateError);
+      return res.status(500).json({ success: false, error: "Failed to update password" });
     }
 
-    await supabase.from("EmailToken").update({ usedAt: now }).eq("id", emailToken.id);
-
-    return res.status(200).json({ success: true, message: "Password reset successfully. You can now log in." });
+    console.log(`[reset-password] Password reset successful for user: ${updateData.user?.id}`);
+    return res.status(200).json({ 
+      success: true, 
+      message: "Password reset successfully. You can now log in."
+    });
   } catch (err) {
     console.error("Reset password error:", err);
     return res.status(500).json({ success: false, error: "Internal server error" });
