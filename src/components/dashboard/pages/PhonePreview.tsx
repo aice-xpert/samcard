@@ -925,7 +925,7 @@ function PhonePreviewComponent({
                     <div style={{ fontFamily: T.fontFamily, position: 'relative' }}>
                       {/* Full-bleed photo with S-curve wave */}
                       <div style={{ width: '100%', height: 190, position: 'relative', overflow: 'hidden' }}>
-                        <PPhoto h="100%" />
+                        <PPhoto h="100%" style={{ objectPosition: 'center top' }} />
                         {/* Accent colour wash at bottom of photo */}
                         <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, transparent 35%, ${T.green}55 100%)` }} />
                         {/* Secondary wave for depth (behind main wave) */}
@@ -971,6 +971,129 @@ function PhonePreviewComponent({
                       </div>
                       {/* Seamless fade from hero bg into phone bg */}
                       <div style={{ height: 40, background: `linear-gradient(to bottom, ${T.bg} 0%, ${T.bg}99 30%, ${T.bg}44 60%, transparent 100%)`, pointerEvents: 'none' }} />
+                    </div>
+                  )}
+
+                  {profileEnabled && heroLayout === 'wave-side' && (
+                    <div style={{ fontFamily: T.fontFamily, position: 'relative' }}>
+                      <div style={{ width: '100%', height: 180, position: 'relative', overflow: 'hidden', display: 'flex' }}>
+                        {/* Name centered on left */}
+                        <div style={{ flex: 1, background: T.bg, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '14px 14px 36px 14px', position: 'relative', zIndex: 2 }}>
+                          <PNameInfo color={T.textPrimary} titleColor={T.green} companyColor={T.textMuted} />
+                        </div>
+                        {/* Photo on right */}
+                        <div style={{ width: '46%', position: 'relative', overflow: 'hidden', flexShrink: 0, alignSelf: 'stretch' }}>
+                          <PPhoto h="100%" style={{ objectPosition: 'center top' }} />
+                          {/* Gradient: bg-color on left blends into photo */}
+                          <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to right, ${T.bg} 0%, ${T.bg}dd 18%, ${T.bg}88 35%, transparent 62%)` }} />
+                        </div>
+                        {/* Wave layer 1 — accent glow */}
+                        <svg viewBox="0 0 400 60" preserveAspectRatio="none"
+                          style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 40, zIndex: 3, opacity: 0.45 }}>
+                          <path d="M0,28 C60,4 160,50 260,16 C330,0 375,30 400,12 L400,60 L0,60 Z" fill={T.green} />
+                        </svg>
+                        {/* Wave layer 2 — solid bg */}
+                        <svg viewBox="0 0 400 60" preserveAspectRatio="none"
+                          style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 30, zIndex: 4 }}>
+                          <path d="M0,18 C70,0 170,34 275,8 C342,0 380,22 400,8 L400,60 L0,60 Z" fill={T.bg} />
+                        </svg>
+                        {/* Logo circle at right edge of wave */}
+                        <div style={{ position: 'absolute', bottom: 12, right: 12, zIndex: 5 }}>
+                          {hasBrandLogo ? (
+                            <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#fff', border: `2px solid ${T.green}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
+                              <img src={brandLogo} alt="Brand" style={{ width: 22, height: 22, objectFit: 'contain' }} />
+                            </div>
+                          ) : (
+                            <div style={{ width: 30, height: 30, borderRadius: '50%', background: T.green, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 12, border: `2px solid ${T.bg}` }}>
+                              {(pCompany || pName || 'T')[0]?.toUpperCase()}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div style={{ height: 40, background: `linear-gradient(to bottom, ${T.bg} 0%, ${T.bg}99 30%, ${T.bg}44 60%, transparent 100%)`, pointerEvents: 'none' }} />
+                    </div>
+                  )}
+
+                  {profileEnabled && heroLayout === 'wave-icons' && (
+                    <div style={{ fontFamily: T.fontFamily, position: 'relative' }}>
+                      <div style={{ width: '100%', height: 162, position: 'relative', overflow: 'hidden' }}>
+                        <PPhoto h="100%" style={{ objectPosition: 'center top' }} />
+                        <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, transparent 30%, ${T.green}88 100%)` }} />
+                        {hasBrandLogo && logoPosition === 'top-right' && (
+                          <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 5 }}><PLogo pos="top-right" /></div>
+                        )}
+                        {hasBrandLogo && logoPosition === 'top-left' && (
+                          <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 5 }}><PLogo pos="top-left" /></div>
+                        )}
+                        {/* Triple wave */}
+                        <svg viewBox="0 0 400 60" preserveAspectRatio="none"
+                          style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 42, zIndex: 1, opacity: 0.4 }}>
+                          <path d="M0,38 C60,10 150,50 230,18 C300,0 360,36 400,16 L400,60 L0,60 Z" fill={T.greenLight} />
+                        </svg>
+                        <svg viewBox="0 0 400 60" preserveAspectRatio="none"
+                          style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 34, zIndex: 2, opacity: 0.65 }}>
+                          <path d="M0,26 C80,4 190,46 280,14 C345,2 385,28 400,10 L400,60 L0,60 Z" fill={T.bg} />
+                        </svg>
+                        <svg viewBox="0 0 400 60" preserveAspectRatio="none"
+                          style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 24, zIndex: 3 }}>
+                          <path d="M0,16 C70,0 165,30 265,8 C330,0 375,20 400,6 L400,60 L0,60 Z" fill={T.bg} />
+                        </svg>
+                      </div>
+                      {/* 3 contact icon circles between wave and name */}
+                      <div style={{ display: 'flex', gap: 10, justifyContent: 'center', padding: '10px 14px 4px', background: T.bg }}>
+                        {[<Phone key="p" size={14} />, <Mail key="m" size={14} />, <MessageSquare key="c" size={14} />].map((icon, i) => (
+                          <div key={i} style={{ width: 32, height: 32, borderRadius: '50%', background: T.green, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 2px 8px ${T.green}66` }}>{icon}</div>
+                        ))}
+                      </div>
+                      <div style={{ background: T.bg, padding: '4px 14px 6px' }}>
+                        <PNameInfo color={T.textPrimary} titleColor={T.greenLight} companyColor={T.textMuted} />
+                      </div>
+                      <div style={{ height: 40, background: `linear-gradient(to bottom, ${T.bg} 0%, ${T.bg}99 30%, ${T.bg}44 60%, transparent 100%)`, pointerEvents: 'none' }} />
+                    </div>
+                  )}
+
+                  {profileEnabled && heroLayout === 'slash-wave' && (
+                    <div style={{ fontFamily: T.fontFamily, position: 'relative' }}>
+                      <div style={{ width: '100%', height: 148, position: 'relative', overflow: 'hidden' }}>
+                        <PPhoto h="100%" style={{ objectPosition: 'center top' }} />
+                        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.55) 100%)' }} />
+                        {/* Diagonal accent slashes */}
+                        <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} viewBox="0 0 100 148" preserveAspectRatio="none">
+                          <line x1="60" y1="0" x2="100" y2="90" stroke={T.green} strokeWidth="9" opacity="0.7" />
+                          <line x1="76" y1="0" x2="100" y2="50" stroke={T.greenLight} strokeWidth="6" opacity="0.45" />
+                          <line x1="50" y1="0" x2="95" y2="110" stroke={T.green} strokeWidth="3" opacity="0.28" />
+                        </svg>
+                        {(!hasBrandLogo || logoPosition === 'top-right') && (
+                          <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 3 }}>
+                            {hasBrandLogo ? <PLogo pos="top-right" /> : (
+                              <div style={{ width: 28, height: 28, borderRadius: '50%', background: T.green, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 12 }}>
+                                {(pCompany || pName || 'T')[0]?.toUpperCase()}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        {hasBrandLogo && logoPosition === 'top-left' && (
+                          <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 3 }}><PLogo pos="top-left" /></div>
+                        )}
+                        {/* Wave layer 1 — bold accent (visible on dark bg) */}
+                        <svg viewBox="0 0 400 60" preserveAspectRatio="none"
+                          style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 40, zIndex: 4, opacity: 0.7 }}>
+                          <path d="M0,30 C60,6 160,50 260,16 C330,0 375,30 400,12 L400,60 L0,60 Z" fill={T.green} />
+                        </svg>
+                        {/* Wave layer 2 — solid card bg */}
+                        <svg viewBox="0 0 400 60" preserveAspectRatio="none"
+                          style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 28, zIndex: 5 }}>
+                          <path d="M0,16 C80,0 185,30 290,8 C352,0 385,20 400,6 L400,60 L0,60 Z" fill={T.card} />
+                        </svg>
+                      </div>
+                      {/* Circular profile overlapping wave */}
+                      <div style={{ position: 'relative', background: T.card, padding: '10px 14px 6px 82px', minHeight: 68 }}>
+                        <div style={{ position: 'absolute', top: -26, left: 14, width: 56, height: 56, borderRadius: '50%', overflow: 'hidden', border: `2px solid ${T.green}`, boxShadow: `0 2px 12px rgba(0,0,0,0.3)` }}>
+                          <PPhoto h="100%" style={{ objectPosition: 'center top' }} />
+                        </div>
+                        <PNameInfo color={T.textPrimary} titleColor={T.greenLight} companyColor={T.textMuted} />
+                      </div>
+                      <div style={{ height: 40, background: `linear-gradient(to bottom, ${T.card} 0%, ${T.card}99 30%, ${T.card}44 60%, transparent 100%)`, pointerEvents: 'none' }} />
                     </div>
                   )}
 

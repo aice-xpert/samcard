@@ -360,6 +360,11 @@ const PALETTE_TO_HERO_LAYOUT: Record<string, string> = {
   'mocha-torn':      'torn-edge',
   'navy-gold':       'wave-logo',
   'emerald-wave':    'wave-logo',
+  'azure-flow':      'wave-panel',
+  'rose-wave':       'wave-panel',
+  'navy-amber':      'wave-logo',
+  'blush-soft':      'wave-side',
+  'violet-pro':      'wave-icons',
 };
 
 function buildThemeOverride(d: DesignSettings): Partial<ThemeOverride> {

@@ -385,8 +385,26 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
         return "soft";
     };
 
-    const buildCardDesignPayload = (settings: any) => ({
-        palette: typeof settings?.palette === "string" ? settings.palette : "green",
+    const PALETTE_TO_HERO_LAYOUT: Record<string, string> = {
+        'medical-teal': 'wave-panel', 'teamwork-orange': 'side-panel',
+        'heritage-gold': 'wave-panel', 'team-pro': 'group-diagonal',
+        'royal-purple': 'circle-overlap', 'minimal-mono': 'circle-center',
+        'sunset-banner': 'top-banner', 'sky-circle': 'circle-overlap',
+        'onyx-pro': 'default', 'mocha-torn': 'torn-edge',
+        'navy-gold': 'wave-logo', 'emerald-wave': 'wave-logo',
+        'azure-flow': 'wave-panel', 'rose-wave': 'wave-panel',
+        'navy-amber': 'wave-logo', 'blush-soft': 'wave-side',
+        'violet-pro': 'wave-icons',
+    };
+
+    const buildCardDesignPayload = (settings: any) => {
+        const palette = typeof settings?.palette === "string" ? settings.palette : "green";
+        const heroLayout = (typeof settings?.heroLayout === "string" && settings.heroLayout && settings.heroLayout !== "default")
+            ? settings.heroLayout
+            : (PALETTE_TO_HERO_LAYOUT[palette] ?? "default");
+        return ({
+        palette,
+        heroLayout,
         accentColor: typeof settings?.accentColor === "string" ? settings.accentColor : "#008001",
         accentLight: typeof settings?.accentLight === "string" ? settings.accentLight : "#49B618",
         bgColor: typeof settings?.bgColor === "string" ? settings.bgColor : "#0a0f0a",
@@ -405,7 +423,8 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
         cardRadius: toNumber(settings?.cardRadius, 16),
         shadowIntensity: toShadowIntensity(settings?.shadowIntensity),
         glowEffect: typeof settings?.glowEffect === "boolean" ? settings.glowEffect : true,
-    });
+        });
+    };
 
     const handleSaveFinish = () => {
         setSaveError(null);

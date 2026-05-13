@@ -24,6 +24,7 @@ export default function TemplatePicker({ cardId, onApply, onDesignApply, classNa
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    setSelectedId(null);
     try {
       const stored = localStorage.getItem(selectedKeyForCard(cardId));
       if (stored) setSelectedId(stored);

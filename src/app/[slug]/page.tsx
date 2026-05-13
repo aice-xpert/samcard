@@ -1377,6 +1377,11 @@ export default function PublicCardPage() {
     'mocha-torn':      'torn-edge',
     'navy-gold':       'wave-logo',
     'emerald-wave':    'wave-logo',
+    'azure-flow':      'wave-panel',
+    'rose-wave':       'wave-panel',
+    'navy-amber':      'wave-logo',
+    'blush-soft':      'wave-side',
+    'violet-pro':      'wave-icons',
   };
   // Use stored heroLayout from DB first; fall back to palette-based derivation for legacy rows.
   // Use || not ?? so empty string from DB also falls back to 'default'.
@@ -1389,10 +1394,10 @@ export default function PublicCardPage() {
   const company = fd.company || businessProfile.company || '';
   const profileImg = content.profileImage || '';
 
-  const PhotoEl = ({ height, objectFit = 'cover', className = '' }: { height?: number | string; objectFit?: string; className?: string }) =>
+  const PhotoEl = ({ height, objectFit = 'cover', objectPosition = 'center', className = '' }: { height?: number | string; objectFit?: string; objectPosition?: string; className?: string }) =>
     profileImg ? (
       <img src={profileImg} alt={name}
-        style={{ width: '100%', height: height ?? '100%', objectFit: objectFit as 'cover', display: 'block' }}
+        style={{ width: '100%', height: height ?? '100%', objectFit: objectFit as 'cover', objectPosition, display: 'block' }}
         className={className}
       />
     ) : (
@@ -1733,7 +1738,7 @@ export default function PublicCardPage() {
             <div style={{ fontFamily: T.fontFamily, position: 'relative' }}>
               {/* Full-bleed photo with S-curve wave */}
               <div style={{ width: '100%', height: 260, position: 'relative', overflow: 'hidden' }}>
-                <PhotoEl height="100%" />
+                <PhotoEl height="100%" objectPosition="center top" />
                 {/* Accent colour wash at bottom of photo */}
                 <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, transparent 35%, ${T.green}55 100%)` }} />
                 {/* Secondary wave for depth (behind main wave) */}
@@ -1766,6 +1771,133 @@ export default function PublicCardPage() {
               </div>
               {/* Seamless fade from hero bg into page bg */}
               <div style={{ height: 48, background: `linear-gradient(to bottom, ${T.bg} 0%, ${T.bg}99 30%, ${T.bg}44 60%, transparent 100%)`, pointerEvents: 'none' }} />
+            </div>
+          )}
+
+          {profileVisible && heroLayout === 'wave-side' && (
+            <div style={{ fontFamily: T.fontFamily, position: 'relative' }}>
+              <div style={{ width: '100%', height: 230, position: 'relative', overflow: 'hidden', display: 'flex' }}>
+                {/* Name centered on left */}
+                <div style={{ flex: 1, background: T.bg, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '16px 20px 44px 20px', position: 'relative', zIndex: 2 }}>
+                  <NameInfo color={T.textPrimary} titleColor={T.green} companyColor={T.textMuted} />
+                </div>
+                {/* Photo on right */}
+                <div style={{ width: '46%', position: 'relative', overflow: 'hidden', flexShrink: 0, alignSelf: 'stretch' }}>
+                  <PhotoEl height="100%" objectPosition="center top" />
+                  {/* Gradient: bg-color on left blends into photo */}
+                  <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to right, ${T.bg} 0%, ${T.bg}dd 18%, ${T.bg}88 35%, transparent 62%)` }} />
+                </div>
+                {/* Wave layer 1 — accent glow */}
+                <svg viewBox="0 0 400 60" preserveAspectRatio="none"
+                  style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 44, zIndex: 3, opacity: 0.45 }}>
+                  <path d="M0,28 C60,4 160,50 260,16 C330,0 375,30 400,12 L400,60 L0,60 Z" fill={T.green} />
+                </svg>
+                {/* Wave layer 2 — solid bg */}
+                <svg viewBox="0 0 400 60" preserveAspectRatio="none"
+                  style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 34, zIndex: 4 }}>
+                  <path d="M0,18 C70,0 170,34 275,8 C342,0 380,22 400,8 L400,60 L0,60 Z" fill={T.bg} />
+                </svg>
+                {/* Logo circle at right edge of wave */}
+                <div style={{ position: 'absolute', bottom: 8, right: 18, zIndex: 5 }}>
+                  {hasBrandLogo ? (
+                    <div style={{ width: 42, height: 42, borderRadius: '50%', background: '#fff', border: `2px solid ${T.green}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: '0 2px 10px rgba(0,0,0,0.2)' }}>
+                      <img src={content.brandLogo} alt="Brand" style={{ width: 30, height: 30, objectFit: 'contain' }} />
+                    </div>
+                  ) : (
+                    <div style={{ width: 40, height: 40, borderRadius: '50%', background: T.green, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 16, border: `2px solid ${T.bg}` }}>
+                      {(company || name || 'T')[0]?.toUpperCase()}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div style={{ height: 48, background: `linear-gradient(to bottom, ${T.bg} 0%, ${T.bg}99 30%, ${T.bg}44 60%, transparent 100%)`, pointerEvents: 'none' }} />
+            </div>
+          )}
+
+          {profileVisible && heroLayout === 'wave-icons' && (
+            <div style={{ fontFamily: T.fontFamily, position: 'relative' }}>
+              <div style={{ width: '100%', height: 230, position: 'relative', overflow: 'hidden' }}>
+                <PhotoEl height="100%" objectPosition="center top" />
+                <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, transparent 30%, ${T.green}88 100%)` }} />
+                {hasBrandLogo && content.logoPosition === 'top-right' && (
+                  <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 5 }}><LogoBadge pos="top-right" /></div>
+                )}
+                {hasBrandLogo && content.logoPosition === 'top-left' && (
+                  <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 5 }}><LogoBadge pos="top-left" /></div>
+                )}
+                {/* Triple wave */}
+                <svg viewBox="0 0 400 60" preserveAspectRatio="none"
+                  style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 50, zIndex: 1, opacity: 0.4 }}>
+                  <path d="M0,38 C60,10 150,50 230,18 C300,0 360,36 400,16 L400,60 L0,60 Z" fill={T.greenLight} />
+                </svg>
+                <svg viewBox="0 0 400 60" preserveAspectRatio="none"
+                  style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 42, zIndex: 2, opacity: 0.65 }}>
+                  <path d="M0,26 C80,4 190,46 280,14 C345,2 385,28 400,10 L400,60 L0,60 Z" fill={T.bg} />
+                </svg>
+                <svg viewBox="0 0 400 60" preserveAspectRatio="none"
+                  style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 30, zIndex: 3 }}>
+                  <path d="M0,16 C70,0 165,30 265,8 C330,0 375,20 400,6 L400,60 L0,60 Z" fill={T.bg} />
+                </svg>
+              </div>
+              {/* 3 contact icon circles between wave and name */}
+              <div style={{ display: 'flex', gap: 14, justifyContent: 'center', padding: '14px 20px 6px', background: T.bg }}>
+                {[<Phone key="p" size={18} />, <Mail key="m" size={18} />, <MessageSquare key="c" size={18} />].map((icon, i) => (
+                  <div key={i} style={{ width: 44, height: 44, borderRadius: '50%', background: T.green, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 3px 12px ${T.green}66` }}>{icon}</div>
+                ))}
+              </div>
+              <div style={{ background: T.bg, padding: '6px 20px 8px' }}>
+                <NameInfo color={T.textPrimary} titleColor={T.greenLight} companyColor={T.textMuted} />
+              </div>
+              <div style={{ height: 48, background: `linear-gradient(to bottom, ${T.bg} 0%, ${T.bg}99 30%, ${T.bg}44 60%, transparent 100%)`, pointerEvents: 'none' }} />
+            </div>
+          )}
+
+          {profileVisible && heroLayout === 'slash-wave' && (
+            <div style={{ fontFamily: T.fontFamily, position: 'relative' }}>
+              <div style={{ width: '100%', height: 200, position: 'relative', overflow: 'hidden' }}>
+                <PhotoEl height="100%" objectPosition="center top" />
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.55) 100%)' }} />
+                {/* Diagonal accent slashes */}
+                <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} viewBox="0 0 100 200" preserveAspectRatio="none">
+                  <line x1="60" y1="0" x2="100" y2="120" stroke={T.green} strokeWidth="9" opacity="0.7" />
+                  <line x1="76" y1="0" x2="100" y2="65" stroke={T.greenLight} strokeWidth="6" opacity="0.45" />
+                  <line x1="50" y1="0" x2="95" y2="150" stroke={T.green} strokeWidth="3" opacity="0.28" />
+                </svg>
+                {(!hasBrandLogo || content.logoPosition === 'top-right') && (
+                  <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 3 }}>
+                    {hasBrandLogo ? (
+                      <div style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)', padding: 5, borderRadius: 10, lineHeight: 0 }}>
+                        <img src={content.brandLogo} alt="Brand" style={{ maxWidth: 40, maxHeight: 40, objectFit: 'contain', borderRadius: 6 }} />
+                      </div>
+                    ) : (
+                      <div style={{ width: 36, height: 36, borderRadius: '50%', background: T.green, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 16 }}>
+                        {(company || name || 'T')[0]?.toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+                )}
+                {hasBrandLogo && content.logoPosition === 'top-left' && (
+                  <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 3 }}><LogoBadge pos="top-left" /></div>
+                )}
+                {/* Wave layer 1 — bold accent (visible on dark bg) */}
+                <svg viewBox="0 0 400 60" preserveAspectRatio="none"
+                  style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 46, zIndex: 4, opacity: 0.7 }}>
+                  <path d="M0,30 C60,6 160,50 260,16 C330,0 375,30 400,12 L400,60 L0,60 Z" fill={T.green} />
+                </svg>
+                {/* Wave layer 2 — solid card bg */}
+                <svg viewBox="0 0 400 60" preserveAspectRatio="none"
+                  style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 34, zIndex: 5 }}>
+                  <path d="M0,16 C80,0 185,30 290,8 C352,0 385,20 400,6 L400,60 L0,60 Z" fill={T.card} />
+                </svg>
+              </div>
+              {/* Circular profile overlapping wave */}
+              <div style={{ position: 'relative', background: T.card, padding: '12px 20px 8px 100px', minHeight: 88 }}>
+                <div style={{ position: 'absolute', top: -32, left: 18, width: 70, height: 70, borderRadius: '50%', overflow: 'hidden', border: `2px solid ${T.green}`, boxShadow: `0 3px 16px rgba(0,0,0,0.3)` }}>
+                  <PhotoEl height="100%" objectPosition="center top" />
+                </div>
+                <NameInfo color={T.textPrimary} titleColor={T.greenLight} companyColor={T.textMuted} />
+              </div>
+              <div style={{ height: 48, background: `linear-gradient(to bottom, ${T.card} 0%, ${T.card}99 30%, ${T.card}44 60%, transparent 100%)`, pointerEvents: 'none' }} />
             </div>
           )}
 
