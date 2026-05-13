@@ -35,7 +35,6 @@ import {
   getCustomLinks,
   getSocialLinks,
   getCardDesign,
-  updateCardDesign,
   CardDesignResponse,
   updateBusinessProfile,
   updateCustomLinks,
@@ -416,6 +415,13 @@ const TEMPLATE_PALETTE_TO_HERO: Record<string, string> = {
   'sky-circle':      'circle-overlap',
   'onyx-pro':        'default',
   'mocha-torn':      'torn-edge',
+  'navy-gold':       'wave-logo',
+  'emerald-wave':    'wave-logo',
+  'azure-flow':      'wave-panel',
+  'rose-wave':       'wave-panel',
+  'navy-amber':      'wave-logo',
+  'blush-soft':      'wave-side',
+  'violet-pro':      'wave-icons',
 };
 
 function buildThemeOverrideFromCardDesign(design: Partial<CardDesignResponse>): Partial<ThemeOverride> {
@@ -1722,8 +1728,14 @@ export default function BusinessProfile({
           cardId={resolvedCardId ?? cardId ?? null}
           onApply={(content) => {
             try {
-              // merge known fields into formData
               const incoming = content as Record<string, unknown>;
+              // For existing cards (card data already loaded from API), skip content
+              // changes — template selection on an existing card should only change
+              // the design/theme, not overwrite the user's name, photo, etc.
+              const isEditingExisting = !!(resolvedCardId && hasLoadedCardContentRef.current);
+              if (isEditingExisting) return;
+
+              // New card: apply template content fields
               const updates: Partial<FormData> = {};
               if (typeof incoming.name === 'string') updates.name = incoming.name;
               if (typeof incoming.jobTitle === 'string') updates.title = incoming.jobTitle;
@@ -1737,11 +1749,9 @@ export default function BusinessProfile({
 
               setFormData(prev => ({ ...prev, ...updates }));
 
-              // profileImage and brandLogo
               if (typeof incoming.profileImage === 'string') setProfileImage(incoming.profileImage);
               if (typeof incoming.brandLogo === 'string') setBrandLogo(incoming.brandLogo);
 
-              // social links mapping: from {platform: string, url: string} to our SocialLink[] (platform index)
               if (Array.isArray(incoming.socialLinks)) {
                 const arr = incoming.socialLinks as Array<Record<string, unknown>>;
                 const newSocial = [...socialLinks];
@@ -1755,7 +1765,6 @@ export default function BusinessProfile({
                 setSocialLinks(newSocial);
               }
 
-              // sections enablement
               if (Array.isArray(incoming.sections)) {
                 const sec = { ...sections };
                 for (const s of (incoming.sections as Array<Record<string, unknown>>)) {
@@ -1770,38 +1779,19 @@ export default function BusinessProfile({
                 setSections(sec);
               }
 
-              // custom links (from sections content)
               if (Array.isArray(incoming.sections)) {
                 for (const s of (incoming.sections as Array<Record<string, unknown>>)) {
-                  const content = s.content as { links?: unknown } | undefined;
-                  if (s.type === 'links' && Array.isArray(content?.links)) {
-                    const links = (content!.links as Array<Record<string, unknown>>).map(l => ({ label: String(l.label ?? ''), url: String(l.url ?? '') }));
+                  const cnt = s.content as { links?: unknown } | undefined;
+                  if (s.type === 'links' && Array.isArray(cnt?.links)) {
+                    const links = (cnt!.links as Array<Record<string, unknown>>).map(l => ({ label: String(l.label ?? ''), url: String(l.url ?? '') }));
                     if (links.length) setCustomLinks(links as any);
                   }
                 }
               }
 
-              // persist merged cache
-              try {
-                const ck = cacheKeyForEditor(cardId, resolvedCardId, allowFallbackToFirstCard);
-                const newCache: CacheShape = {
-                  profileImage: typeof incoming.profileImage === 'string' ? incoming.profileImage : profileImage,
-                  brandLogo: typeof incoming.brandLogo === 'string' ? incoming.brandLogo : brandLogo,
-                  logoPosition,
-                  formData: { ...formData, ...updates },
-                  socialLinks: socialLinks,
-                  connectFields: connectFields,
-                  sections: { ...sections },
-                  expanded: { ...expanded },
-                  customLinks: customLinks,
-                  extraSections: extraSections,
-                  sectionOrder: sectionOrder,
-                  unifiedOrder: unifiedOrder,
-                };
-                saveCacheForKey(newCache, ck);
-              } catch (e) {
-                // ignore persistence errors
-              }
+              // Template content is applied to state only (preview).
+              // It is NOT persisted to localStorage or the backend here.
+              // The user must explicitly click Save to persist their changes.
             } catch (err) {
               console.error('Failed applying template content', err);
             }
@@ -1841,6 +1831,10 @@ export default function BusinessProfile({
                 'royal-purple': 'circle-overlap', 'minimal-mono': 'circle-center',
                 'sunset-banner': 'top-banner', 'sky-circle': 'circle-overlap',
                 'onyx-pro': 'default', 'mocha-torn': 'torn-edge',
+                'navy-gold': 'wave-logo', 'emerald-wave': 'wave-logo',
+                'azure-flow': 'wave-panel', 'rose-wave': 'wave-panel',
+                'navy-amber': 'wave-logo', 'blush-soft': 'wave-side',
+                'violet-pro': 'wave-icons',
               };
 
               const themeForPreview: Partial<ThemeOverride> = {
@@ -1884,33 +1878,10 @@ export default function BusinessProfile({
                 boldHeadings,
                 cardRadius,
               };
+              // Persist template design to localStorage so Design editor picks it up.
+              // Do NOT auto-save to backend — the user must explicitly click Save.
               saveThemeOverride(designKey, cachePayload as any);
               setThemeOverride(prev => ({ ...prev, ...themeForPreview }));
-
-              // Persist to backend so the published /[slug] page uses the template's design
-              if (resolvedCardId) {
-                updateCardDesign(resolvedCardId, {
-                  palette,
-                  accentColor: accent,
-                  accentLight,
-                  bgColor,
-                  cardColor,
-                  textPrimary,
-                  textMuted,
-                  phoneBgPreset,
-                  phoneBgColor1,
-                  phoneBgColor2,
-                  phoneBgAngle,
-                  phoneBgType,
-                  font: fontKey,
-                  nameFontSize,
-                  bodyFontSize,
-                  boldHeadings,
-                  cardRadius,
-                  shadowIntensity: (typeof d.shadowIntensity === 'string' ? d.shadowIntensity : 'soft') as any,
-                  glowEffect: typeof d.glowEffect === 'boolean' ? d.glowEffect : false,
-                }).catch((err) => console.error('Failed to persist template design', err));
-              }
             } catch (e) {
               console.error('Failed to apply template design', e);
             }

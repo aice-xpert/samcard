@@ -27,6 +27,7 @@ interface QRConfigData {
   designLabel: string;
   shapeLabel: string;
   stickerId: string | null;
+  decorateImageUrl: string;
 }
 
 router.get("/", verifySession, async (req: AuthRequest, res: Response) => {
@@ -103,6 +104,7 @@ router.put("/", verifySession, async (req: AuthRequest, res: Response) => {
       designLabel: "",
       shapeLabel: "",
       stickerId: null,
+      decorateImageUrl: qrData.decorateImageUrl ?? "",
     };
 
     const insertData = {
@@ -127,6 +129,7 @@ router.put("/", verifySession, async (req: AuthRequest, res: Response) => {
       designLabel: qrData.designLabel ?? defaultConfig.designLabel,
       shapeLabel: qrData.shapeLabel ?? defaultConfig.shapeLabel,
       stickerId: qrData.stickerId ?? defaultConfig.stickerId,
+      decorateImageUrl: qrData.decorateImageUrl ?? defaultConfig.decorateImageUrl,
       updatedAt: new Date().toISOString(),
     };
 

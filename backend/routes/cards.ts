@@ -106,20 +106,27 @@ const normalizeSlug = (value: unknown): string | null => {
 };
 
 /**
- * Checks whether a given slug is already taken in the Card table.
+ * Checks whether a given slug is already taken in the Card table,
+ * checking both the primary slug column and the customSlug column.
  * Optionally excludes a card (for update flows).
  */
 const isSlugTaken = async (
   slug: string,
   excludeCardId?: string
 ): Promise<{ taken: boolean; error: string | null }> => {
-  let query = supabase.from("Card").select("id").eq("slug", slug);
+  let slugQuery = supabase.from("Card").select("id").eq("slug", slug);
+  let customSlugQuery = supabase.from("Card").select("id").eq("customSlug", slug);
   if (excludeCardId) {
-    query = query.neq("id", excludeCardId);
+    slugQuery = slugQuery.neq("id", excludeCardId);
+    customSlugQuery = customSlugQuery.neq("id", excludeCardId);
   }
-  const { data, error } = await query;
-  if (error) return { taken: false, error: error.message };
-  return { taken: (data ?? []).length > 0, error: null };
+  const [slugRes, customSlugRes] = await Promise.all([slugQuery, customSlugQuery]);
+  if (slugRes.error) return { taken: false, error: slugRes.error.message };
+  if (customSlugRes.error) return { taken: false, error: customSlugRes.error.message };
+  return {
+    taken: (slugRes.data ?? []).length > 0 || (customSlugRes.data ?? []).length > 0,
+    error: null,
+  };
 };
 
 // ── Name uniqueness check ─────────────────────────────────────────────────────
@@ -326,9 +333,10 @@ router.post("/", verifySession, async (req: AuthRequest, res: Response) => {
       businessProfileId = createdProfile.id;
     }
 
-    // 3. Create the Card — use custom slug if provided, otherwise card ID
+    // 3. Create the Card — slug is always the auto-generated card ID.
+    // customSlug (if provided) is stored separately; both resolve publicly.
     const cardId = createCardId();
-    const slug = resolvedCustomSlug ?? cardId;
+    const slug = cardId;
     const shareUrl = `/${slug}`;
 
     const cardData: Record<string, unknown> = {
@@ -338,6 +346,7 @@ router.post("/", verifySession, async (req: AuthRequest, res: Response) => {
       name: normalizedName,
       slug,
       shareUrl,
+      ...(resolvedCustomSlug ? { customSlug: resolvedCustomSlug } : {}),
       cardType: cardType || "QR",
       status: "ACTIVE",
       updatedAt: new Date().toISOString(),
@@ -437,23 +446,27 @@ router.put("/:id", verifySession, async (req: AuthRequest, res: Response) => {
     }
 
     // ── Custom slug update ────────────────────────────────────────────────────
-    if (customSlug !== undefined && customSlug !== "") {
-      const normalized = normalizeSlug(customSlug);
-      if (!normalized) {
-        return res.status(400).json({
-          error:
-            "Invalid custom URL. Use 3–60 characters: lowercase letters, numbers, and hyphens only.",
-        });
+    if (customSlug !== undefined) {
+      if (customSlug === "") {
+        // Empty string clears the custom slug
+        updateData.customSlug = null;
+      } else {
+        const normalized = normalizeSlug(customSlug);
+        if (!normalized) {
+          return res.status(400).json({
+            error:
+              "Invalid custom URL. Use 3–60 characters: lowercase letters, numbers, and hyphens only.",
+          });
+        }
+        const { taken, error: slugErr } = await isSlugTaken(normalized, String(id));
+        if (slugErr) return res.status(500).json({ error: slugErr });
+        if (taken) {
+          return res.status(409).json({
+            error: "This custom URL is already taken. Please choose another.",
+          });
+        }
+        updateData.customSlug = normalized;
       }
-      const { taken, error: slugErr } = await isSlugTaken(normalized, String(id));
-      if (slugErr) return res.status(500).json({ error: slugErr });
-      if (taken) {
-        return res.status(409).json({
-          error: "This custom URL is already taken. Please choose another.",
-        });
-      }
-      updateData.slug = normalized;
-      updateData.shareUrl = `/${normalized}`;
     }
 
     if (status) {

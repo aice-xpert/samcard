@@ -4,7 +4,9 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import BusinessProfile from "./BusinessProfile";
 import { DesignNew } from "./Design";
 import { NfcQr } from "./NfcQR";
-import { createCard, updateCard, updateCardQR, updateCardContent, updateCardDesign, CardContentPayload, getCards, checkSlugAvailable } from "@/lib/api";
+import { createCard, updateCard, updateCardQR, updateCardContent, updateCardDesign, CardContentPayload, getCards, uploadFile, checkSlugAvailable } from "@/lib/api";
+import { makeQRMatrix } from "@/components/dashboard/pages/qr-engine";
+import { rebuildDecoratedComposite } from "@/components/dashboard/pages/qr-download-utils";
 
 const STEPS = [
     { id: 1, label: "Content" },
@@ -18,18 +20,37 @@ function CampaignNameModal({
     isSaving,
     errorMessage,
     onClearError,
+    isEditMode,
+    initialAutoSlug,
+    initialCustomSlug,
+    existingCardId,
 }: {
     onCancel: () => void;
-    onSave: (campaignName: string, customSlug?: string) => void;
+    onSave: (campaignName: string, customSlug?: string | null) => void;
     isSaving: boolean;
     errorMessage?: string;
     onClearError: () => void;
+    isEditMode?: boolean;
+    initialAutoSlug?: string;
+    initialCustomSlug?: string | null;
+    existingCardId?: string;
 }) {
     const [campaignName, setCampaignName] = useState("");
-    const [customSlug, setCustomSlug] = useState("");
-    const [slugStatus, setSlugStatus] = useState<"idle" | "checking" | "available" | "taken" | "invalid">("idle");
-    const [slugMessage, setSlugMessage] = useState("");
+    const [customSlug, setCustomSlug] = useState(initialCustomSlug ?? "");
+    const [slugStatus, setSlugStatus] = useState<"idle" | "checking" | "available" | "taken" | "invalid">(
+        initialCustomSlug ? "available" : "idle"
+    );
+    const [slugMessage, setSlugMessage] = useState(
+        initialCustomSlug ? "✓ Current custom URL" : ""
+    );
     const slugDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const [autoSlugPreview] = useState(() => {
+        if (initialAutoSlug) return initialAutoSlug;
+        const hex = Array.from({ length: 32 }, () =>
+            Math.floor(Math.random() * 16).toString(16)
+        ).join("");
+        return `card_${hex}`;
+    });
 
     const PUBLIC_BASE =
         process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
@@ -57,10 +78,17 @@ function CampaignNameModal({
             return;
         }
 
+        // If unchanged from the existing value, mark available immediately
+        if (isEditMode && raw === (initialCustomSlug ?? "")) {
+            setSlugStatus("available");
+            setSlugMessage("✓ Current custom URL");
+            return;
+        }
+
         setSlugStatus("checking");
         slugDebounceRef.current = setTimeout(async () => {
             try {
-                const result = await checkSlugAvailable(raw);
+                const result = await checkSlugAvailable(raw, existingCardId);
                 if (result.available) {
                     setSlugStatus("available");
                     setSlugMessage("✓ This URL is available");
@@ -77,7 +105,17 @@ function CampaignNameModal({
 
     const handleSave = async () => {
         onClearError();
-        const slugToUse = customSlug && slugStatus === "available" ? customSlug : undefined;
+        let slugToUse: string | null | undefined;
+        if (isEditMode) {
+            // In edit mode: empty field = clear slug (null), changed value = new slug
+            if (!customSlug) {
+                slugToUse = initialCustomSlug ? "" : undefined;  // "" signals backend to clear
+            } else {
+                slugToUse = slugStatus === "available" ? customSlug : undefined;
+            }
+        } else {
+            slugToUse = customSlug && slugStatus === "available" ? customSlug : undefined;
+        }
         await onSave(campaignName, slugToUse);
     };
 
@@ -97,7 +135,9 @@ function CampaignNameModal({
 
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-lg font-bold text-white">Finish & Publish</h2>
+                    <h2 className="text-lg font-bold text-white">
+                        {isEditMode ? "Edit Card URLs" : "Finish & Publish"}
+                    </h2>
                     <button
                         onClick={onCancel}
                         className="w-7 h-7 rounded-lg bg-[#1a1f1a] text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20 flex items-center justify-center transition-all text-lg"
@@ -106,21 +146,42 @@ function CampaignNameModal({
                     </button>
                 </div>
 
-                {/* Campaign Name */}
+                {/* Campaign Name — only shown when creating */}
+                {!isEditMode && (
+                    <div className="mb-4">
+                        <label className="block text-xs font-medium text-[#A0A0A0] mb-2 uppercase tracking-wide">
+                            Campaign Name
+                        </label>
+                        <input
+                            type="text"
+                            value={campaignName}
+                            onChange={(e) => {
+                                setCampaignName(e.target.value);
+                                if (errorMessage) onClearError();
+                            }}
+                            placeholder="e.g. My Business Card Campaign"
+                            className="w-full px-3 py-2.5 rounded-xl border border-[#008001]/25 bg-[#111811] text-sm text-white outline-none focus:border-[#008001]/60 placeholder-[#555] transition-colors"
+                        />
+                    </div>
+                )}
+
+                {/* Auto-generated URL (read-only) */}
                 <div className="mb-4">
                     <label className="block text-xs font-medium text-[#A0A0A0] mb-2 uppercase tracking-wide">
-                        Campaign Name
+                        Auto-generated URL
                     </label>
-                    <input
-                        type="text"
-                        value={campaignName}
-                        onChange={(e) => {
-                            setCampaignName(e.target.value);
-                            if (errorMessage) onClearError();
-                        }}
-                        placeholder="e.g. My Business Card Campaign"
-                        className="w-full px-3 py-2.5 rounded-xl border border-[#008001]/25 bg-[#111811] text-sm text-white outline-none focus:border-[#008001]/60 placeholder-[#555] transition-colors"
-                    />
+                    <div className="flex items-center rounded-xl border border-[#008001]/15 bg-[#0d120d] overflow-hidden opacity-70">
+                        <span className="px-3 text-xs text-[#555] whitespace-nowrap border-r border-[#008001]/15 py-2.5 select-none">
+                            {PUBLIC_BASE}/
+                        </span>
+                        <span className="flex-1 px-3 py-2.5 text-xs text-[#555] font-mono truncate select-none">
+                            {autoSlugPreview}
+                        </span>
+                        <span className="px-3 text-[10px] text-[#444] whitespace-nowrap">auto</span>
+                    </div>
+                    <p className="text-xs mt-1.5 text-[#444]">
+                        {isEditMode ? "Permanent — cannot be changed" : "Always active — generated when you publish"}
+                    </p>
                 </div>
 
                 {/* Custom URL */}
@@ -148,7 +209,11 @@ function CampaignNameModal({
                         <p className={`text-xs mt-1.5 ${slugMsgColor}`}>{slugMessage}</p>
                     )}
                     {!customSlug && (
-                        <p className="text-xs mt-1.5 text-[#555]">Leave blank to use the auto-generated URL</p>
+                        <p className="text-xs mt-1.5 text-[#555]">
+                            {isEditMode && initialCustomSlug
+                                ? "Clear the field to remove your custom URL"
+                                : "Add a memorable custom URL — both links will work"}
+                        </p>
                     )}
                 </div>
 
@@ -171,7 +236,7 @@ function CampaignNameModal({
                         disabled={isSaving || (!!customSlug && slugStatus !== "available")}
                         className="px-6 py-2.5 rounded-xl bg-[#008001] text-white text-sm font-semibold hover:bg-[#49B618] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                        {isSaving ? "Saving..." : "Save & Publish"}
+                        {isSaving ? "Saving..." : isEditMode ? "Save Changes" : "Save & Publish"}
                     </button>
                 </div>
             </div>
@@ -192,25 +257,30 @@ const CheckIcon = () => (
     </svg>
 );
 
-function SavedSuccessModal({ onCancel, onDashboard, cardSlug }: { onCancel: () => void; onDashboard: () => void; cardSlug?: string }) {
+function SavedSuccessModal({ onCancel, onDashboard, cardSlug, cardCustomSlug }: {
+    onCancel: () => void;
+    onDashboard: () => void;
+    cardSlug?: string;
+    cardCustomSlug?: string | null;
+}) {
     const PUBLIC_BASE =
         process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
         "https://samcard.vercel.app";
 
-    const CARD_URL = cardSlug
-        ? `${PUBLIC_BASE}/${cardSlug}`
-        : typeof window !== "undefined"
-            ? `${PUBLIC_BASE}/...`
-            : PUBLIC_BASE;
+    const autoUrl = cardSlug ? `${PUBLIC_BASE}/${cardSlug}` : `${PUBLIC_BASE}/...`;
+    const customUrl = cardCustomSlug ? `${PUBLIC_BASE}/${cardCustomSlug}` : null;
 
-    const url = CARD_URL;
-    const embed = `<iframe src="${CARD_URL}" />`;
-    const [copiedUrl, setCopiedUrl] = useState(false);
+    const shareUrl = customUrl ?? autoUrl;
+    const embed = `<iframe src="${shareUrl}" />`;
+
+    const [copiedAuto, setCopiedAuto] = useState(false);
+    const [copiedCustom, setCopiedCustom] = useState(false);
     const [copiedEmbed, setCopiedEmbed] = useState(false);
 
-    const copy = (text: string, type: "url" | "embed") => {
+    const copy = (text: string, type: "auto" | "custom" | "embed") => {
         navigator.clipboard.writeText(text);
-        if (type === "url") { setCopiedUrl(true); setTimeout(() => setCopiedUrl(false), 2000); }
+        if (type === "auto") { setCopiedAuto(true); setTimeout(() => setCopiedAuto(false), 2000); }
+        else if (type === "custom") { setCopiedCustom(true); setTimeout(() => setCopiedCustom(false), 2000); }
         else { setCopiedEmbed(true); setTimeout(() => setCopiedEmbed(false), 2000); }
     };
 
@@ -218,17 +288,17 @@ function SavedSuccessModal({ onCancel, onDashboard, cardSlug }: { onCancel: () =
         {
             label: "Facebook",
             bg: "bg-[#1877F2]",
-            href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
+            href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
         },
         {
             label: "Twitter",
             bg: "bg-black border border-[#333]",
-            href: `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}`,
+            href: `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}`,
         },
         {
             label: "LinkedIn",
             bg: "bg-[#0A66C2]",
-            href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`,
+            href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`,
         },
     ];
 
@@ -269,13 +339,27 @@ function SavedSuccessModal({ onCancel, onDashboard, cardSlug }: { onCancel: () =
                     ))}
                 </div>
 
-                {/* URL */}
+                {/* Auto URL */}
+                <p className="text-xs font-medium text-[#A0A0A0] uppercase tracking-wide mb-2">Auto-generated URL</p>
                 <div className="flex items-center gap-2 bg-[#111811] border border-[#008001]/25 rounded-xl px-3 py-2.5 mb-3 group">
-                    <span className="text-xs text-[#A0A0A0] flex-1 truncate font-mono">{url}</span>
-                    <button onClick={() => copy(url, "url")} className="text-[#555] group-hover:text-[#49B618] transition-colors">
-                        {copiedUrl ? <CheckIcon /> : <CopyIcon />}
+                    <span className="text-xs text-[#A0A0A0] flex-1 truncate font-mono">{autoUrl}</span>
+                    <button onClick={() => copy(autoUrl, "auto")} className="text-[#555] group-hover:text-[#49B618] transition-colors">
+                        {copiedAuto ? <CheckIcon /> : <CopyIcon />}
                     </button>
                 </div>
+
+                {/* Custom URL (shown only if set) */}
+                {customUrl && (
+                    <>
+                        <p className="text-xs font-medium text-[#A0A0A0] uppercase tracking-wide mb-2">Custom URL</p>
+                        <div className="flex items-center gap-2 bg-[#111811] border border-[#49B618]/30 rounded-xl px-3 py-2.5 mb-3 group">
+                            <span className="text-xs text-[#49B618] flex-1 truncate font-mono">{customUrl}</span>
+                            <button onClick={() => copy(customUrl, "custom")} className="text-[#555] group-hover:text-[#49B618] transition-colors">
+                                {copiedCustom ? <CheckIcon /> : <CopyIcon />}
+                            </button>
+                        </div>
+                    </>
+                )}
 
                 {/* Embed */}
                 <p className="text-xs font-medium text-[#A0A0A0] uppercase tracking-wide mb-2">Embed Code</p>
@@ -315,7 +399,9 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
     const [cardContent, setCardContent] = useState<CardContentPayload | null>(null);
     const [campaignName, setCampaignName] = useState("");
     const [createdSlug, setCreatedSlug] = useState<string | undefined>(undefined);
+    const [createdCustomSlug, setCreatedCustomSlug] = useState<string | null | undefined>(undefined);
     const [activeCardId, setActiveCardId] = useState<string | undefined>(cardId);
+    const [existingCardInfo, setExistingCardInfo] = useState<{ slug?: string; customSlug?: string | null } | null>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [saveError, setSaveError] = useState<string | null>(null);
     const [hasLoadedCardContent, setHasLoadedCardContent] = useState(false);
@@ -383,8 +469,26 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
         return "soft";
     };
 
-    const buildCardDesignPayload = (settings: any) => ({
-        palette: typeof settings?.palette === "string" ? settings.palette : "green",
+    const PALETTE_TO_HERO_LAYOUT: Record<string, string> = {
+        'medical-teal': 'wave-panel', 'teamwork-orange': 'side-panel',
+        'heritage-gold': 'wave-panel', 'team-pro': 'group-diagonal',
+        'royal-purple': 'circle-overlap', 'minimal-mono': 'circle-center',
+        'sunset-banner': 'top-banner', 'sky-circle': 'circle-overlap',
+        'onyx-pro': 'default', 'mocha-torn': 'torn-edge',
+        'navy-gold': 'wave-logo', 'emerald-wave': 'wave-logo',
+        'azure-flow': 'wave-panel', 'rose-wave': 'wave-panel',
+        'navy-amber': 'wave-logo', 'blush-soft': 'wave-side',
+        'violet-pro': 'wave-icons',
+    };
+
+    const buildCardDesignPayload = (settings: any) => {
+        const palette = typeof settings?.palette === "string" ? settings.palette : "green";
+        const heroLayout = (typeof settings?.heroLayout === "string" && settings.heroLayout && settings.heroLayout !== "default")
+            ? settings.heroLayout
+            : (PALETTE_TO_HERO_LAYOUT[palette] ?? "default");
+        return ({
+        palette,
+        heroLayout,
         accentColor: typeof settings?.accentColor === "string" ? settings.accentColor : "#008001",
         accentLight: typeof settings?.accentLight === "string" ? settings.accentLight : "#49B618",
         bgColor: typeof settings?.bgColor === "string" ? settings.bgColor : "#0a0f0a",
@@ -403,23 +507,36 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
         cardRadius: toNumber(settings?.cardRadius, 16),
         shadowIntensity: toShadowIntensity(settings?.shadowIntensity),
         glowEffect: typeof settings?.glowEffect === "boolean" ? settings.glowEffect : true,
-    });
-
-    const handleSaveFinish = () => {
-        setSaveError(null);
-        if (activeCardId) {
-            void handleSaveCard(undefined, undefined);
-        } else {
-            setShowCampaignModal(true);
-        }
+        });
     };
 
-    const handleCampaignSave = async (campaignName: string, customSlug?: string) => {
-        setPendingCustomSlug(customSlug);
+    const handleSaveFinish = async () => {
+        setSaveError(null);
+        if (activeCardId) {
+            // Fetch existing card to pre-populate the URL fields in the modal
+            setIsSaving(true);
+            try {
+                const cards = await getCards();
+                const existing = cards.find((c) => c.id === activeCardId);
+                setExistingCardInfo(existing
+                    ? { slug: existing.slug, customSlug: existing.customSlug ?? null }
+                    : null
+                );
+            } catch {
+                setExistingCardInfo(null);
+            } finally {
+                setIsSaving(false);
+            }
+        }
+        setShowCampaignModal(true);
+    };
+
+    const handleCampaignSave = async (campaignName: string, customSlug?: string | null) => {
+        setPendingCustomSlug(customSlug ?? undefined);
         await handleSaveCard(campaignName, customSlug);
     };
 
-    const handleSaveCard = async (campaignName: string | undefined, customSlug: string | undefined) => {
+    const handleSaveCard = async (campaignName: string | undefined, customSlug: string | null | undefined) => {
         setIsSaving(true);
         setSaveError(null);
 
@@ -450,10 +567,13 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
             let targetCardId = activeCardId;
 
             if (targetCardId) {
+                // Include customSlug in update if provided (empty string clears it)
+                if (customSlug !== undefined) payload.customSlug = customSlug ?? "";
                 await updateCard(targetCardId, payload);
                 const cards = await getCards();
                 const edited = cards.find((c) => c.id === targetCardId);
                 setCreatedSlug(edited?.slug);
+                setCreatedCustomSlug(edited?.customSlug ?? null);
             } else {
                 const createPayload: any = { ...payload, name: campaignName || "My Card" };
                 if (customSlug) createPayload.customSlug = customSlug;
@@ -461,6 +581,7 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
                 targetCardId = card.id;
                 setActiveCardId(card.id);
                 setCreatedSlug(card.slug);
+                setCreatedCustomSlug(card.customSlug ?? null);
             }
 
             if (designSettings && targetCardId) {
@@ -468,6 +589,33 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
             }
 
             if (qrConfig && targetCardId) {
+                // Rebuild decorated composite with the real card URL so the QR
+                // matrix encodes the correct slug instead of the placeholder
+                // ("…/…") that was used before the card existed.
+                let finalDecorateUrl = qrConfig.decorateCompositeDataUrl || '';
+                const realSlug = createdSlug ?? (await getCards().then(cs => cs.find(c => c.id === targetCardId)?.slug));
+                if (qrConfig.decorateImageUrl && realSlug) {
+                    try {
+                        const PUBLIC_BASE =
+                            process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') ||
+                            'https://samcard.vercel.app';
+                        const correctUrl = `${PUBLIC_BASE}/${realSlug}`;
+                        const { matrix, N } = makeQRMatrix(correctUrl);
+                        const blob = await rebuildDecoratedComposite(
+                            qrConfig.decorateImageUrl,
+                            qrConfig,
+                            matrix,
+                            N,
+                            1200,
+                        );
+                        const file = new File([blob], 'qr-decorated.png', { type: 'image/png' });
+                        const { url } = await uploadFile(file);
+                        finalDecorateUrl = url;
+                    } catch (err) {
+                        console.warn('[CreateCard] Failed to rebuild decorated composite with correct URL, using original', err);
+                    }
+                }
+
                 await updateCardQR(targetCardId, {
                     shapeId: qrConfig.shapeId,
                     dotShape: qrConfig.dotShape,
@@ -489,7 +637,7 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
                     stickerId: qrConfig.selectedSticker?.id ?? null,
                     designLabel: qrConfig.designLabel,
                     shapeLabel: qrConfig.shapeLabel,
-                    decorateImageUrl: qrConfig.decorateCompositeDataUrl || '',
+                    decorateImageUrl: finalDecorateUrl,
                 });
             }
 
@@ -547,9 +695,13 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
                     isSaving={isSaving}
                     errorMessage={saveError ?? undefined}
                     onClearError={() => setSaveError(null)}
+                    isEditMode={!!activeCardId}
+                    initialAutoSlug={existingCardInfo?.slug}
+                    initialCustomSlug={existingCardInfo?.customSlug}
+                    existingCardId={activeCardId}
                 />
             )}
-            {showSuccessModal && <SavedSuccessModal onCancel={handleClose} onDashboard={handleDashboard} cardSlug={createdSlug} />}
+            {showSuccessModal && <SavedSuccessModal onCancel={handleClose} onDashboard={handleDashboard} cardSlug={createdSlug} cardCustomSlug={createdCustomSlug} />}
 
             {/* ── Stepper Header ── */}
             <div className="flex items-center justify-center gap-2 px-8 py-5 border-b border-[#008001]/20 bg-[#0a0f0a]">

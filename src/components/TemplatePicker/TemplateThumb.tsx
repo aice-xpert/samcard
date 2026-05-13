@@ -438,6 +438,242 @@ export default function TemplateThumb({ template }: { template: CardTemplate }) 
     );
   }
 
+  // ── 11/12. wave-logo-curve — Navy Gold / Emerald Wave ───────────
+  if (layout === 'wave-logo-curve') {
+    return (
+      <PhoneFrame bg={p.bg}>
+        <div style={{ width: '100%', height: '46%', position: 'relative', overflow: 'hidden' }}>
+          <Portrait src={profileImg} />
+          {/* Colour wash at bottom of photo */}
+          <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, transparent 40%, ${p.accent}55 100%)` }} />
+          {/* S-curve wave SVG */}
+          <svg viewBox="0 0 200 40" preserveAspectRatio="none"
+            style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 22, zIndex: 2 }}>
+            <path d="M0,24 C50,0 150,40 200,16 L200,40 L0,40 Z" fill={p.panel} />
+          </svg>
+          {/* Secondary wave for depth */}
+          <svg viewBox="0 0 200 40" preserveAspectRatio="none"
+            style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 26, zIndex: 1, opacity: 0.35 }}>
+            <path d="M0,28 C60,8 140,36 200,12 L200,40 L0,40 Z" fill={p.accent} />
+          </svg>
+        </div>
+        {/* Circular logo overlapping wave */}
+        <div style={{ position: 'absolute', top: 'calc(46% - 14px)', left: 8, zIndex: 4 }}>
+          <div style={{
+            width: 22, height: 22, borderRadius: '50%',
+            background: '#fff', border: `2px solid ${p.accent}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+          }}>
+            <LogoCircle src={brandLogo} size={16} accent={p.accent} border="none" bg={p.accentGradient} />
+          </div>
+        </div>
+        <div style={{ background: p.panelGradient, padding: '10px 8px 4px 8px' }}>
+          <NameBlock textColor={p.text} accent={p.accentLight} muteColor="rgba(255,255,255,0.6)" />
+          <IconRow accent={p.accentLight} gradient={p.accentGradient} filled />
+        </div>
+        <AboutCard bg="rgba(255,255,255,0.06)" textColor={p.text} accent={p.accentLight} />
+      </PhoneFrame>
+    );
+  }
+
+  // ── 15. wave-badge-center — Navy Amber ───────────────────────
+  if (layout === 'wave-badge-center') {
+    return (
+      <PhoneFrame bg={p.bg}>
+        <div style={{ width: '100%', height: '50%', position: 'relative', overflow: 'hidden' }}>
+          <Portrait src={profileImg} filter="grayscale(25%)" />
+          <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, transparent 30%, ${p.accent}55 100%)` }} />
+          {/* Wave layer 1 — deep amber ripple */}
+          <svg viewBox="0 0 200 50" preserveAspectRatio="none"
+            style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 30, zIndex: 1, opacity: 0.45 }}>
+            <path d="M0,35 C30,10 60,45 100,20 C140,-5 170,38 200,15 L200,50 L0,50 Z" fill={p.accent} />
+          </svg>
+          {/* Wave layer 2 — mid panel */}
+          <svg viewBox="0 0 200 50" preserveAspectRatio="none"
+            style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 28, zIndex: 2, opacity: 0.6 }}>
+            <path d="M0,28 C45,5 90,42 135,18 C165,2 185,30 200,14 L200,50 L0,50 Z" fill={p.panel} />
+          </svg>
+          {/* Wave layer 3 — solid front */}
+          <svg viewBox="0 0 200 50" preserveAspectRatio="none"
+            style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 24, zIndex: 3 }}>
+            <path d="M0,20 C55,0 110,34 160,12 C180,4 195,20 200,10 L200,50 L0,50 Z" fill={p.panel} />
+          </svg>
+        </div>
+        {/* Amber badge circle sitting on the wave crest */}
+        <div style={{
+          position: 'absolute', top: 'calc(50% - 13px)',
+          left: '50%', transform: 'translateX(-50%)', zIndex: 5,
+        }}>
+          <div style={{
+            width: 22, height: 22, borderRadius: '50%',
+            background: p.accentGradient, border: `2px solid ${p.bg}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: `0 0 10px ${p.accent}88`,
+          }}>
+            <LogoCircle src={brandLogo} size={15} accent={p.accent} border="none" bg="transparent" />
+          </div>
+        </div>
+        <div style={{ background: p.panelGradient, padding: '12px 8px 4px 8px', textAlign: 'center' }}>
+          <NameBlock textColor={p.text} accent={p.accentLight} muteColor="rgba(255,255,255,0.6)" align="center" />
+          <IconRow accent={p.accentLight} gradient={p.accentGradient} filled />
+        </div>
+        {/* Wavy divider before About */}
+        <svg viewBox="0 0 200 12" preserveAspectRatio="none"
+          style={{ width: '100%', height: 7, display: 'block', marginTop: 1 }}>
+          <path d="M0,6 C40,0 80,12 120,5 C160,-2 185,8 200,4 L200,12 L0,12 Z" fill={`${p.accent}22`} />
+        </svg>
+        <AboutCard bg="rgba(255,255,255,0.06)" textColor={p.text} accent={p.accentLight} />
+      </PhoneFrame>
+    );
+  }
+
+  // ── 16. photo-right-side — Blush Soft ────────────────────────
+  if (layout === 'photo-right-side') {
+    const darkText = '#1a0a12';
+    return (
+      <PhoneFrame bg={p.bg}>
+        <div style={{ display: 'flex', height: '44%', position: 'relative', overflow: 'hidden', marginTop: 12 }}>
+          <div style={{ flex: 1, padding: '6px 8px 14px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+            <NameBlock textColor={darkText} accent={p.accent} muteColor={`${darkText}99`} />
+            <div style={{ display: 'flex', gap: 3, marginTop: 4 }}>
+              {['☎','✉','💬'].map((g, i) => (
+                <div key={i} style={{ width: 11, height: 11, borderRadius: '50%', background: p.accentGradient, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 4, color: '#fff' }}>{g}</div>
+              ))}
+            </div>
+          </div>
+          <div style={{ width: '46%', position: 'relative', overflow: 'hidden' }}>
+            <Portrait src={profileImg} />
+            {/* Wavy left edge blending photo into text area */}
+            <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} viewBox="0 0 60 100" preserveAspectRatio="none">
+              <path d="M0,0 C12,20 4,40 16,60 C6,75 14,88 0,100 L60,100 L60,0 Z" fill={p.panel} opacity="0.9" />
+            </svg>
+          </div>
+          {/* Triple wave bottom of hero */}
+          <svg viewBox="0 0 200 36" preserveAspectRatio="none"
+            style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 20, zIndex: 2, opacity: 0.35 }}>
+            <path d="M0,18 C50,4 100,28 150,10 C175,2 190,18 200,8 L200,36 L0,36 Z" fill={p.accent} />
+          </svg>
+          <svg viewBox="0 0 200 36" preserveAspectRatio="none"
+            style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 16, zIndex: 3 }}>
+            <path d="M0,10 C40,0 90,20 140,6 C168,0 188,14 200,4 L200,36 L0,36 Z" fill={p.panel} />
+          </svg>
+        </div>
+        {/* Logo circle at wave right edge */}
+        <div style={{ position: 'absolute', top: 'calc(12px + 44% - 12px)', right: 8, zIndex: 4 }}>
+          <LogoCircle src={brandLogo} size={17} accent={p.accent} border={`2px solid ${p.bg}`} bg={p.accentGradient} />
+        </div>
+        <AboutCard bg={`${p.accent}18`} textColor={darkText} accent={p.accent} />
+        {/* Wavy accent strip before Contact */}
+        <svg viewBox="0 0 200 10" preserveAspectRatio="none"
+          style={{ width: '100%', height: 6, display: 'block', margin: '2px 0' }}>
+          <path d="M0,5 C35,0 70,10 105,4 C140,-1 170,8 200,3 L200,10 L0,10 Z" fill={`${p.accent}30`} />
+        </svg>
+        <div style={{ margin: '0 6px 3px', background: p.accentGradient, borderRadius: 4, padding: '3px 6px' }}>
+          <div style={{ fontSize: 5, fontWeight: 700, color: '#fff' }}>Contact Us</div>
+        </div>
+      </PhoneFrame>
+    );
+  }
+
+  // ── 17. hero-wave-icons — Violet Pro ─────────────────────────
+  if (layout === 'hero-wave-icons') {
+    return (
+      <PhoneFrame bg={p.bg}>
+        <div style={{ width: '100%', height: '48%', position: 'relative', overflow: 'hidden' }}>
+          <Portrait src={profileImg} />
+          <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, transparent 25%, ${p.accent}99 100%)` }} />
+          {/* Logo circle top-right */}
+          <div style={{ position: 'absolute', top: 5, right: 5, zIndex: 4 }}>
+            <LogoCircle src={brandLogo} size={13} accent={p.accent} border="none" bg={p.accentGradient} />
+          </div>
+          {/* Wave layer 1 — accent glow */}
+          <svg viewBox="0 0 200 50" preserveAspectRatio="none"
+            style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 32, zIndex: 1, opacity: 0.5 }}>
+            <path d="M0,30 C35,8 75,42 115,18 C150,0 180,32 200,14 L200,50 L0,50 Z" fill={p.accentLight} />
+          </svg>
+          {/* Wave layer 2 — mid */}
+          <svg viewBox="0 0 200 50" preserveAspectRatio="none"
+            style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 28, zIndex: 2, opacity: 0.65 }}>
+            <path d="M0,22 C50,2 95,36 145,14 C170,4 190,24 200,10 L200,50 L0,50 Z" fill={p.panel} />
+          </svg>
+          {/* Wave layer 3 — solid front */}
+          <svg viewBox="0 0 200 50" preserveAspectRatio="none"
+            style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 22, zIndex: 3 }}>
+            <path d="M0,16 C40,0 85,28 130,10 C160,0 185,18 200,6 L200,50 L0,50 Z" fill={p.panel} />
+          </svg>
+        </div>
+        {/* Social icons floating on the wave */}
+        <div style={{ display: 'flex', gap: 5, justifyContent: 'center', padding: '5px 0', position: 'relative', zIndex: 2 }}>
+          {['☎','✉','💬'].map((g, i) => (
+            <div key={i} style={{ width: 14, height: 14, borderRadius: '50%', background: p.accentGradient, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 5, color: '#fff', boxShadow: `0 2px 6px ${p.accent}66` }}>{g}</div>
+          ))}
+        </div>
+        <div style={{ padding: '2px 8px 3px', background: p.panelGradient }}>
+          <NameBlock textColor={p.text} accent={p.accentLight} muteColor="rgba(255,255,255,0.55)" />
+        </div>
+        {/* Wavy separator */}
+        <svg viewBox="0 0 200 12" preserveAspectRatio="none"
+          style={{ width: '100%', height: 7, display: 'block' }}>
+          <path d="M0,6 C45,0 90,12 135,4 C165,-1 188,8 200,3 L200,12 L0,12 Z" fill={`${p.accentLight}30`} />
+        </svg>
+        <AboutCard bg="rgba(255,255,255,0.06)" textColor={p.text} accent={p.accentLight} />
+      </PhoneFrame>
+    );
+  }
+
+  // ── 18. slash-group — Slash Dark ─────────────────────────────
+  if (layout === 'slash-group') {
+    return (
+      <PhoneFrame bg={p.panelGradient}>
+        <div style={{ width: '100%', height: '40%', position: 'relative', overflow: 'hidden' }}>
+          <Portrait src={profileImg} />
+          <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, transparent 45%, ${p.panel}dd 100%)` }} />
+          {/* Orange diagonal slash lines */}
+          <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} viewBox="0 0 100 80">
+            <line x1="65" y1="0" x2="100" y2="55" stroke={p.accent} strokeWidth="4" opacity="0.9" />
+            <line x1="78" y1="0" x2="100" y2="32" stroke={p.accentLight} strokeWidth="2.5" opacity="0.6" />
+            <line x1="55" y1="0" x2="95" y2="65" stroke={p.accent} strokeWidth="2" opacity="0.35" />
+          </svg>
+          {/* Logo circle top-right */}
+          <div style={{ position: 'absolute', top: 4, right: 4, zIndex: 2 }}>
+            <LogoCircle src={brandLogo} size={13} accent={p.accent} border="none" bg={p.accentGradient} />
+          </div>
+          {/* Wave layer 1 — accent glow */}
+          <svg viewBox="0 0 200 40" preserveAspectRatio="none"
+            style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 24, zIndex: 3, opacity: 0.4 }}>
+            <path d="M0,22 C40,4 85,36 130,14 C160,2 185,24 200,10 L200,40 L0,40 Z" fill={p.accent} />
+          </svg>
+          {/* Wave layer 2 — solid front */}
+          <svg viewBox="0 0 200 40" preserveAspectRatio="none"
+            style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 20, zIndex: 4 }}>
+            <path d="M0,14 C50,0 100,24 150,8 C175,0 192,16 200,6 L200,40 L0,40 Z" fill={p.panel} />
+          </svg>
+        </div>
+        {/* Small profile circle overlapping wave */}
+        <div style={{ marginTop: -13, paddingLeft: 8, position: 'relative', zIndex: 5 }}>
+          <div style={{
+            width: 28, height: 28, borderRadius: '50%', overflow: 'hidden',
+            border: `2px solid ${p.accent}`, display: 'inline-block',
+            boxShadow: `0 0 8px ${p.accent}66`,
+          }}>
+            <Portrait src={profileImg} />
+          </div>
+        </div>
+        <div style={{ padding: '3px 8px 2px' }}>
+          <NameBlock textColor="#fff" accent={p.accentLight} muteColor="rgba(255,255,255,0.6)" />
+          <IconRow accent={p.accent} gradient={p.accentGradient} filled />
+        </div>
+        {/* Wavy divider before About */}
+        <svg viewBox="0 0 200 10" preserveAspectRatio="none"
+          style={{ width: '100%', height: 6, display: 'block', margin: '2px 0' }}>
+          <path d="M0,5 C40,0 80,10 120,3 C155,-1 180,7 200,2 L200,10 L0,10 Z" fill={`${p.accent}30`} />
+        </svg>
+        <AboutCard bg="rgba(255,255,255,0.06)" textColor="#fff" accent={p.accentLight} />
+      </PhoneFrame>
+    );
+  }
+
   // Fallback
   return (
     <PhoneFrame bg={p.bg}>

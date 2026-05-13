@@ -613,6 +613,7 @@ model Card {
 
   // URLs & Sharing - UNIQUE constraints for data integrity
   slug                String      @unique
+  customSlug          String?     @unique
   shareUrl            String      @unique
   shortUrl            String?     @unique
 
