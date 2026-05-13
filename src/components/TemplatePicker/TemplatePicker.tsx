@@ -24,14 +24,14 @@ export default function TemplatePicker({ cardId, onApply, onDesignApply, classNa
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Reset selection when the component mounts; do not auto-select from stored value.
     setSelectedId(null);
+    // Clear any persisted selection for this card to avoid stale state.
     try {
-      const stored = localStorage.getItem(selectedKeyForCard(cardId));
-      if (stored) setSelectedId(stored);
-    } catch {
-      // ignore
-    }
-  }, [cardId]);
+      localStorage.removeItem(selectedKeyForCard(cardId));
+    } catch {}
+  }, []);
+
 
   const updateScrollState = useCallback(() => {
     const el = scrollRef.current;
