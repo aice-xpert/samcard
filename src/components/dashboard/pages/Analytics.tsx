@@ -11,7 +11,7 @@ import {
   Globe, Phone, MessageSquare, Star, MoreVertical,
   Search, ChevronLeft, ChevronRight, Check, X,
   TrendingUp, TrendingDown, Smartphone, Users, Eye,
-  MapPin, Target, Zap, Activity,
+  MapPin, Target, Zap, Activity, Sun, Moon,
 } from "lucide-react";
 import {
   getAnalytics,
@@ -25,6 +25,7 @@ import {
   GoalProgressData,
   Lead,
 } from "@/lib/api";
+import { useTheme } from "@/contexts/ThemeContext";
 
 // ── Types ──────────────────────────────────────────────────────────────
 type Period = "7" | "30" | "90";
@@ -62,7 +63,7 @@ const formatNumber = (n: number): string =>
   n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n);
 
 const changeColor = (v: number) =>
-  v > 0 ? "text-[#49B618]" : v < 0 ? "text-red-400" : "text-[#A0A0A0]";
+  v > 0 ? "text-[#49B618]" : v < 0 ? "text-destructive" : "text-muted-foreground";
 
 const normalizeDate = (d: string): Date => {
   if (!d) return new Date();
@@ -103,17 +104,17 @@ function useInView(rootMargin = "200px") {
 // ── Skeleton ───────────────────────────────────────────────────────────
 function Skeleton({ className = "" }: { className?: string }) {
   return (
-    <div className={`animate-pulse rounded bg-[#1E1E1E] ${className}`} />
+    <div className={`animate-pulse rounded bg-muted ${className}`} />
   );
 }
 
 // ── Toast ──────────────────────────────────────────────────────────────
 function Toast({ msg, onClose }: { msg: string; onClose: () => void }) {
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-[#1E1E1E] border border-[#49B618]/40 rounded-xl px-4 py-3 shadow-2xl">
+    <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-card border border-[#49B618]/40 rounded-xl px-4 py-3 shadow-2xl">
       <Check className="w-4 h-4 text-[#49B618]" />
-      <span className="text-sm text-white">{msg}</span>
-      <button onClick={onClose}><X className="w-4 h-4 text-[#A0A0A0] hover:text-white" /></button>
+      <span className="text-sm text-foreground">{msg}</span>
+      <button onClick={onClose}><X className="w-4 h-4 text-muted-foreground hover:text-foreground" /></button>
     </div>
   );
 }
@@ -125,16 +126,16 @@ function StatCard({
   label: string; value: string; change?: number; icon: React.ElementType; loading: boolean;
 }) {
   return (
-    <div className="rounded-2xl border border-[#008001]/30 bg-[#000000] p-5 flex items-center gap-4">
+    <div className="rounded-2xl border border-[#008001]/30 bg-background p-5 flex items-center gap-4">
       <div className="w-11 h-11 rounded-xl bg-[#008001]/20 flex items-center justify-center flex-shrink-0">
         <Icon className="w-5 h-5 text-[#49B618]" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-xs text-[#A0A0A0] mb-1">{label}</p>
+        <p className="text-xs text-muted-foreground mb-1">{label}</p>
         {loading ? (
           <Skeleton className="h-7 w-20" />
         ) : (
-          <p className="text-2xl font-bold text-white">{value}</p>
+          <p className="text-2xl font-bold text-foreground">{value}</p>
         )}
       </div>
       {change !== undefined && !loading && (
@@ -154,6 +155,7 @@ interface AnalyticsProps {
 }
 
 export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
+  const { toggleTheme, isDark } = useTheme();
   const [period, setPeriod] = useState<Period>("7");
   const [loading, setLoading] = useState(true);
   const [momLoading, setMomLoading] = useState(true);
@@ -352,16 +354,28 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
     return link;
   };
 
+  // Theme-aware colors for recharts (recharts can't read CSS vars directly)
+  const chartAxisColor = isDark ? "#A0A0A0" : "#64748b";
+  const chartGridColor = isDark ? "#1E1E1E" : "#e2e8f0";
+  const tooltipBg = isDark ? "#000000" : "#ffffff";
+  const tooltipText = isDark ? "#FFFFFF" : "#0a0a0a";
+  const tooltipStyle = {
+    backgroundColor: tooltipBg,
+    border: "1px solid #008001",
+    borderRadius: "8px",
+    color: tooltipText,
+  };
+
   return (
-    <div className="min-h-screen bg-[#000000] p-6 space-y-6 font-mono">
+    <div className="min-h-screen bg-background p-6 space-y-6 font-mono">
       {toast && <Toast msg={toast} onClose={() => setToast(null)} />}
 
 
       {/* ── Header ── */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Analytics</h1>
-          <p className="text-sm text-[#A0A0A0] mt-1">
+          <h1 className="text-3xl font-bold text-foreground tracking-tight">Analytics</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             {cardTitle
               ? <>Showing analytics for <span className="text-[#49B618] font-medium">{cardTitle}</span></>
               : "Comprehensive insights into your digital card performance"}
@@ -374,12 +388,20 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
               setPeriod(e.target.value as Period);
               setPage(1);
             }}
-            className="w-40 h-10 rounded-lg border border-[#008001]/30 bg-[#000000] text-white text-sm px-3 focus:outline-none focus:border-[#49B618] cursor-pointer"
+            className="w-40 h-10 rounded-lg border border-border bg-background text-foreground text-sm px-3 focus:outline-none focus:border-[#49B618] cursor-pointer"
           >
             <option value="7">Last 7 days</option>
             <option value="30">Last 30 days</option>
             <option value="90">Last 90 days</option>
           </select>
+          <button
+            onClick={toggleTheme}
+            className="flex items-center justify-center w-10 h-10 rounded-lg border border-border bg-background text-foreground hover:bg-muted transition-colors"
+            title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+            aria-label="Toggle theme"
+          >
+            {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </button>
           <button
             onClick={handleExport}
             className="flex items-center gap-2 h-10 px-4 bg-[#49B618] hover:bg-[#009200] text-white text-sm font-medium rounded-lg transition-colors"
@@ -419,11 +441,11 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
       </div>
 
       {/* ── Performance Chart ── */}
-      <div className="rounded-2xl border border-[#008001]/30 bg-[#000000] p-6">
+      <div className="rounded-2xl border border-[#008001]/30 bg-background p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
             <BarChart2 className="w-5 h-5 text-[#49B618]" />
-            <span className="text-base font-semibold text-white">Performance Report</span>
+            <span className="text-base font-semibold text-foreground">Performance Report</span>
           </div>
           <div className="flex items-center gap-6">
             {(
@@ -441,11 +463,11 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
                 className={`flex items-center gap-2 transition-opacity ${showLegend[l.key] ? "opacity-100" : "opacity-30"}`}
               >
                 <div className="w-3 h-3 rounded-full" style={{ backgroundColor: l.color }} />
-                <span className="text-xs text-[#A0A0A0]">{l.label}</span>
+                <span className="text-xs text-muted-foreground">{l.label}</span>
               </button>
             ))}
             <button title="Click legend to toggle series">
-              <Info className="w-4 h-4 text-[#A0A0A0] hover:text-[#49B618]" />
+              <Info className="w-4 h-4 text-muted-foreground hover:text-[#49B618]" />
             </button>
           </div>
         </div>
@@ -461,11 +483,11 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
               key={s.label}
               className={`text-center py-4 ${s.border ? "border-x border-[#008001]/30" : ""}`}
             >
-              <p className="text-xs text-[#A0A0A0] mb-2">{s.label}</p>
+              <p className="text-xs text-muted-foreground mb-2">{s.label}</p>
               {loading ? (
                 <Skeleton className="h-12 w-24 mx-auto" />
               ) : (
-                <p className="text-5xl font-bold text-white">
+                <p className="text-5xl font-bold text-foreground">
                   {s.val.toLocaleString()}
                 </p>
               )}
@@ -501,23 +523,16 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
                 />
                 <XAxis
                   dataKey="day"
-                  tick={{ fill: "#A0A0A0", fontSize: 12 }}
+                  tick={{ fill: chartAxisColor, fontSize: 12 }}
                   axisLine={false}
                   tickLine={false}
                 />
                 <YAxis
-                  tick={{ fill: "#A0A0A0", fontSize: 11 }}
+                  tick={{ fill: chartAxisColor, fontSize: 11 }}
                   axisLine={false}
                   tickLine={false}
                 />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#000000",
-                    border: "1px solid #008001",
-                    borderRadius: "8px",
-                    color: "#FFFFFF",
-                  }}
-                />
+                <Tooltip contentStyle={tooltipStyle} />
                 {showLegend.taps && (
                   <Area
                     type="monotone"
@@ -557,9 +572,9 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
       {/* ── Row 2: Conversion Funnel + Device Distribution + Traffic Sources ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Conversion Funnel */}
-        <div className="rounded-2xl border border-[#008001]/30 bg-[#000000] p-6">
+        <div className="rounded-2xl border border-[#008001]/30 bg-background p-6">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-base font-semibold text-white">Conversion Funnel</span>
+            <span className="text-base font-semibold text-foreground">Conversion Funnel</span>
             <Zap className="w-4 h-4 text-[#49B618]" />
           </div>
           {loading ? (
@@ -573,12 +588,12 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
               {(analytics?.funnelSteps ?? []).map((step, i) => (
                 <div key={i}>
                   <div className="flex justify-between items-center mb-1">
-                    <span className="text-sm text-white">{step.label}</span>
-                    <span className="text-xs text-[#A0A0A0]">
+                    <span className="text-sm text-foreground">{step.label}</span>
+                    <span className="text-xs text-muted-foreground">
                       {step.value.toLocaleString()} · {step.percentage}%
                     </span>
                   </div>
-                  <div className="h-2 bg-[#1E1E1E] rounded-full overflow-hidden">
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all duration-700"
                       style={{
@@ -594,9 +609,9 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
         </div>
 
         {/* Device Distribution */}
-        <div className="rounded-2xl border border-[#008001]/30 bg-[#000000] p-6">
+        <div className="rounded-2xl border border-[#008001]/30 bg-background p-6">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-base font-semibold text-white">Device Distribution</span>
+            <span className="text-base font-semibold text-foreground">Device Distribution</span>
             <Smartphone className="w-4 h-4 text-[#49B618]" />
           </div>
           {loading ? (
@@ -623,12 +638,7 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
                       ))}
                     </Pie>
                     <Tooltip
-                      contentStyle={{
-                        backgroundColor: "#000000",
-                        border: "1px solid #008001",
-                        borderRadius: "8px",
-                        color: "#fff",
-                      }}
+                      contentStyle={tooltipStyle}
                       formatter={(val) => [`${Number(val ?? 0)}%`, ""]}
                     />
                   </PieChart>
@@ -642,9 +652,9 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
                         className="w-3 h-3 rounded-full"
                         style={{ backgroundColor: deviceColorMap[d.name] ?? PIE_COLORS[i % PIE_COLORS.length] }}
                       />
-                      <span className="text-sm text-white">{d.name}</span>
+                      <span className="text-sm text-foreground">{d.name}</span>
                     </div>
-                    <span className="text-xs text-[#A0A0A0]">
+                    <span className="text-xs text-muted-foreground">
                       {d.value}% · {d.count}
                     </span>
                   </div>
@@ -655,10 +665,10 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
         </div>
 
         {/* Traffic Sources */}
-        <div className="rounded-2xl border border-[#008001]/30 bg-[#000000] p-6">
+        <div className="rounded-2xl border border-[#008001]/30 bg-background p-6">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-base font-semibold text-white">Traffic Sources</span>
-            <MoreVertical className="w-4 h-4 text-[#A0A0A0]" />
+            <span className="text-base font-semibold text-foreground">Traffic Sources</span>
+            <MoreVertical className="w-4 h-4 text-muted-foreground" />
           </div>
           {loading ? (
             <div className="space-y-3">
@@ -667,17 +677,17 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
           ) : (
             <>
               <div className="text-center mb-4">
-                <p className="text-3xl font-bold text-white">{totalSources.toLocaleString()}</p>
-                <p className="text-xs text-[#A0A0A0]">Total Interactions</p>
+                <p className="text-3xl font-bold text-foreground">{totalSources.toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground">Total Interactions</p>
               </div>
               <div className="space-y-3">
                 {(analytics?.sources ?? []).map((s, i) => (
                   <div key={i}>
                     <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm text-white">{s.name}</span>
-                      <span className="text-xs text-[#A0A0A0]">{sourcePercentage(s.value)}%</span>
+                      <span className="text-sm text-foreground">{s.name}</span>
+                      <span className="text-xs text-muted-foreground">{sourcePercentage(s.value)}%</span>
                     </div>
-                    <div className="h-1.5 bg-[#1E1E1E] rounded-full overflow-hidden">
+                    <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                       <div
                         className="h-full rounded-full"
                         style={{
@@ -700,9 +710,9 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
       {/* ── Row 3: Month-over-Month + Top Locations ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Month-over-Month */}
-        <div className="rounded-2xl border border-[#008001]/30 bg-[#000000] p-6">
+        <div className="rounded-2xl border border-[#008001]/30 bg-background p-6">
           <div className="flex items-center justify-between mb-5">
-            <span className="text-base font-semibold text-white">Month-over-Month</span>
+            <span className="text-base font-semibold text-foreground">Month-over-Month</span>
             <TrendingUp className="w-4 h-4 text-[#49B618]" />
           </div>
           {momLoading ? (
@@ -713,27 +723,20 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
                 data={monthOverMonth}
                 margin={{ top: 4, right: 4, left: -20, bottom: 0 }}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="#1E1E1E" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke={chartGridColor} vertical={false} />
                 <XAxis
                   dataKey="metric"
-                  tick={{ fill: "#A0A0A0", fontSize: 11 }}
+                  tick={{ fill: chartAxisColor, fontSize: 11 }}
                   axisLine={false}
                   tickLine={false}
                 />
                 <YAxis
-                  tick={{ fill: "#A0A0A0", fontSize: 10 }}
+                  tick={{ fill: chartAxisColor, fontSize: 10 }}
                   axisLine={false}
                   tickLine={false}
                 />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#000000",
-                    border: "1px solid #008001",
-                    borderRadius: "8px",
-                    color: "#fff",
-                  }}
-                />
-                <Bar dataKey="lastMonth" fill="#1E1E1E" radius={[4, 4, 0, 0]} name="Last Month" />
+                <Tooltip contentStyle={tooltipStyle} />
+                <Bar dataKey="lastMonth" fill={chartGridColor} radius={[4, 4, 0, 0]} name="Last Month" />
                 <Bar dataKey="thisMonth" fill="#49B618" radius={[4, 4, 0, 0]} name="This Month" />
               </BarChart>
             </ResponsiveContainer>
@@ -741,10 +744,10 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
           {!momLoading && (
             <div className="grid grid-cols-2 gap-3 mt-4">
               {monthOverMonth.map((m, i) => (
-                <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-[#1E1E1E]">
+                <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-muted">
                   <div>
-                    <p className="text-xs text-[#A0A0A0]">{m.metric}</p>
-                    <p className="text-sm font-semibold text-white">{m.thisMonth.toLocaleString()}</p>
+                    <p className="text-xs text-muted-foreground">{m.metric}</p>
+                    <p className="text-sm font-semibold text-foreground">{m.thisMonth.toLocaleString()}</p>
                   </div>
                   <span className={`text-xs font-medium flex items-center gap-0.5 ${changeColor(m.change)}`}>
                     {changeIcon(m.change)}
@@ -757,9 +760,9 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
         </div>
 
         {/* Top Locations */}
-        <div className="rounded-2xl border border-[#008001]/30 bg-[#000000] p-6">
+        <div className="rounded-2xl border border-[#008001]/30 bg-background p-6">
           <div className="flex items-center justify-between mb-5">
-            <span className="text-base font-semibold text-white">Top Locations</span>
+            <span className="text-base font-semibold text-foreground">Top Locations</span>
             <MapPin className="w-4 h-4 text-[#49B618]" />
           </div>
           {momLoading ? (
@@ -773,12 +776,12 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
                   <span className="text-xl flex-shrink-0">{countryFlag(loc.country)}</span>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm text-white truncate">{loc.country}</span>
-                      <span className="text-xs text-[#A0A0A0] ml-2 flex-shrink-0">
+                      <span className="text-sm text-foreground truncate">{loc.country}</span>
+                      <span className="text-xs text-muted-foreground ml-2 flex-shrink-0">
                         {loc.visitors.toLocaleString()} · {loc.percentage}%
                       </span>
                     </div>
-                    <div className="h-1.5 bg-[#1E1E1E] rounded-full overflow-hidden">
+                    <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                       <div
                         className="h-full rounded-full transition-all duration-700"
                         style={{
@@ -801,23 +804,23 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
       {/* ── Row 4: Goals + Top Links ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Monthly Goal */}
-        <div className="rounded-2xl border border-[#008001]/30 bg-[#000000] p-6">
+        <div className="rounded-2xl border border-[#008001]/30 bg-background p-6">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-base font-semibold text-white">Monthly Goal</span>
+            <span className="text-base font-semibold text-foreground">Monthly Goal</span>
             <Target className="w-4 h-4 text-[#49B618]" />
           </div>
           {goalsLoading || !monthlyGoal ? (
             <Skeleton className="h-32 w-full" />
           ) : (
             <>
-              <p className="text-xs text-[#A0A0A0] mb-1">{monthlyGoal.metric}</p>
+              <p className="text-xs text-muted-foreground mb-1">{monthlyGoal.metric}</p>
               <div className="flex items-end gap-2 mb-3">
-                <p className="text-3xl font-bold text-white">
+                <p className="text-3xl font-bold text-foreground">
                   {monthlyGoal.current.toLocaleString()}
                 </p>
-                <p className="text-sm text-[#A0A0A0] pb-1">/ {monthlyGoal.target.toLocaleString()}</p>
+                <p className="text-sm text-muted-foreground pb-1">/ {monthlyGoal.target.toLocaleString()}</p>
               </div>
-              <div className="h-3 bg-[#1E1E1E] rounded-full overflow-hidden mb-2">
+              <div className="h-3 bg-muted rounded-full overflow-hidden mb-2">
                 <div
                   className="h-full rounded-full bg-[#49B618] transition-all duration-1000"
                   style={{ width: `${monthlyGoal.percentage}%` }}
@@ -825,30 +828,30 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
               </div>
               <div className="flex justify-between">
                 <p className="text-xs text-[#49B618]">{monthlyGoal.percentage}% complete</p>
-                <p className="text-xs text-[#A0A0A0]">{monthlyGoal.statusText}</p>
+                <p className="text-xs text-muted-foreground">{monthlyGoal.statusText}</p>
               </div>
             </>
           )}
         </div>
 
         {/* Weekly Challenge */}
-        <div className="rounded-2xl border border-[#008001]/30 bg-[#000000] p-6">
+        <div className="rounded-2xl border border-[#008001]/30 bg-background p-6">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-base font-semibold text-white">Weekly Challenge</span>
+            <span className="text-base font-semibold text-foreground">Weekly Challenge</span>
             <Zap className="w-4 h-4 text-[#49B618]" />
           </div>
           {goalsLoading || !weeklyChallenge ? (
             <Skeleton className="h-32 w-full" />
           ) : (
             <>
-              <p className="text-xs text-[#A0A0A0] mb-1">{weeklyChallenge.metric}</p>
+              <p className="text-xs text-muted-foreground mb-1">{weeklyChallenge.metric}</p>
               <div className="flex items-end gap-2 mb-3">
-                <p className="text-3xl font-bold text-white">
+                <p className="text-3xl font-bold text-foreground">
                   {weeklyChallenge.current}
                 </p>
-                <p className="text-sm text-[#A0A0A0] pb-1">/ {weeklyChallenge.target}</p>
+                <p className="text-sm text-muted-foreground pb-1">/ {weeklyChallenge.target}</p>
               </div>
-              <div className="h-3 bg-[#1E1E1E] rounded-full overflow-hidden mb-2">
+              <div className="h-3 bg-muted rounded-full overflow-hidden mb-2">
                 <div
                   className="h-full rounded-full bg-[#49B618] transition-all duration-1000"
                   style={{ width: `${weeklyChallenge.percentage}%` }}
@@ -856,16 +859,16 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
               </div>
               <div className="flex justify-between">
                 <p className="text-xs text-[#49B618]">{weeklyChallenge.percentage}% complete</p>
-                <p className="text-xs text-[#A0A0A0]">{weeklyChallenge.statusText}</p>
+                <p className="text-xs text-muted-foreground">{weeklyChallenge.statusText}</p>
               </div>
             </>
           )}
         </div>
 
         {/* Top Links */}
-        <div className="rounded-2xl border border-[#008001]/30 bg-[#000000] p-6">
+        <div className="rounded-2xl border border-[#008001]/30 bg-background p-6">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-base font-semibold text-white">Top Links</span>
+            <span className="text-base font-semibold text-foreground">Top Links</span>
             <Globe className="w-4 h-4 text-[#49B618]" />
           </div>
           {loading ? (
@@ -873,20 +876,20 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
               {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
             </div>
           ) : (analytics?.topLinks ?? []).length === 0 ? (
-            <p className="text-sm text-[#A0A0A0] text-center py-8">No link clicks yet</p>
+            <p className="text-sm text-muted-foreground text-center py-8">No link clicks yet</p>
           ) : (
             <div className="space-y-3">
               {(analytics?.topLinks ?? []).map((link, i) => (
                 <div key={link.id} className="flex items-center gap-3">
-                  <span className="text-xs text-[#A0A0A0] w-4 flex-shrink-0">#{i + 1}</span>
+                  <span className="text-xs text-muted-foreground w-4 flex-shrink-0">#{i + 1}</span>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm text-white truncate">{link.label}</span>
-                      <span className="text-xs text-[#A0A0A0] ml-2 flex-shrink-0">
+                      <span className="text-sm text-foreground truncate">{link.label}</span>
+                      <span className="text-xs text-muted-foreground ml-2 flex-shrink-0">
                         {link.clicks} · {link.percentage}%
                       </span>
                     </div>
-                    <div className="h-1.5 bg-[#1E1E1E] rounded-full overflow-hidden">
+                    <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                       <div
                         className="h-full rounded-full bg-[#49B618]"
                         style={{ width: `${link.percentage}%` }}
@@ -904,10 +907,10 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
       <div ref={leadsRef} />
 
       {/* ── Recent Leads ── */}
-      <div className="rounded-2xl border border-[#008001]/30 bg-[#000000] p-6">
+      <div className="rounded-2xl border border-[#008001]/30 bg-background p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <span className="text-lg font-semibold text-white">Recent Leads</span>
+            <span className="text-lg font-semibold text-foreground">Recent Leads</span>
             {selected.length > 0 && (
               <span className="text-xs text-[#49B618] bg-[#49B618]/10 px-2 py-0.5 rounded-full">
                 {selected.length} selected
@@ -927,7 +930,7 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
                     showToast("Failed to delete leads");
                   }
                 }}
-                className="text-red-400 hover:text-red-300 transition-colors"
+                className="text-destructive hover:opacity-80 transition-opacity"
                 title="Delete selected"
               >
                 <Trash2 className="w-4 h-4" />
@@ -935,7 +938,7 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
             )}
           </div>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A0A0A0]" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               value={search}
               onChange={(e) => {
@@ -943,7 +946,7 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
                 setPage(1);
               }}
               placeholder="Search leads…"
-              className="w-64 h-9 pl-9 pr-4 rounded-lg border border-[#008001]/30 bg-[#1E1E1E] text-white text-sm placeholder:text-[#A0A0A0] focus:outline-none focus:border-[#49B618]"
+              className="w-64 h-9 pl-9 pr-4 rounded-lg border border-border bg-muted text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-[#49B618]"
             />
             {search && (
               <button
@@ -953,7 +956,7 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
                 }}
                 className="absolute right-3 top-1/2 -translate-y-1/2"
               >
-                <X className="w-3.5 h-3.5 text-[#A0A0A0] hover:text-white" />
+                <X className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground" />
               </button>
             )}
           </div>
@@ -966,11 +969,11 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
             ))}
           </div>
         ) : filteredLeads.length === 0 ? (
-          <div className="text-center py-16 text-[#A0A0A0]">
+          <div className="text-center py-16 text-muted-foreground">
             <Search className="w-8 h-8 mx-auto mb-3 opacity-40" />
             <p>
               {search
-                ? <>No leads match &ldquo;<span className="text-white">{search}</span>&rdquo;</>
+                ? <>No leads match &ldquo;<span className="text-foreground">{search}</span>&rdquo;</>
                 : "No leads yet"}
             </p>
           </div>
@@ -979,7 +982,7 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-[#008001]/30 bg-[#1E1E1E]">
+                  <tr className="border-b border-[#008001]/30 bg-muted">
                     <th className="py-3 px-4">
                       <input
                         type="checkbox"
@@ -994,7 +997,7 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
                     {["No", "Contact", "Card", "Source", "Date", "Engagement", "Actions"].map((h) => (
                       <th
                         key={h}
-                        className="text-left py-3 px-4 text-xs font-medium text-[#A0A0A0] uppercase tracking-wider"
+                        className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider"
                       >
                         {h}
                       </th>
@@ -1012,7 +1015,7 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
                     return (
                       <tr
                         key={lead.id}
-                        className={`border-b border-[#1E1E1E] hover:bg-[#1E1E1E] transition-colors ${selected.includes(lead.id) ? "bg-[#49B618]/5" : ""}`}
+                        className={`border-b border-border hover:bg-muted transition-colors ${selected.includes(lead.id) ? "bg-[#49B618]/5" : ""}`}
                       >
                         <td className="py-4 px-4">
                           <input
@@ -1022,7 +1025,7 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
                             className="accent-[#49B618] cursor-pointer"
                           />
                         </td>
-                        <td className="py-4 px-4 text-sm font-medium text-white">
+                        <td className="py-4 px-4 text-sm font-medium text-foreground">
                           {String((leadsPage - 1) * PAGE_SIZE + idx + 1).padStart(2, "0")}
                         </td>
                         <td className="py-4 px-4">
@@ -1031,8 +1034,8 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
                               {initials}
                             </div>
                             <div>
-                              <p className="text-sm font-medium text-white">{lead.name}</p>
-                              <p className="text-xs text-[#A0A0A0]">{lead.email ?? lead.phone ?? "—"}</p>
+                              <p className="text-sm font-medium text-foreground">{lead.name}</p>
+                              <p className="text-xs text-muted-foreground">{lead.email ?? lead.phone ?? "—"}</p>
                             </div>
                           </div>
                         </td>
@@ -1047,9 +1050,9 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
                               {lead.cardName}
                             </a>
                           ) : lead.cardName ? (
-                            <span className="text-sm text-white">{lead.cardName}</span>
+                            <span className="text-sm text-foreground">{lead.cardName}</span>
                           ) : (
-                            <span className="text-sm text-[#A0A0A0]">—</span>
+                            <span className="text-sm text-muted-foreground">—</span>
                           )}
                         </td>
                         <td className="py-4 px-4">
@@ -1060,14 +1063,14 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
                           </span>
                         </td>
                         <td className="py-4 px-4">
-                          <p className="text-sm text-white">
+                          <p className="text-sm text-foreground">
                             {normalizeDate(lead.createdAt).toLocaleDateString("en-US", {
                               month: "short",
                               day: "numeric",
                               year: "numeric",
                             })}
                           </p>
-                          <p className="text-xs text-[#A0A0A0]">
+                          <p className="text-xs text-muted-foreground">
                             {normalizeDate(lead.createdAt).toLocaleTimeString("en-US", {
                               hour: "2-digit",
                               minute: "2-digit",
@@ -1079,7 +1082,7 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
                             {[...Array(5)].map((_, i) => (
                               <Star
                                 key={i}
-                                className={`w-4 h-4 ${i < Math.round(lead.engagementScore / 20) ? "fill-[#49B618] text-[#49B618]" : "text-[#2a2a2a]"}`}
+                                className={`w-4 h-4 ${i < Math.round(lead.engagementScore / 20) ? "fill-[#49B618] text-[#49B618]" : "text-muted-foreground/40"}`}
                               />
                             ))}
                           </div>
@@ -1137,14 +1140,14 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
 
             {/* Pagination */}
             <div className="flex items-center justify-between mt-6">
-              <p className="text-xs text-[#A0A0A0]">
+              <p className="text-xs text-muted-foreground">
                 Page {leadsPage} of {totalLeadPages} · {leadsTotal} leads total
               </p>
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => setLeadsPage((p) => Math.max(1, p - 1))}
                   disabled={leadsPage === 1}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-[#A0A0A0] hover:bg-[#1E1E1E] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
@@ -1154,7 +1157,7 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
                     onClick={() => setLeadsPage(p)}
                     className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-medium transition-colors ${p === leadsPage
                       ? "bg-[#008001] text-white"
-                      : "text-[#A0A0A0] hover:bg-[#1E1E1E]"
+                      : "text-muted-foreground hover:bg-muted"
                       }`}
                   >
                     {p}
@@ -1163,7 +1166,7 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
                 <button
                   onClick={() => setLeadsPage((p) => Math.min(totalLeadPages, p + 1))}
                   disabled={leadsPage === totalLeadPages}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-[#A0A0A0] hover:bg-[#1E1E1E] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>
