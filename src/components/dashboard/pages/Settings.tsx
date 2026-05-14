@@ -1,3 +1,4 @@
+{/* theme: converted */}
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -35,11 +36,11 @@ function ToastContainer({ toasts, onRemove }: { toasts: Toast[]; onRemove: (id: 
     return (
         <div className="fixed bottom-6 right-6 z-[100] flex flex-col gap-2 pointer-events-none">
             {toasts.map((t) => (
-                <div key={t.id} className="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl border shadow-2xl animate-slide-up"
-                    style={{ background: "#0a0f0a", borderColor: border[t.type] }}>
+                <div key={t.id} className="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl border shadow-2xl animate-slide-up bg-background"
+                    style={{ borderColor: border[t.type] }}>
                     <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: color[t.type] }} />
-                    <span className="text-sm text-white">{t.message}</span>
-                    <button onClick={() => onRemove(t.id)} className="ml-2 text-[#555] hover:text-white transition-colors">
+                    <span className="text-sm text-foreground">{t.message}</span>
+                    <button onClick={() => onRemove(t.id)} className="ml-2 text-muted-foreground hover:text-foreground transition-colors">
                         <X className="w-3 h-3" />
                     </button>
                 </div>
@@ -59,24 +60,24 @@ function ConfirmModal({ open, title, description, confirmLabel, danger, loading,
     if (!open) return null;
     return (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 backdrop-blur-sm p-0 sm:p-4" onClick={onClose}>
-            <div className="bg-[#0a0f0a] border border-[#008001]/30 rounded-t-2xl sm:rounded-2xl p-5 sm:p-6 w-full sm:max-w-md shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="bg-popover border-border rounded-t-2xl sm:rounded-2xl p-5 sm:p-6 w-full sm:max-w-md shadow-2xl" onClick={(e) => e.stopPropagation()}>
                 <div className="flex items-start gap-4 mb-4">
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                         style={{ background: danger ? "rgba(239,68,68,0.15)" : "rgba(73,182,24,0.15)" }}>
                         <AlertTriangle className="w-5 h-5" style={{ color: danger ? "#ef4444" : "#49B618" }} />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <h3 className="text-white font-bold text-lg">{title}</h3>
-                        <p className="text-[#A0A0A0] text-sm mt-1 leading-relaxed">{description}</p>
+                        <h3 className="text-foreground font-bold text-lg">{title}</h3>
+                        <p className="text-muted-foreground text-sm mt-1 leading-relaxed">{description}</p>
                     </div>
-                    <button onClick={onClose} className="w-8 h-8 rounded-lg bg-[#1E1E1E] text-[#A0A0A0] hover:text-white flex items-center justify-center transition-colors flex-shrink-0">
+                    <button onClick={onClose} className="w-8 h-8 rounded-lg bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors flex-shrink-0">
                         <X className="w-4 h-4" />
                     </button>
                 </div>
                 {children}
                 <div className="flex gap-3 mt-5">
-                    <Button variant="outline" className="flex-1 text-sm h-10 border-[#008001]/30 text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20 rounded-xl" onClick={onClose} disabled={loading}>Cancel</Button>
-                    <Button className="flex-1 text-sm h-10 text-white rounded-xl" style={{ background: danger ? "linear-gradient(135deg,#dc2626,#ef4444)" : "linear-gradient(135deg,#008001,#49B618)" }} onClick={onConfirm} disabled={loading}>
+                    <Button variant="outline" className="flex-1 text-sm h-10 border-border text-muted-foreground hover:text-foreground hover:bg-accent/20 rounded-xl" onClick={onClose} disabled={loading}>Cancel</Button>
+                    <Button className="flex-1 text-sm h-10 rounded-xl" style={{ background: danger ? "linear-gradient(135deg,#dc2626,#ef4444)" : "linear-gradient(135deg,#008001,#49B618)" }} onClick={onConfirm} disabled={loading}>
                         {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}{confirmLabel}
                     </Button>
                 </div>
@@ -103,29 +104,29 @@ function AddCardModal({ open, loading, onSave, onClose }: {
     };
     return (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 backdrop-blur-sm p-0 sm:p-4" onClick={onClose}>
-            <div className="bg-[#0a0f0a] border border-[#008001]/30 rounded-t-2xl sm:rounded-2xl p-5 sm:p-6 w-full sm:max-w-md shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="bg-popover border-border rounded-t-2xl sm:rounded-2xl p-5 sm:p-6 w-full sm:max-w-md shadow-2xl" onClick={(e) => e.stopPropagation()}>
                 <div className="flex items-center justify-between mb-5">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#008001] to-[#49B618] flex items-center justify-center"><CreditCard className="w-5 h-5 text-white" /></div>
-                        <h3 className="text-white font-bold text-lg">Add Payment Method</h3>
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center"><CreditCard className="w-5 h-5 text-primary-foreground" /></div>
+                        <h3 className="text-foreground font-bold text-lg">Add Payment Method</h3>
                     </div>
-                    <button onClick={onClose} className="w-8 h-8 rounded-lg bg-[#1E1E1E] text-[#A0A0A0] hover:text-white flex items-center justify-center transition-colors"><X className="w-4 h-4" /></button>
+                    <button onClick={onClose} className="w-8 h-8 rounded-lg bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors"><X className="w-4 h-4" /></button>
                 </div>
                 <div className="space-y-3">
-                    <div><label className="text-xs text-[#A0A0A0] mb-1.5 block">Cardholder Name</label>
-                        <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="John Doe" className="w-full h-10 px-4 rounded-xl bg-[#1E1E1E] border border-[#008001]/20 text-white text-sm placeholder:text-[#555] focus:outline-none focus:border-[#49B618]/50 transition-colors" /></div>
-                    <div><label className="text-xs text-[#A0A0A0] mb-1.5 block">Card Number</label>
-                        <input type="text" value={num} onChange={(e) => setNum(fmt(e.target.value))} placeholder="4242 4242 4242 4242" className="w-full h-10 px-4 rounded-xl bg-[#1E1E1E] border border-[#008001]/20 text-white text-sm placeholder:text-[#555] focus:outline-none focus:border-[#49B618]/50 transition-colors" /></div>
+                    <div><label className="text-xs text-muted-foreground mb-1.5 block">Cardholder Name</label>
+                        <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="John Doe" className="w-full h-10 px-4 rounded-xl bg-input border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors" /></div>
+                    <div><label className="text-xs text-muted-foreground mb-1.5 block">Card Number</label>
+                        <input type="text" value={num} onChange={(e) => setNum(fmt(e.target.value))} placeholder="4242 4242 4242 4242" className="w-full h-10 px-4 rounded-xl bg-input border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors" /></div>
                     <div className="grid grid-cols-2 gap-3">
-                        <div><label className="text-xs text-[#A0A0A0] mb-1.5 block">Expiry</label>
-                            <input type="text" value={exp} onChange={(e) => setExp(fmtExp(e.target.value))} placeholder="MM/YY" className="w-full h-10 px-4 rounded-xl bg-[#1E1E1E] border border-[#008001]/20 text-white text-sm placeholder:text-[#555] focus:outline-none focus:border-[#49B618]/50 transition-colors" /></div>
-                        <div><label className="text-xs text-[#A0A0A0] mb-1.5 block">CVC</label>
-                            <input type="text" value={cvc} onChange={(e) => setCvc(e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="123" className="w-full h-10 px-4 rounded-xl bg-[#1E1E1E] border border-[#008001]/20 text-white text-sm placeholder:text-[#555] focus:outline-none focus:border-[#49B618]/50 transition-colors" /></div>
+                        <div><label className="text-xs text-muted-foreground mb-1.5 block">Expiry</label>
+                            <input type="text" value={exp} onChange={(e) => setExp(fmtExp(e.target.value))} placeholder="MM/YY" className="w-full h-10 px-4 rounded-xl bg-input border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors" /></div>
+                        <div><label className="text-xs text-muted-foreground mb-1.5 block">CVC</label>
+                            <input type="text" value={cvc} onChange={(e) => setCvc(e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="123" className="w-full h-10 px-4 rounded-xl bg-input border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors" /></div>
                     </div>
                 </div>
                 <div className="flex gap-3 mt-5">
-                    <Button variant="outline" className="flex-1 text-sm h-10 border-[#008001]/30 text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20 rounded-xl" onClick={onClose} disabled={loading}>Cancel</Button>
-                    <Button className="flex-1 text-sm h-10 text-white rounded-xl" style={{ background: "linear-gradient(135deg,#008001,#49B618)" }} onClick={handleSave} disabled={!canSave || loading}>
+                    <Button variant="outline" className="flex-1 text-sm h-10 border-border text-muted-foreground hover:text-foreground hover:bg-accent/20 rounded-xl" onClick={onClose} disabled={loading}>Cancel</Button>
+                    <Button className="flex-1 text-sm h-10 rounded-xl" style={{ background: "linear-gradient(135deg,#008001,#49B618)" }} onClick={handleSave} disabled={!canSave || loading}>
                         {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}Add Card
                     </Button>
                 </div>
@@ -135,17 +136,12 @@ function AddCardModal({ open, loading, onSave, onClose }: {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   Notification Row
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-
-/* ═══════════════════════════════════════════════════════════════════════════
    Section Header
    ═══════════════════════════════════════════════════════════════════════════ */
 function SectionIcon({ icon: Icon, gradient }: { icon: React.ElementType; gradient?: string }) {
     return (
-        <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${gradient || "bg-gradient-to-br from-[#008001] to-[#49B618]"}`}>
-            <Icon className="w-4 h-4 text-white" />
+        <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${gradient || "bg-gradient-to-br from-primary to-accent"}`}>
+            <Icon className="w-4 h-4 text-primary-foreground" />
         </div>
     );
 }
@@ -378,9 +374,9 @@ export function Settings() {
             <ConfirmModal open={!!deleteCardId} title="Remove Payment Method?" description={`Remove ${deleteCard?.brand} ending in ${deleteCard?.last4}? This cannot be undone.`} confirmLabel="Remove Card" danger loading={deleteCardLoading} onConfirm={handleDeleteCard} onClose={() => setDeleteCardId(null)} />
             <ConfirmModal open={deleteModal} title="Delete Your Account?" description="This action is permanent. All cards, contacts, and data will be deleted." confirmLabel="Delete Account" danger loading={deleteLoading} onConfirm={handleDeleteAccount} onClose={() => { setDeleteModal(false); setDeleteConfirmText(""); }}>
                 <div className="mt-3 space-y-3">
-                    <div className="p-3 rounded-xl bg-[#ef4444]/5 border border-[#ef4444]/20"><p className="text-xs text-[#ef4444]">⚠ This will permanently delete everything.</p></div>
-                    <div><Label className="text-xs text-[#A0A0A0] mb-1.5 block">Type <span className="text-[#ef4444] font-semibold">DELETE</span> to confirm</Label>
-                        <input type="text" value={deleteConfirmText} onChange={(e) => setDeleteConfirmText(e.target.value)} placeholder="DELETE" className="w-full h-10 px-4 rounded-xl bg-[#1E1E1E] border border-[#ef4444]/20 text-white text-sm placeholder:text-[#555] focus:outline-none focus:border-[#ef4444]/50 transition-colors" /></div>
+                    <div className="p-3 rounded-xl bg-destructive/5 border border-destructive/20"><p className="text-xs text-destructive">⚠ This will permanently delete everything.</p></div>
+                    <div><Label className="text-xs text-muted-foreground mb-1.5 block">Type <span className="text-destructive font-semibold">DELETE</span> to confirm</Label>
+                        <input type="text" value={deleteConfirmText} onChange={(e) => setDeleteConfirmText(e.target.value)} placeholder="DELETE" className="w-full h-10 px-4 rounded-xl bg-input border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors" /></div>
                 </div>
             </ConfirmModal>
 
@@ -388,137 +384,137 @@ export function Settings() {
                 {/* ═══ ROW 1: Profile + Payment Methods ═══ */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                     {/* ── Profile ──────────────────────────────────────────────── */}
-                    <Card className="bg-[#000000] border-[#008001]/30 relative overflow-hidden" style={fadeIn(0)}>
-                        <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-[#008001] to-transparent opacity-[0.04] blur-3xl pointer-events-none" />
-                        <CardHeader className="border-b border-[#008001]/20 pb-4">
-                            <CardTitle className="text-white text-base sm:text-lg flex items-center gap-2">
+                    <Card className="bg-card border-border relative overflow-hidden" style={fadeIn(0)}>
+                        <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-primary to-transparent opacity-[0.04] blur-3xl pointer-events-none" />
+                        <CardHeader className="border-b border-border pb-4">
+                            <CardTitle className="text-card-foreground text-base sm:text-lg flex items-center gap-2">
                                 <SectionIcon icon={User} /><span>Profile Settings</span>
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="pt-5 space-y-4">
                             {/* Avatar */}
                             <div className="flex items-center gap-4 mb-2">
-                                <div className="relative w-16 h-16 rounded-2xl overflow-hidden bg-gradient-to-br from-[#008001] to-[#49B618] shadow-lg shadow-[#008001]/20">
+                                <div className="relative w-16 h-16 rounded-2xl overflow-hidden bg-gradient-to-br from-primary to-accent shadow-lg shadow-primary/20">
                                     {profileAvatar ? (
                                         <img src={profileAvatar} alt="Avatar" className="w-full h-full object-cover" />
                                     ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-white text-xl font-bold">
+                                        <div className="w-full h-full flex items-center justify-center text-primary-foreground text-xl font-bold">
                                             {profileName.split(" ").map((n) => n[0]).join("")}
                                         </div>
                                     )}
                                 </div>
                                 <div>
-                                    <p className="text-sm font-semibold text-white">{profileName}</p>
-                                    <p className="text-xs text-[#A0A0A0] mt-0.5">{profileEmail}</p>
-                                    <label className="text-[10px] text-[#49B618] hover:text-white mt-1 transition-colors cursor-pointer">
+                                    <p className="text-sm font-semibold text-foreground">{profileName}</p>
+                                    <p className="text-xs text-muted-foreground mt-0.5">{profileEmail}</p>
+                                    <label className="text-[10px] text-accent hover:text-foreground mt-1 transition-colors cursor-pointer">
                                         Change avatar
                                         <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
                                     </label>
                                 </div>
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div><Label className="text-xs text-[#A0A0A0] mb-1.5">Full Name</Label>
-                                    <Input value={profileName} onChange={(e) => setProfileName(e.target.value)} className="bg-[#1E1E1E] border-[#008001]/30 text-white h-10 rounded-xl text-sm" /></div>
-                                <div><Label className="text-xs text-[#A0A0A0] mb-1.5">Email</Label>
-                                    <Input value={profileEmail} onChange={(e) => setProfileEmail(e.target.value)} className="bg-[#1E1E1E] border-[#008001]/30 text-white h-10 rounded-xl text-sm" /></div>
-                                <div><Label className="text-xs text-[#A0A0A0] mb-1.5">Phone</Label>
-                                    <Input value={profilePhone} onChange={(e) => setProfilePhone(e.target.value)} className="bg-[#1E1E1E] border-[#008001]/30 text-white h-10 rounded-xl text-sm" /></div>
-                                <div><Label className="text-xs text-[#A0A0A0] mb-1.5">Timezone</Label>
-                                    <select value={timezone} onChange={(e) => setTimezone(e.target.value)} className="w-full h-10 px-3 rounded-xl bg-[#1E1E1E] border border-[#008001]/30 text-white text-sm focus:outline-none focus:border-[#49B618]/50">
+                                <div><Label className="text-xs text-muted-foreground mb-1.5">Full Name</Label>
+                                    <Input value={profileName} onChange={(e) => setProfileName(e.target.value)} className="bg-input border-border text-foreground h-10 rounded-xl text-sm" /></div>
+                                <div><Label className="text-xs text-muted-foreground mb-1.5">Email</Label>
+                                    <Input value={profileEmail} onChange={(e) => setProfileEmail(e.target.value)} className="bg-input border-border text-foreground h-10 rounded-xl text-sm" /></div>
+                                <div><Label className="text-xs text-muted-foreground mb-1.5">Phone</Label>
+                                    <Input value={profilePhone} onChange={(e) => setProfilePhone(e.target.value)} className="bg-input border-border text-foreground h-10 rounded-xl text-sm" /></div>
+                                <div><Label className="text-xs text-muted-foreground mb-1.5">Timezone</Label>
+                                    <select value={timezone} onChange={(e) => setTimezone(e.target.value)} className="w-full h-10 px-3 rounded-xl bg-input border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring">
                                         <option value="America/Los_Angeles">Pacific (PT)</option><option value="America/Denver">Mountain (MT)</option>
                                         <option value="America/Chicago">Central (CT)</option><option value="America/New_York">Eastern (ET)</option>
                                         <option value="Europe/London">London (GMT)</option><option value="Asia/Karachi">Pakistan (PKT)</option>
                                     </select></div>
                             </div>
-                            <div><Label className="text-xs text-[#A0A0A0] mb-1.5">Language</Label>
-                                <select value={language} onChange={(e) => setLanguage(e.target.value)} className="w-full h-10 px-3 rounded-xl bg-[#1E1E1E] border border-[#008001]/30 text-white text-sm focus:outline-none focus:border-[#49B618]/50">
+                            <div><Label className="text-xs text-muted-foreground mb-1.5">Language</Label>
+                                <select value={language} onChange={(e) => setLanguage(e.target.value)} className="w-full h-10 px-3 rounded-xl bg-input border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring">
                                     <option value="en">English</option><option value="es">Español</option><option value="fr">Français</option><option value="de">Deutsch</option><option value="ur">اردو</option>
                                 </select></div>
-                            <Button className="text-white text-xs h-9 rounded-full gap-1.5" style={{ background: "linear-gradient(135deg,#008001,#49B618)" }} onClick={handleSaveProfile} disabled={profileSaving}>
+                            <Button className="text-primary-foreground text-xs h-9 rounded-full gap-1.5" style={{ background: "linear-gradient(135deg,#008001,#49B618)" }} onClick={handleSaveProfile} disabled={profileSaving}>
                                 {profileSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}Save Changes
                             </Button>
                         </CardContent>
                     </Card>
 
                     {/* ── Payment Methods ──────────────────────────────────────── */}
-                    <Card className="bg-[#000000] border-[#008001]/30 relative overflow-hidden" style={fadeIn(100)}>
-                        <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-[#49B618] to-transparent opacity-[0.03] blur-3xl pointer-events-none" />
-                        <CardHeader className="border-b border-[#008001]/20 pb-4">
+                    <Card className="bg-card border-border relative overflow-hidden" style={fadeIn(100)}>
+                        <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-accent to-transparent opacity-[0.03] blur-3xl pointer-events-none" />
+                        <CardHeader className="border-b border-border pb-4">
                             <div className="flex items-center justify-between">
-                                <CardTitle className="text-white text-base sm:text-lg flex items-center gap-2">
+                                <CardTitle className="text-card-foreground text-base sm:text-lg flex items-center gap-2">
                                     <SectionIcon icon={CreditCard} /><span>Payment Methods</span>
                                 </CardTitle>
-                                <Button size="sm" className="text-white text-xs h-9 rounded-full gap-1.5" style={{ background: "linear-gradient(135deg,#008001,#49B618)" }} onClick={() => setAddCardModal(true)}>
+                                <Button size="sm" className="text-primary-foreground text-xs h-9 rounded-full gap-1.5" style={{ background: "linear-gradient(135deg,#008001,#49B618)" }} onClick={() => setAddCardModal(true)}>
                                     <Plus className="w-3.5 h-3.5" />Add Card
                                 </Button>
                             </div>
                         </CardHeader>
                         <CardContent className="pt-5 space-y-3">
-                            {cards.length === 0 && <p className="text-sm text-[#555] text-center py-8">No payment methods added</p>}
+                            {cards.length === 0 && <p className="text-sm text-muted-foreground text-center py-8">No payment methods added</p>}
                             {cards.map((card) => (
-                                <div key={card.id} className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl border border-[#008001]/20 bg-[#111a11] hover:bg-[#0f1f0f] transition-colors group">
-                                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg ${card.isDefault ? "bg-gradient-to-br from-[#008001] to-[#49B618] shadow-[#008001]/20" : "bg-[#1E1E1E] border border-[#008001]/20"}`}>
-                                        <CreditCard className={`w-5 h-5 ${card.isDefault ? "text-white" : "text-[#A0A0A0]"}`} />
+                                <div key={card.id} className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl border border-border bg-muted/30 hover:bg-muted transition-colors group">
+                                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg ${card.isDefault ? "bg-gradient-to-br from-primary to-accent shadow-primary/20" : "bg-muted border border-border"}`}>
+                                        <CreditCard className={`w-5 h-5 ${card.isDefault ? "text-primary-foreground" : "text-muted-foreground"}`} />
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2">
-                                            <p className="text-sm font-medium text-white">{card.brand} •••• {card.last4}</p>
-                                            {card.isDefault && <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-[#49B618]/15 text-[#49B618] border border-[#49B618]/20"><Star className="w-2.5 h-2.5" />Default</span>}
+                                            <p className="text-sm font-medium text-foreground">{card.brand} •••• {card.last4}</p>
+                                            {card.isDefault && <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-accent/15 text-accent border border-accent/20"><Star className="w-2.5 h-2.5" />Default</span>}
                                         </div>
-                                        <p className="text-xs text-[#A0A0A0] mt-0.5">Expires {card.expiry}</p>
+                                        <p className="text-xs text-muted-foreground mt-0.5">Expires {card.expiry}</p>
                                     </div>
                                     <div className="flex items-center gap-1.5 flex-shrink-0">
                                         {!card.isDefault && (
-                                            <Button variant="outline" size="sm" className="border-[#008001]/30 text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20 text-[10px] h-7 rounded-lg px-2" onClick={() => handleSetDefault(card.id)}>
+                                            <Button variant="outline" size="sm" className="border-border text-muted-foreground hover:text-foreground hover:bg-accent/20 text-[10px] h-7 rounded-lg px-2" onClick={() => handleSetDefault(card.id)}>
                                                 Set Default
                                             </Button>
                                         )}
-                                        <button className="w-7 h-7 rounded-lg flex items-center justify-center text-[#555] hover:text-[#ef4444] hover:bg-[#ef4444]/10 transition-colors" onClick={() => setDeleteCardId(card.id)}>
+                                        <button className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors" onClick={() => setDeleteCardId(card.id)}>
                                             <Trash2 className="w-3.5 h-3.5" />
                                         </button>
                                     </div>
                                 </div>
                             ))}
-                            <p className="text-[10px] text-[#555] pt-1">Your default payment method is used for subscription billing and orders.</p>
+                            <p className="text-[10px] text-muted-foreground/60 pt-1">Your default payment method is used for subscription billing and orders.</p>
                         </CardContent>
                     </Card>
                 </div>
 
-                {/* ═══ ROW 2: Security + Notifications ═══ */}
+                {/* ═══ ROW 2: Security + Danger Zone ═══ */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                     {/* ── Security ─────────────────────────────────────────────── */}
-                    <Card className="bg-[#000000] border-[#008001]/30 relative overflow-hidden" style={fadeIn(200)}>
-                        <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-[#008001] to-transparent opacity-[0.04] blur-3xl pointer-events-none" />
-                        <CardHeader className="border-b border-[#008001]/20 pb-4">
-                            <CardTitle className="text-white text-base sm:text-lg flex items-center gap-2"><SectionIcon icon={Shield} />Security</CardTitle>
+                    <Card className="bg-card border-border relative overflow-hidden" style={fadeIn(200)}>
+                        <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-primary to-transparent opacity-[0.04] blur-3xl pointer-events-none" />
+                        <CardHeader className="border-b border-border pb-4">
+                            <CardTitle className="text-card-foreground text-base sm:text-lg flex items-center gap-2"><SectionIcon icon={Shield} />Security</CardTitle>
                         </CardHeader>
                         <CardContent className="pt-5 space-y-5">
                             {/* Password */}
                             <div>
-                                <h4 className="text-sm font-semibold text-white mb-3 flex items-center gap-2"><Key className="w-3.5 h-3.5 text-[#49B618]" />Change Password</h4>
+                                <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2"><Key className="w-3.5 h-3.5 text-accent" />Change Password</h4>
                                 <div className="space-y-3">
                                     <div className="relative">
-                                        <Label className="text-xs text-[#A0A0A0] mb-1.5">Current Password</Label>
-                                        <Input type={showCurrentPw ? "text" : "password"} value={currentPw} onChange={(e) => { setCurrentPw(e.target.value); setPwError(""); }} className="bg-[#1E1E1E] border-[#008001]/30 text-white pr-10 h-10 rounded-xl text-sm" placeholder="Enter current password" />
-                                        <button type="button" onClick={() => setShowCurrentPw(!showCurrentPw)} className="absolute right-3 bottom-3 text-[#555] hover:text-white transition-colors">
+                                        <Label className="text-xs text-muted-foreground mb-1.5">Current Password</Label>
+                                        <Input type={showCurrentPw ? "text" : "password"} value={currentPw} onChange={(e) => { setCurrentPw(e.target.value); setPwError(""); }} className="bg-input border-border text-foreground pr-10 h-10 rounded-xl text-sm" placeholder="Enter current password" />
+                                        <button type="button" onClick={() => setShowCurrentPw(!showCurrentPw)} className="absolute right-3 bottom-3 text-muted-foreground hover:text-foreground transition-colors">
                                             {showCurrentPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                         </button>
                                     </div>
                                     <div className="relative">
-                                        <Label className="text-xs text-[#A0A0A0] mb-1.5">New Password</Label>
-                                        <Input type={showNewPw ? "text" : "password"} value={newPw} onChange={(e) => { setNewPw(e.target.value); setPwError(""); }} className="bg-[#1E1E1E] border-[#008001]/30 text-white pr-10 h-10 rounded-xl text-sm" placeholder="Min. 8 characters" />
-                                        <button type="button" onClick={() => setShowNewPw(!showNewPw)} className="absolute right-3 bottom-3 text-[#555] hover:text-white transition-colors">
+                                        <Label className="text-xs text-muted-foreground mb-1.5">New Password</Label>
+                                        <Input type={showNewPw ? "text" : "password"} value={newPw} onChange={(e) => { setNewPw(e.target.value); setPwError(""); }} className="bg-input border-border text-foreground pr-10 h-10 rounded-xl text-sm" placeholder="Min. 8 characters" />
+                                        <button type="button" onClick={() => setShowNewPw(!showNewPw)} className="absolute right-3 bottom-3 text-muted-foreground hover:text-foreground transition-colors">
                                             {showNewPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                         </button>
-                                        {newPw && <div className="mt-2 flex items-center gap-2"><div className="flex gap-1 flex-1">{[1, 2, 3, 4].map((i) => <div key={i} className="h-1 flex-1 rounded-full transition-all duration-300" style={{ background: i <= pwStrength ? pwColors[pwStrength] : "#1E1E1E" }} />)}</div><span className="text-[10px] text-[#555]">{pwLabel}</span></div>}
+                                        {newPw && <div className="mt-2 flex items-center gap-2"><div className="flex gap-1 flex-1">{[1, 2, 3, 4].map((i) => <div key={i} className="h-1 flex-1 rounded-full transition-all duration-300" style={{ background: i <= pwStrength ? pwColors[pwStrength] : "var(--muted)" }} />)}</div><span className="text-[10px] text-muted-foreground">{pwLabel}</span></div>}
                                     </div>
                                     <div>
-                                        <Label className="text-xs text-[#A0A0A0] mb-1.5">Confirm Password</Label>
-                                        <Input type="password" value={confirmPw} onChange={(e) => { setConfirmPw(e.target.value); setPwError(""); }} className="bg-[#1E1E1E] border-[#008001]/30 text-white h-10 rounded-xl text-sm" placeholder="Re-enter new password" />
-                                        {confirmPw && newPw && confirmPw !== newPw && <p className="text-[10px] text-[#ef4444] mt-1">Passwords don&apos;t match</p>}
+                                        <Label className="text-xs text-muted-foreground mb-1.5">Confirm Password</Label>
+                                        <Input type="password" value={confirmPw} onChange={(e) => { setConfirmPw(e.target.value); setPwError(""); }} className="bg-input border-border text-foreground h-10 rounded-xl text-sm" placeholder="Re-enter new password" />
+                                        {confirmPw && newPw && confirmPw !== newPw && <p className="text-[10px] text-destructive mt-1">Passwords don&apos;t match</p>}
                                     </div>
-                                    {pwError && <div className="p-2.5 rounded-lg bg-[#ef4444]/10 border border-[#ef4444]/20"><p className="text-xs text-[#ef4444]">{pwError}</p></div>}
-                                    <Button className="text-white text-xs h-9 rounded-full gap-1.5" style={{ background: "linear-gradient(135deg,#008001,#49B618)" }} onClick={handlePasswordChange} disabled={pwLoading || !currentPw || !newPw || !confirmPw}>
+                                    {pwError && <div className="p-2.5 rounded-lg bg-destructive/10 border border-destructive/20"><p className="text-xs text-destructive">{pwError}</p></div>}
+                                    <Button className="text-primary-foreground text-xs h-9 rounded-full gap-1.5" style={{ background: "linear-gradient(135deg,#008001,#49B618)" }} onClick={handlePasswordChange} disabled={pwLoading || !currentPw || !newPw || !confirmPw}>
                                         {pwLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}<Key className="w-3.5 h-3.5" />Update Password
                                     </Button>
                                 </div>
@@ -527,22 +523,22 @@ export function Settings() {
                     </Card>
 
                     {/* ── Danger Zone ──────────────────────────────────────── */}
-                    <Card className="bg-[#000000] border-2 border-[#ef4444]/20 relative overflow-hidden" style={fadeIn(350)}>
-                        <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-[#ef4444] to-transparent opacity-[0.03] blur-3xl pointer-events-none" />
-                        <CardHeader className="border-b border-[#ef4444]/10 pb-4">
-                            <CardTitle className="text-[#ef4444] text-base sm:text-lg flex items-center gap-2"><SectionIcon icon={Trash2} gradient="bg-[#ef4444]/10 border border-[#ef4444]/20" />Danger Zone</CardTitle>
+                    <Card className="bg-card border-2 border-destructive/20 relative overflow-hidden" style={fadeIn(350)}>
+                        <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-destructive to-transparent opacity-[0.03] blur-3xl pointer-events-none" />
+                        <CardHeader className="border-b border-destructive/10 pb-4">
+                            <CardTitle className="text-destructive text-base sm:text-lg flex items-center gap-2"><SectionIcon icon={Trash2} gradient="bg-destructive/10 border border-destructive/20" />Danger Zone</CardTitle>
                         </CardHeader>
                         <CardContent className="pt-5 space-y-4">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                <div><h4 className="text-sm font-semibold text-white">Delete Account</h4><p className="text-xs text-[#A0A0A0] mt-0.5">Permanently delete everything</p></div>
-                                <Button variant="outline" className="text-[#ef4444] border-[#ef4444]/30 hover:bg-[#ef4444]/10 text-xs h-9 rounded-full gap-1.5 flex-shrink-0" onClick={() => setDeleteModal(true)}>
+                                <div><h4 className="text-sm font-semibold text-foreground">Delete Account</h4><p className="text-xs text-muted-foreground mt-0.5">Permanently delete everything</p></div>
+                                <Button variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10 text-xs h-9 rounded-full gap-1.5 flex-shrink-0" onClick={() => setDeleteModal(true)}>
                                     <Trash2 className="w-3.5 h-3.5" />Delete Account
                                 </Button>
                             </div>
-                            <Separator className="bg-[#ef4444]/10" />
+                            <Separator className="bg-border" />
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                <div><h4 className="text-sm font-semibold text-white">Export Data</h4><p className="text-xs text-[#A0A0A0] mt-0.5">Download all your data as JSON</p></div>
-                                <Button variant="outline" className="border-[#008001]/30 text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20 text-xs h-9 rounded-full gap-1.5 flex-shrink-0" onClick={handleExportData} disabled={exportLoading}>
+                                <div><h4 className="text-sm font-semibold text-foreground">Export Data</h4><p className="text-xs text-muted-foreground mt-0.5">Download all your data as JSON</p></div>
+                                <Button variant="outline" className="border-border text-muted-foreground hover:text-foreground hover:bg-accent/20 text-xs h-9 rounded-full gap-1.5 flex-shrink-0" onClick={handleExportData} disabled={exportLoading}>
                                     {exportLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}{exportLoading ? "Exporting…" : "Export Data"}
                                 </Button>
                             </div>

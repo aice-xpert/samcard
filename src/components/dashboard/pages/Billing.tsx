@@ -1,3 +1,4 @@
+{/* theme: converted */}
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -182,9 +183,8 @@ function ToastContainer({ toasts, onRemove }: { toasts: Toast[]; onRemove: (id: 
             {toasts.map((t) => (
                 <div
                     key={t.id}
-                    className="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl border shadow-2xl animate-slide-up"
+                    className="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl border shadow-2xl animate-slide-up bg-background"
                     style={{
-                        background: "#0a0f0a",
                         borderColor: t.type === "success" ? "rgba(73,182,24,0.4)" : "rgba(0,128,1,0.3)",
                     }}
                 >
@@ -192,10 +192,10 @@ function ToastContainer({ toasts, onRemove }: { toasts: Toast[]; onRemove: (id: 
                         className="w-4 h-4 flex-shrink-0"
                         style={{ color: t.type === "success" ? "#49B618" : "#008001" }}
                     />
-                    <span className="text-sm text-white">{t.message}</span>
+                    <span className="text-sm text-foreground">{t.message}</span>
                     <button
                         onClick={() => onRemove(t.id)}
-                        className="ml-2 text-[#555] hover:text-white transition-colors"
+                        className="ml-2 text-muted-foreground hover:text-foreground transition-colors"
                     >
                         <X className="w-3 h-3" />
                     </button>
@@ -258,7 +258,7 @@ function ConfirmModal({
             onClick={onClose}
         >
             <div
-                className="bg-[#0a0f0a] border border-[#008001]/30 rounded-t-2xl sm:rounded-2xl p-5 sm:p-6 w-full sm:max-w-md shadow-2xl"
+                className="bg-popover border-border rounded-t-2xl sm:rounded-2xl p-5 sm:p-6 w-full sm:max-w-md shadow-2xl"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
@@ -270,14 +270,14 @@ function ConfirmModal({
                         <Icon className="w-5 h-5" style={{ color: c.iconColor }} />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <h3 className="text-white font-bold text-lg">{title}</h3>
-                        <p className="text-[#A0A0A0] text-sm mt-1 leading-relaxed">
+                        <h3 className="text-foreground font-bold text-lg">{title}</h3>
+                        <p className="text-muted-foreground text-sm mt-1 leading-relaxed">
                             {description}
                         </p>
                     </div>
                     <button
                         onClick={onClose}
-                        className="w-8 h-8 rounded-lg bg-[#1E1E1E] text-[#A0A0A0] hover:text-white flex items-center justify-center transition-colors flex-shrink-0"
+                        className="w-8 h-8 rounded-lg bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors flex-shrink-0"
                     >
                         <X className="w-4 h-4" />
                     </button>
@@ -289,14 +289,14 @@ function ConfirmModal({
                 <div className="flex gap-3 mt-5">
                     <Button
                         variant="outline"
-                        className="flex-1 text-sm h-10 border-[#008001]/30 text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20 rounded-xl"
+                        className="flex-1 text-sm h-10 border-border text-muted-foreground hover:text-foreground hover:bg-accent/20 rounded-xl"
                         onClick={onClose}
                         disabled={loading}
                     >
                         Cancel
                     </Button>
                     <Button
-                        className="flex-1 text-sm h-10 text-white rounded-xl"
+                        className="flex-1 text-sm h-10 rounded-xl"
                         style={{ background: c.bg }}
                         onClick={onConfirm}
                         disabled={loading}
@@ -360,18 +360,18 @@ function PaymentModal({
             onClick={onClose}
         >
             <div
-                className="bg-[#0a0f0a] border border-[#008001]/30 rounded-t-2xl sm:rounded-2xl p-5 sm:p-6 w-full sm:max-w-md shadow-2xl"
+                className="bg-popover border-border rounded-t-2xl sm:rounded-2xl p-5 sm:p-6 w-full sm:max-w-md shadow-2xl"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
                 <div className="flex items-center justify-between mb-5">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#008001] to-[#49B618] flex items-center justify-center">
-                            <CreditCard className="w-5 h-5 text-white" />
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                            <CreditCard className="w-5 h-5 text-primary-foreground" />
                         </div>
                         <div>
-                            <h3 className="text-white font-bold text-lg">Update Payment</h3>
-                            <p className="text-xs text-[#A0A0A0] mt-0.5">
+                            <h3 className="text-foreground font-bold text-lg">Update Payment</h3>
+                            <p className="text-xs text-muted-foreground mt-0.5">
                                 Current:{" "}
                                 {currentMethod
                                     ? `${currentMethod.brand} •••• ${currentMethod.last4}`
@@ -381,7 +381,7 @@ function PaymentModal({
                     </div>
                     <button
                         onClick={onClose}
-                        className="w-8 h-8 rounded-lg bg-[#1E1E1E] text-[#A0A0A0] hover:text-white flex items-center justify-center transition-colors"
+                        className="w-8 h-8 rounded-lg bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors"
                     >
                         <X className="w-4 h-4" />
                     </button>
@@ -390,34 +390,34 @@ function PaymentModal({
                 {/* Fields */}
                 <div className="space-y-3">
                     <div>
-                        <label className="text-xs text-[#A0A0A0] mb-1.5 block">Card Number</label>
+                        <label className="text-xs text-muted-foreground mb-1.5 block">Card Number</label>
                         <input
                             type="text"
                             value={cardNumber}
                             onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
                             placeholder="4242 4242 4242 4242"
-                            className="w-full h-10 px-4 rounded-xl bg-[#1E1E1E] border border-[#008001]/20 text-white text-sm placeholder:text-[#555] focus:outline-none focus:border-[#49B618]/50 transition-colors"
+                            className="w-full h-10 px-4 rounded-xl bg-input border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
                         />
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="text-xs text-[#A0A0A0] mb-1.5 block">Expiry</label>
+                            <label className="text-xs text-muted-foreground mb-1.5 block">Expiry</label>
                             <input
                                 type="text"
                                 value={expiry}
                                 onChange={(e) => setExpiry(formatExpiry(e.target.value))}
                                 placeholder="MM/YY"
-                                className="w-full h-10 px-4 rounded-xl bg-[#1E1E1E] border border-[#008001]/20 text-white text-sm placeholder:text-[#555] focus:outline-none focus:border-[#49B618]/50 transition-colors"
+                                className="w-full h-10 px-4 rounded-xl bg-input border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
                             />
                         </div>
                         <div>
-                            <label className="text-xs text-[#A0A0A0] mb-1.5 block">CVC</label>
+                            <label className="text-xs text-muted-foreground mb-1.5 block">CVC</label>
                             <input
                                 type="text"
                                 value={cvc}
                                 onChange={(e) => setCvc(e.target.value.replace(/\D/g, "").slice(0, 4))}
                                 placeholder="123"
-                                className="w-full h-10 px-4 rounded-xl bg-[#1E1E1E] border border-[#008001]/20 text-white text-sm placeholder:text-[#555] focus:outline-none focus:border-[#49B618]/50 transition-colors"
+                                className="w-full h-10 px-4 rounded-xl bg-input border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
                             />
                         </div>
                     </div>
@@ -427,14 +427,14 @@ function PaymentModal({
                 <div className="flex gap-3 mt-5">
                     <Button
                         variant="outline"
-                        className="flex-1 text-sm h-10 border-[#008001]/30 text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20 rounded-xl"
+                        className="flex-1 text-sm h-10 border-border text-muted-foreground hover:text-foreground hover:bg-accent/20 rounded-xl"
                         onClick={onClose}
                         disabled={loading}
                     >
                         Cancel
                     </Button>
                     <Button
-                        className="flex-1 text-sm h-10 text-white rounded-xl"
+                        className="flex-1 text-sm h-10 rounded-xl"
                         style={{ background: "linear-gradient(135deg,#008001,#49B618)" }}
                         onClick={handleSave}
                         disabled={!canSubmit || loading}
@@ -466,7 +466,7 @@ function AnimatedProgress({
     }, [value, delay]);
 
     return (
-        <div className="h-2 bg-[#1E1E1E] rounded-full overflow-hidden">
+        <div className="h-2 bg-muted rounded-full overflow-hidden">
             <div
                 className="h-full rounded-full transition-all duration-1000 ease-out"
                 style={{
@@ -494,10 +494,10 @@ function UsageStat({
 }) {
     return (
         <div className="space-y-2">
-            <p className="text-xs sm:text-sm text-[#A0A0A0]">{label}</p>
-            <p className="text-xl sm:text-2xl font-bold text-white">{value}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">{label}</p>
+            <p className="text-xl sm:text-2xl font-bold text-foreground">{value}</p>
             <AnimatedProgress value={pct} color={color} delay={delay} />
-            <p className="text-[10px] text-[#555]">{pct}% used</p>
+            <p className="text-[10px] text-muted-foreground/70">{pct}% used</p>
         </div>
     );
 }
@@ -521,7 +521,6 @@ export function Billing() {
     // Toasts
     const [toasts, setToasts] = useState<Toast[]>([]);
     const nextToastId = useCallback(() => Date.now(), []);
-
     const addToast = useCallback(
         (message: string, type: "success" | "info" = "success") => {
             const id = nextToastId();
@@ -530,10 +529,8 @@ export function Billing() {
         },
         [nextToastId]
     );
-
     const removeToast = (id: number) => setToasts((prev) => prev.filter((t) => t.id !== id));
 
-    // Downloading state per invoice
     const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
     useEffect(() => {
@@ -679,7 +676,6 @@ export function Billing() {
         addToast(`Downloaded ${invoice.invoiceNumber}`);
     };
 
-    // ── Derived ───────────────────────────────────────────────────────────────
     const targetPlan = targetPlanIdx !== null ? plans[targetPlanIdx] ?? null : null;
 
     return (
@@ -700,8 +696,8 @@ export function Billing() {
                 onConfirm={confirmCancel}
                 onClose={() => setModal(null)}
             >
-                <div className="p-3 rounded-xl bg-[#ef4444]/5 border border-[#ef4444]/20 mt-3">
-                    <p className="text-xs text-[#ef4444]">
+                <div className="p-3 rounded-xl bg-destructive/5 border border-destructive/20 mt-3">
+                    <p className="text-xs text-destructive">
                         ⚠ Your current usage and data will be retained, but some features will become unavailable.
                     </p>
                 </div>
@@ -722,14 +718,14 @@ export function Billing() {
                 onClose={() => { setModal(null); setTargetPlanIdx(null); }}
             >
                 {targetPlan && (
-                    <div className="p-3 rounded-xl bg-[#008001]/10 border border-[#008001]/20 mt-3 space-y-1">
+                    <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 mt-3 space-y-1">
                         {targetPlan.features.slice(0, 3).map((f) => (
                             <div key={f} className="flex items-center gap-2">
-                                <Check className="w-3 h-3 text-[#49B618] flex-shrink-0" />
-                                <span className="text-xs text-[#A0A0A0]">{f}</span>
+                                <Check className="w-3 h-3 text-accent flex-shrink-0" />
+                                <span className="text-xs text-muted-foreground">{f}</span>
                             </div>
                         ))}
-                        <p className="text-[10px] text-[#555] pt-1">
+                        <p className="text-[10px] text-muted-foreground/70 pt-1">
                             +{targetPlan.features.length - 3} more features
                         </p>
                     </div>
@@ -750,8 +746,8 @@ export function Billing() {
                 onConfirm={confirmPlanChange}
                 onClose={() => { setModal(null); setTargetPlanIdx(null); }}
             >
-                <div className="p-3 rounded-xl bg-[#fbbf24]/5 border border-[#fbbf24]/20 mt-3">
-                    <p className="text-xs text-[#fbbf24]">
+                <div className="p-3 rounded-xl bg-warning/5 border border-warning/20 mt-3">
+                    <p className="text-xs text-warning">
                         ⚠ Features from your current plan will be unavailable after downgrading.
                     </p>
                 </div>
@@ -769,30 +765,30 @@ export function Billing() {
             <div className="space-y-4 sm:space-y-6">
                 {/* ── Current Plan Banner ──────────────────────────────────── */}
                 <Card
-                    className="relative overflow-hidden bg-[#000000] border-2 border-[#49B618]/60 shadow-lg shadow-[#49B618]/10 transition-all duration-700"
+                    className="relative overflow-hidden bg-card border-2 border-accent/60 shadow-lg shadow-accent/10 transition-all duration-700"
                     style={{
                         opacity: mounted ? 1 : 0,
                         transform: mounted ? "translateY(0)" : "translateY(12px)",
                         transition: "opacity 0.5s ease, transform 0.5s ease",
                     }}
                 >
-                    <div className="absolute top-0 right-0 w-60 h-60 bg-gradient-to-br from-[#49B618] to-[#008001] opacity-[0.06] blur-3xl pointer-events-none" />
-                    <div className="absolute bottom-0 left-0 w-40 h-40 bg-gradient-to-tr from-[#008001] to-transparent opacity-[0.04] blur-3xl pointer-events-none" />
+                    <div className="absolute top-0 right-0 w-60 h-60 bg-gradient-to-br from-accent to-primary opacity-[0.06] blur-3xl pointer-events-none" />
+                    <div className="absolute bottom-0 left-0 w-40 h-40 bg-gradient-to-tr from-primary to-transparent opacity-[0.04] blur-3xl pointer-events-none" />
 
-                    <CardHeader className="border-b border-[#008001]/20 pb-4">
+                    <CardHeader className="border-b border-border pb-4">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-[#008001] to-[#49B618] flex items-center justify-center shadow-lg shadow-[#008001]/30">
-                                    <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg shadow-primary/30">
+                                    <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />
                                 </div>
                                 <div>
-                                    <CardTitle className="text-white text-base sm:text-lg flex items-center gap-2">
+                                    <CardTitle className="text-card-foreground text-base sm:text-lg flex items-center gap-2">
                                         {currentPlan ? `${currentPlan.name} Plan` : "Billing"}
-                                        <Badge className="bg-[#49B618]/20 text-[#49B618] border-[#49B618]/30 text-[10px] px-2 hover:bg-[#49B618]/20">
+                                        <Badge className="bg-accent/20 text-accent border-accent/30 text-[10px] px-2 hover:bg-accent/20">
                                             Active
                                         </Badge>
                                     </CardTitle>
-                                    <p className="text-xs text-[#A0A0A0] mt-0.5">
+                                    <p className="text-xs text-muted-foreground mt-0.5">
                                         {user?.subscriptionEndsAt
                                             ? `Renews on ${formatDate(user.subscriptionEndsAt)} · ${currentPlan?.price ?? "—"}/${currentPlan?.period ?? "—"}`
                                             : currentPlan?.name === "Free"
@@ -808,7 +804,7 @@ export function Billing() {
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        className="border-[#008001]/30 text-[#A0A0A0] hover:text-white hover:bg-[#ef4444]/10 hover:border-[#ef4444]/30 text-xs h-9 rounded-full transition-colors"
+                                        className="border-border text-muted-foreground hover:text-destructive hover:bg-destructive/10 hover:border-destructive/30 text-xs h-9 rounded-full transition-colors"
                                         onClick={handleCancelPlan}
                                     >
                                         Cancel Plan
@@ -817,7 +813,7 @@ export function Billing() {
                                 {currentPlanIdx < plans.length - 1 && (
                                     <Button
                                         size="sm"
-                                        className="text-white text-xs h-9 rounded-full gap-1.5"
+                                        className="text-primary-foreground text-xs h-9 rounded-full gap-1.5"
                                         style={{
                                             background: "linear-gradient(135deg,#008001,#49B618)",
                                         }}
@@ -860,8 +856,8 @@ export function Billing() {
 
                 {/* ── Plan Comparison ──────────────────────────────────────── */}
                 <div>
-                    <h3 className="text-base sm:text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-[#49B618]" />
+                    <h3 className="text-base sm:text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
                         Available Plans
                     </h3>
 
@@ -874,10 +870,10 @@ export function Billing() {
                             return (
                                 <Card
                                     key={plan.name}
-                                    className={`relative overflow-hidden bg-[#000000] transition-all duration-500 group hover:shadow-lg hover:shadow-[#008001]/10 ${
+                                    className={`relative overflow-hidden bg-card transition-all duration-500 group hover:shadow-lg hover:shadow-primary/10 ${
                                         isCurrent
-                                            ? "border-2 border-[#49B618]/60"
-                                            : "border border-[#008001]/30 hover:border-[#008001]/60"
+                                            ? "border-2 border-accent/60"
+                                            : "border border-border hover:border-primary/60"
                                     }`}
                                     style={{
                                         opacity: mounted ? 1 : 0,
@@ -886,41 +882,41 @@ export function Billing() {
                                     }}
                                 >
                                     {plan.popular && (
-                                        <div className="absolute -top-px left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#49B618] to-transparent" />
+                                        <div className="absolute -top-px left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-accent to-transparent" />
                                     )}
                                     {plan.popular && (
                                         <div className="absolute top-3 right-3">
-                                            <Badge className="bg-[#49B618]/20 text-[#49B618] border-[#49B618]/30 text-[10px] hover:bg-[#49B618]/20">
+                                            <Badge className="bg-accent/20 text-accent border-accent/30 text-[10px] hover:bg-accent/20">
                                                 Popular
                                             </Badge>
                                         </div>
                                     )}
-                                    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#008001] to-transparent opacity-0 group-hover:opacity-10 blur-3xl transition-opacity duration-500 pointer-events-none" />
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary to-transparent opacity-0 group-hover:opacity-10 blur-3xl transition-opacity duration-500 pointer-events-none" />
 
                                     <CardHeader className="pb-2">
                                         <div className="flex items-center gap-2.5 mb-3">
                                             <div
                                                 className={`w-9 h-9 rounded-lg flex items-center justify-center ${
                                                     isCurrent
-                                                        ? "bg-gradient-to-br from-[#008001] to-[#49B618]"
-                                                        : "bg-[#1E1E1E] border border-[#008001]/20"
+                                                        ? "bg-gradient-to-br from-primary to-accent"
+                                                        : "bg-muted border border-border"
                                                 }`}
                                             >
                                                 <PlanIcon
                                                     className={`w-4 h-4 ${
-                                                        isCurrent ? "text-white" : "text-[#A0A0A0]"
+                                                        isCurrent ? "text-primary-foreground" : "text-muted-foreground"
                                                     }`}
                                                 />
                                             </div>
-                                            <CardTitle className="text-white text-base">
+                                            <CardTitle className="text-card-foreground text-base">
                                                 {plan.name}
                                             </CardTitle>
                                         </div>
                                         <div className="mt-1">
-                                            <span className="text-3xl sm:text-4xl font-bold text-white">
+                                            <span className="text-3xl sm:text-4xl font-bold text-foreground">
                                                 {plan.price}
                                             </span>
-                                            <span className="text-xs sm:text-sm text-[#A0A0A0] ml-1">
+                                            <span className="text-xs sm:text-sm text-muted-foreground ml-1">
                                                 / {plan.period}
                                             </span>
                                         </div>
@@ -947,19 +943,19 @@ export function Billing() {
                                                     <div
                                                         className={`w-4 h-4 rounded-full flex items-center justify-center mt-0.5 flex-shrink-0 ${
                                                             isCurrent
-                                                                ? "bg-[#49B618]/20"
-                                                                : "bg-[#1E1E1E]"
+                                                                ? "bg-accent/20"
+                                                                : "bg-muted"
                                                         }`}
                                                     >
                                                         <Check
                                                             className={`w-2.5 h-2.5 ${
                                                                 isCurrent
-                                                                    ? "text-[#49B618]"
-                                                                    : "text-[#555]"
+                                                                    ? "text-accent"
+                                                                    : "text-muted-foreground/50"
                                                             }`}
                                                         />
                                                     </div>
-                                                    <span className="text-xs sm:text-sm text-[#A0A0A0]">
+                                                    <span className="text-xs sm:text-sm text-muted-foreground">
                                                         {feature}
                                                     </span>
                                                 </li>
@@ -968,7 +964,7 @@ export function Billing() {
 
                                         {isCurrent ? (
                                             <Button
-                                                className="w-full bg-[#1E1E1E] text-[#555] border border-[#008001]/20 cursor-default h-10 rounded-xl text-xs"
+                                                className="w-full bg-muted text-muted-foreground border-border cursor-default h-10 rounded-xl text-xs"
                                                 variant="outline"
                                                 disabled
                                             >
@@ -976,7 +972,7 @@ export function Billing() {
                                             </Button>
                                         ) : (
                                             <Button
-                                                className="w-full text-white h-10 rounded-xl text-xs hover:opacity-90 transition-opacity"
+                                                className="w-full text-primary-foreground h-10 rounded-xl text-xs hover:opacity-90 transition-opacity"
                                                 style={{
                                                     background: isUpgrade
                                                         ? "linear-gradient(135deg,#008001,#49B618)"
@@ -997,23 +993,23 @@ export function Billing() {
 
                 {/* ── Payment Method ───────────────────────────────────────── */}
                 <Card
-                    className="bg-[#000000] border-[#008001]/30 transition-all duration-500"
+                    className="bg-card border-border transition-all duration-500"
                     style={{
                         opacity: mounted ? 1 : 0,
                         transform: mounted ? "translateY(0)" : "translateY(12px)",
                         transition: "opacity 0.6s ease 400ms, transform 0.6s ease 400ms",
                     }}
                 >
-                    <CardHeader className="border-b border-[#008001]/20 pb-4">
+                    <CardHeader className="border-b border-border pb-4">
                         <div className="flex items-center justify-between">
-                            <CardTitle className="text-white text-base sm:text-lg flex items-center gap-2">
-                                <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-[#49B618]" />
+                            <CardTitle className="text-card-foreground text-base sm:text-lg flex items-center gap-2">
+                                <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
                                 Payment Method
                             </CardTitle>
                             <Button
                                 variant="outline"
                                 size="sm"
-                                className="border-[#008001]/30 text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20 text-xs h-9 rounded-full"
+                                className="border-border text-muted-foreground hover:text-foreground hover:bg-accent/20 text-xs h-9 rounded-full"
                                 onClick={handleUpdatePayment}
                             >
                                 Update
@@ -1022,45 +1018,45 @@ export function Billing() {
                     </CardHeader>
                     <CardContent className="pt-4">
                         <div
-                            className="flex items-center gap-4 p-4 rounded-xl border border-[#008001]/20 bg-[#111a11] hover:bg-[#0f1f0f] transition-colors group cursor-pointer"
+                            className="flex items-center gap-4 p-4 rounded-xl border border-border bg-muted/30 hover:bg-muted transition-colors group cursor-pointer"
                             onClick={handleUpdatePayment}
                         >
-                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#008001] to-[#49B618] flex items-center justify-center shadow-lg shadow-[#008001]/20 group-hover:shadow-[#008001]/30 transition-shadow">
-                                <CreditCard className="w-6 h-6 text-white" />
+                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg shadow-primary/20 group-hover:shadow-primary/30 transition-shadow">
+                                <CreditCard className="w-6 h-6 text-primary-foreground" />
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-white">
+                                <p className="text-sm font-medium text-foreground">
                                     {paymentMethod
                                         ? `${paymentMethod.brand} ending in ${paymentMethod.last4}`
                                         : "No payment method on file"}
                                 </p>
-                                <p className="text-xs text-[#A0A0A0] mt-0.5">
+                                <p className="text-xs text-muted-foreground mt-0.5">
                                     {paymentMethod ? `Expires ${paymentMethod.expiry}` : "Add a card to continue"}
                                 </p>
                             </div>
                             <Badge
                                 variant="outline"
-                                className="border-[#008001]/30 text-[#A0A0A0] text-[10px] hidden sm:flex"
+                                className="border-border text-muted-foreground text-[10px] hidden sm:flex"
                             >
                                 Default
                             </Badge>
-                            <ExternalLink className="w-4 h-4 text-[#555] group-hover:text-[#A0A0A0] transition-colors flex-shrink-0" />
+                            <ExternalLink className="w-4 h-4 text-muted-foreground/70 group-hover:text-foreground transition-colors flex-shrink-0" />
                         </div>
                     </CardContent>
                 </Card>
 
                 {/* ── Invoice History ──────────────────────────────────────── */}
                 <Card
-                    className="bg-[#000000] border-[#008001]/30 transition-all duration-500"
+                    className="bg-card border-border transition-all duration-500"
                     style={{
                         opacity: mounted ? 1 : 0,
                         transform: mounted ? "translateY(0)" : "translateY(12px)",
                         transition: "opacity 0.6s ease 600ms, transform 0.6s ease 600ms",
                     }}
                 >
-                    <CardHeader className="border-b border-[#008001]/20 pb-4">
-                        <CardTitle className="text-white text-base sm:text-lg flex items-center gap-2">
-                            <Receipt className="w-4 h-4 sm:w-5 sm:h-5 text-[#49B618]" />
+                    <CardHeader className="border-b border-border pb-4">
+                        <CardTitle className="text-card-foreground text-base sm:text-lg flex items-center gap-2">
+                            <Receipt className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
                             Invoice History
                         </CardTitle>
                     </CardHeader>
@@ -1070,12 +1066,12 @@ export function Billing() {
                         <div className="hidden md:block overflow-x-auto">
                             <Table>
                                 <TableHeader>
-                                    <TableRow className="border-[#008001]/20 hover:bg-transparent">
+                                    <TableRow className="border-border hover:bg-transparent">
                                         {["Invoice ID", "Date", "Amount", "Status", "Actions"].map(
                                             (h) => (
                                                 <TableHead
                                                     key={h}
-                                                    className="text-[#555] text-xs uppercase tracking-wider font-semibold"
+                                                    className="text-muted-foreground text-xs uppercase tracking-wider font-semibold"
                                                 >
                                                     {h}
                                                 </TableHead>
@@ -1087,7 +1083,7 @@ export function Billing() {
                                     {visibleInvoices.map((invoice, idx) => (
                                         <TableRow
                                             key={invoice.id}
-                                            className="border-[#008001]/10 hover:bg-[#008001]/5 transition-colors"
+                                            className="border-border/50 hover:bg-muted/50 transition-colors"
                                             style={{
                                                 opacity: mounted ? 1 : 0,
                                                 transform: mounted
@@ -1098,24 +1094,24 @@ export function Billing() {
                                                 }ms, transform 0.3s ease ${700 + idx * 80}ms`,
                                             }}
                                         >
-                                            <TableCell className="font-mono text-sm text-[#49B618] font-semibold">
+                                            <TableCell className="font-mono text-sm text-accent font-semibold">
                                                 {invoice.invoiceNumber}
                                             </TableCell>
-                                            <TableCell className="text-[#A0A0A0] text-sm">
+                                            <TableCell className="text-muted-foreground text-sm">
                                                 {formatDate(invoice.date)}
                                             </TableCell>
-                                            <TableCell className="text-white font-semibold text-sm">
+                                            <TableCell className="text-foreground font-semibold text-sm">
                                                 {formatCurrency(invoice.amount, invoice.currency)}
                                             </TableCell>
                                             <TableCell>
-                                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#49B618]/10 text-[#49B618] border border-[#49B618]/20">
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-[#49B618] flex-shrink-0" />
+                                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-accent/10 text-accent border border-accent/20">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-accent flex-shrink-0" />
                                                     {invoice.status}
                                                 </span>
                                             </TableCell>
                                             <TableCell>
                                                 <button
-                                                    className="flex items-center gap-1.5 text-[#A0A0A0] hover:text-white transition-colors text-xs disabled:opacity-50"
+                                                    className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors text-xs disabled:opacity-50"
                                                     onClick={() => handleDownload(invoice)}
                                                     disabled={downloadingId === invoice.id}
                                                 >
@@ -1136,11 +1132,11 @@ export function Billing() {
                         </div>
 
                         {/* Mobile */}
-                        <div className="md:hidden divide-y divide-[#008001]/10">
+                        <div className="md:hidden divide-y divide-border">
                             {visibleInvoices.map((invoice, idx) => (
                                 <div
                                     key={invoice.id}
-                                    className="p-4 hover:bg-[#008001]/5 transition-colors"
+                                    className="p-4 hover:bg-muted/50 transition-colors"
                                     style={{
                                         opacity: mounted ? 1 : 0,
                                         transform: mounted
@@ -1153,24 +1149,24 @@ export function Billing() {
                                 >
                                     <div className="flex items-start justify-between mb-2">
                                         <div>
-                                            <span className="font-mono text-sm font-semibold text-[#49B618]">
+                                            <span className="font-mono text-sm font-semibold text-accent">
                                                 {invoice.invoiceNumber}
                                             </span>
-                                            <p className="text-xs text-[#A0A0A0] mt-0.5">
+                                            <p className="text-xs text-muted-foreground mt-0.5">
                                                 {formatDate(invoice.date)}
                                             </p>
                                         </div>
-                                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#49B618]/10 text-[#49B618] border border-[#49B618]/20">
-                                            <span className="w-1 h-1 rounded-full bg-[#49B618]" />
+                                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-accent/10 text-accent border border-accent/20">
+                                            <span className="w-1 h-1 rounded-full bg-accent" />
                                             {invoice.status}
                                         </span>
                                     </div>
                                     <div className="flex items-center justify-between">
-                                        <p className="text-sm font-bold text-white">
+                                        <p className="text-sm font-bold text-foreground">
                                             {formatCurrency(invoice.amount, invoice.currency)}
                                         </p>
                                         <button
-                                            className="flex items-center gap-1 text-[#A0A0A0] hover:text-white transition-colors text-xs disabled:opacity-50"
+                                            className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors text-xs disabled:opacity-50"
                                             onClick={() => handleDownload(invoice)}
                                             disabled={downloadingId === invoice.id}
                                         >
@@ -1189,12 +1185,12 @@ export function Billing() {
                         </div>
 
                         {/* Footer */}
-                        <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-t border-[#008001]/10">
-                            <p className="text-xs text-[#555]">
+                        <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-t border-border">
+                            <p className="text-xs text-muted-foreground/70">
                                 Showing {visibleInvoices.length} of {allInvoices.length} invoices
                             </p>
                             <button
-                                className="flex items-center gap-1.5 text-xs text-[#49B618] hover:text-white transition-colors"
+                                className="flex items-center gap-1.5 text-xs text-accent hover:text-foreground transition-colors"
                                 onClick={() => setShowAllInvoices((v) => !v)}
                             >
                                 {showAllInvoices ? "Show less" : "View all invoices"}
