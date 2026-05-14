@@ -17,6 +17,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
 import { useUser } from '@/contexts/UserContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import {
   getBusinessProfile,
   getCards,
@@ -125,7 +126,7 @@ const funnelSteps = [
 // ─────────────────────────────────────────────────────────────────
 function SectionSkeleton({ height = 'h-64' }: { height?: string }) {
   return (
-    <div className={`${height} rounded-2xl bg-[#0d1a0d]/60 border border-[#008001]/10 animate-pulse`} />
+    <div className={`${height} rounded-2xl bg-muted/60 border border-border animate-pulse`} />
   );
 }
 
@@ -288,6 +289,11 @@ export function ComprehensiveDashboard({ onNavigate }: { onNavigate?: (page: str
     return () => observer.disconnect();
   }, [goalsLoaded]);
 
+  const { isDark } = useTheme();
+  const tooltipStyle = isDark
+    ? { background: '#000000', border: '1px solid #008001', borderRadius: '12px', color: '#FFFFFF', fontSize: '12px' }
+    : { background: '#ffffff', border: '1px solid #008001', borderRadius: '12px', color: '#000000', fontSize: '12px' };
+
   const firstName = profile.name ? profile.name.split(" ")[0] : "";
   const profileCompletion = analytics?.profileCompletion ?? 0;
   const engagementScore = analytics?.engagementScore ?? 0;
@@ -396,7 +402,7 @@ export function ComprehensiveDashboard({ onNavigate }: { onNavigate?: (page: str
     <div className="space-y-4 sm:space-y-6">
 
       {/* ── Welcome Banner ── */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#000000] via-[#008001]/30 to-[#000000] p-5 sm:p-8 shadow-2xl border border-[#008001]/30">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-background via-[#008001]/30 to-background p-5 sm:p-8 shadow-2xl border border-[#008001]/30">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwODAwMSIgc3Ryb2tlLW9wYWNpdHk9IjAuMSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-30" />
 
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
@@ -404,22 +410,22 @@ export function ComprehensiveDashboard({ onNavigate }: { onNavigate?: (page: str
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2 sm:mb-3">
               <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-[#49B618] animate-pulse" />
-              <span className="text-[#A0A0A0] text-xs sm:text-sm font-medium">The Future of Business Cards</span>
+              <span className="text-muted-foreground text-xs sm:text-sm font-medium">The Future of Business Cards</span>
             </div>
-            <h1 className="text-2xl sm:text-4xl font-bold text-white mb-1 sm:mb-2">Welcome back, {firstName}!</h1>
-            <p className="text-[#A0A0A0] mb-4 sm:mb-6 text-sm sm:text-lg">Your digital business card is performing great today</p>
+            <h1 className="text-2xl sm:text-4xl font-bold text-foreground mb-1 sm:mb-2">Welcome back, {firstName}!</h1>
+            <p className="text-foreground/70 mb-4 sm:mb-6 text-sm sm:text-lg">Your digital business card is performing great today</p>
 
-            <div className="bg-[#000000]/50 backdrop-blur-xl rounded-xl p-4 sm:p-5 border border-[#008001]/30 max-w-md">
+            <div className="bg-background/50 backdrop-blur-xl rounded-xl p-4 sm:p-5 border border-[#008001]/30 max-w-md">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-white font-semibold text-sm sm:text-base">Profile Completion</span>
-                <span className="text-white font-bold text-base sm:text-lg">{profileCompletion}%</span>
+                <span className="text-foreground font-semibold text-sm sm:text-base">Profile Completion</span>
+                <span className="text-foreground font-bold text-base sm:text-lg">{profileCompletion}%</span>
               </div>
-              <div className="relative h-3 bg-[#1E1E1E] rounded-full overflow-hidden">
+              <div className="relative h-3 bg-muted rounded-full overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-r from-[#008001] to-[#49B618] rounded-full transition-all duration-1000" style={{ width: `${profileCompletion}%` }} />
               </div>
               <div className="flex items-center gap-2 mt-3 text-xs sm:text-sm">
                 <CheckCircle2 className="w-4 h-4 text-[#49B618] flex-shrink-0" />
-                <span className="text-[#A0A0A0]">Almost there! Add social links to reach 100%</span>
+                <span className="text-muted-foreground">Almost there! Add social links to reach 100%</span>
               </div>
             </div>
           </div>
@@ -448,12 +454,12 @@ export function ComprehensiveDashboard({ onNavigate }: { onNavigate?: (page: str
                   : 'from-red-500 to-red-700',
               },
             ].map(({ icon: Icon, label, value, badge, badgeCls, gradient }) => (
-              <div key={label} className="bg-[#000000]/50 backdrop-blur-xl rounded-xl p-4 sm:p-6 border border-[#008001]/30 text-center flex-1 sm:min-w-32">
+              <div key={label} className="bg-background/50 backdrop-blur-xl rounded-xl p-4 sm:p-6 border border-[#008001]/30 text-center flex-1 sm:min-w-32">
                 <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br ${gradient} flex items-center justify-center mx-auto mb-2 sm:mb-3`}>
                   <Icon className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
                 </div>
-                <p className="text-[#A0A0A0] text-xs sm:text-sm mb-1">{label}</p>
-                <p className="text-2xl sm:text-4xl font-bold text-white">{value}</p>
+                <p className="text-muted-foreground text-xs sm:text-sm mb-1">{label}</p>
+                <p className="text-2xl sm:text-4xl font-bold text-foreground">{value}</p>
                 <Badge className={`mt-1 sm:mt-2 ${badgeCls} text-xs`}>
                   {label === 'This Week' && !thisWeekTrendUp
                     ? <TrendingDown className="w-3 h-3 mr-1" />
@@ -472,7 +478,7 @@ export function ComprehensiveDashboard({ onNavigate }: { onNavigate?: (page: str
           const Icon = stat.icon;
           const TrendIcon = stat.trend === 'up' ? TrendingUp : TrendingDown;
           return (
-            <Card key={index} className="relative overflow-hidden bg-[#000000] border-[#008001]/30 hover:shadow-lg hover:shadow-[#008001]/20 transition-all group">
+            <Card key={index} className="relative overflow-hidden bg-card border-[#008001]/30 hover:shadow-lg hover:shadow-[#008001]/20 transition-all group">
               <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${stat.gradient} opacity-10 blur-3xl group-hover:opacity-20 transition-opacity`} />
               <CardContent className="p-4 sm:p-6 relative z-10">
                 <div className="flex items-start justify-between mb-3 sm:mb-4">
@@ -483,9 +489,9 @@ export function ComprehensiveDashboard({ onNavigate }: { onNavigate?: (page: str
                     <TrendIcon className="w-3 h-3 mr-1" />{stat.change}
                   </Badge>
                 </div>
-                <h3 className="text-xl sm:text-3xl font-bold text-white">{stat.value}</h3>
-                <p className="text-xs sm:text-sm text-[#A0A0A0] mt-0.5 sm:mt-1">{stat.title}</p>
-                <div className="flex items-center gap-1 text-xs text-[#A0A0A0] mt-1 sm:mt-2">
+                <h3 className="text-xl sm:text-3xl font-bold text-foreground">{stat.value}</h3>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">{stat.title}</p>
+                <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1 sm:mt-2">
                   <Clock className="w-3 h-3" /><span>Last 30 days</span>
                 </div>
               </CardContent>
@@ -507,11 +513,11 @@ export function ComprehensiveDashboard({ onNavigate }: { onNavigate?: (page: str
         <div className="lg:col-span-2 flex flex-col gap-4 sm:gap-6">
 
           {/* Engagement chart */}
-          <Card className="bg-[#000000] border-[#008001]/30">
+          <Card className="bg-card border-[#008001]/30">
             <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-[#008001]/30 pb-4">
               <div>
-                <CardTitle className="text-white text-base sm:text-lg">Engagement Analytics</CardTitle>
-                <p className="text-xs sm:text-sm text-[#A0A0A0] mt-0.5">Track your performance over time</p>
+                <CardTitle className="text-foreground text-base sm:text-lg">Engagement Analytics</CardTitle>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Track your performance over time</p>
               </div>
               <div className="flex gap-2">
                 {(['30', '7', '90'] as const).map((p) => (
@@ -522,7 +528,7 @@ export function ComprehensiveDashboard({ onNavigate }: { onNavigate?: (page: str
                     className={`h-7 sm:h-8 px-2 sm:px-3 text-xs ${
                       chartPeriod === p
                         ? 'bg-gradient-to-r from-[#008001] to-[#49B618] hover:from-[#006312] hover:to-[#008001] text-white'
-                        : 'border border-[#008001]/30 bg-transparent text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20'
+                        : 'border border-[#008001]/30 bg-transparent text-muted-foreground hover:text-white hover:bg-[#008001]/20'
                     }`}
                   >
                     {p} Days
@@ -551,7 +557,7 @@ export function ComprehensiveDashboard({ onNavigate }: { onNavigate?: (page: str
                     <CartesianGrid strokeDasharray="3 3" stroke="#008001" strokeOpacity={0.2} />
                     <XAxis dataKey="date" stroke="#A0A0A0" fontSize={11} />
                     <YAxis stroke="#A0A0A0" fontSize={11} width={30} />
-                    <Tooltip contentStyle={{ background: '#000000', border: '1px solid #008001', borderRadius: '12px', color: '#FFFFFF', fontSize: '12px' }} />
+                    <Tooltip contentStyle={tooltipStyle} />
                     <Legend wrapperStyle={{ fontSize: '11px' }} />
                     <Area type="monotone" dataKey="leads" stroke="#006312" strokeWidth={2} fill="url(#colorLeads)" />
                     <Area type="monotone" dataKey="taps"  stroke="#008001" strokeWidth={3} fill="url(#colorTaps)"  />
@@ -563,15 +569,15 @@ export function ComprehensiveDashboard({ onNavigate }: { onNavigate?: (page: str
           </Card>
 
           {/* Conversion Funnel */}
-          <Card className="bg-[#000000] border-[#008001]/30">
+          <Card className="bg-card border-[#008001]/30">
             <CardHeader className="border-b border-[#008001]/30 py-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-white flex items-center gap-2 text-base sm:text-lg">
+                  <CardTitle className="text-foreground flex items-center gap-2 text-base sm:text-lg">
                     <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-[#49B618]" />
                     Conversion Funnel
                   </CardTitle>
-                  <p className="text-xs sm:text-sm text-[#A0A0A0] mt-0.5">How taps turn into real connections</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">How taps turn into real connections</p>
                 </div>
                 <Badge className="bg-[#008001]/20 text-[#49B618] border-[#008001]/30 text-xs">7.4% end-to-end</Badge>
               </div>
@@ -598,13 +604,13 @@ export function ComprehensiveDashboard({ onNavigate }: { onNavigate?: (page: str
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between mb-1">
-                              <span className="text-xs sm:text-sm font-semibold text-white truncate">{step.label}</span>
+                              <span className="text-xs sm:text-sm font-semibold text-foreground truncate">{step.label}</span>
                               <div className="flex items-center gap-1 sm:gap-2 ml-2 flex-shrink-0">
                                 <span className="text-xs sm:text-sm font-bold" style={{ color: colors[i] }}>{step.value.toLocaleString()}</span>
-                                <span className="text-xs text-[#A0A0A0]">{step.percentage}%</span>
+                                <span className="text-xs text-muted-foreground">{step.percentage}%</span>
                               </div>
                             </div>
-                            <div className="h-2 bg-[#1E1E1E] rounded-full overflow-hidden">
+                            <div className="h-2 bg-muted rounded-full overflow-hidden">
                               <div className="h-full rounded-full transition-all duration-700"
                                 style={{ width: `${step.percentage}%`, background: `linear-gradient(90deg, ${colors[i]}aa, ${colors[i]})`, boxShadow: `0 0 6px ${colors[i]}55` }} />
                             </div>
@@ -618,15 +624,15 @@ export function ComprehensiveDashboard({ onNavigate }: { onNavigate?: (page: str
                 {/* Conversion summary — hidden on small mobile, shown sm+ */}
                 <div className="hidden sm:flex flex-shrink-0 w-28 sm:w-32 flex-col items-center gap-3 self-center">
                   <div className="w-full p-3 sm:p-4 rounded-xl bg-gradient-to-br from-[#008001]/10 to-[#49B618]/5 border border-[#008001]/30 text-center">
-                    <p className="text-xs text-[#A0A0A0] mb-1">Conversion</p>
+                    <p className="text-xs text-muted-foreground mb-1">Conversion</p>
                     <p className="text-2xl sm:text-3xl font-bold text-[#49B618]">7.4%</p>
-                    <p className="text-xs text-[#A0A0A0] mt-1">tap → share</p>
+                    <p className="text-xs text-muted-foreground mt-1">tap → share</p>
                     <div className="flex items-center justify-center gap-1 mt-2">
                       <TrendingUp className="w-3 h-3 text-[#49B618]" />
                       <span className="text-xs text-[#49B618] font-medium">+2.1%</span>
                     </div>
                   </div>
-                  <p className="text-xs text-[#A0A0A0] text-center leading-relaxed">
+                  <p className="text-xs text-muted-foreground text-center leading-relaxed">
                     Best fix: add a profile photo for <span className="text-[#49B618]">+18% views</span>
                   </p>
                 </div>
@@ -639,9 +645,9 @@ export function ComprehensiveDashboard({ onNavigate }: { onNavigate?: (page: str
         <div className="flex flex-col gap-4 sm:gap-6">
 
           {/* Device Distribution */}
-          <Card className="bg-[#000000] border-[#008001]/30">
+          <Card className="bg-card border-[#008001]/30">
             <CardHeader className="border-b border-[#008001]/30">
-              <CardTitle className="text-sm sm:text-base text-white">Device Distribution</CardTitle>
+              <CardTitle className="text-sm sm:text-base text-foreground">Device Distribution</CardTitle>
             </CardHeader>
             <CardContent className="pt-4 sm:pt-6">
               <div className="h-40 sm:h-48 min-w-0 min-h-[160px] sm:min-h-[192px]">
@@ -650,18 +656,18 @@ export function ComprehensiveDashboard({ onNavigate }: { onNavigate?: (page: str
                     <Pie data={deviceDistributionData} cx="50%" cy="50%" innerRadius={45} outerRadius={65} paddingAngle={3} dataKey="value">
                       {deviceDistributionData.map((entry, index) => (<Cell key={`cell-${index}`} fill={entry.color} />))}
                     </Pie>
-                    <Tooltip contentStyle={{ background: '#000000', border: '1px solid #008001', color: '#FFFFFF', fontSize: '12px' }} />
+                    <Tooltip contentStyle={tooltipStyle} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
               <div className="space-y-2 mt-3 sm:mt-4">
                 {deviceDistributionData.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 rounded-lg bg-[#1E1E1E]">
+                  <div key={index} className="flex items-center justify-between p-2 rounded-lg bg-muted">
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
-                      <span className="text-xs sm:text-sm text-[#A0A0A0]">{item.name}</span>
+                      <span className="text-xs sm:text-sm text-muted-foreground">{item.name}</span>
                     </div>
-                    <span className="text-xs sm:text-sm font-bold text-white">{item.value}%</span>
+                    <span className="text-xs sm:text-sm font-bold text-foreground">{item.value}%</span>
                   </div>
                 ))}
               </div>
@@ -669,11 +675,11 @@ export function ComprehensiveDashboard({ onNavigate }: { onNavigate?: (page: str
           </Card>
 
           {/* Top Locations */}
-          <Card className="bg-[#000000] border-[#008001]/30">
+          <Card className="bg-card border-[#008001]/30">
             <CardHeader className="border-b border-[#008001]/30">
               <div className="flex items-center gap-2">
                 <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-[#49B618]" />
-                <CardTitle className="text-sm sm:text-base text-white">Top Locations</CardTitle>
+                <CardTitle className="text-sm sm:text-base text-foreground">Top Locations</CardTitle>
               </div>
             </CardHeader>
             <CardContent className="pt-3 sm:pt-4">
@@ -684,19 +690,19 @@ export function ComprehensiveDashboard({ onNavigate }: { onNavigate?: (page: str
                       <div className="flex items-center gap-2">
                         <span className="text-lg sm:text-2xl">{location.flag}</span>
                         <div>
-                          <p className="text-xs sm:text-sm font-medium text-white leading-tight">{location.country}</p>
-                          <p className="text-[10px] sm:text-xs text-[#A0A0A0]">{location.visitors} visitors</p>
+                          <p className="text-xs sm:text-sm font-medium text-foreground leading-tight">{location.country}</p>
+                          <p className="text-[10px] sm:text-xs text-muted-foreground">{location.visitors} visitors</p>
                         </div>
                       </div>
-                      <span className="text-xs sm:text-sm font-bold text-white">{location.percentage}%</span>
+                      <span className="text-xs sm:text-sm font-bold text-foreground">{location.percentage}%</span>
                     </div>
-                    <div className="h-1.5 sm:h-2 bg-[#1E1E1E] rounded-full overflow-hidden">
+                    <div className="h-1.5 sm:h-2 bg-muted rounded-full overflow-hidden">
                       <div className="h-full bg-gradient-to-r from-[#008001] to-[#49B618] rounded-full transition-all duration-1000"
                         style={{ width: `${location.percentage}%` }} />
                     </div>
                   </div>
                 )) : (
-                  <p className="text-xs text-[#A0A0A0] text-center py-4">No location data available</p>
+                  <p className="text-xs text-muted-foreground text-center py-4">No location data available</p>
                 )}
               </div>
             </CardContent>
@@ -707,21 +713,21 @@ export function ComprehensiveDashboard({ onNavigate }: { onNavigate?: (page: str
 
       {/* ── Recent Card Taps — 1-col mobile, 2-col sm, 3-col lg ── */}
       <LazySection skeleton={<SectionSkeleton height="h-48" />}>
-      <Card className="bg-[#000000] border-[#008001]/30">
+      <Card className="bg-card border-[#008001]/30">
         <CardHeader className="border-b border-[#008001]/30">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-white flex items-center gap-2 text-base sm:text-lg">
+              <CardTitle className="text-foreground flex items-center gap-2 text-base sm:text-lg">
                 <Activity className="w-4 h-4 sm:w-5 sm:h-5 text-[#49B618]" />
                 Recent Card Taps
               </CardTitle>
-              <p className="text-xs sm:text-sm text-[#A0A0A0] mt-1">Live interactions with your digital card</p>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1">Live interactions with your digital card</p>
             </div>
             <Button
               onClick={() => onNavigate?.('analytics')}
               variant="outline"
               size="sm"
-              className="border-[#008001]/30 text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20 text-xs sm:text-sm h-8"
+              className="border-[#008001]/30 text-muted-foreground hover:text-white hover:bg-[#008001]/20 text-xs sm:text-sm h-8"
             >
               View All <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2" />
             </Button>
@@ -730,7 +736,7 @@ export function ComprehensiveDashboard({ onNavigate }: { onNavigate?: (page: str
         <CardContent className="pt-4 sm:pt-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {recentTaps.map((tap) => (
-              <div key={tap.id} className="group relative overflow-hidden rounded-xl border border-[#008001]/30 bg-gradient-to-br from-black to-[#1E1E1E] p-3 sm:p-4 hover:shadow-lg hover:shadow-[#008001]/20 hover:border-[#49B618]/50 transition-all">
+              <div key={tap.id} className="group relative overflow-hidden rounded-xl border border-[#008001]/30 bg-gradient-to-br from-background to-card p-3 sm:p-4 hover:shadow-lg hover:shadow-[#008001]/20 hover:border-[#49B618]/50 transition-all">
                 <div className="flex items-start gap-3 mb-3">
                   <div className="relative flex-shrink-0">
                     <Image
@@ -741,11 +747,11 @@ export function ComprehensiveDashboard({ onNavigate }: { onNavigate?: (page: str
                       unoptimized
                       className="w-10 h-10 sm:w-12 sm:h-12 rounded-full ring-2 ring-[#008001]/30 object-cover"
                     />
-                    <div className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full border-2 border-black ${tap.status === 'active' ? 'bg-[#49B618]' : 'bg-[#006312]'}`} />
+                    <div className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full border-2 border-card ${tap.status === 'active' ? 'bg-[#49B618]' : 'bg-[#006312]'}`} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-white text-sm truncate">{tap.name}</h4>
-                    <div className="flex items-center gap-1 text-xs text-[#A0A0A0]">
+                    <h4 className="font-semibold text-foreground text-sm truncate">{tap.name}</h4>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
                       <MapPin className="w-3 h-3 flex-shrink-0" />
                       <span className="truncate">{tap.location}</span>
                     </div>
@@ -753,12 +759,12 @@ export function ComprehensiveDashboard({ onNavigate }: { onNavigate?: (page: str
                 </div>
                 <div className="space-y-1.5 sm:space-y-2">
                   <div className="flex items-center gap-2 text-xs sm:text-sm">
-                    <Smartphone className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#A0A0A0] flex-shrink-0" />
-                    <span className="text-[#A0A0A0] truncate">{tap.device}</span>
+                    <Smartphone className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground flex-shrink-0" />
+                    <span className="text-muted-foreground truncate">{tap.device}</span>
                   </div>
                   <div className="flex items-center justify-between gap-2">
                     <Badge className="bg-[#008001]/20 text-[#49B618] border-[#008001]/30 text-xs truncate max-w-[120px]">{tap.action}</Badge>
-                    <div className="flex items-center gap-1 text-xs text-[#A0A0A0] flex-shrink-0">
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground flex-shrink-0">
                       <Clock className="w-3 h-3" />{tap.time}
                     </div>
                   </div>
@@ -773,11 +779,11 @@ export function ComprehensiveDashboard({ onNavigate }: { onNavigate?: (page: str
       {/* ── Most Clicked Links + Smart Insights ── */}
       <LazySection skeleton={<SectionSkeleton height="h-64" />}>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-        <Card className="lg:col-span-2 bg-[#000000] border-[#008001]/30">
+        <Card className="lg:col-span-2 bg-card border-[#008001]/30">
           <CardHeader className="border-b border-[#008001]/30">
             <div className="flex items-center gap-2">
               <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-[#49B618]" />
-              <CardTitle className="text-white text-base sm:text-lg">Most Clicked Links</CardTitle>
+              <CardTitle className="text-foreground text-base sm:text-lg">Most Clicked Links</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="pt-4 sm:pt-6 space-y-3 sm:space-y-4">
@@ -792,40 +798,40 @@ export function ComprehensiveDashboard({ onNavigate }: { onNavigate?: (page: str
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1 sm:mb-2">
-                        <span className="text-xs sm:text-sm font-semibold text-white">{link.name}</span>
-                        <span className="text-xs sm:text-sm text-[#A0A0A0] ml-2">{link.clicks} clicks</span>
+                        <span className="text-xs sm:text-sm font-semibold text-foreground">{link.name}</span>
+                        <span className="text-xs sm:text-sm text-muted-foreground ml-2">{link.clicks} clicks</span>
                       </div>
-                      <div className="h-1.5 sm:h-2 bg-[#1E1E1E] rounded-full overflow-hidden">
+                      <div className="h-1.5 sm:h-2 bg-muted rounded-full overflow-hidden">
                         <div className="h-full rounded-full" style={{ width: `${link.percentage}%`, background: `linear-gradient(90deg, ${link.color}, ${link.color}cc)` }} />
                       </div>
                     </div>
                   </div>
-                  <span className="text-sm sm:text-lg font-bold text-white flex-shrink-0">{link.percentage}%</span>
+                  <span className="text-sm sm:text-lg font-bold text-foreground flex-shrink-0">{link.percentage}%</span>
                 </div>
               );
             })}
           </CardContent>
         </Card>
 
-        <Card className="bg-[#000000] border-[#008001]/30">
+        <Card className="bg-card border-[#008001]/30">
           <CardHeader className="border-b border-[#008001]/30">
             <div className="flex items-center gap-2">
               <Lightbulb className="w-4 h-4 sm:w-5 sm:h-5 text-[#49B618]" />
-              <CardTitle className="text-sm sm:text-base text-white">Smart Insights</CardTitle>
+              <CardTitle className="text-sm sm:text-base text-foreground">Smart Insights</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="pt-3 sm:pt-4 space-y-3">
             {recommendations.map((rec, i) => {
               const Icon = rec.icon;
               return (
-                <div key={i} className="p-3 rounded-lg border border-[#008001]/30 bg-gradient-to-br from-black to-[#1E1E1E] hover:shadow-md hover:shadow-[#008001]/20 transition-all">
+                <div key={i} className="p-3 rounded-lg border border-[#008001]/30 bg-gradient-to-br from-background to-card hover:shadow-md hover:shadow-[#008001]/20 transition-all">
                   <div className="flex items-start gap-3">
                     <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br ${rec.color} flex items-center justify-center flex-shrink-0`}>
                       <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-white text-xs sm:text-sm mb-1">{rec.title}</h4>
-                      <p className="text-xs text-[#A0A0A0] leading-relaxed">{rec.desc}</p>
+                      <h4 className="font-semibold text-foreground text-xs sm:text-sm mb-1">{rec.title}</h4>
+                      <p className="text-xs text-muted-foreground leading-relaxed">{rec.desc}</p>
                       <Badge className={`mt-2 text-xs ${
                         rec.priority === 'high'   ? 'bg-[#49B618]/20 text-[#49B618] border-[#49B618]/30' :
                         rec.priority === 'medium' ? 'bg-[#009200]/20 text-[#009200] border-[#009200]/30' :
@@ -848,28 +854,28 @@ export function ComprehensiveDashboard({ onNavigate }: { onNavigate?: (page: str
 
       {/* ── Month-over-Month — 2-col mobile, 4-col desktop ── */}
       <LazySection skeleton={<SectionSkeleton height="h-40" />}>
-      <Card className="bg-[#000000] border-[#008001]/30">
+      <Card className="bg-card border-[#008001]/30">
         <CardHeader className="border-b border-[#008001]/30">
-          <CardTitle className="text-white flex items-center gap-2 text-base sm:text-lg">
+          <CardTitle className="text-foreground flex items-center gap-2 text-base sm:text-lg">
             <Target className="w-4 h-4 sm:w-5 sm:h-5 text-[#49B618]" />
             Month-over-Month Performance
           </CardTitle>
-          <p className="text-xs sm:text-sm text-[#A0A0A0]">Compare your growth metrics</p>
+          <p className="text-xs sm:text-sm text-muted-foreground">Compare your growth metrics</p>
         </CardHeader>
         <CardContent className="pt-4 sm:pt-6">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
             {monthOverMonthPerformance.map((item, i) => (
-              <div key={i} className="p-4 sm:p-6 rounded-xl border border-[#008001]/30 bg-gradient-to-br from-black to-[#1E1E1E] text-center">
-                <p className="text-xs sm:text-sm text-[#A0A0A0] mb-2">{item.metric}</p>
+              <div key={i} className="p-4 sm:p-6 rounded-xl border border-[#008001]/30 bg-gradient-to-br from-background to-card text-center">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-2">{item.metric}</p>
                 <div className="flex items-center justify-center gap-1 sm:gap-3 mb-2 sm:mb-3 flex-wrap">
                   <div>
-                    <p className="text-[10px] sm:text-xs text-[#A0A0A0]">Last</p>
-                    <p className="text-sm sm:text-lg font-semibold text-[#A0A0A0]">{item.lastMonth.toLocaleString()}</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">Last</p>
+                    <p className="text-sm sm:text-lg font-semibold text-muted-foreground">{item.lastMonth.toLocaleString()}</p>
                   </div>
-                  <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 text-[#A0A0A0]" />
+                  <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground" />
                   <div>
-                    <p className="text-[10px] sm:text-xs text-[#A0A0A0]">Now</p>
-                    <p className="text-lg sm:text-2xl font-bold text-white">{item.thisMonth.toLocaleString()}</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">Now</p>
+                    <p className="text-lg sm:text-2xl font-bold text-foreground">{item.thisMonth.toLocaleString()}</p>
                   </div>
                 </div>
                 <Badge className={`text-xs ${item.change > 0 ? 'bg-[#006312]/20 text-[#49B618] border-[#008001]/30' : 'bg-red-500/20 text-red-400 border-red-500/30'}`}>
@@ -889,25 +895,28 @@ export function ComprehensiveDashboard({ onNavigate }: { onNavigate?: (page: str
       {/* ── Goals — stack on mobile, side-by-side on sm+ ── */}
       <LazySection skeleton={<SectionSkeleton height="h-40" />}>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-        <Card className="bg-gradient-to-br from-[#008001] to-[#006312] text-white border-0 shadow-xl">
+        <Card className={isDark
+          ? "bg-gradient-to-br from-[#008001] to-[#006312] text-white border-0 shadow-xl"
+          : "bg-card border border-[#008001] shadow-xl"
+        }>
           <CardContent className="p-5 sm:p-8">
             <div className="flex items-start justify-between mb-4 sm:mb-6">
               <div>
                 <div className="flex items-center gap-2 mb-1 sm:mb-2">
-                  <Target className="w-5 h-5 sm:w-6 sm:h-6" />
-                  <h3 className="text-lg sm:text-xl font-bold">Monthly Goal</h3>
+                  <Target className={`w-5 h-5 sm:w-6 sm:h-6 ${!isDark ? 'text-[#008001]' : ''}`} />
+                  <h3 className={`text-lg sm:text-xl font-bold ${!isDark ? 'text-[#008001]' : ''}`}>Monthly Goal</h3>
                 </div>
-                <p className="text-white/80 text-xs sm:text-sm">{monthlyGoal.target.toLocaleString()} {monthlyGoal.metric}</p>
+                <p className={`text-xs sm:text-sm ${isDark ? 'text-white/80' : 'text-[#006312]'}`}>{monthlyGoal.target.toLocaleString()} {monthlyGoal.metric}</p>
               </div>
-              <Badge className="bg-white/20 text-white border-white/30 text-xs">{monthlyGoal.percentage}% Complete</Badge>
+              <Badge className={isDark ? "bg-white/20 text-white border-white/30 text-xs" : "bg-[#008001]/10 text-[#008001] border-[#008001]/40 text-xs"}>{monthlyGoal.percentage}% Complete</Badge>
             </div>
             <div className="space-y-2 sm:space-y-3">
-              <div className="flex items-center justify-between text-xs sm:text-sm">
+              <div className={`flex items-center justify-between text-xs sm:text-sm ${!isDark ? 'text-[#008001]' : ''}`}>
                 <span>Current Progress</span>
-                <span className="font-bold text-base sm:text-lg">{monthlyGoal.current.toLocaleString()} / {monthlyGoal.target.toLocaleString()}</span>
+                <span className={`font-bold text-base sm:text-lg ${!isDark ? 'text-foreground' : ''}`}>{monthlyGoal.current.toLocaleString()} / {monthlyGoal.target.toLocaleString()}</span>
               </div>
-              <Progress value={monthlyGoal.percentage} className="h-2 sm:h-3 bg-white/20" />
-              <div className="flex items-center gap-2 text-xs sm:text-sm text-white/80">
+              <Progress value={monthlyGoal.percentage} className={`h-2 sm:h-3 ${isDark ? 'bg-white/20' : 'bg-[#008001]/15'}`} />
+              <div className={`flex items-center gap-2 text-xs sm:text-sm ${isDark ? 'text-white/80' : 'text-[#006312]'}`}>
                 <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
                 <span>{monthlyGoal.statusText}</span>
               </div>
@@ -915,25 +924,28 @@ export function ComprehensiveDashboard({ onNavigate }: { onNavigate?: (page: str
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-[#49B618] to-[#009200] text-white border-0 shadow-xl">
+        <Card className={isDark
+          ? "bg-gradient-to-br from-[#49B618] to-[#009200] text-white border-0 shadow-xl"
+          : "bg-card border border-[#49B618] shadow-xl"
+        }>
           <CardContent className="p-5 sm:p-8">
             <div className="flex items-start justify-between mb-4 sm:mb-6">
               <div>
                 <div className="flex items-center gap-2 mb-1 sm:mb-2">
-                  <Sparkles className="w-5 h-5 sm:w-6 sm:h-6" />
-                  <h3 className="text-lg sm:text-xl font-bold">Weekly Challenge</h3>
+                  <Sparkles className={`w-5 h-5 sm:w-6 sm:h-6 ${!isDark ? 'text-[#49B618]' : ''}`} />
+                  <h3 className={`text-lg sm:text-xl font-bold ${!isDark ? 'text-[#49B618]' : ''}`}>Weekly Challenge</h3>
                 </div>
-                <p className="text-white/80 text-xs sm:text-sm">Get {weeklyChallenge.target.toLocaleString()} {weeklyChallenge.metric}</p>
+                <p className={`text-xs sm:text-sm ${isDark ? 'text-white/80' : 'text-[#009200]'}`}>Get {weeklyChallenge.target.toLocaleString()} {weeklyChallenge.metric}</p>
               </div>
-              <Badge className="bg-white/20 text-white border-white/30 text-xs">{weeklyChallenge.percentage}% Complete</Badge>
+              <Badge className={isDark ? "bg-white/20 text-white border-white/30 text-xs" : "bg-[#49B618]/10 text-[#49B618] border-[#49B618]/40 text-xs"}>{weeklyChallenge.percentage}% Complete</Badge>
             </div>
             <div className="space-y-2 sm:space-y-3">
-              <div className="flex items-center justify-between text-xs sm:text-sm">
+              <div className={`flex items-center justify-between text-xs sm:text-sm ${!isDark ? 'text-[#49B618]' : ''}`}>
                 <span>Current Progress</span>
-                <span className="font-bold text-base sm:text-lg">{weeklyChallenge.current.toLocaleString()} / {weeklyChallenge.target.toLocaleString()}</span>
+                <span className={`font-bold text-base sm:text-lg ${!isDark ? 'text-foreground' : ''}`}>{weeklyChallenge.current.toLocaleString()} / {weeklyChallenge.target.toLocaleString()}</span>
               </div>
-              <Progress value={weeklyChallenge.percentage} className="h-2 sm:h-3 bg-white/20" />
-              <div className="flex items-center gap-2 text-xs sm:text-sm text-white/80">
+              <Progress value={weeklyChallenge.percentage} className={`h-2 sm:h-3 ${isDark ? 'bg-white/20' : 'bg-[#49B618]/15'}`} />
+              <div className={`flex items-center gap-2 text-xs sm:text-sm ${isDark ? 'text-white/80' : 'text-[#009200]'}`}>
                 <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current flex-shrink-0" />
                 <span>{weeklyChallenge.statusText}</span>
               </div>

@@ -62,7 +62,7 @@
   /* Dark-first defaults matching the brand */
   --background: #000000;
   --foreground: #ededed;
-  --card: #1e1e1e;
+  --card: #000000;
   --card-foreground: #ededed;
   --popover: #1e1e1e;
   --popover-foreground: #ededed;
@@ -102,7 +102,7 @@
 .dark {
   --background: #000000;
   --foreground: #ededed;
-  --card: #1e1e1e;
+  --card: #000000;
   --card-foreground: #ededed;
   --popover: #1e1e1e;
   --popover-foreground: #ededed;
