@@ -116,7 +116,10 @@ interface MyCardsNewProps {
   onViewAnalytics?: (cardId: string, cardTitle: string) => void;
 }
 
+import { useTheme } from '@/contexts/ThemeContext';
+
 export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onViewAnalytics }: MyCardsNewProps = {}) {
+  const { isDark } = useTheme();
   const [cards, setCards] = useState<CardType[]>([]);
   const [, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -448,8 +451,8 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onVie
         {/* Row 1: title + create button */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white">My Cards</h1>
-            <p className="text-xs sm:text-sm text-[#A0A0A0] mt-0.5">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">My Cards</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
               {visible.length} of {cards.length} cards
             </p>
           </div>
@@ -458,7 +461,7 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onVie
             {/* Mobile filter toggle */}
             <button
               onClick={e => { e.stopPropagation(); setShowFilters(f => !f); }}
-              className="sm:hidden p-2 rounded-full border border-[#008001]/30 text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20 transition-colors"
+              className="sm:hidden p-2 rounded-full border border-[#008001]/30 text-muted-foreground hover:text-foreground hover:bg-[#008001]/20 transition-colors"
             >
               <SlidersHorizontal className="w-4 h-4" />
             </button>
@@ -477,16 +480,16 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onVie
         {/* Row 2: Search + filters */}
         <div className={`${showFilters ? 'flex' : 'hidden'} sm:flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3`}>
           <div className="relative flex-1 sm:max-w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A0A0A0]" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Search cards..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="pl-10 w-full bg-[#000000] border-[#008001]/30 text-white rounded-full h-10"
+              className="pl-10 w-full bg-card border-[#008001]/30 text-foreground rounded-full h-10"
             />
             {search && (
               <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2">
-                <X className="w-3 h-3 text-[#A0A0A0]" />
+                <X className="w-3 h-3 text-muted-foreground" />
               </button>
             )}
           </div>
@@ -496,7 +499,7 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onVie
               <SelectTrigger className="flex-1 sm:w-32 bg-[#008001] text-white border-0 rounded-full h-10 text-sm">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-[#000000] border-[#008001]/30">
+              <SelectContent className="bg-card border-[#008001]/30">
                 <SelectItem value="all">All Cards</SelectItem>
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="inactive">Inactive</SelectItem>
@@ -507,7 +510,7 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onVie
               <SelectTrigger className="flex-1 sm:w-40 bg-[#008001] text-white border-0 rounded-full h-10 text-sm">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-[#000000] border-[#008001]/30">
+              <SelectContent className="bg-card border-[#008001]/30">
                 <SelectItem value="recent">Sort: Recent</SelectItem>
                 <SelectItem value="views">Sort: Most Views</SelectItem>
                 <SelectItem value="name">Sort: A-Z</SelectItem>
@@ -529,7 +532,7 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onVie
           return (
             <Card
               key={card.id}
-              className="bg-[#000000] rounded-2xl border shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+              className="bg-card rounded-2xl border shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
               style={{
                 borderColor: `${theme.accent}4d`,
                 boxShadow: `0 8px 24px ${theme.accent}1a`,
@@ -537,18 +540,21 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onVie
             >
               <CardHeader className="p-3 sm:p-4">
                 <div className="flex items-center justify-between gap-2">
-                  <h3 className="text-sm sm:text-base font-bold text-white truncate">{card.title}</h3>
+                  <h3 className="text-sm sm:text-base font-bold text-foreground truncate">{card.title}</h3>
                   <div className="flex items-center gap-1.5 flex-shrink-0">
                     <Badge className={`rounded-full px-2 sm:px-3 text-xs font-bold ${card.status === 'ACTIVE'
                       ? 'hover:opacity-95'
-                      : 'bg-[#A0A0A0]/15 text-[#A0A0A0] hover:bg-[#A0A0A0]/15'
+                      : 'hover:opacity-90'
                       }`}
                       style={card.status === 'ACTIVE'
                         ? {
                           backgroundColor: `${theme.accent}26`,
                           color: theme.accentLight,
                         }
-                        : undefined
+                        : {
+                          backgroundColor: isDark ? 'rgba(160,160,160,0.15)' : 'rgba(100,100,100,0.15)',
+                          color: isDark ? '#A0A0A0' : '#4B5563',
+                        }
                       }>
                       {card.status === 'ACTIVE' ? 'Active' : 'Draft'}
                     </Badge>
@@ -557,22 +563,22 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onVie
                     <div className="relative" onClick={e => e.stopPropagation()}>
                       <button
                         onClick={() => setOpenMenu(openMenu === card.id ? null : card.id)}
-                        className="text-[#A0A0A0] hover:bg-[#1E1E1E] rounded-lg p-1"
+                        className="text-muted-foreground hover:bg-muted rounded-lg p-1"
                       >
                         <MoreVertical className="w-4 h-4" />
                       </button>
                       {openMenu === card.id && (
-                        <div className="absolute right-0 top-8 z-30 bg-[#0a0a0a] border border-[#008001]/30 rounded-xl shadow-2xl w-40 py-1">
+                        <div className="absolute right-0 top-8 z-30 bg-background border border-[#008001]/30 rounded-xl shadow-2xl w-40 py-1">
                           <button onClick={() => { setEditCard(card); setEditTitle(card.title || ''); setOpenMenu(null); }}
-                            className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#008001]/20 flex items-center gap-2">
+                            className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-[#008001]/20 flex items-center gap-2">
                             <Edit className="w-3 h-3" /> Rename
                           </button>
                           <button onClick={() => duplicateCard(card)} disabled={duplicatingId === card.id}
-                            className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#008001]/20 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                            className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-[#008001]/20 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
                             <Copy className="w-3 h-3" /> {duplicatingId === card.id ? 'Duplicating…' : 'Duplicate'}
                           </button>
                           <button onClick={() => { openPreview(card); setOpenMenu(null); }}
-                            className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#008001]/20 flex items-center gap-2">
+                            className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-[#008001]/20 flex items-center gap-2">
                             <Eye className="w-3 h-3" /> Preview
                           </button>
                           <button onClick={() => { setConfirmDelete(card.id); setOpenMenu(null); }}
@@ -621,35 +627,40 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onVie
                 </div>
 
                 {/* Stats row */}
-                <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
-                  {[
-                    { label: 'Taps', value: (card.taps ?? 0).toLocaleString(), onClick: undefined },
-                    { label: 'Views', value: (card.views ?? 0).toLocaleString(), onClick: undefined },
-                    { label: 'Leads', value: String(card.leads ?? 0), onClick: undefined },
-                  ].map(({ label, value, onClick }) => (
-                    <div
-                      key={label}
-                      onClick={onClick}
-                      className={`rounded-xl p-2 sm:p-3 text-center${onClick ? ' cursor-pointer hover:ring-1 hover:ring-[#008001]/40 transition-all' : ''}`}
-                      style={{ backgroundColor: theme.panel }}
-                    >
-                      <p className="text-sm sm:text-lg font-bold text-white">{value}</p>
-                      <p className="text-[10px] sm:text-xs text-[#A0A0A0]">{label}</p>
+                {(() => {
+                  const panelBg = theme.panel;
+                  return (
+                    <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
+                      {[
+                        { label: 'Taps', value: (card.taps ?? 0).toLocaleString(), onClick: undefined },
+                        { label: 'Views', value: (card.views ?? 0).toLocaleString(), onClick: undefined },
+                        { label: 'Leads', value: String(card.leads ?? 0), onClick: undefined },
+                      ].map(({ label, value, onClick }) => (
+                        <div
+                          key={label}
+                          onClick={onClick}
+                          className={`rounded-xl p-2 sm:p-3 text-center${onClick ? ' cursor-pointer hover:ring-1 hover:ring-[#008001]/40 transition-all' : ''}`}
+                          style={{ backgroundColor: panelBg }}
+                        >
+                          <p className="text-sm sm:text-lg font-bold text-white">{value}</p>
+                          <p className="text-[10px] sm:text-xs text-white/70">{label}</p>
+                        </div>
+                      ))}
+                      <div className="rounded-xl p-2 sm:p-3 min-w-0" style={{ backgroundColor: panelBg }}>
+                        <Sparkline data={card.trend ?? sparklineData} color={theme.accentLight} />
+                        <p className="text-[10px] sm:text-xs text-white/70 text-center mt-1">7-day</p>
+                      </div>
                     </div>
-                  ))}
-                  <div className="rounded-xl p-2 sm:p-3 min-w-0" style={{ backgroundColor: theme.panel }}>
-                    <Sparkline data={card.trend ?? sparklineData} color={theme.accentLight} />
-                    <p className="text-[10px] sm:text-xs text-[#A0A0A0] text-center mt-1">7-day</p>
-                  </div>
-                </div>
+                  );
+                })()}
 
                 {/* Completion bar */}
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-white">Profile Completion</span>
+                    <span className="text-xs font-semibold text-foreground">Profile Completion</span>
                     <span className="text-xs font-bold" style={{ color: theme.accentLight }}>{card.completion}%</span>
                   </div>
-                  <div className="relative h-1.5 bg-[#1E1E1E] rounded-full overflow-hidden">
+                  <div className="relative h-1.5 bg-muted rounded-full overflow-hidden">
                     <div className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#49B618] to-[#008001] rounded-full transition-all"
                       style={{
                         width: `${card.completion}%`,
@@ -693,16 +704,16 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onVie
                     <Button key={label} onClick={onClick}
                       disabled={Boolean(disabled)}
                       variant="outline"
-                      className="border-[#008001]/30 text-white hover:bg-[#008001] hover:text-white h-8 sm:h-9 text-xs gap-1">
+                      className="border-[#008001]/30 text-foreground hover:bg-[#008001] hover:text-white h-8 sm:h-9 text-xs gap-1">
                       <Icon className="w-3 h-3" /> {label}
                     </Button>
                   ))}
                 </div>
 
                 {/* Bottom row: Publish toggle */}
-                <div className="flex items-center justify-between pt-2 sm:pt-3 border-t border-[#1E1E1E]">
+                <div className="flex items-center justify-between pt-2 sm:pt-3 border-t border-border">
                   <button onClick={() => duplicateCard(card)} disabled={duplicatingId === card.id}
-                    className="text-xs text-[#A0A0A0] flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="text-xs text-muted-foreground flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{ color: duplicatingId === card.id ? '#A0A0A0' : undefined }}
                     onMouseEnter={(e) => { if (duplicatingId !== card.id) e.currentTarget.style.color = theme.accent; }}
                     onMouseLeave={(e) => { e.currentTarget.style.color = '#A0A0A0'; }}>
@@ -710,7 +721,7 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onVie
                   </button>
 
                   <div className="flex items-center gap-1.5 sm:gap-2">
-                    <span className="text-xs text-white">
+                    <span className="text-xs text-foreground">
                       {card.status === 'ACTIVE' ? 'Published' : 'Draft'}
                     </span>
                     <Switch
@@ -738,14 +749,14 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onVie
         {/* Create new tile */}
         <Card
           onClick={() => (onCreateBusinessCard ? onCreateBusinessCard() : setShowCreate(true))}
-          className="bg-[#000000] rounded-2xl border-2 border-dashed border-[#008001]/40 hover:border-[#49B618] hover:bg-[#1E1E1E] hover:shadow-lg hover:shadow-[#49B618]/10 transition-all duration-300 cursor-pointer group min-h-[200px] sm:min-h-[300px]"
+          className="bg-card rounded-2xl border-2 border-dashed border-[#008001]/40 hover:border-[#49B618] hover:bg-muted hover:shadow-lg hover:shadow-[#49B618]/10 transition-all duration-300 cursor-pointer group min-h-[200px] sm:min-h-[300px]"
         >
           <CardContent className="p-6 sm:p-8 flex flex-col items-center justify-center h-full">
             <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full border-2 border-dashed border-[#008001] group-hover:border-[#49B618] flex items-center justify-center mb-3 sm:mb-4 transition-colors">
               <Plus className="w-6 h-6 sm:w-7 sm:h-7 text-[#008001] group-hover:text-[#49B618] transition-colors" />
             </div>
-            <h3 className="text-sm sm:text-base font-bold text-white mb-1">Create New Card</h3>
-            <p className="text-xs sm:text-sm text-[#A0A0A0] text-center">Design a new digital business card</p>
+            <h3 className="text-sm sm:text-base font-bold text-foreground mb-1">Create New Card</h3>
+            <p className="text-xs sm:text-sm text-muted-foreground text-center">Design a new digital business card</p>
           </CardContent>
         </Card>
       </div>
@@ -753,7 +764,7 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onVie
       {/* No results */}
       {visible.length === 0 && (
         <div className="text-center py-12 sm:py-16">
-          <p className="text-[#A0A0A0] text-base sm:text-lg">No cards match your search.</p>
+          <p className="text-muted-foreground text-base sm:text-lg">No cards match your search.</p>
           <button
             onClick={() => { setSearch(''); setFilter('all'); }}
             className="text-[#49B618] text-sm mt-2 hover:underline"
@@ -767,7 +778,7 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onVie
 
       {shareCard && (
         <Modal onClose={() => setShareCard(null)} title="Share Card">
-          <p className="text-[#A0A0A0] text-sm mb-1">
+          <p className="text-muted-foreground text-sm mb-1">
             {shareCard.status !== 'ACTIVE' && (
               <span className="text-yellow-400 block mb-2">
                 ⚠ This card is still a Draft. Publish it first so recipients can view it.
@@ -779,7 +790,7 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onVie
             <Input
               readOnly
               value={cardPublicUrl(shareCard)}
-              className="bg-[#1E1E1E] border-[#008001]/30 text-white text-xs sm:text-sm"
+              className="bg-muted border-[#008001]/30 text-foreground text-xs sm:text-sm"
             />
             <Button
               onClick={() => copyLink(shareCard)}
@@ -812,7 +823,7 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onVie
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => { showToast(`Opened ${label}!`); setShareCard(null); }}
-                className="py-2 px-2 sm:px-3 rounded-lg bg-[#1E1E1E] text-white text-xs sm:text-sm hover:bg-[#008001]/20 transition-colors text-center"
+                className="py-2 px-2 sm:px-3 rounded-lg bg-muted text-foreground text-xs sm:text-sm hover:bg-[#008001]/20 transition-colors text-center"
               >
                 {label}
               </a>
@@ -832,16 +843,16 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onVie
               ].map(({ label, value, pct }) => (
                 <div key={label}>
                   <div className="flex justify-between mb-1">
-                    <span className="text-white text-sm">{label}</span>
+                    <span className="text-foreground text-sm">{label}</span>
                     <span className="text-[#49B618] font-bold">{value.toLocaleString()}</span>
                   </div>
-                  <div className="h-2 bg-[#1E1E1E] rounded-full overflow-hidden">
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
                     <div className="h-full bg-gradient-to-r from-[#49B618] to-[#008001] rounded-full" style={{ width: `${pct}%` }} />
                   </div>
                 </div>
               ))}
-              <div className="pt-2 border-t border-[#1E1E1E]">
-                <p className="text-[#A0A0A0] text-xs">
+              <div className="pt-2 border-t border-border">
+                <p className="text-muted-foreground text-xs">
                   Profile completion: <span className="text-[#49B618] font-bold">{statsCard.completion}%</span>
                 </p>
               </div>
@@ -854,34 +865,34 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onVie
       {
         editCard && (
           <Modal onClose={() => setEditCard(null)} title="Edit Card">
-            <p className="text-[#A0A0A0] text-sm mb-2">Card name</p>
+            <p className="text-muted-foreground text-sm mb-2">Card name</p>
             <Input
               value={editTitle}
               onChange={e => setEditTitle(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && saveEdit()}
-              className="bg-[#1E1E1E] border-[#008001]/30 text-white mb-4"
+              className="bg-muted border-[#008001]/30 text-foreground mb-4"
               autoFocus
             />
             <div className="mb-4">
-              <p className="text-[#A0A0A0] text-xs mb-2">Card links</p>
+              <p className="text-muted-foreground text-xs mb-2">Card links</p>
               <div className="space-y-2">
                 <Input
                   readOnly
                   value={cardPublicUrl(editCard)}
-                  className="bg-[#1E1E1E] border-[#008001]/30 text-white text-xs"
+                  className="bg-muted border-[#008001]/30 text-foreground text-xs"
                 />
                 <div className="flex gap-2">
                   <Button
                     onClick={() => navigator.clipboard.writeText(cardPublicUrl(editCard))}
                     variant="outline"
-                    className="flex-1 border-[#008001]/30 text-white hover:bg-[#1E1E1E]"
+                    className="flex-1 border-[#008001]/30 text-foreground hover:bg-muted"
                   >
                     <Copy className="w-4 h-4 mr-1" /> Copy Public Link
                   </Button>
                   <Button
                     onClick={() => openPreview(editCard)}
                     variant="outline"
-                    className="flex-1 border-[#008001]/30 text-white hover:bg-[#1E1E1E]"
+                    className="flex-1 border-[#008001]/30 text-foreground hover:bg-muted"
                   >
                     <Eye className="w-4 h-4 mr-1" /> Preview
                   </Button>
@@ -898,10 +909,10 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onVie
       {
         confirmDelete !== null && (
           <Modal onClose={() => setConfirmDelete(null)} title="Delete Card">
-            <p className="text-[#A0A0A0] mb-6">Are you sure? This cannot be undone.</p>
+            <p className="text-muted-foreground mb-6">Are you sure? This cannot be undone.</p>
             <div className="flex gap-3">
               <Button onClick={() => setConfirmDelete(null)}
-                variant="outline" className="flex-1 border-[#008001]/30 text-white hover:bg-[#1E1E1E]">
+                variant="outline" className="flex-1 border-[#008001]/30 text-foreground hover:bg-muted">
                 Cancel
               </Button>
               <Button onClick={() => deleteCard(confirmDelete)}
@@ -916,21 +927,21 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onVie
       {
         showCreate && (
           <Modal onClose={() => setShowCreate(false)} title="Create New Card">
-            <p className="text-[#A0A0A0] text-sm mb-2">Card name</p>
+            <p className="text-muted-foreground text-sm mb-2">Card name</p>
             <Input
               placeholder="e.g. Conference Card"
               value={newTitle}
               onChange={e => setNewTitle(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && createCard()}
-              className="bg-[#1E1E1E] border-[#008001]/30 text-white mb-4"
+              className="bg-muted border-[#008001]/30 text-foreground mb-4"
               autoFocus
             />
-            <p className="text-[#A0A0A0] text-sm mb-2">Card type</p>
+            <p className="text-muted-foreground text-sm mb-2">Card type</p>
             <Select value={newCardType} onValueChange={(value) => setNewCardType(value as 'QR' | 'NFC' | 'HYBRID' | 'LINK')}>
-              <SelectTrigger className="w-full bg-[#1E1E1E] border-[#008001]/30 text-white mb-4">
+              <SelectTrigger className="w-full bg-muted border-[#008001]/30 text-foreground mb-4">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-[#000000] border-[#008001]/30">
+              <SelectContent className="bg-card border-[#008001]/30">
                 <SelectItem value="QR">QR</SelectItem>
                 <SelectItem value="NFC">NFC</SelectItem>
                 <SelectItem value="HYBRID">Hybrid</SelectItem>
@@ -963,12 +974,12 @@ function Modal({
       onClick={onClose}
     >
       <div
-        className="bg-[#0a0a0a] border border-[#008001]/30 rounded-t-2xl sm:rounded-2xl p-5 sm:p-6 w-full sm:max-w-md shadow-2xl"
+        className="bg-background border border-[#008001]/30 rounded-t-2xl sm:rounded-2xl p-5 sm:p-6 w-full sm:max-w-md shadow-2xl"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4 sm:mb-5">
-          <h3 className="text-white font-bold text-base sm:text-lg">{title}</h3>
-          <button onClick={onClose} className="text-[#A0A0A0] hover:text-white p-1">
+          <h3 className="text-foreground font-bold text-base sm:text-lg">{title}</h3>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground p-1">
             <X className="w-5 h-5" />
           </button>
         </div>

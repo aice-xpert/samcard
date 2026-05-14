@@ -1,6 +1,7 @@
 "use client";
 
-import { Bell, ChevronDown } from 'lucide-react';
+import { Bell, ChevronDown, Sun, Moon } from 'lucide-react';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/dashboard/ui/avatar';
 import { Button } from '@/components/dashboard/ui/button';
 import {
@@ -64,6 +65,7 @@ export function EnhancedHeader({
   onNavigate
 }: EnhancedHeaderProps) {
   const { profile } = useUser();
+  const { isDark, toggleTheme } = useTheme();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [membershipLabel, setMembershipLabel] = useState('Free');
   const [loggingOut, setLoggingOut] = useState(false);
@@ -166,7 +168,7 @@ export function EnhancedHeader({
   }, []);
 
   return (
-    <header className="h-16 border-b border-[#008001]/30 bg-[#000000]/95 backdrop-blur-xl px-8 flex items-center justify-between shadow-sm">
+    <header className="h-16 border-b border-[#008001]/30 bg-background/95 backdrop-blur-xl px-8 flex items-center justify-between shadow-sm">
       {/* Left side - Search and Breadcrumb */}
       <div className="flex items-center gap-6 flex-1">
         {/* <div className="relative max-w-md w-full">
@@ -189,7 +191,7 @@ export function EnhancedHeader({
           )}
         </div> */}
         <div>
-          <p className="text-xs text-[#A0A0A0]">{subtitle}</p>
+          <p className="text-xs text-muted-foreground">{subtitle}</p>
           <h2 className="text-base bg-gradient-to-r from-[#49B618] to-[#009200] bg-clip-text text-transparent font-semibold">{title}</h2>
         </div>
       </div>
@@ -210,10 +212,25 @@ export function EnhancedHeader({
           </Select>
         )}
 
+        {/* Theme Toggle */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleTheme}
+          className="bg-card hover:bg-[#008001]/20"
+          aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+        >
+          {isDark ? (
+            <Sun className="w-5 h-5 text-[#49B618]" />
+          ) : (
+            <Moon className="w-5 h-5 text-[#49B618]" />
+          )}
+        </Button>
+
         {/* Notifications Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="relative bg-[#1E1E1E] hover:bg-[#008001]/20">
+            <Button variant="ghost" size="icon" className="relative bg-card hover:bg-[#008001]/20">
               <Bell className="w-5 h-5 text-[#49B618]" />
               {unreadCount > 0 && (
                 <span className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-[#49B618] to-[#009200] rounded-full text-xs flex items-center justify-center text-white font-bold animate-pulse">
@@ -222,9 +239,9 @@ export function EnhancedHeader({
               )}
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-80 bg-[#000000] border-[#008001]/30 p-0">
+          <DropdownMenuContent align="end" className="w-80 bg-background border-[#008001]/30 p-0">
             <div className="flex items-center justify-between px-4 py-3 border-b border-[#008001]/30">
-              <DropdownMenuLabel className="text-white p-0">Notifications</DropdownMenuLabel>
+              <DropdownMenuLabel className="text-foreground p-0">Notifications</DropdownMenuLabel>
               {unreadCount > 0 && (
                 <button
                   onClick={(e) => { e.stopPropagation(); markAllAsRead(); }}
@@ -236,7 +253,7 @@ export function EnhancedHeader({
             </div>
             <div className="max-h-80 overflow-y-auto [&::-webkit-scrollbar-track]:bg-black [&::-webkit-scrollbar-thumb]:bg-[#008001] [&::-webkit-scrollbar]:w-1.5">
               {notifications.length === 0 ? (
-                <div className="px-4 py-8 text-center text-[#A0A0A0] text-sm">
+                <div className="px-4 py-8 text-center text-muted-foreground text-sm">
                   No notifications
                 </div>
               ) : (
@@ -250,14 +267,14 @@ export function EnhancedHeader({
                       {!notification.read && (
                         <div className="w-2 h-2 rounded-full bg-[#49B618] flex-shrink-0" />
                       )}
-                      <span className={`text-sm font-medium ${notification.read ? 'text-[#A0A0A0]' : 'text-white'}`}>
+                      <span className={`text-sm font-medium ${notification.read ? 'text-muted-foreground' : 'text-foreground'}`}>
                         {notification.title}
                       </span>
-                      <span className="ml-auto text-xs text-[#A0A0A0] flex-shrink-0">
+                      <span className="ml-auto text-xs text-muted-foreground flex-shrink-0">
                         {notification.time}
                       </span>
                     </div>
-                    <p className={`text-xs pl-4 ${notification.read ? 'text-[#666666]' : 'text-[#A0A0A0]'}`}>
+                    <p className={`text-xs pl-4 ${notification.read ? 'text-muted-foreground/60' : 'text-muted-foreground'}`}>
                       {notification.message}
                     </p>
                   </DropdownMenuItem>
@@ -270,49 +287,49 @@ export function EnhancedHeader({
         {/* User Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="gap-3 bg-[#1E1E1E] hover:bg-[#008001]/20 px-3 text-white">
+            <Button variant="ghost" className="gap-3 bg-card hover:bg-[#008001]/20 px-3 text-foreground">
               <Avatar className="w-8 h-8 ring-2 ring-[#008001]/30">
                 {profile.avatar && <AvatarImage src={profile.avatar} />}
                 <AvatarFallback className="bg-[#008001]/30 text-white text-xs font-bold">{initials}</AvatarFallback>
               </Avatar>
               <div className="text-left hidden md:block">
-                <p className="text-sm text-white font-medium">{profile.name}</p>
-                <p className="text-xs text-[#A0A0A0]">{membershipLabel} Member</p>
+                <p className="text-sm text-foreground font-medium">{profile.name}</p>
+                <p className="text-xs text-muted-foreground">{membershipLabel} Member</p>
               </div>
-              <ChevronDown className="w-4 h-4 text-[#A0A0A0]" />
+              <ChevronDown className="w-4 h-4 text-muted-foreground" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56 bg-[#000000] border-[#008001]/30">
-            <DropdownMenuLabel className="text-white">My Account</DropdownMenuLabel>
+          <DropdownMenuContent align="end" className="w-56 bg-background border-[#008001]/30">
+            <DropdownMenuLabel className="text-foreground">My Account</DropdownMenuLabel>
             <DropdownMenuSeparator className="bg-[#008001]/30" />
             <DropdownMenuItem
               onClick={() => handleNavigate('settings')}
-              className="text-[#A0A0A0] focus:text-white focus:bg-[#008001]/20 cursor-pointer"
+              className="text-muted-foreground focus:text-foreground focus:bg-[#008001]/20 cursor-pointer"
             >
               Profile Settings
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => handleNavigate('billing')}
-              className="text-[#A0A0A0] focus:text-white focus:bg-[#008001]/20 cursor-pointer"
+              className="text-muted-foreground focus:text-foreground focus:bg-[#008001]/20 cursor-pointer"
             >
               Billing
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => handleNavigate('settings')}
-              className="text-[#A0A0A0] focus:text-white focus:bg-[#008001]/20 cursor-pointer"
+              className="text-muted-foreground focus:text-foreground focus:bg-[#008001]/20 cursor-pointer"
             >
               Team
             </DropdownMenuItem>
             <DropdownMenuSeparator className="bg-[#008001]/30" />
             <DropdownMenuItem
               onClick={() => handleNavigate('my-cards')}
-              className="text-[#A0A0A0] focus:text-white focus:bg-[#008001]/20 cursor-pointer"
+              className="text-muted-foreground focus:text-foreground focus:bg-[#008001]/20 cursor-pointer"
             >
               My Cards
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => handleNavigate('orders')}
-              className="text-[#A0A0A0] focus:text-white focus:bg-[#008001]/20 cursor-pointer"
+              className="text-muted-foreground focus:text-foreground focus:bg-[#008001]/20 cursor-pointer"
             >
               Order History
             </DropdownMenuItem>
