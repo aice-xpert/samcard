@@ -394,14 +394,7 @@ export default function Analytics({ cardId, cardTitle }: AnalyticsProps = {}) {
             <option value="30">Last 30 days</option>
             <option value="90">Last 90 days</option>
           </select>
-          <button
-            onClick={toggleTheme}
-            className="flex items-center justify-center w-10 h-10 rounded-lg border border-border bg-background text-foreground hover:bg-muted transition-colors"
-            title={isDark ? "Switch to light mode" : "Switch to dark mode"}
-            aria-label="Toggle theme"
-          >
-            {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          </button>
+       
           <button
             onClick={handleExport}
             className="flex items-center gap-2 h-10 px-4 bg-[#49B618] hover:bg-[#009200] text-white text-sm font-medium rounded-lg transition-colors"

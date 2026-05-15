@@ -6,6 +6,7 @@ import { motion } from "motion/react";
 import { Mail, Lock, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import { FaGithub } from "react-icons/fa";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "") ?? "";
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 5; // 5 days in seconds
@@ -41,6 +42,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const { isDark } = useTheme();
 
   // Pick up token from OAuth redirect hash on mount
   useEffect(() => { consumeHashToken(); }, []);
@@ -82,23 +84,51 @@ export default function LoginPage() {
       setError("Missing NEXT_PUBLIC_BACKEND_URL");
       return;
     }
-    // The backend will handle the full OAuth dance and redirect back here
     window.location.href = `${API_BASE}/api/auth/oauth/${provider}`;
   };
 
+  const pageBg = isDark
+    ? "bg-gradient-to-b from-theme-devil-green via-black to-black"
+    : "bg-gradient-to-b from-theme-devil-green/35 via-theme-kelly-green/10 to-white";
+
+  const cardBg = isDark
+    ? "bg-white/5 backdrop-blur-lg border-white/10 shadow-2xl shadow-theme-digital-green/10"
+    : "bg-white border-gray-200 shadow-2xl shadow-theme-digital-green/10";
+
+  const headingColor = isDark ? "text-white" : "text-gray-900";
+  const subtitleColor = isDark ? "text-gray-400" : "text-gray-500";
+  const labelColor = isDark ? "text-white" : "text-gray-700";
+  const iconColor = isDark ? "text-gray-400" : "text-gray-400";
+
+  const inputClass = isDark
+    ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:ring-accent"
+    : "bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:ring-theme-digital-green";
+
+  const socialBtnClass = isDark
+    ? "bg-white/5 border-white/10 hover:bg-white/10"
+    : "bg-gray-50 border-gray-200 hover:bg-gray-100";
+
+  const socialTextColor = isDark ? "text-white" : "text-gray-700";
+
+  const dividerBorderColor = isDark ? "border-white/10" : "border-gray-200";
+  const dividerTextBg = isDark ? "bg-transparent" : "bg-white";
+  const checkboxLabelColor = isDark ? "text-gray-400" : "text-gray-500";
+  const backLinkColor = isDark ? "text-gray-400 hover:text-white" : "text-gray-500 hover:text-gray-800";
+  const footerTextColor = isDark ? "text-gray-400" : "text-gray-500";
+
   return (
     <div
-      className="
-        min-h-screen
-        bg-gradient-to-b from-theme-devil-green via-black to-black
+      className={`
+        min-h-screen ${pageBg}
         pt-24 pb-5
         flex items-center justify-center px-4
         overflow-hidden relative
-      "
+      `}
     >
       {/* Glow Effects */}
-      <div className="absolute -top-20 -right-20 w-96 h-96 bg-gradient-to-br from-theme-kelly-green/30 to-theme-digital-green/20 blur-3xl rounded-full -z-10" />
-      <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-gradient-to-br from-theme-devil-green/40 to-theme-digital-green/20 blur-3xl rounded-full -z-10" />
+      <div className={`absolute -top-20 -right-20 w-96 h-96 blur-3xl rounded-full -z-10 ${isDark ? "bg-gradient-to-br from-theme-kelly-green/30 to-theme-digital-green/20" : "bg-gradient-to-br from-theme-kelly-green/45 to-theme-digital-green/30"}`} />
+      <div className={`absolute top-10 -left-20 w-72 h-72 blur-3xl rounded-full -z-10 ${isDark ? "bg-gradient-to-br from-theme-devil-green/40 to-theme-digital-green/20" : "bg-gradient-to-br from-theme-devil-green/25 to-theme-digital-green/10"}`} />
+      <div className={`absolute top-1/2 left-1/4 w-64 h-64 blur-3xl rounded-full -z-10 ${isDark ? "bg-theme-digital-green/5" : "bg-theme-digital-green/10"}`} />
 
       <div className="w-full max-w-md">
         {/* Header */}
@@ -108,8 +138,8 @@ export default function LoginPage() {
           transition={{ duration: 0.5 }}
           className="text-center mb-8"
         >
-          <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
-          <p className="text-gray-400">Sign in to your account to continue</p>
+          <h1 className={`text-3xl font-bold ${headingColor} mb-2`}>Welcome Back</h1>
+          <p className={subtitleColor}>Sign in to your account to continue</p>
         </motion.div>
 
         {/* Card */}
@@ -117,10 +147,7 @@ export default function LoginPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="
-            bg-white/5 backdrop-blur-lg rounded-2xl p-8
-            border border-white/10 shadow-2xl shadow-theme-digital-green/10
-          "
+          className={`rounded-2xl p-8 border ${cardBg}`}
         >
           {/* Error Banner */}
           {error && (
@@ -132,11 +159,11 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-white mb-2">
+              <label htmlFor="email" className={`block text-sm font-medium ${labelColor} mb-2`}>
                 Email Address
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                <Mail className={`absolute left-3 top-1/2 -translate-y-1/2 ${iconColor}`} size={20} />
                 <input
                   id="email"
                   type="email"
@@ -144,24 +171,18 @@ export default function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
                   required
-                  className="
-                    w-full pl-11 pr-4 py-3
-                    bg-white/5 border border-white/10 rounded-xl
-                    text-white placeholder:text-gray-500
-                    focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent
-                    transition-all
-                  "
+                  className={`w-full pl-11 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all ${inputClass}`}
                 />
               </div>
             </div>
 
             {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-white mb-2">
+              <label htmlFor="password" className={`block text-sm font-medium ${labelColor} mb-2`}>
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                <Lock className={`absolute left-3 top-1/2 -translate-y-1/2 ${iconColor}`} size={20} />
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
@@ -169,18 +190,12 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
                   required
-                  className="
-                    w-full pl-11 pr-12 py-3
-                    bg-white/5 border border-white/10 rounded-xl
-                    text-white placeholder:text-gray-500
-                    focus:outline-none focus:ring-2 focus:ring-accent
-                    transition-all
-                  "
+                  className={`w-full pl-11 pr-12 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all ${inputClass}`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                  className={`absolute right-3 top-1/2 -translate-y-1/2 ${iconColor} ${isDark ? "hover:text-white" : "hover:text-gray-700"} transition-colors`}
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
@@ -192,9 +207,9 @@ export default function LoginPage() {
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
-                  className="w-4 h-4 rounded border-white/10 bg-white/5 text-accent focus:ring-accent"
+                  className={`w-4 h-4 rounded ${isDark ? "border-white/10 bg-white/5" : "border-gray-300 bg-white"} text-accent focus:ring-accent`}
                 />
-                <span className="text-sm text-gray-400">Remember me</span>
+                <span className={`text-sm ${checkboxLabelColor}`}>Remember me</span>
               </label>
               <Link
                 href="/forgot-password"
@@ -227,10 +242,10 @@ export default function LoginPage() {
           {/* Divider */}
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-white/10" />
+              <div className={`w-full border-t ${dividerBorderColor}`} />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-4 text-gray-400 bg-transparent">Or continue with</span>
+              <span className={`px-4 ${subtitleColor} ${dividerTextBg}`}>Or continue with</span>
             </div>
           </div>
 
@@ -239,23 +254,23 @@ export default function LoginPage() {
             <button
               onClick={() => handleSocialSignIn("google")}
               disabled={loading}
-              className="py-3 flex items-center justify-center gap-2 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`py-3 flex items-center justify-center gap-2 border rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed ${socialBtnClass}`}
             >
               <FcGoogle size={20} />
-              <span className="text-white text-sm">Google</span>
+              <span className={`text-sm ${socialTextColor}`}>Google</span>
             </button>
 
             <button
               onClick={() => handleSocialSignIn("github")}
               disabled={loading}
-              className="py-3 flex items-center justify-center gap-2 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`py-3 flex items-center justify-center gap-2 border rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed ${socialBtnClass}`}
             >
-              <FaGithub size={20} className="text-white" />
-              <span className="text-white text-sm">GitHub</span>
+              <FaGithub size={20} className={socialTextColor} />
+              <span className={`text-sm ${socialTextColor}`}>GitHub</span>
             </button>
           </div>
 
-          <p className="mt-6 text-center text-sm text-gray-400">
+          <p className={`mt-6 text-center text-sm ${footerTextColor}`}>
             Don&apos;t have an account?{" "}
             <Link href="/signup" className="text-accent hover:text-theme-digital-green transition-colors">
               Sign up for free
@@ -269,7 +284,7 @@ export default function LoginPage() {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="mt-6 text-center"
         >
-          <Link href="/" className="text-sm text-gray-400 hover:text-white transition-colors">
+          <Link href="/" className={`text-sm ${backLinkColor} transition-colors`}>
             ← Back to home
           </Link>
         </motion.div>

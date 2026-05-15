@@ -897,7 +897,7 @@ export function ComprehensiveDashboard({ onNavigate }: { onNavigate?: (page: str
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         <Card className={isDark
           ? "bg-gradient-to-br from-[#008001] to-[#006312] text-white border-0 shadow-xl"
-          : "bg-card border border-[#008001] shadow-xl"
+          : "bg-gradient-to-br from-[#e8f5e8] to-[#008001]/20 border border-[#008001] shadow-xl"
         }>
           <CardContent className="p-5 sm:p-8">
             <div className="flex items-start justify-between mb-4 sm:mb-6">
@@ -926,7 +926,7 @@ export function ComprehensiveDashboard({ onNavigate }: { onNavigate?: (page: str
 
         <Card className={isDark
           ? "bg-gradient-to-br from-[#49B618] to-[#009200] text-white border-0 shadow-xl"
-          : "bg-card border border-[#49B618] shadow-xl"
+          : "bg-gradient-to-br from-[#e8f5e8] to-[#49B618]/20 border border-[#49B618] shadow-xl"
         }>
           <CardContent className="p-5 sm:p-8">
             <div className="flex items-start justify-between mb-4 sm:mb-6">
