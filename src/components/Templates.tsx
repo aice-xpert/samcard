@@ -6,6 +6,7 @@ import "swiper/css/navigation";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Navigation, Pagination } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const templates = [
   {
@@ -50,11 +51,16 @@ const VIEWPORT = { once: true };
 
 export function Templates() {
   const swiperRef = useRef<SwiperType | null>(null);
+  const { isDark } = useTheme();
 
   return (
     <section
       id="templates"
-      className="py-24 bg-gradient-to-b from-[#031203] to-background"
+      className={`py-24 ${
+        isDark
+          ? "bg-gradient-to-b from-[#031203] to-background"
+          : "bg-gradient-to-b from-[#e8f3e8] to-background"
+      }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
@@ -64,10 +70,10 @@ export function Templates() {
           transition={{ duration: 0.6 }}
           className="text-center space-y-4 mb-16"
         >
-          <h2 className="text-4xl lg:text-5xl font-bold text-white">
+          <h2 className="text-4xl lg:text-5xl font-bold text-foreground">
             Beautiful Templates for Every Style
           </h2>
-          <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Choose from our professionally designed templates and customize them
             to perfectly match your brand.
           </p>
@@ -76,11 +82,13 @@ export function Templates() {
         <div className="relative pb-12 px-12">
           <button
             onClick={() => swiperRef.current?.slidePrev()}
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 z-10
+            className={`absolute left-0 top-1/2 -translate-y-1/2 z-10
                        w-10 h-10 flex items-center justify-center rounded-full
-                       bg-white/10 border border-white/20 text-white
-                       hover:bg-theme-digital-green hover:border-theme-digital-green
-                       transition-all backdrop-blur-sm"
+                       border transition-all backdrop-blur-sm ${
+              isDark
+                ? "bg-white/10 border-white/20 text-white hover:bg-theme-digital-green hover:border-theme-digital-green"
+                : "bg-white border-gray-300 text-foreground hover:bg-theme-digital-green hover:border-theme-digital-green hover:text-white"
+            }`}
             aria-label="Previous slide"
           >
             <svg
@@ -101,11 +109,13 @@ export function Templates() {
 
           <button
             onClick={() => swiperRef.current?.slideNext()}
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 z-10
+            className={`absolute right-0 top-1/2 -translate-y-1/2 z-10
                        w-10 h-10 flex items-center justify-center rounded-full
-                       bg-white/10 border border-white/20 text-white
-                       hover:bg-theme-digital-green hover:border-theme-digital-green
-                       transition-all backdrop-blur-sm"
+                       border transition-all backdrop-blur-sm ${
+              isDark
+                ? "bg-white/10 border-white/20 text-white hover:bg-theme-digital-green hover:border-theme-digital-green"
+                : "bg-white border-gray-300 text-foreground hover:bg-theme-digital-green hover:border-theme-digital-green hover:text-white"
+            }`}
             aria-label="Next slide"
           >
             <svg
@@ -157,9 +167,13 @@ export function Templates() {
                   className="group cursor-pointer"
                 >
                   <div
-                    className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl
+                    className={`backdrop-blur-sm border rounded-2xl
                                   hover:shadow-2xl hover:shadow-theme-digital-green/10
-                                  hover:border-theme-digital-green/50 transition-all overflow-hidden"
+                                  hover:border-theme-digital-green/50 transition-all overflow-hidden ${
+                      isDark
+                        ? "bg-white/5 border-white/10"
+                        : "bg-white border-gray-200 shadow-sm"
+                    }`}
                   >
                     <div
                       className={`h-64 bg-gradient-to-br ${template.color} p-8 relative`}
@@ -180,16 +194,18 @@ export function Templates() {
                     </div>
 
                     <div className="p-6 space-y-2">
-                      <h3 className="text-xl font-semibold text-white group-hover:text-accent transition-colors">
+                      <h3 className="text-xl font-semibold text-foreground group-hover:text-accent transition-colors">
                         {template.name}
                       </h3>
-                      <p className="text-sm text-gray-400">
+                      <p className="text-sm text-muted-foreground">
                         {template.category}
                       </p>
                       <button
-                        className="mt-4 w-full py-2 bg-white/5 text-white border border-white/10
-                                         rounded-lg hover:bg-theme-digital-green hover:border-theme-digital-green
-                                         transition-all"
+                        className={`mt-4 w-full py-2 rounded-lg transition-all ${
+                          isDark
+                            ? "bg-white/5 text-white border border-white/10 hover:bg-theme-digital-green hover:border-theme-digital-green"
+                            : "bg-gray-100 text-foreground border border-gray-200 hover:bg-theme-digital-green hover:border-theme-digital-green hover:text-white"
+                        }`}
                       >
                         Preview Template
                       </button>

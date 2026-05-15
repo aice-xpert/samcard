@@ -27,7 +27,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{
+          __html: `(function(){try{var e=localStorage.getItem("samcard-theme")||"dark";document.documentElement.classList.add(e)}catch(e){}})()`
+        }} />
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-theme-black`}>
         <LayoutShell>{children}</LayoutShell>
       </body>

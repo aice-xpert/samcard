@@ -29,8 +29,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!mounted) return;
     const root = document.documentElement;
-    root.classList.toggle("dark", theme === "dark");
-    root.classList.toggle("light", theme === "light");
+    root.classList.remove("light", "dark");
+    root.classList.add(theme);
     localStorage.setItem(STORAGE_KEY, theme);
   }, [theme, mounted]);
 

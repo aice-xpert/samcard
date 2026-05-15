@@ -3,19 +3,21 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { Star } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export function CTA() {
+  const { isDark } = useTheme();
+
   return (
-    <section className="py-28 bg-gradient-to-b from-black via-theme-devil-green/50 to-black px-4">
+    <section className={`py-28 bg-gradient-to-b ${isDark ? "from-black via-theme-devil-green/50 to-black" : "from-background via-theme-devil-green/20 to-background"} px-4`}>
       <div className="max-w-4xl mx-auto text-center">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="relative bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-14 overflow-hidden"
+          className={`relative ${isDark ? "bg-white/5 backdrop-blur-2xl border border-white/10" : "bg-white border-gray-200 shadow-sm"} rounded-3xl p-14 overflow-hidden`}
         >
-          {/* Glow */}
           <div className="absolute -top-10 -right-10 w-64 h-64 bg-gradient-to-br from-theme-digital-green/30 to-theme-kelly-green/30 rounded-full blur-3xl -z-10" />
           <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-gradient-to-br from-theme-devil-green/50 to-theme-digital-green/20 rounded-full blur-3xl -z-10" />
 
@@ -29,11 +31,11 @@ export function CTA() {
             ))}
           </div>
 
-          <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">
+          <h2 className={`text-3xl lg:text-4xl font-bold mb-4 ${isDark ? "text-white" : "text-foreground"}`}>
             Join 50,000+ professionals who love SamCard
           </h2>
 
-          <p className="text-gray-400 mb-10 text-lg">
+          <p className="text-muted-foreground mb-10 text-lg">
             Start your free 14-day trial today. No credit card required.
           </p>
 
@@ -49,8 +51,7 @@ export function CTA() {
 
             <Link
               href="/features"
-              className="px-8 py-4 bg-white/10 backdrop-blur-sm text-white border-2 border-white/30 rounded-xl
-                         hover:border-accent hover:bg-white/20 transition-all text-center"
+              className={`px-8 py-4 rounded-xl transition-all text-center ${isDark ? "bg-white/10 backdrop-blur-sm text-white border-2 border-white/30 hover:border-accent hover:bg-white/20" : "bg-gray-100 text-foreground border-2 border-gray-200 hover:border-accent hover:bg-gray-200"}`}
             >
               See All Features
             </Link>

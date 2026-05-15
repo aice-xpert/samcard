@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { useTheme } from "@/contexts/ThemeContext";
 import Link from "next/link";
 import {
   Check,
@@ -14,6 +15,7 @@ import {
 } from "lucide-react";
 
 export function PricingCards() {
+  const { isDark } = useTheme();
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">(
     "monthly"
   );
@@ -86,7 +88,7 @@ export function PricingCards() {
   ];
 
   return (
-    <section className="py-20 bg-black">
+    <section className={`py-20 ${isDark ? "bg-black" : "bg-background"}`}>
       <div className="max-w-7xl mx-auto px-4">
 
         {/* Billing Toggle */}
@@ -97,7 +99,9 @@ export function PricingCards() {
             className={`px-6 py-2 rounded-lg font-medium transition-all duration-300 ${
               billingCycle === "monthly"
                 ? "bg-accent text-black shadow-lg shadow-accent/40"
-                : "bg-white/5 text-gray-400 hover:bg-white/10"
+                : isDark
+                  ? "bg-white/5 text-muted-foreground hover:bg-white/10"
+                  : "bg-gray-100 text-muted-foreground hover:bg-gray-200"
             }`}
           >
             Monthly
@@ -109,7 +113,9 @@ export function PricingCards() {
             className={`px-6 py-2 rounded-lg font-medium transition-all duration-300 relative ${
               billingCycle === "annual"
                 ? "bg-accent text-black shadow-lg shadow-accent/40"
-                : "bg-white/5 text-gray-400 hover:bg-white/10"
+                : isDark
+                  ? "bg-white/5 text-muted-foreground hover:bg-white/10"
+                  : "bg-gray-100 text-muted-foreground hover:bg-gray-200"
             }`}
           >
             Annual
@@ -149,7 +155,9 @@ export function PricingCards() {
                   ${
                     plan.popular
                       ? "border-accent bg-theme-devil-green/10 scale-105 shadow-2xl shadow-accent/20"
-                      : "border-white/10 bg-white/5 hover:border-accent/50"
+                      : isDark
+                        ? "border-white/10 bg-white/5 hover:border-accent/50"
+                        : "border-gray-200 bg-white hover:border-accent/50 shadow-sm"
                   }`}
               >
                 {/* Popular Badge */}
@@ -168,23 +176,23 @@ export function PricingCards() {
                   <plan.icon className="text-white" size={28} />
                 </div>
 
-                <h3 className="text-2xl font-bold text-white mb-2">
+                <h3 className="text-2xl font-bold text-foreground mb-2">
                   {plan.name}
                 </h3>
 
-                <p className="text-gray-400 text-sm mb-6">
+                <p className="text-muted-foreground text-sm mb-6">
                   {plan.description}
                 </p>
 
                 {/* Price */}
-                <div className="pt-4 pb-6 border-b border-white/10">
+                <div className={`pt-4 pb-6 border-b ${isDark ? "border-white/10" : "border-gray-200"}`}>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-5xl font-bold text-white">
+                    <span className="text-5xl font-bold text-foreground">
                       {finalPrice}
                     </span>
 
                     {plan.price !== "Custom" && (
-                      <span className="text-gray-400">
+                      <span className="text-muted-foreground">
                         /{billingCycle === "monthly" ? "month" : "year"}
                       </span>
                     )}
@@ -204,7 +212,7 @@ export function PricingCards() {
                       key={feature.name}
                       className={`flex items-center gap-3 text-sm ${
                         feature.included
-                          ? "text-gray-300"
+                          ? "text-muted-foreground"
                           : "text-gray-500"
                       }`}
                     >
@@ -225,7 +233,9 @@ export function PricingCards() {
                     ${
                       plan.popular
                         ? "bg-gradient-to-r from-accent to-theme-digital-green text-black hover:shadow-xl hover:shadow-accent/30"
-                        : "bg-white/10 text-white hover:bg-white/20"
+                        : isDark
+                          ? "bg-white/10 text-foreground hover:bg-white/20"
+                          : "bg-gray-100 text-foreground hover:bg-gray-200"
                     }`}
                 >
                   {plan.buttonText}
