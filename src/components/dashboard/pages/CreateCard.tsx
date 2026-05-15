@@ -120,27 +120,27 @@ function CampaignNameModal({
     };
 
     const slugBorderColor =
-        slugStatus === "available" ? "border-[#49B618]/60" :
-            slugStatus === "taken" || slugStatus === "invalid" ? "border-red-500/60" :
-                "border-[#008001]/25";
+        slugStatus === "available" ? "border-accent/60" :
+            slugStatus === "taken" || slugStatus === "invalid" ? "border-destructive/60" :
+                "border-border";
 
     const slugMsgColor =
-        slugStatus === "available" ? "text-[#49B618]" :
-            slugStatus === "taken" || slugStatus === "invalid" ? "text-red-400" :
-                "text-[#A0A0A0]";
+        slugStatus === "available" ? "text-accent" :
+            slugStatus === "taken" || slugStatus === "invalid" ? "text-destructive" :
+                "text-muted-foreground";
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-            <div className="bg-[#0d120d] border border-[#008001]/30 rounded-2xl w-full max-w-md mx-4 p-6 shadow-2xl shadow-[#008001]/10">
+            <div className="bg-popover border-border rounded-2xl w-full max-w-md mx-4 p-6 shadow-2xl shadow-primary/10">
 
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-lg font-bold text-white">
+                    <h2 className="text-lg font-bold text-foreground">
                         {isEditMode ? "Edit Card URLs" : "Finish & Publish"}
                     </h2>
                     <button
                         onClick={onCancel}
-                        className="w-7 h-7 rounded-lg bg-[#1a1f1a] text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20 flex items-center justify-center transition-all text-lg"
+                        className="w-7 h-7 rounded-lg bg-muted text-muted-foreground hover:text-foreground hover:bg-accent/20 flex items-center justify-center transition-all text-lg"
                     >
                         ×
                     </button>
@@ -149,7 +149,7 @@ function CampaignNameModal({
                 {/* Campaign Name — only shown when creating */}
                 {!isEditMode && (
                     <div className="mb-4">
-                        <label className="block text-xs font-medium text-[#A0A0A0] mb-2 uppercase tracking-wide">
+                        <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">
                             Campaign Name
                         </label>
                         <input
@@ -160,37 +160,37 @@ function CampaignNameModal({
                                 if (errorMessage) onClearError();
                             }}
                             placeholder="e.g. My Business Card Campaign"
-                            className="w-full px-3 py-2.5 rounded-xl border border-[#008001]/25 bg-[#111811] text-sm text-white outline-none focus:border-[#008001]/60 placeholder-[#555] transition-colors"
+                            className="w-full px-3 py-2.5 rounded-xl border border-border bg-input text-sm text-foreground outline-none focus:border-primary/60 placeholder:text-muted-foreground/60 transition-colors"
                         />
                     </div>
                 )}
 
                 {/* Auto-generated URL (read-only) */}
                 <div className="mb-4">
-                    <label className="block text-xs font-medium text-[#A0A0A0] mb-2 uppercase tracking-wide">
+                    <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">
                         Auto-generated URL
                     </label>
-                    <div className="flex items-center rounded-xl border border-[#008001]/15 bg-[#0d120d] overflow-hidden opacity-70">
-                        <span className="px-3 text-xs text-[#555] whitespace-nowrap border-r border-[#008001]/15 py-2.5 select-none">
+                    <div className="flex items-center rounded-xl border border-border/60 bg-background/50 overflow-hidden opacity-70">
+                        <span className="px-3 text-xs text-muted-foreground whitespace-nowrap border-r border-border/50 py-2.5 select-none">
                             {PUBLIC_BASE}/
                         </span>
-                        <span className="flex-1 px-3 py-2.5 text-xs text-[#555] font-mono truncate select-none">
+                        <span className="flex-1 px-3 py-2.5 text-xs text-muted-foreground font-mono truncate select-none">
                             {autoSlugPreview}
                         </span>
-                        <span className="px-3 text-[10px] text-[#444] whitespace-nowrap">auto</span>
+                        <span className="px-3 text-[10px] text-muted-foreground/60 whitespace-nowrap">auto</span>
                     </div>
-                    <p className="text-xs mt-1.5 text-[#444]">
+                    <p className="text-xs mt-1.5 text-muted-foreground/60">
                         {isEditMode ? "Permanent — cannot be changed" : "Always active — generated when you publish"}
                     </p>
                 </div>
 
                 {/* Custom URL */}
                 <div className="mb-5">
-                    <label className="block text-xs font-medium text-[#A0A0A0] mb-2 uppercase tracking-wide">
-                        Custom URL <span className="text-[#555] normal-case font-normal">(optional)</span>
+                    <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">
+                        Custom URL <span className="text-muted-foreground/60 normal-case font-normal">(optional)</span>
                     </label>
-                    <div className={`flex items-center rounded-xl border ${slugBorderColor} bg-[#111811] transition-colors focus-within:border-[#008001]/60 overflow-hidden`}>
-                        <span className="px-3 text-xs text-[#555] whitespace-nowrap border-r border-[#008001]/15 py-2.5 select-none">
+                    <div className={`flex items-center rounded-xl border ${slugBorderColor} bg-input transition-colors focus-within:border-primary/60 overflow-hidden`}>
+                        <span className="px-3 text-xs text-muted-foreground whitespace-nowrap border-r border-border/50 py-2.5 select-none">
                             {PUBLIC_BASE}/
                         </span>
                         <input
@@ -199,17 +199,17 @@ function CampaignNameModal({
                             onChange={(e) => handleSlugChange(e.target.value)}
                             placeholder="your-custom-url"
                             maxLength={60}
-                            className="flex-1 px-3 py-2.5 bg-transparent text-sm text-white outline-none placeholder-[#555]"
+                            className="flex-1 px-3 py-2.5 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
                         />
                         {slugStatus === "checking" && (
-                            <span className="px-3 text-xs text-[#A0A0A0] animate-pulse">checking…</span>
+                            <span className="px-3 text-xs text-muted-foreground animate-pulse">checking…</span>
                         )}
                     </div>
                     {slugMessage && (
                         <p className={`text-xs mt-1.5 ${slugMsgColor}`}>{slugMessage}</p>
                     )}
                     {!customSlug && (
-                        <p className="text-xs mt-1.5 text-[#555]">
+                        <p className="text-xs mt-1.5 text-muted-foreground/60">
                             {isEditMode && initialCustomSlug
                                 ? "Clear the field to remove your custom URL"
                                 : "Add a memorable custom URL — both links will work"}
@@ -218,7 +218,7 @@ function CampaignNameModal({
                 </div>
 
                 {errorMessage && (
-                    <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+                    <div className="mb-4 rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
                         {errorMessage}
                     </div>
                 )}
@@ -227,14 +227,14 @@ function CampaignNameModal({
                 <div className="flex justify-between gap-3">
                     <button
                         onClick={onCancel}
-                        className="px-5 py-2.5 rounded-xl border border-[#008001]/30 text-[#A0A0A0] text-sm hover:border-[#008001]/60 hover:text-white transition-all"
+                        className="px-5 py-2.5 rounded-xl border border-border text-muted-foreground text-sm hover:border-primary/60 hover:text-foreground transition-all"
                     >
                         Cancel
                     </button>
                     <button
                         onClick={handleSave}
                         disabled={isSaving || (!!customSlug && slugStatus !== "available")}
-                        className="px-6 py-2.5 rounded-xl bg-[#008001] text-white text-sm font-semibold hover:bg-[#49B618] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                        className="px-6 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-accent transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                         {isSaving ? "Saving..." : isEditMode ? "Save Changes" : "Save & Publish"}
                     </button>
@@ -252,7 +252,7 @@ const CopyIcon = () => (
 );
 
 const CheckIcon = () => (
-    <svg className="w-4 h-4 text-[#49B618]" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+    <svg className="w-4 h-4 text-accent" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
     </svg>
 );
@@ -304,29 +304,29 @@ function SavedSuccessModal({ onCancel, onDashboard, cardSlug, cardCustomSlug }: 
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-            <div className="bg-[#0d120d] border border-[#008001]/30 rounded-2xl w-full max-w-lg mx-4 p-8 shadow-2xl shadow-[#008001]/10">
+            <div className="bg-popover border-border rounded-2xl w-full max-w-lg mx-4 p-8 shadow-2xl shadow-primary/10">
 
                 {/* Success Icon */}
                 <div className="flex flex-col items-center mb-6">
-                    <div className="w-14 h-14 rounded-full border-2 border-[#49B618] bg-[#008001]/10 flex items-center justify-center mb-4">
-                        <svg className="w-7 h-7 text-[#49B618]" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                    <div className="w-14 h-14 rounded-full border-2 border-accent bg-primary/10 flex items-center justify-center mb-4">
+                        <svg className="w-7 h-7 text-accent" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
                     </div>
-                    <h2 className="text-2xl font-bold text-white">Saved Successfully!</h2>
+                    <h2 className="text-2xl font-bold text-foreground">Saved Successfully!</h2>
                 </div>
 
                 {/* Important Notice */}
-                <div className="flex gap-3 bg-[#008001]/10 border border-[#008001]/20 rounded-xl px-4 py-3 mb-6">
-                    <span className="text-[#49B618] mt-0.5 text-sm">ℹ</span>
-                    <p className="text-sm text-[#A0A0A0]">
-                        <span className="font-semibold text-[#49B618]">IMPORTANT: </span>
+                <div className="flex gap-3 bg-primary/10 border border-primary/20 rounded-xl px-4 py-3 mb-6">
+                    <span className="text-accent mt-0.5 text-sm">ℹ</span>
+                    <p className="text-sm text-muted-foreground">
+                        <span className="font-semibold text-accent">IMPORTANT: </span>
                         Please make sure to test scan your QR before printing for production
                     </p>
                 </div>
 
                 {/* Share */}
-                <p className="text-xs font-medium text-[#A0A0A0] uppercase tracking-wide mb-3">Share on social media</p>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Share on social media</p>
                 <div className="flex gap-2 mb-5">
                     {shareLinks.map((s) => (
                         <button
@@ -340,10 +340,10 @@ function SavedSuccessModal({ onCancel, onDashboard, cardSlug, cardCustomSlug }: 
                 </div>
 
                 {/* Auto URL */}
-                <p className="text-xs font-medium text-[#A0A0A0] uppercase tracking-wide mb-2">Auto-generated URL</p>
-                <div className="flex items-center gap-2 bg-[#111811] border border-[#008001]/25 rounded-xl px-3 py-2.5 mb-3 group">
-                    <span className="text-xs text-[#A0A0A0] flex-1 truncate font-mono">{autoUrl}</span>
-                    <button onClick={() => copy(autoUrl, "auto")} className="text-[#555] group-hover:text-[#49B618] transition-colors">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Auto-generated URL</p>
+                <div className="flex items-center gap-2 bg-input border-border rounded-xl px-3 py-2.5 mb-3 group">
+                    <span className="text-xs text-foreground/80 flex-1 truncate font-mono">{autoUrl}</span>
+                    <button onClick={() => copy(autoUrl, "auto")} className="text-muted-foreground group-hover:text-accent transition-colors">
                         {copiedAuto ? <CheckIcon /> : <CopyIcon />}
                     </button>
                 </div>
@@ -351,10 +351,10 @@ function SavedSuccessModal({ onCancel, onDashboard, cardSlug, cardCustomSlug }: 
                 {/* Custom URL (shown only if set) */}
                 {customUrl && (
                     <>
-                        <p className="text-xs font-medium text-[#A0A0A0] uppercase tracking-wide mb-2">Custom URL</p>
-                        <div className="flex items-center gap-2 bg-[#111811] border border-[#49B618]/30 rounded-xl px-3 py-2.5 mb-3 group">
-                            <span className="text-xs text-[#49B618] flex-1 truncate font-mono">{customUrl}</span>
-                            <button onClick={() => copy(customUrl, "custom")} className="text-[#555] group-hover:text-[#49B618] transition-colors">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Custom URL</p>
+                        <div className="flex items-center gap-2 bg-input border-accent/30 rounded-xl px-3 py-2.5 mb-3 group">
+                            <span className="text-xs text-accent flex-1 truncate font-mono">{customUrl}</span>
+                            <button onClick={() => copy(customUrl, "custom")} className="text-muted-foreground group-hover:text-accent transition-colors">
                                 {copiedCustom ? <CheckIcon /> : <CopyIcon />}
                             </button>
                         </div>
@@ -362,25 +362,25 @@ function SavedSuccessModal({ onCancel, onDashboard, cardSlug, cardCustomSlug }: 
                 )}
 
                 {/* Embed */}
-                <p className="text-xs font-medium text-[#A0A0A0] uppercase tracking-wide mb-2">Embed Code</p>
-                <div className="flex items-center gap-2 bg-[#111811] border border-[#008001]/25 rounded-xl px-3 py-2.5 mb-6 group">
-                    <span className="text-xs text-[#555] flex-1 truncate font-mono">{embed}</span>
-                    <button onClick={() => copy(embed, "embed")} className="text-[#555] group-hover:text-[#49B618] transition-colors">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Embed Code</p>
+                <div className="flex items-center gap-2 bg-input border-border rounded-xl px-3 py-2.5 mb-6 group">
+                    <span className="text-xs text-muted-foreground flex-1 truncate font-mono">{embed}</span>
+                    <button onClick={() => copy(embed, "embed")} className="text-muted-foreground group-hover:text-accent transition-colors">
                         {copiedEmbed ? <CheckIcon /> : <CopyIcon />}
                     </button>
                 </div>
 
                 {/* Actions */}
-                <div className="flex justify-between pt-5 border-t border-[#008001]/15">
+                <div className="flex justify-between pt-5 border-t border-border">
                     <button
                         onClick={onCancel}
-                        className="px-5 py-2.5 rounded-xl border border-[#008001]/30 text-[#A0A0A0] text-sm hover:border-[#008001]/60 hover:text-white transition-all"
+                        className="px-5 py-2.5 rounded-xl border border-border text-muted-foreground text-sm hover:border-primary/60 hover:text-foreground transition-all"
                     >
                         Cancel
                     </button>
                     <button
                         onClick={onDashboard}
-                        className="px-6 py-2.5 rounded-xl bg-[#008001] text-white text-sm font-semibold hover:bg-[#49B618] transition-all"
+                        className="px-6 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-accent transition-all"
                     >
                         Done
                     </button>
@@ -704,27 +704,27 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
             {showSuccessModal && <SavedSuccessModal onCancel={handleClose} onDashboard={handleDashboard} cardSlug={createdSlug} cardCustomSlug={createdCustomSlug} />}
 
             {/* ── Stepper Header ── */}
-            <div className="flex items-center justify-center gap-2 px-8 py-5 border-b border-[#008001]/20 bg-[#0a0f0a]">
+            <div className="flex items-center justify-center gap-2 px-8 py-5 border-b border-border bg-background">
                 {STEPS.map((s, i) => (
                     <div key={s.id} className="flex items-center gap-2">
                         <button
                             onClick={() => handleStepClick(s.id)}
                             className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold transition-all cursor-pointer
                 ${step === s.id
-                                    ? "bg-[#008001] text-white"
+                                    ? "bg-primary text-primary-foreground"
                                     : step > s.id
-                                        ? "bg-[#008001]/30 text-[#49B618]"
-                                        : "bg-[#1a1f1a] text-[#A0A0A0] hover:bg-[#1a1f1a]/80 hover:text-white"
+                                        ? "bg-primary/30 text-accent"
+                                        : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
                                 }`}
                         >
                             <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold
-                ${step === s.id ? "bg-white text-[#008001]" : "bg-current/20"}`}>
+                ${step === s.id ? "bg-background text-primary" : "bg-current/20"}`}>
                                 {step > s.id ? "✓" : s.id}
                             </span>
                             {s.label}
                         </button>
                         {i < STEPS.length - 1 && (
-                            <div className={`w-8 h-px ${step > s.id ? "bg-[#008001]" : "bg-[#333]"}`} />
+                            <div className={`w-8 h-px ${step > s.id ? "bg-primary" : "bg-muted-foreground/30"}`} />
                         )}
                     </div>
                 ))}
@@ -759,22 +759,22 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
             </div>
 
             {/* ── Navigation Buttons ── */}
-            <div className="flex justify-between items-center px-8 py-4 border-t border-[#008001]/20 bg-[#0a0f0a]">
+            <div className="flex justify-between items-center px-8 py-4 border-t border-border bg-background">
                 <button
                     onClick={() => setStep((prev) => Math.max(1, prev - 1))}
                     disabled={step === 1}
-                    className="px-5 py-2 rounded-lg border border-[#008001]/40 text-[#A0A0A0] text-sm
-            hover:border-[#008001] hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="px-5 py-2 rounded-lg border border-border text-muted-foreground text-sm
+            hover:border-primary hover:text-foreground transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                     ← Back
                 </button>
 
-                <span className="text-xs text-[#A0A0A0]">Step {step} of {STEPS.length}</span>
+                <span className="text-xs text-muted-foreground">Step {step} of {STEPS.length}</span>
 
                 {step < STEPS.length ? (
                     <button
                         onClick={handleNext}
-                        className="px-5 py-2 rounded-lg bg-[#008001] text-white text-sm font-semibold hover:bg-[#49B618] transition-all"
+                        className="px-5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-accent transition-all"
                     >
                         Next →
                     </button>
@@ -783,15 +783,15 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
                         onClick={handleSaveFinish}
                         disabled={isSaving || (!!activeCardId && !hasLoadedCardContent)}
                         title={activeCardId && !hasLoadedCardContent ? "Waiting for card content to finish loading" : undefined}
-                        className="px-5 py-2 rounded-lg bg-[#49B618] text-white text-sm font-semibold hover:bg-[#008001] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                        className="px-5 py-2 rounded-lg bg-accent text-accent-foreground text-sm font-semibold hover:bg-primary transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                         {isSaving ? "Saving..." : activeCardId && !hasLoadedCardContent ? "Loading…" : "Save & Finish ✓"}
                     </button>
                 )}
             </div>
             {saveError && !showCampaignModal && (
-                <div className="px-8 pb-4 bg-[#0a0f0a]">
-                    <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+                <div className="px-8 pb-4 bg-background">
+                    <div className="rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
                         {saveError}
                     </div>
                 </div>

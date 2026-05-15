@@ -3,11 +3,13 @@
 
 import { motion } from "framer-motion";
 import { Zap } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export function PricingHero() {
+  const { isDark } = useTheme();
 
   return (
-    <section className="pt-32 pb-20 bg-gradient-to-b from-theme-devil-green via-black to-black">
+    <section className={`pt-32 pb-20 bg-gradient-to-b from-theme-devil-green ${isDark ? "via-black to-black" : "via-background to-background"}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         <motion.div
@@ -28,7 +30,7 @@ export function PricingHero() {
           </div>
 
           {/* Heading */}
-          <h1 className="text-5xl lg:text-7xl font-bold text-white leading-tight">
+          <h1 className="text-5xl lg:text-7xl font-bold text-foreground leading-tight">
             Choose Your{" "}
             <span className="bg-gradient-to-r from-accent to-theme-digital-green bg-clip-text text-transparent">
               Perfect Plan
@@ -36,7 +38,7 @@ export function PricingHero() {
           </h1>
 
           {/* Subtext */}
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
             From solo entrepreneurs to enterprise teams, we have the right
             solution for you. Start free and scale as you grow.
           </p>

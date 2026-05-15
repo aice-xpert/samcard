@@ -384,8 +384,6 @@ function buildThemeOverride(d: DesignSettings): Partial<ThemeOverride> {
     boldHeadings: d.boldHeadings,
     cardRadius: d.cardRadius,
     phoneBgStyle: getPhoneBgStyle(d),
-    // heroLayout: use stored value first (preserves template layout when palette becomes 'custom'),
-    // fall back to palette map, then default
     heroLayout: d.heroLayout && d.heroLayout !== 'default'
       ? d.heroLayout
       : (PALETTE_TO_HERO_LAYOUT[d.palette] ?? d.heroLayout ?? 'default'),
@@ -408,15 +406,15 @@ function QRModal({ text, onClose }: { text: string; onClose: () => void }) {
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encoded}&bgcolor=000000&color=49B618&margin=20`;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={onClose}>
-      <div className="relative bg-[#0D0D0D] border border-[#008001]/40 rounded-2xl p-6 sm:p-8 flex flex-col items-center gap-4 shadow-2xl w-full max-w-xs" onClick={e => e.stopPropagation()}>
-        <button onClick={onClose} className="absolute top-3 right-3 text-[#555] hover:text-white"><X className="w-5 h-5" /></button>
-        <h3 className="text-white font-semibold text-lg">Your QR Code</h3>
-        <div className="p-3 rounded-xl bg-[#1a1a1a] border border-[#008001]/30">
+      <div className="relative bg-popover border-border rounded-2xl p-6 sm:p-8 flex flex-col items-center gap-4 shadow-2xl w-full max-w-xs" onClick={e => e.stopPropagation()}>
+        <button onClick={onClose} className="absolute top-3 right-3 text-muted-foreground hover:text-foreground"><X className="w-5 h-5" /></button>
+        <h3 className="text-foreground font-semibold text-lg">Your QR Code</h3>
+        <div className="p-3 rounded-xl bg-muted border-border">
           <img src={qrUrl} alt="QR Code" width={220} height={220} className="rounded-lg" />
         </div>
-        <p className="text-[#A0A0A0] text-xs text-center max-w-[220px]">Scan to view your digital business card</p>
+        <p className="text-muted-foreground text-xs text-center max-w-[220px]">Scan to view your digital business card</p>
         <a href={qrUrl} download="business-card-qr.png"
-          className="flex items-center gap-2 bg-gradient-to-r from-[#008001] to-[#49B618] text-white rounded-xl px-5 py-2 text-sm font-semibold">
+          className="flex items-center gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground rounded-xl px-5 py-2 text-sm font-semibold">
           <Download className="w-4 h-4" /> Download QR
         </a>
       </div>
@@ -430,17 +428,17 @@ function PanelSection({ title, icon, children, defaultOpen = true }: {
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div style={{ borderRadius: 14, overflow: 'hidden', border: '1px solid rgba(0,128,1,0.22)', background: '#080808', marginBottom: 10 }}>
+    <div className="rounded-xl overflow-hidden border border-border bg-card/50 mb-2.5">
       <button onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#008001]/10 transition-colors">
+        className="w-full flex items-center justify-between px-4 py-3 hover:bg-accent/10 transition-colors">
         <div className="flex items-center gap-2.5">
-          <span style={{ color: '#49B618' }}>{icon}</span>
-          <span className="text-sm font-semibold text-white">{title}</span>
+          <span className="text-accent">{icon}</span>
+          <span className="text-sm font-semibold text-foreground">{title}</span>
         </div>
-        {open ? <ChevronUp className="w-4 h-4 text-[#444]" /> : <ChevronDown className="w-4 h-4 text-[#444]" />}
+        {open ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
       </button>
       {open && (
-        <div className="px-4 pb-4 pt-1 space-y-3.5" style={{ borderTop: '1px solid rgba(0,128,1,0.12)' }}>
+        <div className="px-4 pb-4 pt-1 space-y-3.5 border-t border-border">
           {children}
         </div>
       )}
@@ -457,8 +455,8 @@ function Chips<T extends string>({ options, value, onChange }: {
         <button key={o.value} onClick={() => onChange(o.value)}
           className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
           style={{
-            background: value === o.value ? 'linear-gradient(135deg,#008001,#49B618)' : '#151515',
-            color: value === o.value ? '#fff' : '#888',
+            background: value === o.value ? 'linear-gradient(135deg,#008001,#49B618)' : 'var(--muted)',
+            color: value === o.value ? '#fff' : 'var(--muted-foreground)',
             border: value === o.value ? '1px solid transparent' : '1px solid rgba(0,128,1,0.2)',
           }}>
           {o.label}
@@ -472,11 +470,10 @@ function Toggle({ label, sub, checked, onChange }: {
   label: string; sub?: string; checked: boolean; onChange: (v: boolean) => void;
 }) {
   return (
-    <div className="flex items-center justify-between py-2.5 px-3 rounded-xl"
-      style={{ background: '#0d0d0d', border: '1px solid rgba(0,128,1,0.15)' }}>
+    <div className="flex items-center justify-between py-2.5 px-3 rounded-xl bg-muted/30 border border-border">
       <div>
-        <p className="text-xs font-medium text-white">{label}</p>
-        {sub && <p className="text-[10px] mt-0.5" style={{ color: '#555' }}>{sub}</p>}
+        <p className="text-xs font-medium text-foreground">{label}</p>
+        {sub && <p className="text-[10px] mt-0.5 text-muted-foreground">{sub}</p>}
       </div>
       <button onClick={() => onChange(!checked)}
         className="relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full transition-colors"
@@ -495,11 +492,11 @@ function SliderRow({ label, value, min, max, step, unit, onChange }: {
   return (
     <div>
       <div className="flex justify-between items-center mb-1.5">
-        <Label className="text-[10px] uppercase tracking-wider" style={{ color: '#555' }}>{label}</Label>
-        <span className="text-[10px] font-bold" style={{ color: '#49B618' }}>{value}{unit ?? ''}</span>
+        <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</Label>
+        <span className="text-[10px] font-bold text-accent">{value}{unit ?? ''}</span>
       </div>
       <Slider value={[value]} onValueChange={v => onChange(v[0])} min={min} max={max} step={step}
-        className="[&_[role=slider]]:bg-[#49B618] [&_[role=slider]]:border-[#49B618]" />
+        className="[&_[role=slider]]:bg-accent [&_[role=slider]]:border-accent" />
     </div>
   );
 }
@@ -507,13 +504,13 @@ function SliderRow({ label, value, min, max, step, unit, onChange }: {
 function ColorRow({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
     <div>
-      <Label className="text-[10px] uppercase tracking-wider mb-1.5 block" style={{ color: '#555' }}>{label}</Label>
+      <Label className="text-[10px] uppercase tracking-wider mb-1.5 block text-muted-foreground">{label}</Label>
       <div className="flex items-center gap-2">
         <input type="color" value={value} onChange={e => onChange(e.target.value)}
           className="w-9 h-9 rounded-lg cursor-pointer border-0 bg-transparent p-0 flex-shrink-0" />
         <Input value={value}
           onChange={e => { if (/^#[0-9A-Fa-f]{0,6}$/.test(e.target.value)) onChange(e.target.value); }}
-          className="flex-1 bg-[#0d0d0d] border-[#008001]/25 text-white font-mono text-xs h-9"
+          className="flex-1 bg-input border-border text-foreground font-mono text-xs h-9"
           placeholder="#000000" />
       </div>
     </div>
@@ -547,13 +544,11 @@ function WallpaperPicker({ draft, set }: {
                 boxShadow: isSelected ? `0 0 14px ${draft.accentLight}66` : 'none',
               }}
             >
-              <div className="absolute bottom-0 inset-x-0 py-1 text-center"
-                style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
+              <div className="absolute bottom-0 inset-x-0 py-1 text-center bg-black/60 backdrop-blur-sm">
                 <span className="text-[9px] font-semibold text-white">{preset.name}</span>
               </div>
               {isSelected && (
-                <div className="absolute top-1 right-1 w-4 h-4 rounded-full flex items-center justify-center"
-                  style={{ background: draft.accentLight }}>
+                <div className="absolute top-1 right-1 w-4 h-4 rounded-full flex items-center justify-center" style={{ background: draft.accentLight }}>
                   <Check className="w-2.5 h-2.5 text-white" />
                 </div>
               )}
@@ -563,8 +558,7 @@ function WallpaperPicker({ draft, set }: {
       </div>
 
       {draft.phoneBgPreset === 'custom' && (
-        <div className="space-y-3 pt-2 px-3 pb-3 rounded-xl"
-          style={{ background: '#0d0d0d', border: '1px solid rgba(0,128,1,0.2)' }}>
+        <div className="space-y-3 pt-2 px-3 pb-3 rounded-xl bg-muted/20 border border-border">
           <Chips
             options={[
               { value: 'solid', label: 'Solid Color' },
@@ -1035,29 +1029,30 @@ export function DesignNew({
   const ControlsPanel = (
     <div className="space-y-0">
       {hasUnsaved && (
-        <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl mb-3" style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.3)' }}>
-          <div className="w-1.5 h-1.5 rounded-full animate-pulse flex-shrink-0" style={{ background: '#fbbf24' }} />
-          <p className="text-xs flex-1" style={{ color: '#fde68a' }}>Unsaved changes</p>
+        <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl mb-3 bg-warning/10 border border-warning/30">
+          <div className="w-1.5 h-1.5 rounded-full animate-pulse flex-shrink-0 bg-warning" />
+          <p className="text-xs flex-1 text-warning-foreground/90">Unsaved changes</p>
           <button
             type="button"
             onClick={handleReset}
             disabled={isResetting}
-            className="text-xs underline disabled:no-underline disabled:opacity-60 disabled:cursor-not-allowed"
-            style={{ color: '#fbbf24' }}
+            className="text-xs underline disabled:no-underline disabled:opacity-60 disabled:cursor-not-allowed text-warning"
           >
             {isResetting ? 'Reverting...' : 'Revert'}
           </button>
         </div>
       )}
-      <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl mb-3" style={{ background: 'rgba(0,128,1,0.08)', border: '1px solid rgba(0,128,1,0.22)' }}>
-        <div className="w-1.5 h-1.5 rounded-full animate-pulse flex-shrink-0" style={{ background: '#49B618' }} />
-        <p className="text-[11px]" style={{ color: '#7a9a7a' }}>Preview syncs live from <span style={{ color: '#49B618', fontWeight: 600 }}>Business Profile</span>. Press Save to keep changes.</p>
+      <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl mb-3 bg-primary/5 border border-primary/20">
+        <div className="w-1.5 h-1.5 rounded-full animate-pulse flex-shrink-0 bg-accent" />
+        <p className="text-[11px] text-muted-foreground">
+          Preview syncs live from <span className="text-accent font-semibold">Business Profile</span>. Press Save to keep changes.
+        </p>
       </div>
 
       {/* 1. COLOR PALETTES */}
       <PanelSection title="Color Palette" icon={<Palette className="w-4 h-4" />}>
-        <p className="text-[10px]" style={{ color: '#555', marginTop: -4 }}>
-          Each theme sets colors <span style={{ color: '#49B618' }}>+</span> phone wallpaper together
+        <p className="text-[10px] text-muted-foreground mt-[-4px]">
+          Each theme sets colors <span className="text-accent">+</span> phone wallpaper together
         </p>
         <div className="grid grid-cols-3 gap-2">
           {Object.entries(PALETTES).map(([key, p]) => {
@@ -1076,7 +1071,7 @@ export function DesignNew({
                 }}
               >
                 <div className="absolute inset-0" style={{ background: linkedWallpaper?.thumb || p.bg }} />
-                <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.38)' }} />
+                <div className="absolute inset-0 bg-black/38" />
                 <div className="relative z-10 p-2">
                   <div className="w-full rounded-md overflow-hidden mb-1.5"
                     style={{ background: `${p.card}dd`, border: `1px solid ${p.accent}55` }}>
@@ -1094,8 +1089,7 @@ export function DesignNew({
                   <div className="flex items-center justify-between">
                     <p className="text-[9px] font-bold text-white drop-shadow">{p.emoji} {p.name}</p>
                     {isActive && (
-                      <div className="w-3.5 h-3.5 rounded-full flex items-center justify-center flex-shrink-0"
-                        style={{ background: p.accentLight }}>
+                      <div className="w-3.5 h-3.5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: p.accentLight }}>
                         <Check className="w-2 h-2 text-white" />
                       </div>
                     )}
@@ -1110,7 +1104,7 @@ export function DesignNew({
       {/* 2. ACCENT & TEXT COLORS */}
       <PanelSection title="Accent & Text Colors" icon={<Sun className="w-4 h-4" />}>
         <div>
-          <Label className="text-[10px] uppercase tracking-wider mb-2 block" style={{ color: '#555' }}>Quick Colors</Label>
+          <Label className="text-[10px] uppercase tracking-wider mb-2 block text-muted-foreground">Quick Colors</Label>
           <div className="grid grid-cols-5 gap-1.5">
             {QUICK_COLORS.map(c => (
               <button key={c} onClick={() => applyAccent(c)} className="w-full aspect-square rounded-lg transition-all hover:scale-105"
@@ -1145,16 +1139,16 @@ export function DesignNew({
       {/* 4. TYPOGRAPHY */}
       <PanelSection title="Typography" icon={<Type className="w-4 h-4" />}>
         <div>
-          <Label className="text-[10px] uppercase tracking-wider mb-1.5 block" style={{ color: '#555' }}>Font Family</Label>
+          <Label className="text-[10px] uppercase tracking-wider mb-1.5 block text-muted-foreground">Font Family</Label>
           <Select value={draft.font} onValueChange={v => set('font', v)}>
-            <SelectTrigger className="bg-[#0d0d0d] border-[#008001]/25 text-white text-sm h-9"><SelectValue /></SelectTrigger>
-            <SelectContent className="bg-[#111a11] border-[#008001]/30">
-              {Object.entries(FONTS).map(([key, { label }]) => (<SelectItem key={key} value={key} className="text-white focus:bg-[#008001]/30 focus:text-white">{label}</SelectItem>))}
+            <SelectTrigger className="bg-input border-border text-foreground text-sm h-9"><SelectValue /></SelectTrigger>
+            <SelectContent className="bg-popover border-border">
+              {Object.entries(FONTS).map(([key, { label }]) => (<SelectItem key={key} value={key} className="text-foreground focus:bg-accent/20 focus:text-foreground">{label}</SelectItem>))}
             </SelectContent>
           </Select>
-          <div className="mt-2 px-3 py-2 rounded-xl text-center" style={{ background: '#0d0d0d', border: '1px solid rgba(0,128,1,0.15)', fontFamily: FONTS[draft.font]?.css }}>
-            <p style={{ fontSize: 14, color: '#fff', fontWeight: draft.boldHeadings ? 700 : 400 }}>Alex Johnson</p>
-            <p style={{ fontSize: 11, color: '#49B618' }}>Senior Product Designer</p>
+          <div className="mt-2 px-3 py-2 rounded-xl text-center bg-muted/30 border border-border" style={{ fontFamily: FONTS[draft.font]?.css }}>
+            <p style={{ fontSize: 14, color: draft.textPrimary, fontWeight: draft.boldHeadings ? 700 : 400 }}>Alex Johnson</p>
+            <p style={{ fontSize: 11, color: draft.accentLight }}>Senior Product Designer</p>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -1168,7 +1162,7 @@ export function DesignNew({
       <PanelSection title="Card Shape & Effects" icon={<Layout className="w-4 h-4" />}>
         <SliderRow label="Section Card Radius" value={draft.cardRadius} min={0} max={32} step={2} unit="px" onChange={v => set('cardRadius', v)} />
         <div>
-          <Label className="text-[10px] uppercase tracking-wider mb-1.5 block" style={{ color: '#555' }}>Shadow</Label>
+          <Label className="text-[10px] uppercase tracking-wider mb-1.5 block text-muted-foreground">Shadow</Label>
           <Chips options={[{ value: 'none', label: 'None' }, { value: 'soft', label: 'Soft' }, { value: 'medium', label: 'Medium' }, { value: 'strong', label: 'Strong' }]} value={draft.shadowIntensity} onChange={v => set('shadowIntensity', v as DesignSettings['shadowIntensity'])} />
         </div>
         <Toggle label="Glow Effect" sub="Accent-colored ambient glow behind preview" checked={draft.glowEffect} onChange={v => set('glowEffect', v)} />
@@ -1176,7 +1170,7 @@ export function DesignNew({
 
       {/* Save / Reset */}
       <div className="flex gap-3 pt-1 pb-6">
-        <Button type="button" onClick={handleSave} className="flex-1 h-11 gap-2 font-semibold text-white" style={{ background: 'linear-gradient(135deg,#008001,#49B618)' }}>
+        <Button type="button" onClick={handleSave} className="flex-1 h-11 gap-2 font-semibold text-primary-foreground bg-gradient-to-r from-primary to-accent">
           <Save className="w-4 h-4" />{isSaved ? 'Saved!' : 'Save Changes'}
         </Button>
       </div>
@@ -1186,8 +1180,8 @@ export function DesignNew({
   // ── Preview ───────────────────────────────────────────────────────
   const PreviewPanel = (
     <div className="lg:sticky lg:top-8">
-      <div className="rounded-2xl p-4 sm:p-6 transition-all duration-500"
-        style={{ background: 'linear-gradient(135deg,#0a0a0a 0%,#000 100%)', boxShadow: wrapperShadow, border: `1px solid ${draft.accentColor}22` }}>
+      <div className="rounded-2xl p-4 sm:p-6 transition-all duration-500 bg-gradient-to-br from-card/90 to-background" 
+        style={{ boxShadow: wrapperShadow, border: `1px solid ${draft.accentColor}22` }}>
         <PhonePreview {...sharedPreviewProps} onPreviewOpen={() => setIsPreviewOpen(true)} onShareLink={hasPublishedUrl ? handleShareLink : undefined} onSaveContact={handleSaveContact} />
       </div>
       <div className="mt-3 grid grid-cols-3 gap-1.5">
@@ -1199,9 +1193,9 @@ export function DesignNew({
           { k: 'Name', v: `${draft.nameFontSize}px` },
           { k: 'Body', v: `${draft.bodyFontSize}px` },
         ].map(({ k, v }) => (
-          <div key={k} className="text-center py-2 px-1 rounded-xl" style={{ background: '#0a0a0a', border: '1px solid rgba(0,128,1,0.12)' }}>
-            <p className="text-[9px] uppercase tracking-wider" style={{ color: '#444' }}>{k}</p>
-            <p className="text-[11px] font-semibold text-white capitalize truncate mt-0.5">{v}</p>
+          <div key={k} className="text-center py-2 px-1 rounded-xl bg-muted/30 border border-border">
+            <p className="text-[9px] uppercase tracking-wider text-muted-foreground">{k}</p>
+            <p className="text-[11px] font-semibold text-foreground capitalize truncate mt-0.5">{v}</p>
           </div>
         ))}
       </div>
@@ -1209,11 +1203,11 @@ export function DesignNew({
   );
 
   return (
-    <div className="min-h-screen p-4 sm:p-8" style={{ background: 'linear-gradient(135deg,#0a0a0a 0%,#000 100%)' }}>
+    <div className="min-h-screen p-4 sm:p-8 bg-gradient-to-br from-background to-background/80">
       <CardPreviewModal isOpen={isPreviewOpen} onClose={() => setIsPreviewOpen(false)} {...sharedPreviewProps} onShareLink={hasPublishedUrl ? handleShareLink : undefined} onSaveContact={handleSaveContact} />
       {showQR && <QRModal text={formData.website || window.location.href} onClose={() => setShowQR(false)} />}
       {toast && (
-        <div className="fixed top-5 right-4 sm:right-6 z-50 flex items-center gap-2 px-5 py-3 rounded-xl shadow-2xl text-sm font-medium text-white" style={{ background: '#008001' }}>
+        <div className="fixed top-5 right-4 sm:right-6 z-50 flex items-center gap-2 px-5 py-3 rounded-xl shadow-2xl text-sm font-medium text-white bg-primary">
           <Check className="w-4 h-4 flex-shrink-0" /> {toast}
         </div>
       )}
@@ -1221,28 +1215,27 @@ export function DesignNew({
         <div className="mb-6">
           <div className="flex items-start sm:items-center justify-between gap-4 flex-wrap">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Design & Customization</h1>
-              <p className="text-sm mt-1" style={{ color: '#555' }}>
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Design & Customization</h1>
+              <p className="text-sm mt-1 text-muted-foreground">
                 All changes preview instantly — save when ready
-                {hasUnsaved && <span className="ml-2 font-medium" style={{ color: '#fbbf24' }}>· Unsaved changes</span>}
+                {hasUnsaved && <span className="ml-2 font-medium text-warning">· Unsaved changes</span>}
               </p>
             </div>
             <div className="flex gap-2">
-              <Button type="button" onClick={handleReset} disabled={isResetting} variant="outline" size="sm" className="gap-2 text-sm"
-                style={{ borderColor: hasUnsaved ? 'rgba(251,191,36,0.5)' : 'rgba(0,128,1,0.3)', color: hasUnsaved ? '#fbbf24' : '#a0a0a0' }}>
+              <Button type="button" onClick={handleReset} disabled={isResetting} variant="outline" size="sm" className="gap-2 text-sm border-border text-muted-foreground hover:text-foreground hover:bg-accent/10">
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span className={isResetting ? 'inline' : 'hidden sm:inline'}>{isResetting ? 'Resetting...' : 'Reset'}</span>
               </Button>
-              <Button type="button" onClick={handleSave} size="sm" className="gap-2 text-sm font-semibold text-white" style={{ background: 'linear-gradient(135deg,#008001,#49B618)' }}>
+              <Button type="button" onClick={handleSave} size="sm" className="gap-2 text-sm font-semibold text-primary-foreground bg-gradient-to-r from-primary to-accent">
                 <Save className="w-3.5 h-3.5" />{isSaved ? 'Saved!' : 'Save'}
               </Button>
             </div>
           </div>
-          <div className="mt-4 flex lg:hidden rounded-xl overflow-hidden" style={{ border: '1px solid rgba(0,128,1,0.25)' }}>
+          <div className="mt-4 flex lg:hidden rounded-xl overflow-hidden border border-border">
             {(['controls', 'preview'] as const).map(tab => (
               <button key={tab} onClick={() => setMobileTab(tab)}
                 className="flex-1 py-2.5 text-sm font-medium flex items-center justify-center gap-2 transition-all"
-                style={{ background: mobileTab === tab ? '#008001' : '#000', color: mobileTab === tab ? '#fff' : '#555' }}>
+                style={{ background: mobileTab === tab ? 'var(--primary)' : 'var(--background)', color: mobileTab === tab ? 'var(--primary-foreground)' : 'var(--muted-foreground)' }}>
                 {tab === 'controls' ? <><Palette className="w-4 h-4" />Customize</> : <><Smartphone className="w-4 h-4" />Preview</>}
               </button>
             ))}

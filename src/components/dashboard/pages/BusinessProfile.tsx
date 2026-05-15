@@ -1,3 +1,4 @@
+{/* theme: converted */}
 "use client";
 
 import Image from 'next/image';
@@ -539,24 +540,24 @@ function AddComponentMenu({ onAdd }: { onAdd: (key: string) => void }) {
   return (
     <div ref={ref} className="flex justify-center relative">
       <button type="button" onClick={() => setOpen(o => !o)}
-        className="flex items-center gap-2 bg-gradient-to-r from-[#008001] to-[#49B618] hover:from-[#006312] hover:to-[#008001] text-white px-6 sm:px-8 py-2 rounded-full font-medium transition-all text-sm">
+        className="flex items-center gap-2 bg-gradient-to-r from-primary to-accent hover:from-primary/80 hover:to-accent/80 text-primary-foreground px-6 sm:px-8 py-2 rounded-full font-medium transition-all text-sm">
         <Plus className="w-4 h-4" />Add a component
         <ChevronDown className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
       {open && (
-        <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-64 sm:w-72 bg-[#0D0D0D] border border-[#008001]/40 rounded-2xl shadow-2xl z-30 max-h-[380px] overflow-y-auto">
-          <p className="text-[10px] font-semibold text-[#49B618] uppercase tracking-wider px-4 pt-3 pb-1">Core Sections</p>
+        <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-64 sm:w-72 bg-popover border-border rounded-2xl shadow-2xl z-30 max-h-[380px] overflow-y-auto">
+          <p className="text-[10px] font-semibold text-accent uppercase tracking-wider px-4 pt-3 pb-1">Core Sections</p>
           {ADDABLE_COMPONENTS.filter(c => c.group === 'builtin').map(({ key, label, icon: Icon }) => (
             <button key={key} type="button" onClick={() => { onAdd(key); setOpen(false); }}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-white hover:bg-[#008001]/20 transition-colors text-sm text-left">
-              <div className="w-7 h-7 rounded-lg bg-[#008001]/20 flex items-center justify-center flex-shrink-0"><Icon className="w-3.5 h-3.5 text-[#49B618]" /></div>{label}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-foreground hover:bg-accent/10 transition-colors text-sm text-left">
+              <div className="w-7 h-7 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0"><Icon className="w-3.5 h-3.5 text-accent" /></div>{label}
             </button>
           ))}
-          <p className="text-[10px] font-semibold text-[#49B618] uppercase tracking-wider px-4 pt-3 pb-1 border-t border-[#008001]/20 mt-1">Extra Components</p>
+          <p className="text-[10px] font-semibold text-accent uppercase tracking-wider px-4 pt-3 pb-1 border-t border-border mt-1">Extra Components</p>
           {ADDABLE_COMPONENTS.filter(c => c.group === 'extra').map(({ key, label, icon: Icon }) => (
             <button key={key} type="button" onClick={() => { onAdd(key); setOpen(false); }}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-white hover:bg-[#008001]/20 transition-colors text-sm text-left">
-              <div className="w-7 h-7 rounded-lg bg-[#008001]/20 flex items-center justify-center flex-shrink-0"><Icon className="w-3.5 h-3.5 text-[#49B618]" /></div>{label}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-foreground hover:bg-accent/10 transition-colors text-sm text-left">
+              <div className="w-7 h-7 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0"><Icon className="w-3.5 h-3.5 text-accent" /></div>{label}
             </button>
           ))}
           <div className="h-2" />
@@ -607,22 +608,22 @@ function ImageUploader({ value, onChange, label, ratio, roundedClass = 'rounded-
 
   return (
     <div className="space-y-2">
-      <Label className="text-[#A0A0A0] text-xs">{label} <span className="text-[#555]">({ratio})</span></Label>
+      <Label className="text-muted-foreground text-xs">{label} <span className="text-muted-foreground/60">({ratio})</span></Label>
       <div className="flex items-center gap-3 flex-wrap">
-        <div className={`relative ${size} ${roundedClass} overflow-hidden ring-2 ring-[#008001]/30 bg-[#1E1E1E] flex-shrink-0 flex items-center justify-center`}>
+        <div className={`relative ${size} ${roundedClass} overflow-hidden ring-2 ring-primary/30 bg-muted flex-shrink-0 flex items-center justify-center`}>
           {hasContent
             ? <Image src={displaySrc} alt={label} fill className="object-cover" />
-            : <ImageIcon className="w-5 h-5 text-[#555]" />
+            : <ImageIcon className="w-5 h-5 text-muted-foreground" />
           }
         </div>
         <button type="button" onClick={() => ref.current?.click()}
-          className="flex flex-col items-center justify-center gap-1 w-14 h-14 rounded-xl border-2 border-dashed border-[#008001]/40 hover:border-[#49B618] hover:bg-[#008001]/10 transition-all text-[#A0A0A0] hover:text-[#49B618]">
+          className="flex flex-col items-center justify-center gap-1 w-14 h-14 rounded-xl border-2 border-dashed border-border hover:border-accent hover:bg-accent/10 transition-all text-muted-foreground hover:text-accent">
           <Upload className="w-4 h-4" />
           <span className="text-[10px]">Upload</span>
         </button>
         <input ref={ref} type="file" accept="image/*" className="hidden"
           onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileSelect(f); e.target.value = ''; }} />
-        {hasContent && <button type="button" onClick={() => { onChange(''); onFileSelect?.(null); }} className="text-xs text-red-400 hover:text-red-300 underline">Remove</button>}
+        {hasContent && <button type="button" onClick={() => { onChange(''); onFileSelect?.(null); }} className="text-xs text-destructive hover:text-destructive/80 underline">Remove</button>}
       </div>
     </div>
   );
@@ -632,7 +633,7 @@ interface ToggleProps { checked: boolean; onChange: (v: boolean) => void; }
 function Toggle({ checked, onChange }: ToggleProps) {
   return (
     <button type="button" role="switch" aria-checked={checked} onClick={() => onChange(!checked)}
-      className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors focus:outline-none ${checked ? 'bg-gradient-to-r from-[#008001] to-[#49B618]' : 'bg-[#333]'}`}>
+      className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors focus:outline-none ${checked ? 'bg-gradient-to-r from-primary to-accent' : 'bg-muted'}`}>
       <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-6' : 'translate-x-1'}`} />
     </button>
   );
@@ -650,12 +651,12 @@ function LogoPositionPicker({ value, onChange }: { value: LogoPosition; onChange
       {opts.map(opt => (
         <button key={opt.v} type="button" onClick={() => onChange(opt.v)}
           className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all text-center gap-1.5 ${value === opt.v
-            ? 'border-[#49B618] bg-[#49B618]/10 text-white'
-            : 'border-[#008001]/20 bg-[#0D0D0D] text-[#A0A0A0] hover:border-[#008001]/50 hover:text-white'
+            ? 'border-accent bg-accent/10 text-foreground'
+            : 'border-border bg-card/50 text-muted-foreground hover:border-primary/50 hover:text-foreground'
             }`}>
-          <div className="w-12 h-8 rounded-md bg-[#1a2e1a] border border-[#008001]/30 relative overflow-hidden flex-shrink-0">
-            <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-[#49B618]/40 border border-[#49B618]/60" />
-            <div className={`absolute w-4 h-1.5 rounded-sm bg-[#49B618]/80 ${opt.logoClass}`} />
+          <div className="w-12 h-8 rounded-md bg-muted border border-primary/30 relative overflow-hidden flex-shrink-0">
+            <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-accent/40 border border-accent/60" />
+            <div className={`absolute w-4 h-1.5 rounded-sm bg-accent/80 ${opt.logoClass}`} />
           </div>
           <span className="text-[11px] font-medium leading-tight">{opt.label}</span>
           <span className="text-[9px] opacity-55 leading-tight">{opt.desc}</span>
@@ -702,30 +703,30 @@ function DraggableSectionBlock({
   return (
     <Card
       id={id}
-      className={`bg-[#000000] border-[#008001]/30 overflow-hidden scroll-mt-4 transition-all duration-200 ${
+      className={`bg-card border-border overflow-hidden scroll-mt-4 transition-all duration-200 ${
         isDragging ? 'opacity-50 shadow-2xl scale-[1.02]' : ''
       }`}
       style={{ cursor: 'default' }}
     >
-      <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-[#008001]/20">
+      <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-border">
         <div className="flex items-center gap-2 min-w-0">
           <div
             {...dragHandleProps}
-            className="cursor-grab active:cursor-grabbing p-1 -ml-1 rounded-md hover:bg-[#008001]/20 transition-colors"
+            className="cursor-grab active:cursor-grabbing p-1 -ml-1 rounded-md hover:bg-accent/20 transition-colors"
             style={{ touchAction: 'none' }}
             title="Drag to reorder"
           >
-            <GripVertical className="w-4 h-4 text-[#555] cursor-grab active:cursor-grabbing flex-shrink-0" />
+            <GripVertical className="w-4 h-4 text-muted-foreground cursor-grab active:cursor-grabbing flex-shrink-0" />
           </div>
-          <Icon className="w-4 h-4 text-[#49B618] flex-shrink-0" />
-          <span className="font-semibold text-white text-sm truncate">{title}</span>
+          <Icon className="w-4 h-4 text-accent flex-shrink-0" />
+          <span className="font-semibold text-foreground text-sm truncate">{title}</span>
         </div>
         <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 ml-2">
           <Toggle checked={enabled} onChange={handleToggle} />
           <button
             type="button"
             onClick={onExpand}
-            className="w-7 h-7 rounded-md flex items-center justify-center text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20 transition-colors"
+            className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent/20 transition-colors"
           >
             {expanded ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
           </button>
@@ -1435,48 +1436,48 @@ export default function BusinessProfile({
       case 'profile':
         content = (
           <div className="space-y-4 sm:space-y-5">
-            <div className="p-3 sm:p-4 rounded-xl bg-[#0A0A0A] border border-[#008001]/20 space-y-4">
+            <div className="p-3 sm:p-4 rounded-xl bg-muted/30 border border-border space-y-4">
               <ImageUploader value={profileImage} onChange={setProfileImage} label="Profile Photo" ratio="500×625px" roundedClass="rounded-xl" size="w-16 h-16 sm:w-20 sm:h-20" pendingFile={pendingProfileImage} onFileSelect={setPendingProfileImage} />
-              <div className="border-t border-[#008001]/10 pt-4">
+              <div className="border-t border-border pt-4">
                 <ImageUploader value={brandLogo} onChange={setBrandLogo} label="Brand Logo" ratio="160×80px" roundedClass="rounded-lg" size="w-20 h-12 sm:w-24 sm:h-14" pendingFile={pendingBrandLogo} onFileSelect={setPendingBrandLogo} />
                 {brandLogo && (
                   <div className="mt-3">
                     <div className="flex items-center gap-2 mb-1">
-                      <LayoutDashboard className="w-3.5 h-3.5 text-[#49B618]" />
-                      <Label className="text-[#49B618] text-xs font-semibold">Logo Position on Card</Label>
+                      <LayoutDashboard className="w-3.5 h-3.5 text-accent" />
+                      <Label className="text-accent text-xs font-semibold">Logo Position on Card</Label>
                     </div>
                     <LogoPositionPicker value={logoPosition} onChange={setLogoPosition} />
                   </div>
                 )}
               </div>
             </div>
-            <div><Label className="text-[#A0A0A0] text-xs">Name</Label><Input value={formData.name} onChange={e => updateField('name', e.target.value)} placeholder="Full name" className="mt-1 bg-[#1E1E1E] border-[#008001]/30 text-white" /></div>
+            <div><Label className="text-muted-foreground text-xs">Name</Label><Input value={formData.name} onChange={e => updateField('name', e.target.value)} placeholder="Full name" className="mt-1 bg-input border-border text-foreground" /></div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div><Label className="text-[#A0A0A0] text-xs">Heading (Job Title)</Label><Input value={formData.title} onChange={e => updateField('title', e.target.value)} placeholder="Title" className="mt-1 bg-[#1E1E1E] border-[#008001]/30 text-white" /></div>
-              <div><Label className="text-[#A0A0A0] text-xs">Subheading (Company)</Label><Input value={formData.company} onChange={e => updateField('company', e.target.value)} placeholder="Company" className="mt-1 bg-[#1E1E1E] border-[#008001]/30 text-white" /></div>
+              <div><Label className="text-muted-foreground text-xs">Heading (Job Title)</Label><Input value={formData.title} onChange={e => updateField('title', e.target.value)} placeholder="Title" className="mt-1 bg-input border-border text-foreground" /></div>
+              <div><Label className="text-muted-foreground text-xs">Subheading (Company)</Label><Input value={formData.company} onChange={e => updateField('company', e.target.value)} placeholder="Company" className="mt-1 bg-input border-border text-foreground" /></div>
             </div>
-            <div><Label className="text-[#A0A0A0] text-xs">Tagline / Bio</Label><Textarea value={formData.tagline} onChange={e => updateField('tagline', e.target.value)} placeholder="A short bio..." className="mt-1 bg-[#1E1E1E] border-[#008001]/30 text-white" rows={3} /></div>
+            <div><Label className="text-muted-foreground text-xs">Tagline / Bio</Label><Textarea value={formData.tagline} onChange={e => updateField('tagline', e.target.value)} placeholder="A short bio..." className="mt-1 bg-input border-border text-foreground" rows={3} /></div>
           </div>
         );
         break;
       case 'headingText':
         content = (
           <div className="space-y-4">
-            <div><Label className="text-[#A0A0A0] text-xs">Heading</Label><Input value={formData.headingText} onChange={e => updateField('headingText', e.target.value)} placeholder="Section heading..." className="mt-1 bg-[#1E1E1E] border-[#008001]/30 text-white" /></div>
-            <div><Label className="text-[#A0A0A0] text-xs">Text</Label><Textarea value={formData.bodyText} onChange={e => updateField('bodyText', e.target.value)} placeholder="Description or body text..." className="mt-1 bg-[#1E1E1E] border-[#008001]/30 text-white" rows={4} /></div>
+            <div><Label className="text-muted-foreground text-xs">Heading</Label><Input value={formData.headingText} onChange={e => updateField('headingText', e.target.value)} placeholder="Section heading..." className="mt-1 bg-input border-border text-foreground" /></div>
+            <div><Label className="text-muted-foreground text-xs">Text</Label><Textarea value={formData.bodyText} onChange={e => updateField('bodyText', e.target.value)} placeholder="Description or body text..." className="mt-1 bg-input border-border text-foreground" rows={4} /></div>
           </div>
         );
         break;
       case 'contactUs':
         content = (
           <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl bg-[#0D0D0D] border border-[#008001]/20 gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl bg-muted/30 border border-border gap-3">
               <div className="flex-1 min-w-0">
-                <p className="text-xs text-[#A0A0A0] mb-1">Floating Button Text</p>
-                <Input defaultValue="Add to Contact" className="bg-[#1E1E1E] border-[#008001]/30 text-white h-8 text-sm" />
+                <p className="text-xs text-muted-foreground mb-1">Floating Button Text</p>
+                <Input defaultValue="Add to Contact" className="bg-input border-border text-foreground h-8 text-sm" />
               </div>
               <button type="button" onClick={() => downloadVCard(formData, profileImage)}
-                className="flex-shrink-0 flex items-center gap-2 bg-white text-[#008001] rounded-full px-4 py-2 text-sm font-semibold hover:bg-[#f0f0f0] transition-colors self-end sm:self-auto">
+                className="flex-shrink-0 flex items-center gap-2 bg-foreground text-background rounded-full px-4 py-2 text-sm font-semibold hover:bg-foreground/80 transition-colors self-end sm:self-auto">
                 Add to Contact <Plus className="w-4 h-4" />
               </button>
             </div>
@@ -1486,13 +1487,13 @@ export default function BusinessProfile({
               { icon: MapPin, label: 'Address', field: 'location' as const, color: '#009200', placeholder: 'City, Country' },
               { icon: Globe, label: 'Website', field: 'website' as const, color: '#006312', placeholder: 'https://...' },
             ].map(({ icon: Icon, label, field, color, placeholder }) => (
-              <div key={field} className="flex items-center gap-3 p-3 sm:p-4 rounded-xl bg-[#0D0D0D] border border-[#008001]/20">
+              <div key={field} className="flex items-center gap-3 p-3 sm:p-4 rounded-xl bg-muted/30 border border-border">
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${color}18` }}>
                   <Icon className="w-4 h-4" style={{ color }} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[10px] text-[#555] mb-1 uppercase tracking-wider font-medium">{label}</p>
-                  <Input value={formData[field]} onChange={e => updateField(field, e.target.value)} placeholder={placeholder} className="bg-[#1E1E1E] border-[#008001]/30 text-white h-8 text-sm w-full" />
+                  <p className="text-[10px] text-muted-foreground/80 mb-1 uppercase tracking-wider font-medium">{label}</p>
+                  <Input value={formData[field]} onChange={e => updateField(field, e.target.value)} placeholder={placeholder} className="bg-input border-border text-foreground h-8 text-sm w-full" />
                 </div>
               </div>
             ))}
@@ -1502,10 +1503,10 @@ export default function BusinessProfile({
       case 'businessDetails':
         content = (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div><Label className="text-[#A0A0A0] text-xs">Company Name</Label><Input value={formData.company} onChange={e => updateField('company', e.target.value)} className="mt-1 bg-[#1E1E1E] border-[#008001]/30 text-white" /></div>
-            <div><Label className="text-[#A0A0A0] text-xs">Industry</Label><Select value={formData.industry} onValueChange={v => updateField('industry', v)}><SelectTrigger className="mt-1 bg-[#1E1E1E] border-[#008001]/30 text-white"><SelectValue /></SelectTrigger><SelectContent className="bg-[#0D0D0D] border-[#008001]/30">{INDUSTRIES.map(({ value, label }) => (<SelectItem key={value} value={value} className="text-white focus:bg-[#008001]/20 focus:text-white">{label}</SelectItem>))}</SelectContent></Select></div>
-            <div><Label className="text-[#A0A0A0] text-xs">Year Founded</Label><Input type="text" inputMode="numeric" pattern="[0-9]{0,4}" maxLength={4} placeholder="e.g. 2015" value={formData.yearFounded} onChange={e => { const v = e.target.value.replace(/\D/g, '').slice(0, 4); updateField('yearFounded', v); }} className="mt-1 bg-[#1E1E1E] border-[#008001]/30 text-white" /></div>
-            <div><Label className="text-[#A0A0A0] text-xs">Location</Label><Input value={formData.location} onChange={e => updateField('location', e.target.value)} className="mt-1 bg-[#1E1E1E] border-[#008001]/30 text-white" /></div>
+            <div><Label className="text-muted-foreground text-xs">Company Name</Label><Input value={formData.company} onChange={e => updateField('company', e.target.value)} className="mt-1 bg-input border-border text-foreground" /></div>
+            <div><Label className="text-muted-foreground text-xs">Industry</Label><Select value={formData.industry} onValueChange={v => updateField('industry', v)}><SelectTrigger className="mt-1 bg-input border-border text-foreground"><SelectValue /></SelectTrigger><SelectContent className="bg-popover border-border">{INDUSTRIES.map(({ value, label }) => (<SelectItem key={value} value={value} className="text-foreground focus:bg-accent/20 focus:text-foreground">{label}</SelectItem>))}</SelectContent></Select></div>
+            <div><Label className="text-muted-foreground text-xs">Year Founded</Label><Input type="text" inputMode="numeric" pattern="[0-9]{0,4}" maxLength={4} placeholder="e.g. 2015" value={formData.yearFounded} onChange={e => { const v = e.target.value.replace(/\D/g, '').slice(0, 4); updateField('yearFounded', v); }} className="mt-1 bg-input border-border text-foreground" /></div>
+            <div><Label className="text-muted-foreground text-xs">Location</Label><Input value={formData.location} onChange={e => updateField('location', e.target.value)} className="mt-1 bg-input border-border text-foreground" /></div>
           </div>
         );
         break;
@@ -1515,24 +1516,24 @@ export default function BusinessProfile({
             {socialLinks.map((s, i) => {
               const opt = SOCIAL_OPTIONS[s.platform] ?? SOCIAL_OPTIONS[0]; const Icon = opt.icon;
               return (
-                <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-2 p-3 rounded-xl bg-[#0D0D0D] border border-[#008001]/20">
+                <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-2 p-3 rounded-xl bg-muted/30 border border-border">
                   <div className="flex items-center gap-2">
                     <button type="button" onClick={() => openSocialLink(s.value, s.platform)} className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 transition-all ${s.value ? 'opacity-100 hover:scale-110 cursor-pointer' : 'opacity-40 cursor-not-allowed'}`} style={{ backgroundColor: `${opt.color}20` }}><Icon className="w-4 h-4" style={{ color: opt.color }} /></button>
                     <Select value={String(s.platform)} onValueChange={v => updateSocial(i, 'platform', Number(v))}>
-                      <SelectTrigger className="w-28 bg-[#1E1E1E] border-[#008001]/30 text-white text-xs h-9 flex-shrink-0"><SelectValue /></SelectTrigger>
-                      <SelectContent className="bg-[#0D0D0D] border-[#008001]/30">
-                        {SOCIAL_OPTIONS.map((o, idx) => (<SelectItem key={idx} value={String(idx)} className="text-white focus:bg-[#008001]/20 focus:text-white">{o.name}</SelectItem>))}
+                      <SelectTrigger className="w-28 bg-input border-border text-foreground text-xs h-9 flex-shrink-0"><SelectValue /></SelectTrigger>
+                      <SelectContent className="bg-popover border-border">
+                        {SOCIAL_OPTIONS.map((o, idx) => (<SelectItem key={idx} value={String(idx)} className="text-foreground focus:bg-accent/20 focus:text-foreground">{o.name}</SelectItem>))}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="flex items-center gap-2 flex-1">
-                    <Input value={s.value} onChange={e => updateSocial(i, 'value', e.target.value)} placeholder={opt.placeholder} className="flex-1 bg-[#1E1E1E] border-[#008001]/30 text-white h-9 text-sm" />
-                    <button type="button" onClick={() => removeSocial(i)} className="text-red-400 hover:text-red-300 p-1 flex-shrink-0"><Trash2 className="w-4 h-4" /></button>
+                    <Input value={s.value} onChange={e => updateSocial(i, 'value', e.target.value)} placeholder={opt.placeholder} className="flex-1 bg-input border-border text-foreground h-9 text-sm" />
+                    <button type="button" onClick={() => removeSocial(i)} className="text-destructive hover:text-destructive/80 p-1 flex-shrink-0"><Trash2 className="w-4 h-4" /></button>
                   </div>
                 </div>
               );
             })}
-            <Button type="button" variant="outline" size="sm" onClick={addSocial} className="border-dashed border-[#008001]/40 text-[#49B618] hover:bg-[#008001]/10 w-full"><Plus className="w-4 h-4 mr-2" />Add Social Link</Button>
+            <Button type="button" variant="outline" size="sm" onClick={addSocial} className="border-dashed border-border text-accent hover:bg-accent/10 w-full"><Plus className="w-4 h-4 mr-2" />Add Social Link</Button>
           </div>
         );
         break;
@@ -1540,32 +1541,32 @@ export default function BusinessProfile({
         content = (
           <div className="space-y-3">
             {customLinks.map((l, i) => (
-              <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-2 p-3 rounded-xl bg-[#0D0D0D] border border-[#008001]/20">
-                <Input value={l.label} onChange={e => updateLink(i, 'label', e.target.value)} placeholder="Label" className="w-full sm:w-32 bg-[#1E1E1E] border-[#008001]/30 text-white h-9 text-sm flex-shrink-0" />
+              <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-2 p-3 rounded-xl bg-muted/30 border border-border">
+                <Input value={l.label} onChange={e => updateLink(i, 'label', e.target.value)} placeholder="Label" className="w-full sm:w-32 bg-input border-border text-foreground h-9 text-sm flex-shrink-0" />
                 <div className="flex items-center gap-2 flex-1">
-                  <Input value={l.url} onChange={e => updateLink(i, 'url', e.target.value)} placeholder="https://..." className="flex-1 bg-[#1E1E1E] border-[#008001]/30 text-white h-9 text-sm" />
-                  {l.url && (<button type="button" onClick={() => window.open(l.url, '_blank', 'noopener,noreferrer')} className="text-[#49B618] hover:text-white p-1 flex-shrink-0"><Globe className="w-4 h-4" /></button>)}
-                  <button type="button" onClick={() => removeLink(i)} className="text-red-400 hover:text-red-300 p-1 flex-shrink-0"><Trash2 className="w-4 h-4" /></button>
+                  <Input value={l.url} onChange={e => updateLink(i, 'url', e.target.value)} placeholder="https://..." className="flex-1 bg-input border-border text-foreground h-9 text-sm" />
+                  {l.url && (<button type="button" onClick={() => window.open(l.url, '_blank', 'noopener,noreferrer')} className="text-accent hover:text-foreground p-1 flex-shrink-0"><Globe className="w-4 h-4" /></button>)}
+                  <button type="button" onClick={() => removeLink(i)} className="text-destructive hover:text-destructive/80 p-1 flex-shrink-0"><Trash2 className="w-4 h-4" /></button>
                 </div>
               </div>
             ))}
-            <Button type="button" variant="outline" size="sm" onClick={addLink} className="border-dashed border-[#008001]/40 text-[#49B618] hover:bg-[#008001]/10 w-full"><Plus className="w-4 h-4 mr-2" />Add Link</Button>
+            <Button type="button" variant="outline" size="sm" onClick={addLink} className="border-dashed border-border text-accent hover:bg-accent/10 w-full"><Plus className="w-4 h-4 mr-2" />Add Link</Button>
           </div>
         );
         break;
       case 'appointment':
         content = (
           <div>
-            <Label className="text-[#A0A0A0] text-xs">Booking URL (Calendly, Cal.com, etc.)</Label>
+            <Label className="text-muted-foreground text-xs">Booking URL (Calendly, Cal.com, etc.)</Label>
             <div className="flex gap-2 mt-1">
-              <Input value={formData.appointmentUrl} onChange={e => updateField('appointmentUrl', e.target.value)} placeholder="https://calendly.com/username" className="flex-1 bg-[#1E1E1E] border-[#008001]/30 text-white" />
-              {formData.appointmentUrl && (<Button type="button" size="sm" variant="outline" className="border-[#008001]/30 text-[#49B618] hover:bg-[#008001]/20 flex-shrink-0" onClick={() => window.open(formData.appointmentUrl, '_blank', 'noopener,noreferrer')}><Globe className="w-4 h-4" /></Button>)}
+              <Input value={formData.appointmentUrl} onChange={e => updateField('appointmentUrl', e.target.value)} placeholder="https://calendly.com/username" className="flex-1 bg-input border-border text-foreground" />
+              {formData.appointmentUrl && (<Button type="button" size="sm" variant="outline" className="border-border text-accent hover:bg-accent/20 flex-shrink-0" onClick={() => window.open(formData.appointmentUrl, '_blank', 'noopener,noreferrer')}><Globe className="w-4 h-4" /></Button>)}
             </div>
           </div>
         );
         break;
       case 'collectContacts':
-        content = <div><p className="text-xs text-[#555]">Enable this feature to collect your prospects contact details</p></div>;
+        content = <div><p className="text-xs text-muted-foreground">Enable this feature to collect your prospects contact details</p></div>;
         break;
     }
 
@@ -1577,7 +1578,7 @@ export default function BusinessProfile({
         onDragOver={(e) => handleDragOver(e, index)}
         onDragEnd={handleDragEnd}
         onDragLeave={handleDragLeave}
-        className={`transition-all duration-200 ${isDragOver ? 'border-t-2 border-t-[#49B618]' : ''}`}
+        className={`transition-all duration-200 ${isDragOver ? 'border-t-2 border-t-accent' : ''}`}
         style={{ cursor: 'grab' }}
       >
         <DraggableSectionBlock
@@ -1604,7 +1605,7 @@ export default function BusinessProfile({
     return unifiedOrder.map((id, index) => {
       const isBeingDragged = draggedIndex === index;
       const isDragOver = dragOverIndex === index && draggedIndex !== null && draggedIndex !== index;
-      const wrapperClass = `transition-all duration-200 ${isDragOver ? 'border-t-2 border-t-[#49B618]' : ''}`;
+      const wrapperClass = `transition-all duration-200 ${isDragOver ? 'border-t-2 border-t-accent' : ''}`;
 
       // Core section?
       if (DEFAULT_SECTION_ORDER.includes(id as SectionKey)) {
@@ -1682,37 +1683,37 @@ export default function BusinessProfile({
       {/* Template picker - prefill profile + design */}
       
       {/* Profile header card */}
-      <Card className="bg-gradient-to-br from-[#000000] to-[#008001]/10 border-[#008001]/30">
+      <Card className="bg-gradient-to-br from-card to-primary/10 border-border">
         <CardContent className="p-4 sm:p-8">
           <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
             <div className="relative group flex-shrink-0 self-center sm:self-start">
-              <div className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-2xl overflow-hidden ring-4 ring-[#008001]/30 bg-[#1E1E1E] flex items-center justify-center">
-                {profileImage ? <Image src={profileImage} alt="Profile" fill className="object-cover" /> : <User className="w-10 h-10 text-[#333]" />}
+              <div className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-2xl overflow-hidden ring-4 ring-primary/30 bg-muted flex items-center justify-center">
+                {profileImage ? <Image src={profileImage} alt="Profile" fill className="object-cover" /> : <User className="w-10 h-10 text-muted-foreground" />}
               </div>
               <label className="absolute inset-0 bg-black/60 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
                 <Upload className="w-7 h-7 text-white" />
                 <input type="file" accept="image/*" className="hidden" onChange={handleProfileFileChange} />
               </label>
-              <div className="absolute -bottom-2 -right-2 w-9 h-9 bg-gradient-to-br from-[#49B618] to-[#009200] rounded-full border-4 border-[#000000] flex items-center justify-center">
+              <div className="absolute -bottom-2 -right-2 w-9 h-9 bg-gradient-to-br from-accent to-secondary rounded-full border-4 border-background flex items-center justify-center">
                 <div className="w-2.5 h-2.5 bg-white rounded-full" />
               </div>
             </div>
             <div className="flex-1 min-w-0 w-full">
               <div className="flex items-start justify-between mb-3 gap-2">
                 <div className="min-w-0">
-                  <h2 className="text-xl sm:text-2xl font-bold mb-1 text-white truncate">{formData.name}</h2>
-                  <p className="text-[#49B618] text-sm truncate">{formData.title}</p>
-                  <p className="text-sm text-[#A0A0A0] truncate">{formData.company}</p>
+                  <h2 className="text-xl sm:text-2xl font-bold mb-1 text-foreground truncate">{formData.name}</h2>
+                  <p className="text-accent text-sm truncate">{formData.title}</p>
+                  <p className="text-sm text-muted-foreground truncate">{formData.company}</p>
                 </div>
-                <Badge className="bg-gradient-to-r from-[#008001] to-[#49B618] text-white border-0 flex-shrink-0 text-xs">Active</Badge>
+                <Badge className="bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 flex-shrink-0 text-xs">Active</Badge>
               </div>
               <div className="flex gap-2 flex-wrap">
-                <Button size="sm" className="bg-gradient-to-r from-[#008001] to-[#49B618] hover:from-[#006312] hover:to-[#008001] text-white text-xs h-8" onClick={openPreview}><Eye className="w-3.5 h-3.5 mr-1.5" />Preview</Button>
-                <Button variant="outline" size="sm" className="border-[#008001]/30 text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20 text-xs h-8 disabled:opacity-35 disabled:cursor-not-allowed" onClick={handleShareLink} disabled={!hasPublishedUrl} title={!hasPublishedUrl ? 'Publish your card first to share the link' : undefined}>
-                  {copied ? <Check className="w-3.5 h-3.5 mr-1.5 text-[#49B618]" /> : <Share2 className="w-3.5 h-3.5 mr-1.5" />}
+                <Button size="sm" className="bg-gradient-to-r from-primary to-accent hover:from-primary/80 hover:to-accent/80 text-primary-foreground text-xs h-8" onClick={openPreview}><Eye className="w-3.5 h-3.5 mr-1.5" />Preview</Button>
+                <Button variant="outline" size="sm" className="border-border text-muted-foreground hover:text-foreground hover:bg-accent/10 text-xs h-8 disabled:opacity-35 disabled:cursor-not-allowed" onClick={handleShareLink} disabled={!hasPublishedUrl} title={!hasPublishedUrl ? 'Publish your card first to share the link' : undefined}>
+                  {copied ? <Check className="w-3.5 h-3.5 mr-1.5 text-accent" /> : <Share2 className="w-3.5 h-3.5 mr-1.5" />}
                   {copied ? 'Copied!' : 'Share'}
                 </Button>
-                <Button variant="outline" size="sm" className="border-[#008001]/30 text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20 text-xs h-8 disabled:opacity-35 disabled:cursor-not-allowed" onClick={openQrPopup} disabled={!hasPublishedUrl} title={!hasPublishedUrl ? 'Publish your card first to view the QR code' : undefined}>
+                <Button variant="outline" size="sm" className="border-border text-muted-foreground hover:text-foreground hover:bg-accent/10 text-xs h-8 disabled:opacity-35 disabled:cursor-not-allowed" onClick={openQrPopup} disabled={!hasPublishedUrl} title={!hasPublishedUrl ? 'Publish your card first to view the QR code' : undefined}>
                   <QrCode className="w-3.5 h-3.5 mr-1.5" />QR Code
                 </Button>
               </div >
@@ -1722,8 +1723,8 @@ export default function BusinessProfile({
       </Card >
 
 <div className="mb-6">
-  <h2 className="text-white text-lg font-bold mb-1">Templates</h2>
-  <p className="text-[#7a9a7a] text-xs mb-3">Pick a template — fields and colors will be filled in. Edit anything below.</p>
+  <h2 className="text-foreground text-lg font-bold mb-1">Templates</h2>
+  <p className="text-muted-foreground text-xs mb-3">Pick a template — fields and colors will be filled in. Edit anything below.</p>
         <TemplatePicker
           cardId={resolvedCardId ?? cardId ?? null}
           onApply={(content) => {
@@ -1894,7 +1895,7 @@ export default function BusinessProfile({
       <AddComponentMenu onAdd={handleAddComponent} />
 
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pb-8">
-        <Button variant="outline" className="text-red-400 border-red-500/30 hover:bg-red-500/10 text-sm" onClick={() => {
+        <Button variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10 text-sm" onClick={() => {
           setFormData(DEFAULT_STATE.formData);
           setSocialLinks(DEFAULT_STATE.socialLinks);
           setCustomLinks(DEFAULT_STATE.customLinks);
@@ -1913,13 +1914,13 @@ export default function BusinessProfile({
         }}><Trash2 className="w-4 h-4 mr-2" />Delete Profile</Button>
         <div className="flex gap-3">
           <Button onClick={() => { void handleSaveChanges(); }} disabled={isSaving}
-            className={`flex-1 sm:flex-none text-white text-sm transition-all duration-300 ${saveFlash ? 'bg-[#49B618] hover:bg-[#3a9012]' : 'bg-gradient-to-r from-[#008001] to-[#49B618] hover:from-[#006312] hover:to-[#008001]'}`}>
+            className={`flex-1 sm:flex-none text-primary-foreground text-sm transition-all duration-300 ${saveFlash ? 'bg-accent hover:bg-accent/80' : 'bg-gradient-to-r from-primary to-accent hover:from-primary/80 hover:to-accent/80'}`}>
             {saveFlash ? <Check className="w-4 h-4 mr-2" /> : <Save className="w-4 h-4 mr-2" />}
             {isSaving ? 'Saving...' : saveFlash ? 'Saved!' : 'Save Changes'}
           </Button>
         </div>
       </div>
-      {saveError && <p className="text-xs text-red-400 -mt-6 pb-6">{saveError}</p>}
+      {saveError && <p className="text-xs text-destructive -mt-6 pb-6">{saveError}</p>}
     </div>
   );
 
@@ -1944,11 +1945,11 @@ export default function BusinessProfile({
         />
       )}
 
-      <div className="xl:hidden flex rounded-xl overflow-hidden border border-[#008001]/30 mb-4">
-        <button onClick={() => setMobileTab('edit')} className={`flex-1 py-2.5 text-sm font-medium flex items-center justify-center gap-2 transition-all ${mobileTab === 'edit' ? 'bg-[#008001] text-white' : 'bg-[#000000] text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20'}`}>
+      <div className="xl:hidden flex rounded-xl overflow-hidden border border-border mb-4">
+        <button onClick={() => setMobileTab('edit')} className={`flex-1 py-2.5 text-sm font-medium flex items-center justify-center gap-2 transition-all ${mobileTab === 'edit' ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground hover:text-foreground hover:bg-accent/20'}`}>
           <User className="w-4 h-4" /> Edit Profile
         </button>
-        <button onClick={() => setMobileTab('preview')} className={`flex-1 py-2.5 text-sm font-medium flex items-center justify-center gap-2 transition-all ${mobileTab === 'preview' ? 'bg-[#008001] text-white' : 'bg-[#000000] text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20'}`}>
+        <button onClick={() => setMobileTab('preview')} className={`flex-1 py-2.5 text-sm font-medium flex items-center justify-center gap-2 transition-all ${mobileTab === 'preview' ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground hover:text-foreground hover:bg-accent/20'}`}>
           <Smartphone className="w-4 h-4" /> Preview Card
         </button>
       </div>

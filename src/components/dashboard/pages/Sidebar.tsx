@@ -26,7 +26,6 @@ import { BACKEND_URL, getAnalytics, getUserProfile } from '@/lib/api';
 interface SidebarProps {
   activePage: string;
   onNavigate: (page: string) => void;
-  /** Optional: passed from parent to allow the sidebar to close itself on mobile */
   onClose?: () => void;
   profile?: {
     name: string;
@@ -40,8 +39,6 @@ const menuItems = [
   { id: 'create-card', label: 'Digital business card', icon: Briefcase },
   { id: 'my-cards', label: 'My Cards', icon: CreditCard, badge: null },
   { id: 'analytics', label: 'Analytics', icon: BarChart3, badge: 'New' },
-  // { id: 'design', label: 'Design & Customization', icon: Palette, badge: null },
-  // { id: 'nfc-qr', label: 'NFC & QR Management', icon: Smartphone, badge: null },
   { id: 'orders', label: 'Orders', icon: ShoppingCart, badge: 'New' },
   { id: 'billing', label: 'Billing & Subscription', icon: CreditCard, badge: 'Pro' },
   { id: 'settings', label: 'Settings', icon: Settings, badge: null },
@@ -50,7 +47,7 @@ const menuItems = [
 function LogoMark() {
   return (
     <div className="relative w-10 h-10 flex-shrink-0">
-      <div className="absolute inset-0 rounded-xl bg-[#008001]/25 blur-md" />
+      <div className="absolute inset-0 rounded-xl bg-primary/25 blur-md" />
       <div className="relative w-10 h-10 rounded-xl overflow-hidden">
         <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
           <rect width="40" height="40" rx="10" fill="#060e06" />
@@ -118,20 +115,16 @@ export function Sidebar({ activePage, onNavigate, onClose, profile }: SidebarPro
   const handleLogout = async () => {
     setLoggingOut(true);
     try {
-      // Revoke the backend session cookie first (while it's still present)
       try {
         const logoutUrl = BACKEND_URL ? `${BACKEND_URL}/api/auth/logout` : "/api/auth/logout";
         await fetch(logoutUrl, { method: "POST", credentials: "include" });
       } catch {
         // ignore backend errors
       }
-      // Clear all client-side auth state so the middleware fallback cookie
-      // (sessionToken) doesn't keep the session alive and redirect back to /dashboard.
       localStorage.removeItem("sessionToken");
       document.cookie = "session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
       document.cookie = "sessionToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
       await signOut(auth);
-      // Full page navigation so the browser sends no stale cookies to the middleware.
       window.location.href = "/login";
     } catch (error) {
       console.error("Logout failed:", error);
@@ -140,15 +133,14 @@ export function Sidebar({ activePage, onNavigate, onClose, profile }: SidebarPro
   };
 
   return (
-    <div className="h-screen w-60 flex flex-col bg-[#000000] border-r border-[#008001]/30 shadow-2xl">
-
-      {/* ── Logo ── */}
-      <div className="px-5 py-5 border-b border-[#008001]/30 flex items-center justify-between">
+    <div className="h-screen w-60 flex flex-col bg-background border-r border-sidebar-border shadow-2xl">
+      {/* Logo area */}
+      <div className="px-5 py-5 border-b border-sidebar-border flex items-center justify-between">
         <div className="flex items-center gap-3">
           <LogoMark />
           <div>
             <div className="flex items-baseline gap-0.5">
-              <span className="text-white font-black text-xl tracking-tight leading-none">Sam</span>
+              <span className="text-foreground font-black text-xl tracking-tight leading-none">Sam</span>
               <span
                 className="font-black text-xl tracking-tight leading-none"
                 style={{
@@ -161,17 +153,16 @@ export function Sidebar({ activePage, onNavigate, onClose, profile }: SidebarPro
               </span>
             </div>
             <div className="flex items-center gap-1.5 mt-0.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-[#49B618] animate-pulse" />
-              <p className="text-[7px] text-[#A0A0A0] tracking-widest uppercase">Pro Dashboard</p>
+              <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+              <p className="text-[7px] text-muted-foreground tracking-widest uppercase">Pro Dashboard</p>
             </div>
           </div>
         </div>
 
-        {/* Close button — only visible on mobile when drawer is open */}
         {onClose && (
           <button
             onClick={onClose}
-            className="lg:hidden p-1.5 rounded-lg text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20 transition-colors"
+            className="lg:hidden p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/20 transition-colors"
             aria-label="Close menu"
           >
             <X className="w-4 h-4" />
@@ -179,8 +170,8 @@ export function Sidebar({ activePage, onNavigate, onClose, profile }: SidebarPro
         )}
       </div>
 
-      {/* ── Navigation ── */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto [&::-webkit-scrollbar-track]:bg-black [&::-webkit-scrollbar-thumb]:bg-[#008001] [&::-webkit-scrollbar]:w-1.5">
+      {/* Navigation */}
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto [&::-webkit-scrollbar-track]:bg-background [&::-webkit-scrollbar-thumb]:bg-primary [&::-webkit-scrollbar]:w-1.5">
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = activePage === item.id;
@@ -188,13 +179,14 @@ export function Sidebar({ activePage, onNavigate, onClose, profile }: SidebarPro
             <button
               key={item.id}
               onClick={() => onNavigate(item.id)}
-              className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all relative group ${isActive
-                ? 'bg-[#008001]/20 text-white'
-                : 'text-[#A0A0A0] hover:text-white hover:bg-[#008001]/10'
-                }`}
+              className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all relative group ${
+                isActive
+                  ? 'bg-primary/20 text-foreground'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-accent/10'
+              }`}
             >
               {isActive && (
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#49B618] rounded-r" />
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-accent rounded-r" />
               )}
               <Icon className="w-5 h-5 flex-shrink-0 relative z-10 ml-1" />
               <span className="text-sm relative z-10 flex-1 text-left font-medium">{item.label}</span>
@@ -202,10 +194,11 @@ export function Sidebar({ activePage, onNavigate, onClose, profile }: SidebarPro
                 const badge = item.id === 'billing' ? planLabel : item.badge;
                 if (!badge) return null;
                 return (
-                  <Badge className={`relative z-10 text-xs px-2 font-medium border-0 ${badge === 'New' ? 'bg-[#49B618] text-white' :
-                    badge.includes('%') ? 'bg-[#006312] text-white' :
-                      'bg-[#009200] text-white'
-                    }`}>
+                  <Badge className={`relative z-10 text-xs px-2 font-medium border-0 ${
+                    badge === 'New' ? 'bg-accent text-accent-foreground' :
+                    badge.includes('%') ? 'bg-secondary text-secondary-foreground' :
+                    'bg-primary text-primary-foreground'
+                  }`}>
                     {badge}
                   </Badge>
                 );
@@ -215,8 +208,8 @@ export function Sidebar({ activePage, onNavigate, onClose, profile }: SidebarPro
         })}
       </nav>
 
-      {/* ── User Profile ── */}
-      <div className="p-4 border-t border-[#008001]/30 bg-[#1E1E1E]">
+      {/* User Profile */}
+      <div className="p-4 border-t border-sidebar-border bg-background">
         <div className="relative mb-3">
           <svg className="w-full h-20" viewBox="0 0 200 80">
             <defs>
@@ -230,13 +223,13 @@ export function Sidebar({ activePage, onNavigate, onClose, profile }: SidebarPro
               strokeDasharray="201" strokeDashoffset={201 - (201 * (completionScore / 100))} strokeLinecap="round"
               transform="rotate(-90 40 40)" />
             <foreignObject x="14" y="14" width="52" height="52">
-              <Avatar className="w-full h-full border-2 border-[#008001]/30">
+              <Avatar className="w-full h-full border-2 border-primary/30">
                 {displayProfile.avatar && <AvatarImage src={displayProfile.avatar} />}
-                <AvatarFallback className="bg-[#008001]/30 text-white text-sm font-bold">{initials}</AvatarFallback>
+                <AvatarFallback className="bg-primary/30 text-primary-foreground text-sm font-bold">{initials}</AvatarFallback>
               </Avatar>
             </foreignObject>
-            <text x="90" y="30" fill="white" fontSize="14" fontWeight="600">{displayProfile.name}</text>
-            <text x="90" y="48" fill="#A0A0A0" fontSize="11">{displayProfile.email}</text>
+            <text x="90" y="30" fill="currentColor" className="text-foreground" fontSize="14" fontWeight="600">{displayProfile.name}</text>
+            <text x="90" y="48" fill="currentColor" className="text-muted-foreground" fontSize="11">{displayProfile.email}</text>
             <text x="90" y="64" fill="#49B618" fontSize="12" fontWeight="600">
               <tspan>{completionScore}% Complete </tspan>
               <tspan fill="#009200">↑</tspan>
@@ -245,10 +238,10 @@ export function Sidebar({ activePage, onNavigate, onClose, profile }: SidebarPro
         </div>
 
         <div className="flex items-center gap-2 mb-3 flex-wrap">
-          <Badge className="bg-gradient-to-r from-[#008001] to-[#49B618] text-white border-0 flex items-center gap-1 text-xs">
+          <Badge className="bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 flex items-center gap-1 text-xs">
             <Star className="w-3 h-3 fill-current" /> {planLabel} Plan
           </Badge>
-          <Badge className="bg-[#006312] text-white border-0 flex items-center gap-1 text-xs">
+          <Badge className="bg-secondary text-secondary-foreground border-0 flex items-center gap-1 text-xs">
             <TrendingUp className="w-3 h-3" /> {weeklyTrendChange > 0 ? `+${weeklyTrendChange}%` : `${weeklyTrendChange}%`}
           </Badge>
         </div>
@@ -256,10 +249,10 @@ export function Sidebar({ activePage, onNavigate, onClose, profile }: SidebarPro
         <button
           onClick={handleLogout}
           disabled={loggingOut}
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[#A0A0A0] hover:text-white hover:bg-[#008001]/10 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/10 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {loggingOut ? (
-            <svg className="animate-spin w-4 h-4 text-red-400 flex-shrink-0" fill="none" viewBox="0 0 24 24">
+            <svg className="animate-spin w-4 h-4 text-destructive flex-shrink-0" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
             </svg>
@@ -269,7 +262,6 @@ export function Sidebar({ activePage, onNavigate, onClose, profile }: SidebarPro
           <span className="text-sm font-medium">{loggingOut ? 'Logging out…' : 'Logout'}</span>
         </button>
       </div>
-
     </div>
   );
 }

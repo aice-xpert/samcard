@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Star, ChevronLeft, ChevronRight, Quote } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const testimonials = [
   {
@@ -33,6 +34,7 @@ const testimonials = [
 
 export function FeaturedTestimonial() {
   const [index, setIndex] = useState(0);
+  const { isDark } = useTheme();
 
   const rotate = (dir: number) => {
     setIndex((prev) => (prev + dir + testimonials.length) % testimonials.length);
@@ -41,16 +43,16 @@ export function FeaturedTestimonial() {
   const current = testimonials[index];
 
   return (
-    <section className="py-24 bg-gradient-to-b from-black via-theme-devil-green/20 to-black px-4">
+    <section className={`py-24 bg-gradient-to-b ${isDark ? "from-black via-theme-devil-green/20 to-black" : "from-background via-theme-devil-green/20 to-background"} px-4`}>
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold">Featured Reviews</h2>
-          <p className="text-gray-400 mt-2">
+          <p className="text-muted-foreground mt-2">
             Hear directly from our power users
           </p>
         </div>
 
-        <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-10 overflow-hidden">
+        <div className={`relative ${isDark ? "bg-white/5 backdrop-blur-xl border border-white/10" : "bg-white border-gray-200 shadow-sm"} rounded-3xl p-10 overflow-hidden`}>
 
           <div className="absolute top-6 right-6 opacity-10">
             <Quote size={120} className="text-accent" />
@@ -77,7 +79,7 @@ export function FeaturedTestimonial() {
                 </span>
               </div>
 
-              <blockquote className="text-xl text-gray-200 italic mb-8 leading-relaxed">
+              <blockquote className="text-xl text-muted-foreground italic mb-8 leading-relaxed">
                 &ldquo;{current.text}&rdquo;
               </blockquote>
 
@@ -85,25 +87,24 @@ export function FeaturedTestimonial() {
                 <div className="font-semibold text-lg">
                   {current.name}
                 </div>
-                <div className="text-gray-400 text-sm">
+                <div className="text-muted-foreground text-sm">
                   {current.role} · {current.company}
                 </div>
               </div>
             </motion.div>
           </AnimatePresence>
 
-          {/* Controls */}
           <div className="flex gap-3 mt-10 justify-end">
             <button
               onClick={() => rotate(-1)}
-              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center transition"
+              className={`w-10 h-10 rounded-full ${isDark ? "bg-white/10 hover:bg-white/20 border border-white/20" : "bg-white border-gray-200 shadow-sm hover:bg-gray-50"} flex items-center justify-center transition`}
             >
               <ChevronLeft size={18} />
             </button>
 
             <button
               onClick={() => rotate(1)}
-              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center transition"
+              className={`w-10 h-10 rounded-full ${isDark ? "bg-white/10 hover:bg-white/20 border border-white/20" : "bg-white border-gray-200 shadow-sm hover:bg-gray-50"} flex items-center justify-center transition`}
             >
               <ChevronRight size={18} />
             </button>

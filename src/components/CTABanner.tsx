@@ -1,12 +1,20 @@
+"use client";
 import Link from "next/link";
 import { ArrowRight, Sparkles, CheckCircle } from "lucide-react";
 import { CTA_TRUST_BADGES } from "@/constant";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export function CTABanner() {
+  const { isDark } = useTheme();
+
   return (
     <section
       id="cta"
-      className="py-24 bg-gradient-to-b from-[#031103] to-black border-white/5"
+      className={`py-24 border-white/5 ${
+        isDark
+          ? "bg-gradient-to-b from-[#031103] to-black"
+          : "bg-gradient-to-b from-[#e8f3e8] to-white"
+      }`}
     >
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center space-y-8">
@@ -19,10 +27,10 @@ export function CTABanner() {
 
           {/* Heading */}
           <div className="space-y-4">
-            <h2 className="text-4xl lg:text-5xl font-bold text-white">
+            <h2 className="text-4xl lg:text-5xl font-bold text-foreground">
               Ready to Transform Your Networking?
             </h2>
-            <p className="text-xl text-white max-w-2xl mx-auto">
+            <p className="text-xl text-foreground max-w-2xl mx-auto">
               Join 50,000+ professionals who are already networking smarter with
               SamCard. Create your first digital business card in under 2
               minutes.
@@ -42,14 +50,20 @@ export function CTABanner() {
             </Link>
             <Link
               href="/#"
-              className="px-10 py-5 bg-white/5 backdrop-blur-sm text-white border border-white/20 rounded-xl hover:bg-white/10 hover:border-[#49B618]/50 transition-all text-lg font-semibold"
+              className={`px-10 py-5 backdrop-blur-sm border rounded-xl transition-all text-lg font-semibold ${
+                isDark
+                  ? "bg-white/5 text-white border-white/20 hover:bg-white/10 hover:border-[#49B618]/50"
+                  : "bg-black/5 text-foreground border-gray-300 hover:bg-black/10 hover:border-[#49B618]/50"
+              }`}
             >
               View Dashboard Demo
             </Link>
           </div>
 
           {/* Trust Badges */}
-          <div className="flex flex-wrap justify-center items-center gap-8 pt-8 text-white">
+          <div className={`flex flex-wrap justify-center items-center gap-8 pt-8 ${
+            isDark ? "text-white" : "text-foreground"
+          }`}>
             {CTA_TRUST_BADGES.map((text) => (
               <div 
                 key={text} 

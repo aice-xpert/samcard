@@ -2,8 +2,10 @@
 
 import { motion } from "framer-motion";
 import { Check, X } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export function PricingComparison() {
+  const { isDark } = useTheme();
   const comparisonFeatures = [
     {
       category: "Cards & Templates",
@@ -98,15 +100,15 @@ export function PricingComparison() {
       return value ? (
         <Check className="text-accent mx-auto" size={20} />
       ) : (
-        <X className="text-gray-600 mx-auto" size={20} />
+        <X className="text-muted-foreground mx-auto" size={20} />
       );
     }
 
-    return <span className="text-gray-300">{value}</span>;
+    return <span className="text-muted-foreground">{value}</span>;
   };
 
   return (
-    <section className="py-24 bg-gradient-to-b from-black via-theme-devil-green/50 to-black">
+    <section className={`py-24 bg-gradient-to-b ${isDark ? "from-black via-theme-devil-green/50 to-black" : "from-background via-theme-devil-green/5 to-background"}`}>
       <div className="max-w-7xl mx-auto px-4">
 
         {/* Heading */}
@@ -116,23 +118,31 @@ export function PricingComparison() {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <h2 className="text-4xl lg:text-5xl font-bold text-white mb-4">
+          <h2 className="text-4xl lg:text-5xl font-bold text-foreground mb-4">
             Detailed Feature Comparison
           </h2>
-          <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Compare all features across our plans to find the perfect fit
           </p>
         </motion.div>
 
         {/* Table */}
-        <div className="bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 overflow-hidden">
+        <div className={`rounded-3xl border overflow-hidden ${
+          isDark
+            ? "bg-white/5 backdrop-blur-sm border-white/10"
+            : "bg-white border-gray-200 shadow-sm"
+        }`}>
 
           {/* Header */}
-          <div className="grid grid-cols-4 gap-4 p-6 bg-white/5 border-b border-white/10">
-            <div className="text-gray-400 font-semibold">Features</div>
-            <div className="text-center text-white font-bold">Free</div>
-            <div className="text-center text-white font-bold">Premium</div>
-            <div className="text-center text-white font-bold">Enterprise</div>
+          <div className={`grid grid-cols-4 gap-4 p-6 border-b ${
+            isDark
+              ? "bg-white/5 border-white/10"
+              : "bg-gray-50 border-gray-200"
+          }`}>
+            <div className="text-muted-foreground font-semibold">Features</div>
+            <div className="text-center text-foreground font-bold">Free</div>
+            <div className="text-center text-foreground font-bold">Premium</div>
+            <div className="text-center text-foreground font-bold">Enterprise</div>
           </div>
 
           {/* Body */}
@@ -140,8 +150,8 @@ export function PricingComparison() {
             <div key={sectionIndex}>
 
               {/* Category Title */}
-              <div className="px-6 py-4 bg-white/5">
-                <h3 className="text-lg font-bold text-white">
+              <div className={`px-6 py-4 ${isDark ? "bg-white/5" : "bg-gray-50"}`}>
+                <h3 className="text-lg font-bold text-foreground">
                   {section.category}
                 </h3>
               </div>
@@ -150,9 +160,13 @@ export function PricingComparison() {
               {section.features.map((feature, featureIndex) => (
                 <div
                   key={featureIndex}
-                  className="grid grid-cols-4 gap-4 p-6 border-b border-white/5 hover:bg-white/5 transition-colors"
+                  className={`grid grid-cols-4 gap-4 p-6 border-b transition-colors ${
+                    isDark
+                      ? "border-white/5 hover:bg-white/5"
+                      : "border-gray-100 hover:bg-gray-50"
+                  }`}
                 >
-                  <div className="text-gray-300">{feature.name}</div>
+                  <div className="text-muted-foreground">{feature.name}</div>
 
                   <div className="text-center">
                     {renderValue(feature.free)}

@@ -3,6 +3,7 @@
 import { motion } from "motion/react";
 import { ArrowRight, LucideIcon } from "lucide-react";
 import { useState } from "react";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface Props {
   icon: LucideIcon;
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export function SolutionCard({ icon: Icon, title, description }: Props) {
+  const { isDark } = useTheme();
   const [hovered, setHovered] = useState(false);
 
   return (
@@ -20,7 +22,11 @@ export function SolutionCard({ icon: Icon, title, description }: Props) {
       whileHover={{ y: -8, scale: 1.02 }}
       className="relative rounded-2xl p-6 cursor-pointer group"
     >
-      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl" />
+      <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br rounded-xl ${
+        isDark
+          ? "bg-white/5 backdrop-blur-sm border border-white/10"
+          : "bg-white border border-gray-200 shadow-sm"
+      }`} />
 
       <div className="relative">
         <motion.div
@@ -30,11 +36,11 @@ export function SolutionCard({ icon: Icon, title, description }: Props) {
           <Icon className="w-7 h-7 text-theme-kelly-green" />
         </motion.div>
 
-        <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-[#49b618]">
+        <h3 className="text-lg font-semibold text-foreground mb-2 group-hover:text-[#49b618]">
           {title}
         </h3>
 
-        <p className="text-sm text-gray-300 mb-4 group-hover:text-white">{description}</p>
+        <p className="text-sm text-muted-foreground mb-4 group-hover:text-foreground">{description}</p>
 
         <motion.div
           animate={{ x: hovered ? 5 : 0 }}

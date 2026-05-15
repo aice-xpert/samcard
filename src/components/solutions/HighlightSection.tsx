@@ -2,6 +2,7 @@
 
 import { motion } from "motion/react";
 import { BarChart3, Upload, Zap, Shield } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const features = [
   {
@@ -31,10 +32,17 @@ const features = [
 ];
 
 export function HighlightSection() {
+  const { isDark } = useTheme();
   return (
-<section className="py-20 bg-gradient-to-b from-black to-[#031103] relative overflow-hidden">
+<section className={`py-20 relative overflow-hidden ${
+  isDark
+    ? "bg-gradient-to-b from-black to-[#031103]"
+    : "bg-gradient-to-b from-white via-[#f0f8f0] to-[#e8f3e8]"
+}`}>
 
-  <div className="absolute top-0 left-0 right-0 h-[2px] bg-black z-20 pointer-events-none" />
+  <div className={`absolute top-0 left-0 right-0 h-[2px] z-20 pointer-events-none ${
+    isDark ? "bg-black" : "bg-gray-200"
+  }`} />
 
   <div className="absolute inset-0 opacity-20 pointer-events-none">
     <div className="absolute top-32 left-1/4 w-96 h-96 rounded-full blur-3xl bg-theme-digital-green/30" />
@@ -50,13 +58,13 @@ export function HighlightSection() {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+          <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
             Powerful Features for{" "}
             <span className="text-theme-digital-green">
               Better QR Campaigns
             </span>
           </h2>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
             Everything you need to create, manage, and optimize your QR code
             campaigns at scale
           </p>
@@ -72,16 +80,20 @@ export function HighlightSection() {
               transition={{ duration: 0.5, delay: index * 0.1 }}
               whileHover={{ y: -8 }}
             >
-              <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 h-full hover:bg-white/10 transition-all">
+              <div className={`rounded-xl p-6 h-full transition-all ${
+                isDark
+                  ? "bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10"
+                  : "bg-white border border-gray-200 shadow-sm hover:bg-gray-50"
+              }`}>
                 <div className="w-14 h-14 rounded-lg flex items-center justify-center mb-4 bg-theme-digital-green/20">
                   <feature.icon className="w-7 h-7 text-theme-digital-green" />
                 </div>
 
-                <h3 className="text-xl font-semibold text-white mb-3">
+                <h3 className="text-xl font-semibold text-foreground mb-3">
                   {feature.title}
                 </h3>
 
-                <p className="text-gray-400 leading-relaxed">
+                <p className="text-muted-foreground leading-relaxed">
                   {feature.description}
                 </p>
               </div>

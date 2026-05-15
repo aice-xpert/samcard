@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { Navigation } from "./Navigation";
 import Footer from "./Footer";
 import { UserProvider } from "@/contexts/UserContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 
 export default function LayoutShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -32,10 +33,10 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
   }
 
   return (
-    <>
+    <ThemeProvider>
       {showChrome && <Navigation />}
       <main>{children}</main>
       {showChrome && <Footer />}
-    </>
+    </ThemeProvider>
   );
 }

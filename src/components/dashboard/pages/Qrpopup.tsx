@@ -1,3 +1,4 @@
+{/* theme: converted */}
 "use client";
 // src/components/pages/QrPopup.tsx
 //
@@ -195,6 +196,40 @@ export function QrPopup({ isOpen, onClose, cardUrl, cardId, allowFallbackToFirst
         .qr-pop-panel {
           animation: qr-pop-in 0.22s cubic-bezier(0.34,1.5,0.64,1) both;
         }
+
+        /* Light / Dark mode CSS variables for the popup */
+        .light {
+          --qr-pop-bg: #f2f5f2;
+          --qr-pop-border: rgba(0,128,1,0.3);
+          --qr-pop-header-color: #008001;
+          --qr-pop-sub-color: #5a7a5a;
+          --qr-pop-url-bg: #e8ece8;
+          --qr-pop-url-border: rgba(0,128,1,0.2);
+          --qr-pop-url-text: #2a4a2a;
+          --qr-pop-download-bg: linear-gradient(135deg,#006a01,#2e8a08);
+          --qr-pop-share-bg: rgba(0,128,1,0.08);
+          --qr-pop-share-border: rgba(0,128,1,0.25);
+          --qr-pop-share-color: #1a3a1a;
+          --qr-pop-close-bg: rgba(0,128,1,0.08);
+          --qr-pop-close-border: rgba(0,128,1,0.25);
+          --qr-pop-close-color: #5a7a5a;
+        }
+        .dark {
+          --qr-pop-bg: #0d1a0d;
+          --qr-pop-border: rgba(0,128,1,0.35);
+          --qr-pop-header-color: #49B618;
+          --qr-pop-sub-color: #7a9a7a;
+          --qr-pop-url-bg: #111a11;
+          --qr-pop-url-border: rgba(0,128,1,0.2);
+          --qr-pop-url-text: #7a9a7a;
+          --qr-pop-download-bg: linear-gradient(135deg,#008001,#49B618);
+          --qr-pop-share-bg: rgba(0,128,1,0.1);
+          --qr-pop-share-border: rgba(0,128,1,0.3);
+          --qr-pop-share-color: #f0f0f0;
+          --qr-pop-close-bg: rgba(0,128,1,0.12);
+          --qr-pop-close-border: rgba(0,128,1,0.3);
+          --qr-pop-close-color: #7a9a7a;
+        }
       `}</style>
 
       {/* Backdrop */}
@@ -225,8 +260,8 @@ export function QrPopup({ isOpen, onClose, cardUrl, cardId, allowFallbackToFirst
             gap: 14,
             padding: "20px 18px 18px",
             borderRadius: 22,
-            background: "#0d1a0d",
-            border: "1px solid rgba(0,128,1,0.35)",
+            background: "var(--qr-pop-bg)",
+            border: "1px solid var(--qr-pop-border)",
             boxShadow: "0 8px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(73,182,24,0.1)",
             width: "min(300px, 90vw)",
           }}
@@ -239,11 +274,11 @@ export function QrPopup({ isOpen, onClose, cardUrl, cardId, allowFallbackToFirst
               fontWeight: 700,
               letterSpacing: "0.12em",
               textTransform: "uppercase",
-              color: "#49B618",
+              color: "var(--qr-pop-header-color)",
             }}>
               Your Digital Card
             </p>
-            <p style={{ margin: "3px 0 0", fontSize: 12, color: "#7a9a7a" }}>
+            <p style={{ margin: "3px 0 0", fontSize: 12, color: "var(--qr-pop-sub-color)" }}>
               Scan to open your card
             </p>
           </div>
@@ -261,14 +296,14 @@ export function QrPopup({ isOpen, onClose, cardUrl, cardId, allowFallbackToFirst
             alignItems: "center",
             padding: "7px 13px",
             borderRadius: 999,
-            background: "#111a11",
-            border: "1px solid rgba(0,128,1,0.2)",
+            background: "var(--qr-pop-url-bg)",
+            border: "1px solid var(--qr-pop-url-border)",
             width: "100%",
             overflow: "hidden",
           }}>
             <span style={{
               fontSize: 11,
-              color: "#7a9a7a",
+              color: "var(--qr-pop-url-text)",
               overflow: "hidden",
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
@@ -290,7 +325,7 @@ export function QrPopup({ isOpen, onClose, cardUrl, cardId, allowFallbackToFirst
                 gap: 6,
                 padding: "10px 0",
                 borderRadius: 12,
-                background: "linear-gradient(135deg,#008001,#49B618)",
+                background: "var(--qr-pop-download-bg)",
                 border: "none",
                 color: "#fff",
                 fontSize: 12,
@@ -312,9 +347,9 @@ export function QrPopup({ isOpen, onClose, cardUrl, cardId, allowFallbackToFirst
                 gap: 6,
                 padding: "10px 0",
                 borderRadius: 12,
-                background: "rgba(0,128,1,0.1)",
-                border: "1px solid rgba(0,128,1,0.3)",
-                color: "#f0f0f0",
+                background: "var(--qr-pop-share-bg)",
+                border: "1px solid var(--qr-pop-share-border)",
+                color: "var(--qr-pop-share-color)",
                 fontSize: 12,
                 fontWeight: 700,
                 cursor: "pointer",
@@ -335,9 +370,9 @@ export function QrPopup({ isOpen, onClose, cardUrl, cardId, allowFallbackToFirst
               width: 28,
               height: 28,
               borderRadius: "50%",
-              background: "rgba(0,128,1,0.12)",
-              border: "1px solid rgba(0,128,1,0.3)",
-              color: "#7a9a7a",
+              background: "var(--qr-pop-close-bg)",
+              border: "1px solid var(--qr-pop-close-border)",
+              color: "var(--qr-pop-close-color)",
               cursor: "pointer",
               display: "flex",
               alignItems: "center",

@@ -1,4 +1,6 @@
+"use client";
 import { Check, Sparkles, Crown, Building2 } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const pricingPlans = [
   {
@@ -66,19 +68,25 @@ const pricingPlans = [
 ];
 
 export function Pricing() {
+  const { isDark } = useTheme();
+
   return (
     <section
       id="pricing"
-      className="py-24 bg-gradient-to-b from-background via-[#020f02] to-[#031203]"
+      className={`py-24 ${
+        isDark
+          ? "bg-gradient-to-b from-background via-[#020f02] to-[#031203]"
+          : "bg-gradient-to-b from-background via-[#f0f8f0] to-[#e8f3e8]"
+      }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Heading */}
         <div className="text-center space-y-4 mb-16">
-          <h2 className="text-4xl lg:text-5xl font-bold text-white">
+          <h2 className="text-4xl lg:text-5xl font-bold text-foreground">
             Simple, Transparent Pricing
           </h2>
-          <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Choose the perfect plan for your needs. All plans include a 14-day free trial.
           </p>
         </div>
@@ -88,11 +96,14 @@ export function Pricing() {
           {pricingPlans.map((plan, index) => (
             <div
               key={plan.name}
-              className={`relative bg-white/5 backdrop-blur-sm rounded-3xl border-2 overflow-hidden transition-all
+              className={`relative backdrop-blur-sm rounded-3xl border-2 overflow-hidden transition-all
                 ${plan.popular
                   ? "border-theme-digital-green scale-105 z-10 shadow-2xl shadow-theme-digital-green/20 hover:border-theme-digital-green"
-                  : "border-white/10 hover:border-theme-digital-green/50"
-                }`}
+                  : isDark
+                    ? "border-white/10 hover:border-theme-digital-green/50"
+                    : "border-gray-200 hover:border-theme-digital-green/50"
+                }
+                ${isDark ? "bg-white/5" : "bg-white shadow-sm"}`}
             >
               {/* Popular Badge */}
               {plan.popular && (
@@ -108,15 +119,15 @@ export function Pricing() {
                   <div className={`w-14 h-14 bg-gradient-to-br ${plan.gradient} rounded-xl flex items-center justify-center mb-4`}>
                     <plan.icon className="text-white" size={28} />
                   </div>
-                  <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
-                  <p className="text-gray-400 text-sm">{plan.description}</p>
+                  <h3 className="text-2xl font-bold text-foreground mb-2">{plan.name}</h3>
+                  <p className="text-muted-foreground text-sm">{plan.description}</p>
                 </div>
 
                 {/* Price */}
-                <div className="pt-4 pb-6 border-b border-white/10">
+                <div className={`pt-4 pb-6 border-b ${isDark ? "border-white/10" : "border-gray-200"}`}>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-5xl font-bold text-white">{plan.price}</span>
-                    <span className="text-gray-400">{plan.period}</span>
+                    <span className="text-5xl font-bold text-foreground">{plan.price}</span>
+                    <span className="text-muted-foreground">{plan.period}</span>
                   </div>
                 </div>
 
@@ -125,7 +136,7 @@ export function Pricing() {
                   {plan.features.map((feature) => (
                     <li key={feature} className="flex items-start gap-3">
                       <Check className="text-accent flex-shrink-0 mt-0.5" size={20} />
-                      <span className="text-gray-300">{feature}</span>
+                      <span className={isDark ? "text-gray-300" : "text-muted-foreground"}>{feature}</span>
                     </li>
                   ))}
                 </ul>
@@ -135,7 +146,9 @@ export function Pricing() {
                   className={`w-full py-4 rounded-xl font-semibold transition-all ${
                     plan.popular
                       ? "bg-gradient-to-r from-theme-digital-green to-theme-devil-green text-white hover:shadow-xl hover:shadow-theme-digital-green/20 hover:scale-105"
-                      : "bg-white/5 border border-white/10 text-white hover:bg-white/10 hover:border-theme-digital-green/50"
+                      : isDark
+                        ? "bg-white/5 border border-white/10 text-white hover:bg-white/10 hover:border-theme-digital-green/50"
+                        : "bg-gray-100 border border-gray-200 text-foreground hover:bg-gray-200 hover:border-theme-digital-green/50"
                   }`}
                 >
                   {plan.buttonText}
@@ -147,14 +160,17 @@ export function Pricing() {
 
         {/* Money-back Guarantee */}
         <div
-          className="text-center mt-16 p-8 bg-gradient-to-br from-theme-digital-green/10 to-transparent
-                     rounded-2xl max-w-3xl mx-auto border border-theme-digital-green/20"
+          className={`text-center mt-16 p-8 rounded-2xl max-w-3xl mx-auto border ${
+            isDark
+              ? "bg-gradient-to-br from-theme-digital-green/10 to-transparent border-theme-digital-green/20"
+              : "bg-gradient-to-br from-theme-digital-green/10 to-transparent border-theme-digital-green/20"
+          }`}
         >
           <div className="text-4xl mb-4">🛡️</div>
-          <h3 className="text-2xl font-bold text-white mb-2">
+          <h3 className="text-2xl font-bold text-foreground mb-2">
             30-Day Money-Back Guarantee
           </h3>
-          <p className="text-gray-400">
+          <p className="text-muted-foreground">
             Try SamCard risk-free. If you are not completely satisfied within 30 days,
             we will refund you in full—no questions asked.
           </p>

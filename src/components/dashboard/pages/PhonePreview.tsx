@@ -1,3 +1,4 @@
+{/* theme: converted */}
 "use client";
 
 import { useId, useState, useEffect, useMemo, memo, useCallback } from 'react';
@@ -1066,24 +1067,22 @@ function PhonePreviewComponent({
       <style>{scrollCss}</style>
 
       {/* Panel wrapper */}
-      <div className="rounded-2xl p-4" style={{ background: '#000', border: `1px solid ${T.green}4d` }}>
+      <div className="rounded-2xl p-4 bg-card border-border" style={{ border: `1px solid ${T.green}4d` }}>
 
         {/* Top bar */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: T.greenLight }} />
-            <span className="text-sm font-semibold" style={{ color: T.textPrimary, ...ff }}>Live Preview</span>
+            <span className="text-sm font-semibold text-foreground" style={ff}>Live Preview</span>
           </div>
           <div className="flex gap-1.5">
             <button onClick={onPreviewOpen}
-              className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ background: '#1a1a1a', border: `1px solid ${T.green}33`, color: '#888' }}>
+              className="w-8 h-8 rounded-lg flex items-center justify-center bg-muted border-border text-muted-foreground hover:text-foreground hover:bg-accent/10">
               <Eye className="w-3.5 h-3.5" />
             </button>
             {showCopyButton && (
               <button onClick={onShareLink}
-                className="w-8 h-8 rounded-lg flex items-center justify-center"
-                style={{ background: '#1a1a1a', border: `1px solid ${T.green}33`, color: copied ? T.greenLight : '#888' }}>
+                className="w-8 h-8 rounded-lg flex items-center justify-center bg-muted border-border text-muted-foreground hover:text-foreground hover:bg-accent/10">
                 {copied ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
               </button>
             )}
@@ -1100,17 +1099,13 @@ function PhonePreviewComponent({
             }} />
 
           <div className="relative" style={{ zIndex: 1 }}>
-            <div className="rounded-[2.8rem] p-[3px]"
-              style={{
-                background: 'linear-gradient(160deg,#444,#1c1c1c)',
-                boxShadow: '0 0 0 1px rgba(255,255,255,0.06), 0 28px 70px rgba(0,0,0,0.95)',
-              }}>
+            <div className="rounded-[2.8rem] p-[3px] bg-muted/80 shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_28px_70px_rgba(0,0,0,0.95)]">
               <div className="rounded-[2.6rem] overflow-hidden" style={{ background: T.phoneBgStyle || T.bg, overflowX: 'hidden' }}>
                 {/* Status bar */}
                 <div className="relative flex items-center justify-between px-5 pt-2 pb-1" style={{ background: T.bg }}>
                   <div className="absolute top-0 left-1/2 -translate-x-1/2 flex items-end justify-center pb-[5px]"
                     style={{ width: 88, height: 26, background: T.bg, borderRadius: '0 0 18px 18px', zIndex: 10 }}>
-                    <div style={{ width: 40, height: 4, background: '#222', borderRadius: 999 }} />
+                    <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
                   </div>
                   <span className="text-[11px] font-bold" style={{ color: T.textPrimary, ...ff }}>{liveTime}</span>
                   <div className="flex items-center gap-[5px]">
@@ -1145,7 +1140,6 @@ function PhonePreviewComponent({
                     // Profile is handled here when not first
                     if (id === 'profile') {
                       if (!profileIsFirst) {
-                        // ✅ FIX: Add unique key to avoid React warning
                         return <div key={id}>{renderProfileHero()}</div>;
                       }
                       return null;
@@ -1181,9 +1175,8 @@ function PhonePreviewComponent({
                   <div className="flex items-center gap-2">
                     {showCopyButton && (
                       <button onClick={e => { e.stopPropagation(); onShareLink?.(); }}
-                        className="w-9 h-9 rounded-full flex items-center justify-center"
-                        style={{ background: '#1a1a1a', border: `1px solid ${T.green}4d` }}>
-                        {copied ? <Check className="w-4 h-4" style={{ color: T.greenLight }} /> : <Upload className="w-4 h-4" style={{ color: T.textMuted }} />}
+                        className="w-9 h-9 rounded-full flex items-center justify-center bg-muted border-border text-muted-foreground hover:text-foreground hover:bg-accent/10">
+                        {copied ? <Check className="w-4 h-4" style={{ color: T.greenLight }} /> : <Upload className="w-4 h-4" />}
                       </button>
                     )}
                   </div>
@@ -1220,19 +1213,13 @@ function PhonePreviewComponent({
 
         {/* Share panel */}
         {canShowCopy && (
-          <div className="mt-4 p-3 rounded-xl" style={{ background: `${T.green}0f`, border: `1px solid ${T.green}2e` }}>
+          <div className="mt-4 p-3 rounded-xl bg-muted/30 border-border">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: '#555', ...ff }}>Share Your Card</p>
+              <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground" style={ff}>Share Your Card</p>
               <button
                 type="button"
                 onClick={() => setCopyPublishedEnabled(prev => !prev)}
-                className="inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[10px] font-semibold"
-                style={{
-                  border: `1px solid ${copyPublishedEnabled ? T.greenLight : T.green}55`,
-                  color: copyPublishedEnabled ? T.greenLight : '#888',
-                  background: copyPublishedEnabled ? `${T.greenLight}1a` : 'transparent',
-                  ...ff,
-                }}
+                className="inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[10px] font-semibold border-border text-muted-foreground hover:text-foreground hover:bg-accent/10"
                 aria-pressed={copyPublishedEnabled}
               >
                 Published Link
@@ -1241,13 +1228,8 @@ function PhonePreviewComponent({
             {showCopyButton && (
               <div className="grid grid-cols-1 gap-2">
                 <button onClick={onShareLink}
-                  className="flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-medium"
-                  style={{
-                    border: copied ? `1px solid ${T.greenLight}66` : `1px solid ${T.green}33`,
-                    color: copied ? T.greenLight : '#888',
-                    background: copied ? `${T.greenLight}14` : 'transparent',
-                    ...ff,
-                  }}>
+                  className="flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-medium bg-muted/50 border-border text-muted-foreground hover:text-foreground hover:bg-accent/10"
+                  style={copied ? { borderColor: T.greenLight, color: T.greenLight, background: `${T.greenLight}14` } : {}}>
                   {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                   {copied ? 'Copied!' : 'Copy Link'}
                 </button>

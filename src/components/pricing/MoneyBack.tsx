@@ -2,10 +2,12 @@
 
 import { motion } from "framer-motion";
 import { Check } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export function MoneyBack() {
+  const { isDark } = useTheme();
   return (
-    <section className="py-20 bg-gradient-to-b from-black to-[#031103]">
+    <section className={`py-20 ${isDark ? "bg-gradient-to-b from-black to-[#031103]" : "bg-background"}`}>
       <div className="max-w-7xl mx-auto px-4">
 
         <motion.div
@@ -24,12 +26,12 @@ export function MoneyBack() {
           <div className="text-6xl mb-6">🛡️</div>
 
           {/* Heading */}
-          <h3 className="text-3xl lg:text-4xl font-bold text-white mb-4">
+          <h3 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
             30-Day Money-Back Guarantee
           </h3>
 
           {/* Description */}
-          <p className="text-xl text-gray-300 mb-10 leading-relaxed">
+          <p className="text-xl text-muted-foreground mb-10 leading-relaxed">
             Try SamCard risk-free. If you are not completely satisfied within
             30 days, we will refund you in full — no questions asked.
           </p>
@@ -37,23 +39,35 @@ export function MoneyBack() {
           {/* Feature Pills */}
           <div className="flex flex-wrap justify-center gap-4">
 
-            <div className="flex items-center gap-3 bg-white/5 px-6 py-3 rounded-xl border border-white/10">
+            <div className={`flex items-center gap-3 px-6 py-3 rounded-xl border ${
+              isDark
+                ? "bg-white/5 border-white/10"
+                : "bg-white border-gray-200 shadow-sm"
+            }`}>
               <Check className="text-accent" size={20} />
-              <span className="text-gray-300">
+              <span className="text-muted-foreground">
                 No credit card required
               </span>
             </div>
 
-            <div className="flex items-center gap-3 bg-white/5 px-6 py-3 rounded-xl border border-white/10">
+            <div className={`flex items-center gap-3 px-6 py-3 rounded-xl border ${
+              isDark
+                ? "bg-white/5 border-white/10"
+                : "bg-white border-gray-200 shadow-sm"
+            }`}>
               <Check className="text-accent" size={20} />
-              <span className="text-gray-300">
+              <span className="text-muted-foreground">
                 Cancel anytime
               </span>
             </div>
 
-            <div className="flex items-center gap-3 bg-white/5 px-6 py-3 rounded-xl border border-white/10">
+            <div className={`flex items-center gap-3 px-6 py-3 rounded-xl border ${
+              isDark
+                ? "bg-white/5 border-white/10"
+                : "bg-white border-gray-200 shadow-sm"
+            }`}>
               <Check className="text-accent" size={20} />
-              <span className="text-gray-300">
+              <span className="text-muted-foreground">
                 Full refund guarantee
               </span>
             </div>

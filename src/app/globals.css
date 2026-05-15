@@ -62,7 +62,7 @@
   /* Dark-first defaults matching the brand */
   --background: #000000;
   --foreground: #ededed;
-  --card: #1e1e1e;
+  --card: #000000;
   --card-foreground: #ededed;
   --popover: #1e1e1e;
   --popover-foreground: #ededed;
@@ -102,7 +102,7 @@
 .dark {
   --background: #000000;
   --foreground: #ededed;
-  --card: #1e1e1e;
+  --card: #000000;
   --card-foreground: #ededed;
   --popover: #1e1e1e;
   --popover-foreground: #ededed;
@@ -117,6 +117,7 @@
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
+  --input-background: #111a11;
   --ring: #49b618;
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
@@ -130,6 +131,37 @@
   --sidebar-accent: #49b618;
   --sidebar-accent-foreground: #000000;
   --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: #49b618;
+}
+
+.light {
+  --background: #f0f8f0;
+  --foreground: #0a0a0a;
+  --card: #f4fbf4;
+  --card-foreground: #0a0a0a;
+  --popover: #f4fbf4;
+  --popover-foreground: #0a0a0a;
+  --primary: #008001;
+  --primary-foreground: #ffffff;
+  --secondary: #006312;
+  --secondary-foreground: #ffffff;
+  --muted: #e4f0e4;
+  --muted-foreground: #64748b;
+  --accent: #49b618;
+  --accent-foreground: #ffffff;
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: #ffffff;
+  --border: #c4dcc4;
+  --input: #c4dcc4;
+  --input-background: #f4fbf4;
+  --ring: #49b618;
+  --sidebar: #e8f3e8;
+  --sidebar-foreground: #0a0a0a;
+  --sidebar-primary: #008001;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #49b618;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #c4dcc4;
   --sidebar-ring: #49b618;
 }
 
@@ -163,7 +195,7 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #000000;
+  background: var(--background);
 }
 
 ::-webkit-scrollbar-thumb {
@@ -178,5 +210,5 @@
 /* Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #008001 #000000;
+  scrollbar-color: #008001 var(--background);
 }

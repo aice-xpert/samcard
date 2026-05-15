@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Users, Award, Globe, Star } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const stats = [
   { value: "4.9/5", label: "Average Rating", icon: Star },
@@ -11,8 +12,10 @@ const stats = [
 ];
 
 export function StatsBar() {
+  const { isDark } = useTheme();
+
   return (
-    <section className="py-14 bg-neutral-950 border-y border-white/10">
+    <section className={`py-14 ${isDark ? "bg-neutral-950 border-y border-white/10" : "bg-background border-y border-gray-200"}`}>
       <div className="max-w-6xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-8">
         {stats.map((stat, i) => (
           <motion.div
@@ -27,10 +30,10 @@ export function StatsBar() {
               size={28}
               className="mx-auto text-theme-digital-green"
             />
-            <div className="text-3xl font-bold text-white">
+            <div className="text-3xl font-bold text-foreground">
               {stat.value}
             </div>
-            <div className="text-gray-400 text-sm">{stat.label}</div>
+            <div className="text-muted-foreground text-sm">{stat.label}</div>
           </motion.div>
         ))}
       </div>

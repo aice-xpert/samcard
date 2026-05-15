@@ -1,9 +1,10 @@
 "use client";
 
 import { motion } from "motion/react";
-
+import { useTheme } from "@/contexts/ThemeContext";
 
 export function Hero() {
+  const { isDark } = useTheme();
   const scrollToSolutions = () => {
     const solutionsSection = document.getElementById("solutions");
     if (solutionsSection) {
@@ -12,9 +13,17 @@ export function Hero() {
   };
 
   return (
-    <section className="relative pt-52 pb-32 overflow-hidden bg-gradient-to-b from-theme-devil-green via-black to-black">
+    <section className={`relative pt-52 pb-32 overflow-hidden ${
+      isDark
+        ? "bg-gradient-to-b from-theme-devil-green via-black to-black"
+        : "bg-gradient-to-b from-white via-[#f0f8f0] to-[#e8f3e8]"
+    }`}>
 
-      <div className="absolute inset-0 bg-gradient-to-b from-theme-devil-green/20 via-black to-black" />
+      <div className={`absolute inset-0 bg-gradient-to-b ${
+        isDark
+          ? "from-theme-devil-green/20 via-black to-black"
+          : "from-theme-devil-green/5 via-transparent to-transparent"
+      }`} />
 
       <div className="relative max-w-6xl mx-auto px-6 text-center">
         <motion.div
@@ -23,13 +32,13 @@ export function Hero() {
           transition={{ duration: 0.6 }}
         >
     
-          <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">
+          <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6">
             QR Code Solutions
           </h1>
 
    
           <div className="mb-10 space-y-4">
-            <p className="text-xl text-gray-300 leading-relaxed max-w-3xl mx-auto">
+            <p className="text-xl text-muted-foreground leading-relaxed max-w-3xl mx-auto">
               Rated best QR Code solution provider by world&aposs top brands, we are
               a one stop solution for all your QR Code marketing and business needs.
             </p>

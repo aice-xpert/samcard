@@ -179,18 +179,18 @@ function OrderDetailModal({ order, onClose }: { order: ApiOrder; onClose: () => 
             onClick={onClose}
         >
             <div
-                className="bg-[#0a0f0a] border border-[#008001]/30 rounded-t-2xl sm:rounded-2xl p-5 sm:p-6 w-full sm:max-w-md shadow-2xl"
+                className="bg-background border border-[#008001]/30 rounded-t-2xl sm:rounded-2xl p-5 sm:p-6 w-full sm:max-w-md shadow-2xl"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
                 <div className="flex items-center justify-between mb-5">
                     <div>
-                        <h3 className="text-white font-bold text-lg">{order.orderNumber}</h3>
-                        <p className="text-[#A0A0A0] text-xs mt-0.5">{formatDate(order.date)}</p>
+                        <h3 className="text-foreground font-bold text-lg">{order.orderNumber}</h3>
+                        <p className="text-muted-foreground text-xs mt-0.5">{formatDate(order.date)}</p>
                     </div>
                     <button
                         onClick={onClose}
-                        className="w-8 h-8 rounded-lg bg-[#1E1E1E] text-[#A0A0A0] hover:text-white flex items-center justify-center transition-colors"
+                        className="w-8 h-8 rounded-lg bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors"
                     >
                         <X className="w-4 h-4" />
                     </button>
@@ -204,7 +204,7 @@ function OrderDetailModal({ order, onClose }: { order: ApiOrder; onClose: () => 
                     <StatusIcon className="w-5 h-5 flex-shrink-0" style={{ color: cfg.text }} />
                     <div>
                         <p className="text-sm font-semibold" style={{ color: cfg.text }}>{cfg.label}</p>
-                        <p className="text-xs text-[#A0A0A0]">
+                        <p className="text-xs text-muted-foreground">
                             {displayStatus === "Delivered" ? "Your order has been delivered"
                                 : displayStatus === "In Transit" ? "Your order is on its way"
                                     : displayStatus === "Processing" || displayStatus === "Pending" ? "Your order is being processed"
@@ -223,19 +223,19 @@ function OrderDetailModal({ order, onClose }: { order: ApiOrder; onClose: () => 
                     ].map(({ label, value }) => (
                         <div
                             key={label}
-                            className="flex items-center justify-between px-4 py-3 rounded-xl bg-[#111a11] border border-[#008001]/20"
+                            className="flex items-center justify-between px-4 py-3 rounded-xl bg-muted border border-[#008001]/20"
                         >
-                            <span className="text-xs text-[#A0A0A0]">{label}</span>
-                            <span className="text-sm font-semibold text-white">{value}</span>
+                            <span className="text-xs text-muted-foreground">{label}</span>
+                            <span className="text-sm font-semibold text-foreground">{value}</span>
                         </div>
                     ))}
 
                     {/* Tracking */}
                     {order.tracking && (
-                        <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-[#111a11] border border-[#008001]/20">
-                            <span className="text-xs text-[#A0A0A0]">Tracking</span>
+                        <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-muted border border-[#008001]/20">
+                            <span className="text-xs text-muted-foreground">Tracking</span>
                             <div className="flex items-center gap-2">
-                                <span className="text-sm font-mono text-white">{order.tracking}</span>
+                                <span className="text-sm font-mono text-foreground">{order.tracking}</span>
                                 <button
                                     onClick={copyTracking}
                                     className="w-6 h-6 rounded-md flex items-center justify-center transition-colors"
@@ -243,7 +243,7 @@ function OrderDetailModal({ order, onClose }: { order: ApiOrder; onClose: () => 
                                 >
                                     {copied
                                         ? <Check className="w-3 h-3" style={{ color: "#49B618" }} />
-                                        : <Copy className="w-3 h-3 text-[#A0A0A0]" />}
+                                        : <Copy className="w-3 h-3 text-muted-foreground" />}
                                 </button>
                             </div>
                         </div>
@@ -264,7 +264,7 @@ function OrderDetailModal({ order, onClose }: { order: ApiOrder; onClose: () => 
                     <Button
                         onClick={onClose}
                         variant="outline"
-                        className="flex-1 text-sm h-10 border-[#008001]/30 text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20"
+                        className="flex-1 text-sm h-10 border-[#008001]/30 text-muted-foreground hover:text-foreground hover:bg-[#008001]/20"
                     >
                         <RotateCcw className="w-4 h-4 mr-2" />
                         Reorder
@@ -294,8 +294,8 @@ function StatusBadge({ status }: { status: string }) {
 function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: { value: number }[]; label?: string }) {
     if (!active || !payload?.length) return null;
     return (
-        <div className="bg-[#000000] border border-[#008001] rounded-xl px-4 py-3 text-xs shadow-xl">
-            <p className="font-bold text-white mb-1">{label}</p>
+        <div className="bg-background border border-[#008001] rounded-xl px-4 py-3 text-xs shadow-xl">
+            <p className="font-bold text-foreground mb-1">{label}</p>
             <p style={{ color: "#49B618" }}>Orders: {payload[0].value}</p>
         </div>
     );
@@ -307,7 +307,7 @@ function SkeletonRow() {
         <TableRow className="border-[#008001]/10">
             {Array.from({ length: 8 }).map((_, i) => (
                 <TableCell key={i}>
-                    <div className="h-4 bg-[#1E1E1E] rounded animate-pulse" style={{ width: `${60 + Math.random() * 40}%` }} />
+                    <div className="h-4 bg-muted rounded animate-pulse" style={{ width: `${60 + Math.random() * 40}%` }} />
                 </TableCell>
             ))}
         </TableRow>
@@ -415,7 +415,7 @@ export function Orders() {
                     {statCards.map(({ label, value, icon: Icon, gradient, sub }) => (
                         <Card
                             key={label}
-                            className="relative overflow-hidden bg-[#000000] border-[#008001]/30 hover:shadow-lg hover:shadow-[#008001]/20 transition-all group"
+                            className="relative overflow-hidden bg-card border-[#008001]/30 hover:shadow-lg hover:shadow-[#008001]/20 transition-all group"
                         >
                             <div className={`absolute top-0 right-0 w-28 h-28 bg-gradient-to-br ${gradient} opacity-10 blur-3xl group-hover:opacity-20 transition-opacity`} />
                             <CardContent className="p-4 sm:p-6 relative z-10">
@@ -425,12 +425,12 @@ export function Orders() {
                                     </div>
                                 </div>
                                 {loading ? (
-                                    <div className="h-8 w-16 bg-[#1E1E1E] rounded animate-pulse mb-1" />
+                                    <div className="h-8 w-16 bg-muted rounded animate-pulse mb-1" />
                                 ) : (
-                                    <p className="text-xl sm:text-3xl font-bold text-white">{value}</p>
+                                    <p className="text-xl sm:text-3xl font-bold text-foreground">{value}</p>
                                 )}
-                                <p className="text-xs sm:text-sm text-[#A0A0A0] mt-0.5">{label}</p>
-                                <p className="text-[10px] text-[#555] mt-1">{sub}</p>
+                                <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">{label}</p>
+                                <p className="text-[10px] text-muted-foreground/60 mt-1">{sub}</p>
                             </CardContent>
                         </Card>
                     ))}
@@ -439,15 +439,15 @@ export function Orders() {
                 {/* ── Chart + Summary ──────────────────────────────────────────── */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
                     {/* Chart */}
-                    <Card className="lg:col-span-2 bg-[#000000] border-[#008001]/30">
+                    <Card className="lg:col-span-2 bg-card border-[#008001]/30">
                         <CardHeader className="border-b border-[#008001]/30 pb-4">
                             <div className="flex items-center justify-between flex-wrap gap-3">
                                 <div>
-                                    <CardTitle className="text-white text-base sm:text-lg flex items-center gap-2">
+                                    <CardTitle className="text-foreground text-base sm:text-lg flex items-center gap-2">
                                         <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-[#49B618]" />
                                         Monthly Order Trend
                                     </CardTitle>
-                                    <p className="text-xs text-[#A0A0A0] mt-0.5">Orders placed per month</p>
+                                    <p className="text-xs text-muted-foreground mt-0.5">Orders placed per month</p>
                                 </div>
                             </div>
                         </CardHeader>
@@ -458,13 +458,13 @@ export function Orders() {
                                         {Array.from({ length: 7 }).map((_, i) => (
                                             <div
                                                 key={i}
-                                                className="flex-1 bg-[#1E1E1E] rounded-t animate-pulse"
+                                                className="flex-1 bg-muted rounded-t animate-pulse"
                                                 style={{ height: `${30 + Math.random() * 60}%` }}
                                             />
                                         ))}
                                     </div>
                                 ) : chartData.length === 0 ? (
-                                    <div className="h-full flex items-center justify-center text-[#A0A0A0] text-sm">
+                                    <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
                                         No order data available
                                     </div>
                                 ) : (
@@ -483,9 +483,9 @@ export function Orders() {
                     </Card>
 
                     {/* Quick Summary */}
-                    <Card className="bg-[#000000] border-[#008001]/30">
+                    <Card className="bg-card border-[#008001]/30">
                         <CardHeader className="border-b border-[#008001]/30 pb-4">
-                            <CardTitle className="text-white text-base sm:text-lg">Order Summary</CardTitle>
+                            <CardTitle className="text-foreground text-base sm:text-lg">Order Summary</CardTitle>
                         </CardHeader>
                         <CardContent className="pt-4 space-y-3">
                             {displayStatuses.map((status) => {
@@ -496,9 +496,9 @@ export function Orders() {
                                     <div key={status}>
                                         <div className="flex justify-between text-xs mb-1.5">
                                             <span style={{ color: cfg.text }}>{status}</span>
-                                            <span className="text-[#A0A0A0]">{count} order{count !== 1 ? "s" : ""}</span>
+                                            <span className="text-muted-foreground">{count} order{count !== 1 ? "s" : ""}</span>
                                         </div>
-                                        <div className="h-2 bg-[#1E1E1E] rounded-full overflow-hidden">
+                                        <div className="h-2 bg-muted rounded-full overflow-hidden">
                                             <div
                                                 className="h-full rounded-full transition-all duration-700"
                                                 style={{ width: `${pct}%`, background: cfg.dot }}
@@ -510,17 +510,17 @@ export function Orders() {
 
                             {!loading && orders.length > 0 && (
                                 <div className="pt-3 border-t border-[#008001]/20 mt-2">
-                                    <p className="text-[10px] text-[#555] uppercase tracking-wider mb-2">Recent Activity</p>
-                                    <p className="text-xs text-[#A0A0A0]">
+                                    <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wider mb-2">Recent Activity</p>
+                                    <p className="text-xs text-muted-foreground">
                                         Last order placed on{" "}
                                         <span className="text-[#49B618]">
                                             {formatDate(orders[0]?.date)}
                                         </span>
                                     </p>
                                     {orders.length > 0 && (
-                                        <p className="text-xs text-[#A0A0A0] mt-1">
+                                        <p className="text-xs text-muted-foreground mt-1">
                                             Avg. order value:{" "}
-                                            <span className="text-white font-semibold">
+                                            <span className="text-foreground font-semibold">
                                                 {formatAmount(
                                                     orders.reduce((s, o) => s + (Number(o.amount) || 0), 0) / orders.length
                                                 )}
@@ -534,15 +534,15 @@ export function Orders() {
                 </div>
 
                 {/* ── Orders Table ─────────────────────────────────────────────── */}
-                <Card className="bg-[#000000] border-[#008001]/30">
+                <Card className="bg-card border-[#008001]/30">
                     <CardHeader className="border-b border-[#008001]/30 pb-4">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                             <div>
-                                <CardTitle className="text-white text-base sm:text-lg flex items-center gap-2">
+                                <CardTitle className="text-foreground text-base sm:text-lg flex items-center gap-2">
                                     <Package className="w-4 h-4 sm:w-5 sm:h-5 text-[#49B618]" />
                                     Order History
                                 </CardTitle>
-                                <p className="text-xs text-[#A0A0A0] mt-0.5">
+                                <p className="text-xs text-muted-foreground mt-0.5">
                                     {loading ? "Loading…" : `${filtered.length} of ${orders.length} orders`}
                                 </p>
                             </div>
@@ -550,16 +550,16 @@ export function Orders() {
                             <div className="flex flex-wrap gap-2">
                                 {/* Search */}
                                 <div className="relative flex-1 sm:flex-none sm:w-52">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#A0A0A0]" />
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                                     <Input
                                         placeholder="Search orders…"
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
-                                        className="pl-9 w-full bg-[#1E1E1E] border-[#008001]/30 text-white text-xs h-9 rounded-full"
+                                        className="pl-9 w-full bg-muted border-[#008001]/30 text-foreground text-xs h-9 rounded-full"
                                     />
                                     {search && (
                                         <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2">
-                                            <X className="w-3 h-3 text-[#A0A0A0]" />
+                                            <X className="w-3 h-3 text-muted-foreground" />
                                         </button>
                                     )}
                                 </div>
@@ -570,14 +570,14 @@ export function Orders() {
                                         variant="outline"
                                         size="sm"
                                         onClick={() => setShowFilter((f) => !f)}
-                                        className="border-[#008001]/30 text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20 h-9 text-xs gap-1.5 rounded-full"
+                                        className="border-[#008001]/30 text-muted-foreground hover:text-foreground hover:bg-[#008001]/20 h-9 text-xs gap-1.5 rounded-full"
                                     >
                                         <Filter className="w-3.5 h-3.5" />
                                         {statusFilter}
                                         <ChevronDown className={`w-3 h-3 transition-transform ${showFilter ? "rotate-180" : ""}`} />
                                     </Button>
                                     {showFilter && (
-                                        <div className="absolute right-0 top-10 z-20 bg-[#0a0a0a] border border-[#008001]/30 rounded-xl shadow-2xl w-44 py-1.5">
+                                        <div className="absolute right-0 top-10 z-20 bg-background border border-[#008001]/30 rounded-xl shadow-2xl w-44 py-1.5">
                                             {statusOptions.map((s) => (
                                                 <button
                                                     key={s}
@@ -611,7 +611,7 @@ export function Orders() {
                                 <TableHeader>
                                     <TableRow className="border-[#008001]/20 hover:bg-transparent">
                                         {["Order ID", "Date", "Items", "Qty", "Amount", "Status", "Tracking", "Actions"].map((h) => (
-                                            <TableHead key={h} className="text-[#555] text-xs uppercase tracking-wider font-semibold">
+                                            <TableHead key={h} className="text-muted-foreground/60 text-xs uppercase tracking-wider font-semibold">
                                                 {h}
                                             </TableHead>
                                         ))}
@@ -623,13 +623,13 @@ export function Orders() {
                                     ) : filtered.length === 0 ? (
                                         <TableRow>
                                             <TableCell colSpan={8} className="text-center py-16">
-                                                <div className="flex flex-col items-center gap-3 text-[#A0A0A0]">
+                                                <div className="flex flex-col items-center gap-3 text-muted-foreground">
                                                     <Package className="w-10 h-10 opacity-30" />
                                                     <p className="text-sm">
                                                         {orders.length === 0 ? "No orders yet" : "No orders match your search"}
                                                     </p>
                                                     {orders.length === 0 && (
-                                                        <p className="text-xs text-[#555]">Your order history will appear here</p>
+                                                        <p className="text-xs text-muted-foreground/60">Your order history will appear here</p>
                                                     )}
                                                 </div>
                                             </TableCell>
@@ -644,21 +644,21 @@ export function Orders() {
                                                 <TableCell className="font-mono text-sm text-[#49B618] font-semibold">
                                                     {order.orderNumber}
                                                 </TableCell>
-                                                <TableCell className="text-[#A0A0A0] text-sm">{formatDate(order.date)}</TableCell>
-                                                <TableCell className="text-white text-sm max-w-[180px] truncate">{formatItems(order.items)}</TableCell>
-                                                <TableCell className="text-[#A0A0A0] text-sm">×{order.quantity}</TableCell>
-                                                <TableCell className="text-white font-semibold text-sm">{formatAmount(order.amount)}</TableCell>
+                                                <TableCell className="text-muted-foreground text-sm">{formatDate(order.date)}</TableCell>
+                                                <TableCell className="text-foreground text-sm max-w-[180px] truncate">{formatItems(order.items)}</TableCell>
+                                                <TableCell className="text-muted-foreground text-sm">×{order.quantity}</TableCell>
+                                                <TableCell className="text-foreground font-semibold text-sm">{formatAmount(order.amount)}</TableCell>
                                                 <TableCell><StatusBadge status={order.status} /></TableCell>
-                                                <TableCell className="font-mono text-xs text-[#555]">{order.tracking ?? "—"}</TableCell>
+                                                <TableCell className="font-mono text-xs text-muted-foreground/60">{order.tracking ?? "—"}</TableCell>
                                                 <TableCell onClick={(e) => e.stopPropagation()}>
                                                     <div className="flex items-center gap-2">
                                                         <button
                                                             onClick={() => setSelectedOrder(order)}
-                                                            className="w-7 h-7 rounded-lg flex items-center justify-center text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20 transition-colors"
+                                                            className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-[#008001]/20 transition-colors"
                                                         >
                                                             <Eye className="w-3.5 h-3.5" />
                                                         </button>
-                                                        <button className="w-7 h-7 rounded-lg flex items-center justify-center text-[#A0A0A0] hover:text-white hover:bg-[#008001]/20 transition-colors">
+                                                        <button className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-[#008001]/20 transition-colors">
                                                             <RotateCcw className="w-3.5 h-3.5" />
                                                         </button>
                                                     </div>
@@ -675,13 +675,13 @@ export function Orders() {
                             {loading ? (
                                 Array.from({ length: 3 }).map((_, i) => (
                                     <div key={i} className="p-4 space-y-2">
-                                        <div className="h-4 w-28 bg-[#1E1E1E] rounded animate-pulse" />
-                                        <div className="h-3 w-40 bg-[#1E1E1E] rounded animate-pulse" />
-                                        <div className="h-3 w-24 bg-[#1E1E1E] rounded animate-pulse" />
+                                        <div className="h-4 w-28 bg-muted rounded animate-pulse" />
+                                        <div className="h-3 w-40 bg-muted rounded animate-pulse" />
+                                        <div className="h-3 w-24 bg-muted rounded animate-pulse" />
                                     </div>
                                 ))
                             ) : filtered.length === 0 ? (
-                                <div className="flex flex-col items-center gap-3 text-[#A0A0A0] py-16">
+                                <div className="flex flex-col items-center gap-3 text-muted-foreground py-16">
                                     <Package className="w-10 h-10 opacity-30" />
                                     <p className="text-sm">{orders.length === 0 ? "No orders yet" : "No orders match your search"}</p>
                                 </div>
@@ -695,16 +695,16 @@ export function Orders() {
                                         <div className="flex items-start justify-between mb-2">
                                             <div>
                                                 <span className="font-mono text-sm font-semibold text-[#49B618]">{order.orderNumber}</span>
-                                                <p className="text-xs text-[#A0A0A0] mt-0.5">{formatDate(order.date)}</p>
+                                                <p className="text-xs text-muted-foreground mt-0.5">{formatDate(order.date)}</p>
                                             </div>
                                             <StatusBadge status={order.status} />
                                         </div>
                                         <div className="flex items-center justify-between">
-                                            <p className="text-sm text-white">{order.quantity}× {formatItems(order.items)}</p>
-                                            <p className="text-sm font-bold text-white">{formatAmount(order.amount)}</p>
+                                            <p className="text-sm text-foreground">{order.quantity}× {formatItems(order.items)}</p>
+                                            <p className="text-sm font-bold text-foreground">{formatAmount(order.amount)}</p>
                                         </div>
                                         {order.tracking && (
-                                            <p className="text-xs font-mono text-[#555] mt-1.5">{order.tracking}</p>
+                                            <p className="text-xs font-mono text-muted-foreground/60 mt-1.5">{order.tracking}</p>
                                         )}
                                     </div>
                                 ))
@@ -714,13 +714,13 @@ export function Orders() {
                         {/* Footer */}
                         {!loading && filtered.length > 0 && (
                             <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-t border-[#008001]/10">
-                                <p className="text-xs text-[#555]">
+                                <p className="text-xs text-muted-foreground/60">
                                     Showing {filtered.length} of {orders.length} orders
                                 </p>
                                 <button
                                     onClick={() => fetchOrders(true)}
                                     disabled={refreshing}
-                                    className="flex items-center gap-1.5 text-xs text-[#49B618] hover:text-white transition-colors disabled:opacity-50"
+                                    className="flex items-center gap-1.5 text-xs text-[#49B618] hover:text-foreground transition-colors disabled:opacity-50"
                                 >
                                     {refreshing
                                         ? <Loader2 className="w-3 h-3 animate-spin" />

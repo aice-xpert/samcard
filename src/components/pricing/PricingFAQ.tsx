@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTheme } from "@/contexts/ThemeContext";
 import { ArrowRight, HelpCircle } from "lucide-react";
 
 export function PricingFAQ() {
+  const { isDark } = useTheme();
   const [open, setOpen] = useState<number | null>(null);
 
   const faqs = [
@@ -41,7 +43,7 @@ export function PricingFAQ() {
   ];
 
   return (
-    <section className="py-24 bg-black">
+    <section className={`py-24 ${isDark ? "bg-black" : "bg-background"}`}>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Heading */}
@@ -51,10 +53,10 @@ export function PricingFAQ() {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <h2 className="text-4xl lg:text-5xl font-bold text-white mb-4">
+          <h2 className="text-4xl lg:text-5xl font-bold text-foreground mb-4">
             Frequently Asked Questions
           </h2>
-          <p className="text-xl text-gray-300">
+          <p className="text-xl text-muted-foreground">
             Everything you need to know about our pricing
           </p>
         </motion.div>
@@ -68,11 +70,13 @@ export function PricingFAQ() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.05 }}
-              className="bg-white/5 backdrop-blur-sm 
-                         border border-white/10 
-                         rounded-2xl overflow-hidden
+              className={`rounded-2xl overflow-hidden
                          hover:border-accent/60 
-                         transition-all duration-300"
+                         transition-all duration-300 ${
+                isDark
+                  ? "bg-white/5 backdrop-blur-sm border border-white/10"
+                  : "bg-white border border-gray-200 shadow-sm"
+              }`}
             >
               <button
                 onClick={() => setOpen(open === index ? null : index)}
@@ -93,7 +97,7 @@ export function PricingFAQ() {
                   </div>
 
                   {/* Question */}
-                  <span className="text-lg font-semibold text-white">
+                  <span className="text-lg font-semibold text-foreground">
                     {faq.question}
                   </span>
                 </div>
@@ -104,7 +108,7 @@ export function PricingFAQ() {
                   transition={{ duration: 0.3 }}
                 >
                   <ArrowRight
-                    className="text-gray-400 rotate-90"
+                    className="text-muted-foreground rotate-90"
                     size={20}
                   />
                 </motion.div>
@@ -120,7 +124,7 @@ export function PricingFAQ() {
                     transition={{ duration: 0.3 }}
                     className="px-6 pb-6"
                   >
-                    <p className="text-gray-300 leading-relaxed pl-14">
+                    <p className="text-muted-foreground leading-relaxed pl-14">
                       {faq.answer}
                     </p>
                   </motion.div>

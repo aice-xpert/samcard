@@ -1,4 +1,6 @@
+{/* theme: converted */}
 import React, { useState, ReactNode, useMemo, useRef, useCallback } from "react";
+import { useTheme } from "@/contexts/ThemeContext";
 import {
   QR_SHAPES, PRE_DESIGNS, LOGOS,
 } from "@/components/dashboard/pages/constants";
@@ -96,29 +98,22 @@ const STICKER_CATEGORIES = Array.from(
   }, new Map<string, StickerDef[]>())
 );
 
-// ── UI atoms ──────────────────────────────────────────────────────────────────
+// ── UI atoms (converted to Tailwind) ─────────────────────────────────────────
 
 const SLabel = ({ children }: { children: ReactNode }) => (
-  <div style={{
-    fontSize: 9, fontWeight: 700, letterSpacing: "0.14em",
-    textTransform: "uppercase" as const, color: "rgba(74,222,128,0.4)",
-    marginBottom: 10, display: "flex", alignItems: "center", gap: 6,
-  }}>
-    <span style={{ width: 3, height: 3, borderRadius: "50%", background: "rgba(34,197,94,0.4)", display: "inline-block" }} />
+  <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.14em] text-muted-foreground/60 mb-2.5">
+    <span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/40" />
     {children}
   </div>
 );
 
-const Divider = () => <div style={{ height: 1, background: "linear-gradient(90deg,transparent,rgba(34,197,94,0.12),transparent)", margin: "6px 0" }} />;
+const Divider = () => <div className="h-px bg-gradient-to-r from-transparent via-border/40 to-transparent my-1.5" />;
 
 function CheckBox({ checked }: { checked: boolean }) {
   return (
-    <div style={{
-      width: 16, height: 16, borderRadius: 4, flexShrink: 0, transition: "all 0.15s",
-      border: `1.5px solid ${checked ? "#22c55e" : "rgba(148,163,184,0.3)"}`,
-      background: checked ? "#22c55e" : "transparent",
-      display: "flex", alignItems: "center", justifyContent: "center",
-    }}>
+    <div className={`w-4 h-4 rounded-sm border flex items-center justify-center flex-shrink-0 transition-all ${
+      checked ? 'border-primary bg-primary' : 'border-muted-foreground/30 bg-transparent'
+    }`}>
       {checked && <svg width="9" height="7" viewBox="0 0 9 7"><path d="M1 3.5l2 2L8 1" stroke="white" strokeWidth="1.6" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>}
     </div>
   );
@@ -126,42 +121,31 @@ function CheckBox({ checked }: { checked: boolean }) {
 
 function ColorPicker({ color, onChange }: { color: string; onChange: (v: string) => void }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-      <div style={{ width: 30, height: 30, borderRadius: 7, background: color, border: "1px solid rgba(255,255,255,0.1)", flexShrink: 0 }} />
+    <div className="flex items-center gap-2">
+      <div className="w-[30px] h-[30px] rounded-md border border-border/50 flex-shrink-0" style={{ background: color }} />
       <input type="color" value={color.length === 7 ? color : "#111111"} onChange={e => onChange(e.target.value)}
-        style={{ width: 30, height: 30, border: "none", background: "none", cursor: "pointer", padding: 0 }} />
+        className="w-[30px] h-[30px] border-none bg-transparent cursor-pointer p-0" />
       <input value={color} onChange={e => onChange(e.target.value)}
-        style={{
-          flex: 1, padding: "6px 10px", borderRadius: 7,
-          border: "1px solid rgba(255,255,255,0.07)", fontSize: 11,
-          fontFamily: "'JetBrains Mono',monospace",
-          background: "rgba(255,255,255,0.03)", color: "#cbd5e1", outline: "none",
-        }} />
+        className="flex-1 px-2.5 py-1.5 rounded-md border border-border bg-muted/30 text-foreground text-xs font-mono outline-none focus:ring-1 focus:ring-ring" />
     </div>
   );
 }
 
 const ShapeBtn = ({ sel, onClick, el }: { sel: boolean; onClick: () => void; el: ReactNode }) => (
-  <button onClick={onClick} style={{
-    width: "100%", aspectRatio: "1", padding: 4, cursor: "pointer",
-    border: sel ? "1.5px solid #22c55e" : "1px solid rgba(255,255,255,0.06)",
-    borderRadius: 8,
-    background: sel ? "rgba(34,197,94,0.1)" : "rgba(255,255,255,0.02)",
-    boxShadow: sel ? "0 0 0 2px rgba(34,197,94,0.15)" : "none",
-    transform: sel ? "scale(1.06)" : "scale(1)",
-    transition: "all 0.13s cubic-bezier(0.4,0,0.2,1)",
-  }}>
-    <svg width="100%" height="100%" viewBox="10 10 30 30" style={{ display: "block" }}>{el}</svg>
+  <button onClick={onClick} className={`w-full aspect-square p-1 cursor-pointer rounded-lg transition-all ${
+    sel ? 'border-2 border-primary bg-primary/10 shadow-[0_0_0_2px_rgba(34,197,94,0.15)] scale-105' : 'border border-border/60 bg-muted/20 hover:bg-muted/40'
+  }`}>
+    <svg width="100%" height="100%" viewBox="10 10 30 30" className="block">{el}</svg>
   </button>
 );
 
 function SummaryRow({ label, value, onClear, swatch }: { label: string; value: string; onClear: () => void; swatch?: string }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 10 }}>
-      {swatch && <div style={{ width: 10, height: 10, borderRadius: 2, background: swatch, border: "1px solid rgba(255,255,255,0.12)", flexShrink: 0 }} />}
-      <span style={{ color: "rgba(148,163,184,0.4)", minWidth: 52 }}>{label}</span>
-      <span style={{ color: "#94a3b8", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{value}</span>
-      <button onClick={onClear} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(148,163,184,0.3)", fontSize: 14, padding: "0 2px", lineHeight: 1 }}>×</button>
+    <div className="flex items-center gap-1.5 text-[10px]">
+      {swatch && <div className="w-2.5 h-2.5 rounded-sm border border-border/30 flex-shrink-0" style={{ background: swatch }} />}
+      <span className="text-muted-foreground/60 min-w-[52px]">{label}</span>
+      <span className="text-muted-foreground flex-1 truncate">{value}</span>
+      <button onClick={onClear} className="bg-transparent border-none cursor-pointer text-muted-foreground/40 text-sm px-0.5 leading-none hover:text-foreground">×</button>
     </div>
   );
 }
@@ -229,6 +213,7 @@ async function exportDecorateComposite(
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUrl, initialConfig }: QRCustomizerProps) {
+  const { isDark } = useTheme();
   const targetUrl = propTargetUrl ?? (typeof window !== "undefined" ? window.location.href : "https://samcard.app");
 
   const { matrix: previewMatrix, N: previewN } = useMemo(() => makeQRMatrix(targetUrl), [targetUrl]);
@@ -430,7 +415,7 @@ export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUr
 
   const renderPreview = () => {
     const qrSvg = (size: number, cId: string) => (
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ display: "block" }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="block">
         {gradDefs}
         <QRWithShape {...qrProps} size={size} clipId={cId} qrMatrix={previewMatrix} qrN={previewN} />
       </svg>
@@ -449,10 +434,10 @@ export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUr
 
     if (selectedSticker) {
       return (
-        <div style={{ position: "relative", width: PREVIEW_PX }}>
+        <div className="relative w-[240px]">
           {selectedDesign?.sticker && <StickerBadge sticker={selectedDesign.sticker} />}
-          <div style={{ borderRadius: 16, overflow: "visible", boxShadow: "0 8px 32px rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.05)" }}>
-            <svg width={PREVIEW_PX} height={PREVIEW_PX} viewBox={`0 0 ${OUTER_PX} ${OUTER_PX}`} style={{ display: "block" }}>
+          <div className="rounded-lg overflow-visible shadow-2xl border border-white/5">
+            <svg width={PREVIEW_PX} height={PREVIEW_PX} viewBox={`0 0 ${OUTER_PX} ${OUTER_PX}`} className="block">
               {gradDefs}
               <rect width={OUTER_PX} height={OUTER_PX} fill={activeBg} rx={16} />
               <g transform={`translate(${STICKER_RING_PAD},${STICKER_RING_PAD})`}>
@@ -468,9 +453,9 @@ export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUr
     // Canvas preview
     if (useCanvasRenderer) {
       return (
-        <div style={{ position: "relative", width: PREVIEW_PX, marginTop: selectedDesign?.sticker ? 18 : 0 }}>
+        <div className="relative w-[240px] mt-4">
           {selectedDesign?.sticker && <StickerBadge sticker={selectedDesign.sticker} />}
-          <div style={{ borderRadius: 14, overflow: "hidden", boxShadow: "0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04)", background: activeBg }}>
+          <div className="rounded-lg overflow-hidden shadow-2xl border border-white/5" style={{ background: activeBg }}>
             {qrCanvas(PREVIEW_PX)}
           </div>
         </div>
@@ -479,58 +464,48 @@ export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUr
 
     // SVG preview (default)
     return (
-      <div style={{ position: "relative", width: PREVIEW_PX, marginTop: selectedDesign?.sticker ? 18 : 0 }}>
+      <div className="relative w-[240px] mt-4">
         {selectedDesign?.sticker && <StickerBadge sticker={selectedDesign.sticker} />}
-        <div style={{ borderRadius: 14, overflow: "hidden", boxShadow: "0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04)", background: activeBg }}>
+        <div className="rounded-lg overflow-hidden shadow-2xl border border-white/5" style={{ background: activeBg }}>
           {qrSvg(PREVIEW_PX, previewClipId)}
         </div>
       </div>
     );
   };
 
-  // ── Tab content renderer ──────────────────────────────────────────────────
+  // ── Tab content renderer (converted to Tailwind) ────────────────────────────
 
   const renderTabContent = () => {
     switch (activeTab) {
 
       case "qr-shapes":
         return (
-          <>
-            {/* <p style={{ margin: "0 0 14px", fontSize: 11, color: "rgba(148,163,184,0.6)", lineHeight: 1.6 }}>
-              QR dots are distributed <em>inside</em> the shape outline — not simply cropped.
-            </p> */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 8 }}>
-              {QR_SHAPES.map(shape => {
-                const sid = resolveShapeId(shape.id);
-                const isActive = selectedShape.id === shape.id;
-                return (
-                  <div key={shape.id}>
-                    <button onClick={() => setSelectedShape(shape)} title={shape.label} style={{
-                      width: "100%", aspectRatio: "1", padding: 3, cursor: "pointer",
-                      border: isActive ? "1.5px solid #22c55e" : "1px solid rgba(255,255,255,0.06)",
-                      borderRadius: 10, background: isActive ? "rgba(34,197,94,0.08)" : "rgba(255,255,255,0.02)",
-                      boxShadow: isActive ? "0 0 0 2px rgba(34,197,94,0.15)" : "none",
-                      transform: isActive ? "scale(1.04)" : "scale(1)", transition: "all 0.15s",
-                      display: "block", overflow: "hidden",
-                    }}>
-                      <QRShapeThumbnail shapeId={sid} fg="#111111" bg="#ffffff" size={70} clipId={`thumb-${shape.id}`} />
-                    </button>
-                    <div style={{ textAlign: "center", fontSize: 9, color: "rgba(148,163,184,0.5)", fontWeight: 500, marginTop: 3 }}>{shape.label}</div>
-                  </div>
-                );
-              })}
-            </div>
-          </>
+          <div className="grid grid-cols-5 gap-2">
+            {QR_SHAPES.map(shape => {
+              const sid = resolveShapeId(shape.id);
+              const isActive = selectedShape.id === shape.id;
+              return (
+                <div key={shape.id}>
+                  <button onClick={() => setSelectedShape(shape)} title={shape.label} className={`w-full aspect-square p-0.5 cursor-pointer rounded-lg overflow-hidden transition-all ${
+                    isActive ? 'border-2 border-primary bg-primary/10 shadow-[0_0_0_2px_rgba(34,197,94,0.15)] scale-105' : 'border border-border/60 bg-muted/20 hover:bg-muted/40'
+                  }`}>
+                    <QRShapeThumbnail shapeId={sid} fg="#111111" bg="#ffffff" size={70} clipId={`thumb-${shape.id}`} />
+                  </button>
+                  <div className="text-center text-[9px] text-muted-foreground/60 font-medium mt-1">{shape.label}</div>
+                </div>
+              );
+            })}
+          </div>
         );
 
       case "predesigned":
         return (
           <>
-            <p style={{ margin: "0 0 12px", fontSize: 11, color: "rgba(148,163,184,0.6)", lineHeight: 1.6 }}>
+            <p className="text-[11px] text-muted-foreground/60 leading-relaxed mb-3">
               Select a design to apply its full style. Override colours in the Colors tab.
             </p>
             <SLabel>Dot Styles</SLabel>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8, marginBottom: 16 }}>
+            <div className="grid grid-cols-4 gap-2 mb-4">
               {plainDesigns.map(d => (
                 <QRThumbnail key={d.id} design={d} selected={selectedDesign?.id === d.id}
                   onClick={() => {
@@ -540,7 +515,7 @@ export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUr
               ))}
             </div>
             <SLabel>✦ Sticker Styles</SLabel>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8 }}>
+            <div className="grid grid-cols-4 gap-2">
               {stickerDesigns.map(d => (
                 <QRThumbnail key={d.id} design={d} selected={selectedDesign?.id === d.id}
                   onClick={() => {
@@ -550,9 +525,9 @@ export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUr
               ))}
             </div>
             {selectedDesign && (
-              <div style={{ marginTop: 12, padding: "8px 12px", borderRadius: 8, background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.18)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <span style={{ fontSize: 11, color: "#4ade80", fontWeight: 600 }}>✓ {selectedDesign.label} applied</span>
-                <button onClick={() => setSelectedDesign(null)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 10, color: "rgba(148,163,184,0.45)", fontWeight: 600, fontFamily: FONT }}>Reset</button>
+              <div className="mt-3 px-3 py-2 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-between">
+                <span className="text-[11px] text-primary font-semibold">✓ {selectedDesign.label} applied</span>
+                <button onClick={() => setSelectedDesign(null)} className="bg-transparent border-none cursor-pointer text-[10px] text-muted-foreground/60 font-semibold hover:text-foreground">Reset</button>
               </div>
             )}
           </>
@@ -560,36 +535,32 @@ export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUr
 
       case "stickers":
         return (
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <p style={{ margin: "0 0 8px", fontSize: 11, color: "rgba(148,163,184,0.6)", lineHeight: 1.6 }}>
-              Rings &amp; frames that wrap the <strong style={{ color: "#e2e8f0" }}>outside</strong> of your QR code.
+          <div className="flex flex-col gap-1">
+            <p className="text-[11px] text-muted-foreground/60 leading-relaxed mb-2">
+              Rings &amp; frames that wrap the <strong className="text-foreground">outside</strong> of your QR code.
             </p>
             {STICKER_CATEGORIES.map(([category, items]) => (
               <div key={category}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "12px 0 7px" }}>
-                  <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.05)" }} />
-                  <span style={{ fontSize: 8.5, letterSpacing: "0.14em", color: "rgba(148,163,184,0.35)", textTransform: "uppercase" as const, whiteSpace: "nowrap" }}>{category}</span>
-                  <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.05)" }} />
+                <div className="flex items-center gap-2 my-3">
+                  <div className="flex-1 h-px bg-border/40" />
+                  <span className="text-[8.5px] tracking-[0.14em] text-muted-foreground/40 uppercase whitespace-nowrap">{category}</span>
+                  <div className="flex-1 h-px bg-border/40" />
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(6,1fr)", gap: 7 }}>
+                <div className="grid grid-cols-6 gap-1.5">
                   {items.map(sticker => {
                     const isActive = selectedSticker?.id === sticker.id;
                     const tO = 62, tQ = 38, tP = (tO - tQ) / 2;
                     return (
-                      <div key={sticker.id} style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                        <button onClick={() => setSelectedSticker(isActive ? null : sticker)} title={sticker.label} style={{
-                          width: "100%", aspectRatio: "1", padding: 2, cursor: "pointer",
-                          border: isActive ? "1.5px solid #22c55e" : "1px solid rgba(255,255,255,0.06)",
-                          borderRadius: 9, background: isActive ? "rgba(34,197,94,0.08)" : "rgba(255,255,255,0.02)",
-                          boxShadow: isActive ? "0 0 0 2px rgba(34,197,94,0.15)" : "none",
-                          transform: isActive ? "scale(1.05)" : "scale(1)", transition: "all 0.13s", position: "relative", overflow: "hidden",
-                        }}>
+                      <div key={sticker.id} className="flex flex-col gap-0.5">
+                        <button onClick={() => setSelectedSticker(isActive ? null : sticker)} title={sticker.label} className={`relative w-full aspect-square p-0.5 cursor-pointer rounded-lg overflow-hidden transition-all ${
+                          isActive ? 'border-2 border-primary bg-primary/10 shadow-[0_0_0_2px_rgba(34,197,94,0.15)] scale-105' : 'border border-border/60 bg-muted/20 hover:bg-muted/40'
+                        }`}>
                           {isActive && (
-                            <div style={{ position: "absolute", top: 2, right: 2, zIndex: 3, width: 12, height: 12, borderRadius: "50%", background: "#22c55e", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <div className="absolute top-1 right-1 z-10 w-3 h-3 rounded-full bg-primary flex items-center justify-center">
                               <svg width="7" height="5" viewBox="0 0 7 5" fill="none"><path d="M1 2.5l1.5 1.5L6 1" stroke="white" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
                             </div>
                           )}
-                          <svg width="100%" height="100%" viewBox={`0 0 ${tO} ${tO}`} style={{ display: "block" }}>
+                          <svg width="100%" height="100%" viewBox={`0 0 ${tO} ${tO}`} className="block">
                             <rect width={tO} height={tO} fill="#fff" rx={5} />
                             <g transform={`translate(${tP},${tP})`}>
                               {[0, 1, 2, 3, 4, 5, 6].map(r => [0, 1, 2, 3, 4, 5, 6].map(cc =>
@@ -601,7 +572,7 @@ export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUr
                             {sticker.render(tO, tQ)}
                           </svg>
                         </button>
-                        <div style={{ textAlign: "center", fontSize: 8, color: "rgba(148,163,184,0.45)", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sticker.label}</div>
+                        <div className="text-center text-[8px] text-muted-foreground/50 font-medium truncate">{sticker.label}</div>
                       </div>
                     );
                   })}
@@ -609,9 +580,9 @@ export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUr
               </div>
             ))}
             {selectedSticker && (
-              <div style={{ marginTop: 10, padding: "8px 12px", borderRadius: 8, background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.18)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <span style={{ fontSize: 11, color: "#4ade80", fontWeight: 600 }}>✓ {selectedSticker.label} applied</span>
-                <button onClick={() => setSelectedSticker(null)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 10, color: "rgba(148,163,184,0.45)", fontFamily: FONT }}>Remove</button>
+              <div className="mt-2.5 px-3 py-2 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-between">
+                <span className="text-[11px] text-primary font-semibold">✓ {selectedSticker.label} applied</span>
+                <button onClick={() => setSelectedSticker(null)} className="bg-transparent border-none cursor-pointer text-[10px] text-muted-foreground/60 font-semibold hover:text-foreground">Remove</button>
               </div>
             )}
           </div>
@@ -619,21 +590,23 @@ export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUr
 
       case "colors":
         return (
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div className="flex flex-col gap-3.5">
             {selectedDesign && (
-              <div style={{ padding: "8px 12px", borderRadius: 8, background: "rgba(34,197,94,0.04)", border: "1px solid rgba(34,197,94,0.12)", fontSize: 10, color: "#4ade80", lineHeight: 1.5 }}>
+              <div className="px-3 py-2 rounded-md bg-primary/10 border border-primary/20 text-[10px] text-primary leading-relaxed">
                 <strong>{selectedDesign.label}</strong> active — colour overrides apply on top.
               </div>
             )}
             <div>
               <SLabel>Solid Palettes</SLabel>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 7 }}>
+              <div className="grid grid-cols-7 gap-1.5">
                 {PALETTES.map((p, i) => {
                   const active = !fgGradEnabled && fgOverride === p.fg && bgOverride === p.bg;
                   return (
                     <button key={i} title={p.label}
                       onClick={() => { setFgOverride(p.fg); setBgOverride(p.bg); setFgGradEnabled(false); setEyeColor(p.fg); setEyeEnabled(true); }}
-                      style={{ width: "100%", aspectRatio: "1", border: "none", borderRadius: "50%", padding: 0, cursor: "pointer", overflow: "hidden", outline: active ? "2.5px solid #22c55e" : "1px solid rgba(255,255,255,0.08)", outlineOffset: active ? 2 : 1, transition: "all 0.13s", transform: active ? "scale(1.12)" : "scale(1)" }}>
+                      className={`w-full aspect-square border-none rounded-full p-0 cursor-pointer overflow-hidden transition-all ${
+                        active ? 'outline outline-2 outline-primary scale-110' : 'outline outline-1 outline-border/30'
+                      }`}>
                       <svg width="100%" height="100%" viewBox="0 0 40 40">
                         <circle cx={20} cy={20} r={20} fill={p.bg} />
                         <path d="M 20,0 A 20,20 0 0,1 20,40 L 20,20 Z" fill={p.fg} />
@@ -647,33 +620,36 @@ export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUr
             <Divider />
             <div>
               <SLabel>Gradient Presets</SLabel>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 7 }}>
+              <div className="grid grid-cols-4 gap-1.5">
                 {GRADIENT_PRESETS.map((g, i) => {
                   const active = fgGradEnabled && JSON.stringify(fgGradStops) === JSON.stringify(g.stops);
                   return (
                     <button key={i} title={g.label}
                       onClick={() => { setFgGradStops(g.stops); setFgGradAngle(g.angle); setFgGradEnabled(true); setEyeColor(g.stops[0].color); setEyeEnabled(true); }}
-                      style={{ width: "100%", aspectRatio: "1.8", border: "none", borderRadius: 8, padding: 0, cursor: "pointer", overflow: "hidden", outline: active ? "2px solid #22c55e" : "1px solid rgba(255,255,255,0.08)", outlineOffset: active ? 2 : 0, transition: "all 0.13s", transform: active ? "scale(1.03)" : "scale(1)", background: `linear-gradient(${g.angle}deg,${g.stops.map(s => `${s.color} ${s.offset * 100}%`).join(",")})` }}>
-                      <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <span style={{ fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.9)", letterSpacing: "0.05em", textShadow: "0 1px 3px rgba(0,0,0,0.5)" }}>{g.label}</span>
+                      className={`w-full aspect-[1.8] border-none rounded-lg p-0 cursor-pointer overflow-hidden transition-all ${
+                        active ? 'outline outline-2 outline-primary scale-105' : 'outline outline-1 outline-border/30'
+                      }`}
+                      style={{ background: `linear-gradient(${g.angle}deg,${g.stops.map(s => `${s.color} ${s.offset * 100}%`).join(",")})` }}>
+                      <div className="w-full h-full flex items-center justify-center">
+                        <span className="text-[9px] font-bold text-white/90 tracking-[0.05em] drop-shadow-md">{g.label}</span>
                       </div>
                     </button>
                   );
                 })}
               </div>
               {fgGradEnabled && (
-                <div style={{ marginTop: 10, padding: "10px 12px", borderRadius: 9, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", display: "flex", flexDirection: "column", gap: 8 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontSize: 10, color: "rgba(148,163,184,0.6)", fontWeight: 600 }}>Angle</span>
-                    <span style={{ fontSize: 10, color: "#4ade80", fontFamily: "monospace" }}>{fgGradAngle}°</span>
+                <div className="mt-2.5 p-2.5 rounded-md bg-muted/20 border border-border/60 flex flex-col gap-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] text-muted-foreground/80 font-semibold">Angle</span>
+                    <span className="text-[10px] text-primary font-mono">{fgGradAngle}°</span>
                   </div>
-                  <input type="range" min={0} max={360} value={fgGradAngle} onChange={e => setFgGradAngle(Number(e.target.value))} style={{ width: "100%", accentColor: "#22c55e" }} />
-                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                    <span style={{ fontSize: 10, color: "rgba(148,163,184,0.6)", fontWeight: 600 }}>Start</span>
-                    <input type="color" value={fgGradStops[0]?.color ?? "#000"} onChange={e => { setFgGradStops(s => [{ ...s[0], color: e.target.value }, s[1]]); setEyeColor(e.target.value); setEyeEnabled(true); }} style={{ width: 26, height: 26, border: "none", cursor: "pointer", borderRadius: 5 }} />
-                    <span style={{ fontSize: 10, color: "rgba(148,163,184,0.6)", fontWeight: 600, marginLeft: 8 }}>End</span>
-                    <input type="color" value={fgGradStops[1]?.color ?? "#fff"} onChange={e => setFgGradStops(s => [s[0], { ...s[1], color: e.target.value }])} style={{ width: 26, height: 26, border: "none", cursor: "pointer", borderRadius: 5 }} />
-                    <button onClick={() => setFgGradEnabled(false)} style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer", fontSize: 10, color: "rgba(148,163,184,0.4)", fontFamily: FONT }}>Use solid</button>
+                  <input type="range" min={0} max={360} value={fgGradAngle} onChange={e => setFgGradAngle(Number(e.target.value))} className="w-full accent-primary" />
+                  <div className="flex gap-2 items-center">
+                    <span className="text-[10px] text-muted-foreground/80 font-semibold">Start</span>
+                    <input type="color" value={fgGradStops[0]?.color ?? "#000"} onChange={e => { setFgGradStops(s => [{ ...s[0], color: e.target.value }, s[1]]); setEyeColor(e.target.value); setEyeEnabled(true); }} className="w-6 h-6 border-none cursor-pointer rounded-md" />
+                    <span className="text-[10px] text-muted-foreground/80 font-semibold ml-2">End</span>
+                    <input type="color" value={fgGradStops[1]?.color ?? "#fff"} onChange={e => setFgGradStops(s => [s[0], { ...s[1], color: e.target.value }])} className="w-6 h-6 border-none cursor-pointer rounded-md" />
+                    <button onClick={() => setFgGradEnabled(false)} className="ml-auto bg-transparent border-none cursor-pointer text-[10px] text-muted-foreground/50 hover:text-foreground">Use solid</button>
                   </div>
                 </div>
               )}
@@ -685,17 +661,17 @@ export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUr
               { enabled: strokeEnabled, label: "Shape Stroke", onToggle: () => setStrokeEnabled(!strokeEnabled), color: strokeColor, onChange: setStrokeColor },
               { enabled: eyeEnabled, label: "Custom Eye Color", onToggle: () => setEyeEnabled(!eyeEnabled), color: eyeColor, onChange: setEyeColor },
             ].map(({ enabled, label, onToggle, color, onChange }) => (
-              <div key={label} style={{ borderRadius: 10, border: `1px solid ${enabled ? "rgba(34,197,94,0.3)" : "rgba(255,255,255,0.06)"}`, overflow: "hidden", transition: "border-color 0.2s" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 9, padding: "9px 12px", background: enabled ? "rgba(34,197,94,0.05)" : "rgba(255,255,255,0.015)", cursor: "pointer" }} onClick={onToggle}>
+              <div key={label} className={`rounded-md border overflow-hidden transition-colors ${enabled ? 'border-primary/30' : 'border-border/60'}`}>
+                <div className={`flex items-center gap-2 px-3 py-2 cursor-pointer ${enabled ? 'bg-primary/10' : 'bg-muted/20'}`} onClick={onToggle}>
                   <CheckBox checked={enabled} />
-                  <span style={{ fontSize: 12, fontWeight: 600, color: enabled ? "#4ade80" : "rgba(148,163,184,0.6)" }}>{label}</span>
+                  <span className={`text-xs font-semibold ${enabled ? 'text-primary' : 'text-muted-foreground/80'}`}>{label}</span>
                 </div>
-                {enabled && <div style={{ padding: "10px 12px" }}><ColorPicker color={color} onChange={onChange} /></div>}
+                {enabled && <div className="p-2.5"><ColorPicker color={color} onChange={onChange} /></div>}
               </div>
             ))}
             {(fgOverride || bgOverride || fgGradEnabled) && (
               <button onClick={() => { setFgOverride(null); setBgOverride(null); setFgGradEnabled(false); setEyeEnabled(false); }}
-                style={{ padding: "7px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.07)", background: "rgba(255,255,255,0.015)", color: "rgba(148,163,184,0.45)", fontSize: 10, fontWeight: 600, cursor: "pointer", fontFamily: FONT, alignSelf: "flex-start" }}>
+                className="self-start px-3 py-1.5 rounded-md border border-border/60 bg-muted/20 text-muted-foreground/60 text-[10px] font-semibold hover:text-foreground">
                 ↩ Reset all colour overrides
               </button>
             )}
@@ -704,32 +680,32 @@ export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUr
 
       case "shapes":
         return (
-          <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+          <div className="flex flex-col gap-4">
             <div>
               <SLabel>Body Dot Type</SLabel>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 6 }}>
+              <div className="grid grid-cols-7 gap-1.5">
                 {BODY_TYPES.map(bt => (
                   <ShapeBtn key={bt.id} sel={activeBodyType === bt.id} onClick={() => { setBodyType(bt.id); setShapesOverridden(true); }} el={bt.el} />
                 ))}
               </div>
             </div>
-            <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                  <span style={{ fontSize: 9, fontWeight: 700, color: "rgba(148,163,184,0.45)", letterSpacing: "0.1em", textTransform: "uppercase" }}>Dot Scale</span>
-                  <span style={{ fontSize: 10, color: "#22c55e", fontWeight: 700, fontFamily: "monospace" }}>{Math.round(bodyScale * 100)}%</span>
+            <div className="flex gap-3 items-center">
+              <div className="flex-1">
+                <div className="flex justify-between mb-1.5">
+                  <span className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-wide">Dot Scale</span>
+                  <span className="text-[10px] text-primary font-bold font-mono">{Math.round(bodyScale * 100)}%</span>
                 </div>
-                <input type="range" min={60} max={110} value={bodyScale * 100} onChange={e => setBodyScale(Number(e.target.value) / 100)} style={{ width: "100%", accentColor: "#22c55e", cursor: "pointer" }} />
+                <input type="range" min={60} max={110} value={bodyScale * 100} onChange={e => setBodyScale(Number(e.target.value) / 100)} className="w-full accent-primary cursor-pointer" />
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }} onClick={() => setStrokeEnabled(!strokeEnabled)}>
+              <div className="flex items-center gap-1.5 cursor-pointer" onClick={() => setStrokeEnabled(!strokeEnabled)}>
                 <CheckBox checked={strokeEnabled} />
-                <span style={{ fontSize: 10, fontWeight: 600, color: strokeEnabled ? "#4ade80" : "rgba(148,163,184,0.5)" }}>Stroke</span>
+                <span className={`text-[10px] font-semibold ${strokeEnabled ? 'text-primary' : 'text-muted-foreground/70'}`}>Stroke</span>
               </div>
             </div>
             <Divider />
             <div>
               <SLabel>Eye Frame Type</SLabel>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 6 }}>
+              <div className="grid grid-cols-5 gap-1.5">
                 {EYE_FRAMES.map(ef => (
                   <ShapeBtn key={ef.id} sel={activeEyeFrame === ef.id} onClick={() => { setEyeFrameType(ef.id); setShapesOverridden(true); }} el={ef.el} />
                 ))}
@@ -738,7 +714,7 @@ export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUr
             <Divider />
             <div>
               <SLabel>Eye Ball Type</SLabel>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(6,1fr)", gap: 6 }}>
+              <div className="grid grid-cols-6 gap-1.5">
                 {EYE_BALLS.map(eb => (
                   <ShapeBtn key={eb.id} sel={eyeBallType === eb.id} onClick={() => setEyeBallType(eb.id)} el={eb.el} />
                 ))}
@@ -746,7 +722,7 @@ export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUr
             </div>
             {shapesOverridden && (
               <button onClick={() => { setBodyType("square"); setEyeFrameType("square"); setEyeBallType("square"); setBodyScale(1.0); setShapesOverridden(false); }}
-                style={{ padding: "7px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.07)", background: "rgba(255,255,255,0.015)", color: "rgba(148,163,184,0.45)", fontSize: 10, fontWeight: 600, cursor: "pointer", fontFamily: FONT, alignSelf: "flex-start" }}>
+                className="self-start px-3 py-1.5 rounded-md border border-border/60 bg-muted/20 text-muted-foreground/60 text-[10px] font-semibold hover:text-foreground">
                 ↩ Reset shapes
               </button>
             )}
@@ -755,24 +731,26 @@ export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUr
 
       case "logos":
         return (
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <p style={{ margin: 0, fontSize: 11, color: "rgba(148,163,184,0.6)" }}>Select a logo to embed in the centre of your QR code.</p>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(8,1fr)", gap: 7 }}>
+          <div className="flex flex-col gap-3.5">
+            <p className="text-[11px] text-muted-foreground/60">Select a logo to embed in the centre of your QR code.</p>
+            <div className="grid grid-cols-8 gap-1.5">
               {LOGOS.map((logo, idx) => {
                 const isActive = selectedLogoIdx === idx;
                 return (
-                  <button key={logo.id} onClick={() => { setSelectedLogoIdx(isActive ? null : idx); setCustomLogoUrl(null); }} title={logo.label} style={{ width: "100%", aspectRatio: "1", border: "none", borderRadius: "50%", cursor: "pointer", padding: 0, overflow: "hidden", outline: isActive ? "2.5px solid #22c55e" : "1px solid rgba(255,255,255,0.08)", outlineOffset: isActive ? 2 : 0, boxShadow: isActive ? "0 0 0 4px rgba(34,197,94,0.15)" : "0 2px 6px rgba(0,0,0,0.3)", transform: isActive ? "scale(1.12)" : "scale(1)", transition: "all 0.14s" }}>
-                    <div style={{ width: "100%", height: "100%", background: logo.bg, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", padding: "18%" }}>
-                      <svg viewBox="0 0 24 24" width="100%" height="100%" style={{ display: "block" }}>{logo.icon}</svg>
+                  <button key={logo.id} onClick={() => { setSelectedLogoIdx(isActive ? null : idx); setCustomLogoUrl(null); }} title={logo.label} className={`w-full aspect-square border-none rounded-full cursor-pointer p-0 overflow-hidden transition-all ${
+                    isActive ? 'outline outline-2 outline-primary scale-110 shadow-[0_0_0_4px_rgba(34,197,94,0.15)]' : 'outline outline-1 outline-border/30 shadow-md'
+                  }`}>
+                    <div className="w-full h-full flex items-center justify-center rounded-full p-[18%]" style={{ background: logo.bg }}>
+                      <svg viewBox="0 0 24 24" width="100%" height="100%" className="block">{logo.icon}</svg>
                     </div>
                   </button>
                 );
               })}
             </div>
-            <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: 12, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" as const }}>
-              <label style={{ display: "flex", alignItems: "center", gap: 7, background: "linear-gradient(135deg,#16a34a,#22c55e)", color: "#052e14", borderRadius: 9, padding: "8px 14px", cursor: "pointer", fontSize: 11, fontWeight: 700, fontFamily: FONT, boxShadow: "0 2px 10px rgba(34,197,94,0.25)" }}>
+            <div className="pt-3 border-t border-border/40 flex items-center gap-2 flex-wrap">
+              <label className="flex items-center gap-1.5 bg-gradient-to-r from-primary to-accent text-primary-foreground rounded-md px-3 py-2 cursor-pointer text-[11px] font-bold shadow-md">
                 + Add Your Own Logo
-                <input type="file" accept="image/*" style={{ display: "none" }} onChange={async e => {
+                <input type="file" accept="image/*" className="hidden" onChange={async e => {
                   const f = e.target.files?.[0]; if (!f) return;
                   try {
                     const res = await uploadFile(f);
@@ -781,12 +759,12 @@ export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUr
                   } catch { alert("Failed to upload logo."); }
                 }} />
               </label>
-              <span style={{ fontSize: 10, color: "rgba(148,163,184,0.35)" }}>Min 512px · 1:1 ratio</span>
+              <span className="text-[10px] text-muted-foreground/60">Min 512px · 1:1 ratio</span>
             </div>
             {(selectedLogoIdx !== null || customLogoUrl) && (
-              <div style={{ padding: "8px 12px", borderRadius: 8, background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.18)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <span style={{ fontSize: 11, color: "#4ade80", fontWeight: 600 }}>✓ {customLogoUrl ? "Custom logo" : LOGOS[selectedLogoIdx!]?.label} applied</span>
-                <button onClick={() => { setSelectedLogoIdx(null); setCustomLogoUrl(null); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 10, color: "rgba(148,163,184,0.4)", fontFamily: FONT }}>Remove</button>
+              <div className="px-3 py-2 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-between">
+                <span className="text-[11px] text-primary font-semibold">✓ {customLogoUrl ? "Custom logo" : LOGOS[selectedLogoIdx!]?.label} applied</span>
+                <button onClick={() => { setSelectedLogoIdx(null); setCustomLogoUrl(null); }} className="bg-transparent border-none cursor-pointer text-[10px] text-muted-foreground/60 font-semibold hover:text-foreground">Remove</button>
               </div>
             )}
           </div>
@@ -794,14 +772,14 @@ export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUr
 
       case "decorate":
         return (
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div className="flex flex-col gap-3.5">
             <div>
-              <p style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 700, color: "#e2e8f0" }}>Add QR Code on Your Picture</p>
-              <p style={{ margin: 0, fontSize: 11, color: "rgba(148,163,184,0.55)" }}>Upload a photo, then drag and resize the QR overlay. Hit Apply to flatten into a single PNG.</p>
+              <p className="text-sm font-bold text-foreground mb-1">Add QR Code on Your Picture</p>
+              <p className="text-[11px] text-muted-foreground/70">Upload a photo, then drag and resize the QR overlay. Hit Apply to flatten into a single PNG.</p>
             </div>
             <div
               ref={decorateContainerRef}
-              style={{ border: "1.5px dashed rgba(255,255,255,0.08)", borderRadius: 12, minHeight: 200, position: "relative", overflow: "hidden", background: "rgba(255,255,255,0.015)", display: "flex", alignItems: "center", justifyContent: "center" }}
+              className="relative min-h-[200px] rounded-xl border-2 border-dashed border-border/80 bg-muted/10 flex items-center justify-center overflow-hidden"
               onMouseMove={e => {
                 if (!isDragging && !isResizing) return;
                 const rect = e.currentTarget.getBoundingClientRect();
@@ -816,30 +794,31 @@ export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUr
               onMouseLeave={() => { setIsDragging(false); setIsResizing(false); }}
             >
               {decoratePicUrl ? (
-                <div style={{ position: "relative", width: "100%", lineHeight: 0 }}>
-                  <img src={decoratePicUrl} style={{ width: "100%", height: "auto", display: "block", userSelect: "none", pointerEvents: "none" }} draggable={false} alt="uploaded" />
+                <div className="relative w-full leading-none">
+                  <img src={decoratePicUrl} className="w-full h-auto block select-none pointer-events-none" draggable={false} alt="uploaded" />
                   <div
                     onMouseDown={e => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); setDragStart({ mx: e.clientX, my: e.clientY, ox: qrOverlay.x, oy: qrOverlay.y }); }}
-                    style={{ position: "absolute", left: `${qrOverlay.x}%`, top: `${qrOverlay.y}%`, width: `${qrOverlay.size}px`, height: `${qrOverlay.size}px`, cursor: isDragging ? "grabbing" : "grab", border: "2px solid #22c55e", borderRadius: 6, boxShadow: "0 3px 14px rgba(0,0,0,0.5)", userSelect: "none", background: activeBg }}
+                    className="absolute border-2 border-primary rounded-md shadow-lg select-none"
+                    style={{ left: `${qrOverlay.x}%`, top: `${qrOverlay.y}%`, width: `${qrOverlay.size}px`, height: `${qrOverlay.size}px`, background: activeBg, cursor: isDragging ? "grabbing" : "grab" }}
                   >
-                    <svg ref={decorateQrRef} width={qrOverlay.size} height={qrOverlay.size} viewBox={`0 0 ${PREVIEW_PX} ${PREVIEW_PX}`} xmlns="http://www.w3.org/2000/svg" style={{ display: "block", borderRadius: 4 }}>
+                    <svg ref={decorateQrRef} width={qrOverlay.size} height={qrOverlay.size} viewBox={`0 0 ${PREVIEW_PX} ${PREVIEW_PX}`} xmlns="http://www.w3.org/2000/svg" className="block rounded-sm">
                       {gradDefs}
                       <QRWithShape {...qrProps} size={PREVIEW_PX} clipId={`dec-${activeShapeId}`} qrMatrix={previewMatrix} qrN={previewN} />
                     </svg>
                     <div
                       onMouseDown={e => { e.preventDefault(); e.stopPropagation(); setIsResizing(true); setResizeStart({ mx: e.clientX, my: e.clientY, os: qrOverlay.size }); }}
-                      style={{ position: "absolute", bottom: -6, right: -6, width: 12, height: 12, background: "#22c55e", borderRadius: 3, cursor: "se-resize", border: "2px solid white" }}
+                      className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-primary rounded-sm cursor-se-resize border-2 border-white"
                     />
                   </div>
                 </div>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, padding: 32 }}>
-                  <div style={{ width: 56, height: 56, background: "rgba(255,255,255,0.03)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <svg width="26" height="26" viewBox="0 0 24 24" fill="rgba(148,163,184,0.25)"><path d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zM8.5 13.5l2.5 3 3.5-4.5 4.5 6H5l3.5-4.5z" /></svg>
+                <div className="flex flex-col items-center gap-2.5 py-8">
+                  <div className="w-14 h-14 rounded-xl bg-muted/30 flex items-center justify-center">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" className="text-muted-foreground/30"><path d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zM8.5 13.5l2.5 3 3.5-4.5 4.5 6H5l3.5-4.5z" /></svg>
                   </div>
-                  <label style={{ background: "linear-gradient(135deg,#16a34a,#22c55e)", color: "#052e14", borderRadius: 9, padding: "9px 18px", cursor: "pointer", fontSize: 12, fontWeight: 700, fontFamily: FONT, boxShadow: "0 2px 12px rgba(34,197,94,0.25)" }}>
+                  <label className="bg-gradient-to-r from-primary to-accent text-primary-foreground rounded-md px-4 py-2 cursor-pointer text-xs font-bold shadow-md">
                     + Add Picture
-                    <input type="file" accept="image/*" style={{ display: "none" }} onChange={async e => {
+                    <input type="file" accept="image/*" className="hidden" onChange={async e => {
                       const f = e.target.files?.[0]; if (!f) return;
                       try {
                         const res = await uploadFile(f);
@@ -848,15 +827,15 @@ export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUr
                       } catch { alert("Failed to upload picture."); }
                     }} />
                   </label>
-                  <p style={{ margin: 0, fontSize: 10, color: "rgba(148,163,184,0.35)", textAlign: "center" }}>PNG, JPG, GIF supported</p>
+                  <p className="text-[10px] text-muted-foreground/50 text-center">PNG, JPG, GIF supported</p>
                 </div>
               )}
             </div>
             {decoratePicUrl && (
-              <div style={{ display: "flex", gap: 7 }}>
-                  <label style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, background: "rgba(34,197,94,0.06)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.15)", borderRadius: 9, padding: "7px 12px", cursor: "pointer", fontSize: 11, fontWeight: 700, fontFamily: FONT }}>
+              <div className="flex gap-1.5">
+                <label className="flex-1 flex items-center justify-center gap-1 bg-primary/10 text-primary border border-primary/20 rounded-md px-3 py-1.5 cursor-pointer text-[11px] font-bold">
                   🔄 Change Picture
-                  <input type="file" accept="image/*" style={{ display: "none" }} onChange={async e => {
+                  <input type="file" accept="image/*" className="hidden" onChange={async e => {
                     const f = e.target.files?.[0]; if (!f) return;
                     try {
                       const res = await uploadFile(f);
@@ -865,11 +844,11 @@ export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUr
                     } catch { alert("Failed to upload picture."); }
                   }} />
                 </label>
-                <button onClick={() => { setDecoratePicUrl(null); setQrOverlay({ x: 5, y: 5, size: 100 }); }} style={{ padding: "7px 12px", borderRadius: 9, border: "1px solid rgba(239,68,68,0.2)", background: "rgba(239,68,68,0.06)", color: "#f87171", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: FONT }}>✕ Remove</button>
+                <button onClick={() => { setDecoratePicUrl(null); setQrOverlay({ x: 5, y: 5, size: 100 }); }} className="px-3 py-1.5 rounded-md border border-destructive/30 bg-destructive/10 text-destructive text-[11px] font-bold">✕ Remove</button>
               </div>
             )}
             {decoratePicUrl && (
-              <div style={{ padding: "8px 12px", borderRadius: 8, background: "rgba(34,197,94,0.04)", border: "1px solid rgba(34,197,94,0.12)", fontSize: 10, color: "#4ade80", lineHeight: 1.5 }}>
+              <div className="px-3 py-2 rounded-md bg-primary/10 border border-primary/20 text-[10px] text-primary leading-relaxed">
                 💡 Hit <strong>Apply Changes</strong> to export a flattened PNG combining the image and QR code.
               </div>
             )}
@@ -884,37 +863,13 @@ export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUr
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div style={{
-      minHeight: "100vh", width: "100%",
-      background: "rgba(0,0,0,0.75)",
-      backdropFilter: "blur(12px)",
-      WebkitBackdropFilter: "blur(12px)",
-      display: "flex", alignItems: "flex-start", justifyContent: "center",
-      padding: "28px 16px 40px",
-      fontFamily: FONT,
-    }}>
-      {/* ── Modal container ── */}
-      <div style={{
-        width: "100%", maxWidth: 1180,
-        background: "linear-gradient(160deg, #0f1a14 0%, #111816 40%, #0d1510 100%)",
-        border: "1px solid rgba(34,197,94,0.12)",
-        borderRadius: 24,
-        boxShadow: "0 40px 100px rgba(0,0,0,0.85), 0 0 0 1px rgba(34,197,94,0.08), 0 0 60px rgba(34,197,94,0.04)",
-        display: "flex", flexDirection: "column",
-        overflow: "hidden",
-        maxHeight: "calc(100vh - 56px)",
-      }}>
+    <div className={`fixed inset-0 z-[9999] flex items-start justify-center ${isDark ? 'bg-black/75' : 'bg-white/70'} backdrop-blur-sm p-7 font-sans`}>
+      <div className={`w-full max-w-[1180px] rounded-2xl border ${isDark ? 'border-primary/12' : 'border-slate-300/70'} shadow-2xl flex flex-col overflow-hidden max-h-[calc(100vh-56px)] ${isDark ? 'bg-[linear-gradient(160deg,#0f1a14_0%,#111816_40%,#0d1510_100%)]' : 'bg-[linear-gradient(160deg,#f0f4ef_0%,#e8ece8_40%,#e0e4e0_100%)]'}`}>
 
         {/* ── Sticky header ── */}
-        <div style={{
-          display: "flex", alignItems: "center", gap: 16,
-          padding: "18px 28px",
-          borderBottom: "1px solid rgba(34,197,94,0.1)",
-          background: "linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.18) 100%)",
-          flexShrink: 0,
-        }}>
-          <div style={{ width: 44, height: 44, borderRadius: 14, flexShrink: 0, background: "linear-gradient(135deg,#059669,#22c55e)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 20px rgba(34,197,94,0.3), 0 0 0 3px rgba(34,197,94,0.08), inset 0 1px 0 rgba(255,255,255,0.15)" }}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#052e14" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <div className={`flex items-center gap-4 px-7 py-4 border-b border-primary/10 ${isDark ? 'bg-gradient-to-b from-black/35 to-black/20' : 'bg-gradient-to-b from-slate-100/80 to-slate-100/60'} flex-shrink-0`}>
+          <div className="w-11 h-11 rounded-md flex-shrink-0 bg-gradient-to-r from-primary to-accent flex items-center justify-center shadow-lg shadow-primary/30 ring-2 ring-primary/10">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-primary-foreground">
               <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" />
               <rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="3" height="3" rx="0.5" />
               <rect x="19" y="14" width="2" height="2" rx="0.5" /><rect x="14" y="19" width="2" height="2" rx="0.5" />
@@ -922,49 +877,36 @@ export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUr
             </svg>
           </div>
           <div>
-            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, letterSpacing: "-0.03em", background: "linear-gradient(135deg, #f1f5f9 30%, #4ade80)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Customize QR Code</h2>
-            <p style={{ margin: "3px 0 0", fontSize: 11, color: "rgba(148,163,184,0.45)", letterSpacing: "0.06em", fontWeight: 500 }}>Design · Colors · Shapes · Logos · Decorate</p>
+            <h2 className="m-0 text-xl font-extrabold tracking-tight bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">Customize QR Code</h2>
+            <p className="mt-0.5 text-[11px] text-muted-foreground/60 tracking-wide font-medium">Design · Colors · Shapes · Logos · Decorate</p>
           </div>
           {hasCustomisation && (
-            <div style={{ marginLeft: "auto", padding: "5px 12px", borderRadius: 20, background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.2)", fontSize: 10, color: "#4ade80", fontWeight: 600, letterSpacing: "0.04em", display: "flex", alignItems: "center", gap: 6, backdropFilter: "blur(8px)" }}>
-              <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#4ade80", display: "inline-block", boxShadow: "0 0 6px #4ade80" }} />
+            <div className="ml-auto px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-[10px] text-primary font-semibold tracking-wide flex items-center gap-1.5 backdrop-blur-sm">
+              <span className="w-1 h-1 rounded-full bg-primary shadow-[0_0_6px_#4ade80]" />
               Customised
             </div>
           )}
           {onClose && (
             <button onClick={onClose}
-              style={{ marginLeft: hasCustomisation ? 10 : "auto", width: 36, height: 36, borderRadius: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(148,163,184,0.5)", fontSize: 16, flexShrink: 0, transition: "all 0.2s" }}
-              onMouseOver={e => { e.currentTarget.style.background = "rgba(239,68,68,0.1)"; e.currentTarget.style.borderColor = "rgba(239,68,68,0.3)"; e.currentTarget.style.color = "#f87171"; }}
-              onMouseOut={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "rgba(148,163,184,0.5)"; }}
+              className="ml-auto w-9 h-9 rounded-xl bg-muted/20 border border-border/60 flex items-center justify-center text-muted-foreground/70 hover:text-destructive hover:bg-destructive/10 transition-all flex-shrink-0"
             >✕</button>
           )}
         </div>
 
         {/* ── Body: two-pane ── */}
-        <div style={{ display: "flex", flex: 1, overflow: "hidden", minHeight: 0, flexShrink: 1 }}>
+        <div className="flex flex-1 overflow-hidden min-h-0">
 
           {/* Left pane — options */}
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", borderRight: "1px solid rgba(34,197,94,0.08)", minWidth: 0 }}>
+          <div className="flex-1 flex flex-col border-r border-primary/10 min-w-0">
 
             {/* Tab bar */}
-            <div style={{ display: "flex", overflowX: "auto", scrollbarWidth: "none" as React.CSSProperties["scrollbarWidth"], background: "rgba(0,0,0,0.2)", borderBottom: "1px solid rgba(34,197,94,0.06)", padding: "8px 10px 8px", flexShrink: 0, gap: 4 }}>
+            <div className={`flex overflow-x-auto no-scrollbar border-b border-primary/10 px-2.5 py-2 flex-shrink-0 gap-1 ${isDark ? 'bg-black/20' : 'bg-slate-100/70'}`}>
               {tabs.map(tab => {
                 const active = activeTab === tab.id;
                 return (
-                  <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
-                    padding: "7px 14px", border: "none", cursor: "pointer",
-                    whiteSpace: "nowrap", fontFamily: FONT, fontSize: 10,
-                    fontWeight: active ? 700 : 500, letterSpacing: "0.06em",
-                    textTransform: "uppercase" as const,
-                    color: active ? "#052e14" : "rgba(148,163,184,0.5)",
-                    background: active ? "linear-gradient(135deg,#16a34a,#22c55e)" : "rgba(255,255,255,0.02)",
-                    borderRadius: 10,
-                    boxShadow: active ? "0 2px 8px rgba(34,197,94,0.3)" : "none",
-                    transition: "all 0.2s cubic-bezier(0.4,0,0.2,1)",
-                  }}
-                    onMouseOver={e => { if (!active) { e.currentTarget.style.background = "rgba(34,197,94,0.08)"; e.currentTarget.style.color = "#4ade80"; } }}
-                    onMouseOut={e => { if (!active) { e.currentTarget.style.background = "rgba(255,255,255,0.02)"; e.currentTarget.style.color = "rgba(148,163,184,0.5)"; } }}
-                  >
+                  <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`px-3.5 py-1.5 border-none cursor-pointer whitespace-nowrap text-[10px] font-bold uppercase tracking-wide rounded-md transition-all ${
+                    active ? 'bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-md' : 'bg-muted/20 text-muted-foreground/70 hover:bg-primary/20 hover:text-foreground'
+                  }`}>
                     {tab.label}
                   </button>
                 );
@@ -972,61 +914,42 @@ export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUr
             </div>
 
             {/* Scrollable tab content */}
-            <div style={{ flex: 1, overflowY: "auto", padding: "20px 22px", scrollbarWidth: "thin" as React.CSSProperties["scrollbarWidth"], minHeight: 0 }}>
+            <div className="flex-1 overflow-y-auto p-5 scrollbar-thin">
               {renderTabContent()}
             </div>
           </div>
 
           {/* Right pane — docked preview */}
-          <div style={{ width: 320, flexShrink: 1, minWidth: 0, display: "flex", flexDirection: "column", background: "linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(5,15,10,0.25) 100%)" }}>
+          <div className={`w-80 flex-shrink-0 flex flex-col ${isDark ? 'bg-gradient-to-b from-black/20 to-background/25' : 'bg-gradient-to-b from-slate-100/75 to-slate-50/75'}`}>
 
             {/* Preview label */}
-            <div style={{ padding: "14px 22px 10px", borderBottom: "1px solid rgba(34,197,94,0.06)", flexShrink: 0 }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 7 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                  <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#22c55e", display: "inline-block", boxShadow: "0 0 8px rgba(34,197,94,0.6), 0 0 2px #22c55e", animation: "pulse-dot 2s ease-in-out infinite" }} />
-                  <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase" as const, color: "rgba(74,222,128,0.45)" }}>Live Preview</span>
+            <div className="px-5 py-3 border-b border-primary/10 flex-shrink-0">
+              <div className="flex items-center justify-between gap-1.5">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
+                  <span className="text-[9px] font-bold tracking-[0.16em] uppercase text-muted-foreground/60">Live Preview</span>
                 </div>
                 <button
                   onClick={() => setUseCanvasRenderer(!useCanvasRenderer)}
                   title={useCanvasRenderer ? "Switch to SVG renderer" : "Switch to Canvas renderer (experimental)"}
-                  style={{
-                    padding: "4px 10px",
-                    border: "1px solid rgba(34,197,94,0.3)",
-                    borderRadius: 6,
-                    fontSize: 8,
-                    fontWeight: 600,
-                    cursor: "pointer",
-                    fontFamily: FONT,
-                    background: useCanvasRenderer ? "rgba(34,197,94,0.15)" : "rgba(255,255,255,0.02)",
-                    color: useCanvasRenderer ? "#4ade80" : "rgba(148,163,184,0.5)",
-                    transition: "all 0.2s",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.05em",
-                  }}
-                  onMouseOver={e => { e.currentTarget.style.borderColor = "rgba(34,197,94,0.6)"; e.currentTarget.style.background = "rgba(34,197,94,0.2)"; }}
-                  onMouseOut={e => { e.currentTarget.style.borderColor = useCanvasRenderer ? "rgba(34,197,94,0.3)" : "rgba(34,197,94,0.2)"; e.currentTarget.style.background = useCanvasRenderer ? "rgba(34,197,94,0.15)" : "rgba(255,255,255,0.02)"; }}
+                  className={`px-2.5 py-1 rounded border text-[8px] font-semibold uppercase tracking-[0.05em] transition-all ${
+                    useCanvasRenderer ? 'border-primary/60 bg-primary/20 text-primary' : 'border-border/60 bg-muted/20 text-muted-foreground/70 hover:border-primary/40 hover:bg-primary/10'
+                  }`}
                 >
                   {useCanvasRenderer ? "Canvas ✓" : "SVG"}
                 </button>
               </div>
-              <style>{`@keyframes pulse-dot{0%,100%{opacity:1;box-shadow:0 0 8px rgba(34,197,94,0.6)}50%{opacity:0.6;box-shadow:0 0 4px rgba(34,197,94,0.3)}}`}</style>
             </div>
 
             {/* Preview area — scrollable */}
-            <div style={{
-              flex: 1, overflowY: "auto", padding: "24px 22px", display: "flex", flexDirection: "column", alignItems: "center", gap: 18, scrollbarWidth: "thin" as React.CSSProperties["scrollbarWidth"],
-              backgroundImage: "radial-gradient(rgba(34,197,94,0.04) 1px, transparent 1px)",
-              backgroundSize: "16px 16px",
-              minHeight: 0,
-            }}>
+            <div className="flex-1 overflow-y-auto p-6 flex flex-col items-center gap-4 bg-[radial-gradient(rgba(34,197,94,0.03)_1px,transparent_1px)] bg-[length:16px_16px]">
 
               {/* QR preview */}
               {activeTab === "decorate" && decoratePicUrl ? (
-                <div style={{ position: "relative", width: "100%", borderRadius: 14, overflow: "hidden", boxShadow: "0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(34,197,94,0.08)" }}>
-                  <img src={decoratePicUrl} alt="Decorated preview" style={{ width: "100%", height: "auto", display: "block" }} draggable={false} />
-                  <div style={{ position: "absolute", left: `${qrOverlay.x}%`, top: `${qrOverlay.y}%`, width: 64, height: 64, borderRadius: 4, overflow: "hidden" }}>
-                    <svg width="64" height="64" viewBox={`0 0 ${PREVIEW_PX} ${PREVIEW_PX}`} style={{ display: "block" }}>
+                <div className="relative w-full rounded-lg overflow-hidden shadow-2xl border border-white/5">
+                  <img src={decoratePicUrl} alt="Decorated preview" className="w-full h-auto block" draggable={false} />
+                  <div className="absolute left-[5%] top-[5%] w-16 h-16 rounded-sm overflow-hidden">
+                    <svg width="64" height="64" viewBox={`0 0 ${PREVIEW_PX} ${PREVIEW_PX}`} className="block">
                       {gradDefs}
                       <QRWithShape {...qrProps} size={PREVIEW_PX} clipId={`decprev-${activeShapeId}`} />
                     </svg>
@@ -1037,23 +960,23 @@ export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUr
               )}
 
               {/* Shape + design label */}
-              <div style={{ textAlign: "center", width: "100%", padding: "10px 14px", borderRadius: 14, background: "rgba(0,0,0,0.2)", border: "1px solid rgba(34,197,94,0.06)" }}>
-                <div style={{ fontSize: 14, fontWeight: 800, letterSpacing: "-0.01em", marginBottom: 3, background: "linear-gradient(135deg, #4ade80, #22c55e)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{selectedShape.label}</div>
-                <div style={{ fontSize: 10, color: "rgba(148,163,184,0.45)", letterSpacing: "0.02em" }}>
+              <div className={`text-center w-full px-3 py-2.5 rounded-md border border-primary/10 ${isDark ? 'bg-black/20' : 'bg-white/80'}`}>
+                <div className="text-sm font-extrabold tracking-tight mb-0.5 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">{selectedShape.label}</div>
+                <div className="text-[10px] text-muted-foreground/60 tracking-wide">
                   {selectedSticker ? selectedSticker.label : selectedDesign ? selectedDesign.label : "Classic theme"}
-                  {fgGradEnabled && <span style={{ marginLeft: 5, color: "#22c55e" }}>· gradient</span>}
-                  {(fgOverride || bgOverride) && !fgGradEnabled && <span style={{ marginLeft: 5, color: "#22c55e" }}>· custom colour</span>}
+                  {fgGradEnabled && <span className="ml-1 text-primary">· gradient</span>}
+                  {(fgOverride || bgOverride) && !fgGradEnabled && <span className="ml-1 text-primary">· custom colour</span>}
                 </div>
               </div>
 
               {/* Active settings summary */}
               {hasCustomisation && (
-                <div style={{ width: "100%", borderRadius: 14, padding: "14px 16px", background: "rgba(34,197,94,0.03)", border: "1px solid rgba(34,197,94,0.1)", backdropFilter: "blur(8px)" }}>
-                  <div style={{ fontSize: 8.5, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase" as const, color: "rgba(74,222,128,0.4)", marginBottom: 10, display: "flex", alignItems: "center", gap: 5 }}>
-                    <span style={{ width: 3, height: 3, borderRadius: "50%", background: "rgba(34,197,94,0.5)", display: "inline-block" }} />
+                <div className="w-full rounded-md p-3.5 bg-primary/5 border border-primary/15 backdrop-blur-sm">
+                  <div className="flex items-center gap-1 text-[8.5px] font-bold tracking-[0.14em] uppercase text-muted-foreground/60 mb-2.5">
+                    <span className="w-0.5 h-0.5 rounded-full bg-primary/50" />
                     Active Settings
                   </div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                  <div className="flex flex-col gap-1">
                     {selectedDesign && <SummaryRow label="Design" value={selectedDesign.label} onClear={() => setSelectedDesign(null)} />}
                     {selectedSticker && <SummaryRow label="Sticker" value={selectedSticker.label} onClear={() => setSelectedSticker(null)} />}
                     {selectedLogoIdx !== null && <SummaryRow label="Logo" value={LOGOS[selectedLogoIdx]?.label} onClear={() => setSelectedLogoIdx(null)} />}
@@ -1070,27 +993,18 @@ export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUr
         </div>
 
         {/* ── Sticky footer ── */}
-        <div style={{
-          display: "flex", alignItems: "center", gap: 12,
-          padding: "16px 28px",
-          borderTop: "1px solid rgba(34,197,94,0.1)",
-          background: "linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.35) 100%)",
-          backdropFilter: "blur(12px)",
-          flexShrink: 0,
-        }}>
+        <div className={`flex items-center gap-3 px-7 py-4 border-t border-primary/10 backdrop-blur-sm flex-shrink-0 ${isDark ? 'bg-gradient-to-b from-black/20 to-black/40' : 'bg-gradient-to-b from-slate-100/75 to-slate-100/65'}`}>
           {onClose && (
             <button onClick={onClose}
-              style={{ padding: "10px 20px", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: FONT, background: "rgba(255,255,255,0.02)", color: "rgba(148,163,184,0.5)", transition: "all 0.2s", flexShrink: 0 }}
-              onMouseOver={e => { e.currentTarget.style.background = "rgba(239,68,68,0.06)"; e.currentTarget.style.borderColor = "rgba(239,68,68,0.2)"; e.currentTarget.style.color = "#f87171"; }}
-              onMouseOut={e => { e.currentTarget.style.background = "rgba(255,255,255,0.02)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "rgba(148,163,184,0.5)"; }}
+              className="px-5 py-2.5 rounded-md border border-border/60 bg-muted/20 text-muted-foreground/70 text-xs font-semibold hover:bg-destructive/10 hover:border-destructive/30 hover:text-destructive transition-all flex-shrink-0"
             >
               ✕ Discard &amp; Close
             </button>
           )}
 
           {decoratePicUrl && (
-            <div style={{ fontSize: 10, color: "rgba(74,222,128,0.55)", display: "flex", alignItems: "center", gap: 6, padding: "5px 10px", borderRadius: 8, background: "rgba(34,197,94,0.04)", border: "1px solid rgba(34,197,94,0.1)" }}>
-              <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#4ade80", flexShrink: 0, boxShadow: "0 0 4px #4ade80" }} />
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-primary/10 border border-primary/20 text-[10px] text-primary">
+              <span className="w-1 h-1 rounded-full bg-primary shadow-[0_0_4px_#4ade80]" />
               Decorate active — Apply exports a flattened PNG
             </div>
           )}
@@ -1098,31 +1012,19 @@ export default function QRCustomizer({ onApply, onClose, targetUrl: propTargetUr
           <button
             onClick={handleApply}
             disabled={isApplying}
-            style={{
-              marginLeft: "auto", padding: "12px 32px", border: "none", borderRadius: 14,
-              fontSize: 14, fontWeight: 800, cursor: isApplying ? "wait" : "pointer", fontFamily: FONT,
-              letterSpacing: "0.01em",
-              background: isApplying ? "rgba(34,197,94,0.4)" : "linear-gradient(135deg,#16a34a,#22c55e 60%,#4ade80)",
-              color: "#052e14",
-              boxShadow: isApplying ? "none" : "0 6px 24px rgba(34,197,94,0.35), 0 0 0 2px rgba(34,197,94,0.08), inset 0 1px 0 rgba(255,255,255,0.15)",
-              transition: "all 0.2s cubic-bezier(0.4,0,0.2,1)",
-              display: "flex", alignItems: "center", gap: 8, flexShrink: 0,
-            }}
-            onMouseOver={e => { if (!isApplying) { e.currentTarget.style.transform = "translateY(-2px) scale(1.02)"; e.currentTarget.style.boxShadow = "0 8px 32px rgba(34,197,94,0.5), 0 0 0 2px rgba(34,197,94,0.15), inset 0 1px 0 rgba(255,255,255,0.2)"; } }}
-            onMouseOut={e => { e.currentTarget.style.transform = "translateY(0) scale(1)"; e.currentTarget.style.boxShadow = "0 6px 24px rgba(34,197,94,0.35), 0 0 0 2px rgba(34,197,94,0.08), inset 0 1px 0 rgba(255,255,255,0.15)"; }}
+            className="ml-auto px-8 py-3 border-none rounded-xl text-sm font-extrabold tracking-wide cursor-pointer disabled:cursor-wait bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg shadow-primary/40 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2 flex-shrink-0"
           >
             {isApplying ? (
               <>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#052e14" strokeWidth="2.5" strokeLinecap="round" style={{ animation: "spin 1s linear infinite" }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="animate-spin">
                   <path d="M21 12a9 9 0 1 1-6.219-8.56" />
                 </svg>
-                <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
                 Applying…
               </>
             ) : (
               <>
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                  <path d="M3 8l3.5 3.5L13 4.5" stroke="#052e14" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M3 8l3.5 3.5L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
                 Apply Changes
               </>
