@@ -1320,6 +1320,16 @@ export default function PublicCardPage() {
   // Treat undefined S.profile as true (default visible)
   const profileVisible = (S?.profile as boolean | undefined) !== false;
 
+  const FONT_MAP: Record<string, string> = {
+    inter: 'Inter, sans-serif',
+    sora: 'Sora, sans-serif',
+    'dm-sans': '"DM Sans", sans-serif',
+    poppins: 'Poppins, sans-serif',
+    raleway: 'Raleway, sans-serif',
+    playfair: '"Playfair Display", serif',
+    mono: '"Fira Code", monospace',
+  };
+
   const T = {
     bg: D.bgColor || "#0a0f0a",
     card: D.cardColor || "#111a11",
@@ -1330,7 +1340,7 @@ export default function PublicCardPage() {
     textPrimary: D.textPrimary || "#f0f0f0",
     textMuted: D.textMuted || "#7a9a7a",
     divider: `${D.accentColor}20`,
-    fontFamily: D.font === "inter" ? "Inter, sans-serif" : D.font || "inherit",
+    fontFamily: FONT_MAP[D.font] ?? 'Inter, sans-serif',
     nameFontSize: D.nameFontSize ?? 22,
     bodyFontSize: D.bodyFontSize ?? 13,
     boldHeadings: D.boldHeadings ?? true,
@@ -1394,7 +1404,7 @@ export default function PublicCardPage() {
   const company = fd.company || businessProfile.company || '';
   const profileImg = content.profileImage || '';
 
-  const PhotoEl = ({ height, objectFit = 'cover', objectPosition = 'center', className = '' }: { height?: number | string; objectFit?: string; objectPosition?: string; className?: string }) =>
+  const PhotoEl = ({ height, objectFit = 'cover', objectPosition = 'center 20%', className = '' }: { height?: number | string; objectFit?: string; objectPosition?: string; className?: string }) =>
     profileImg ? (
       <img src={profileImg} alt={name}
         style={{ width: '100%', height: height ?? '100%', objectFit: objectFit as 'cover', objectPosition, display: 'block' }}
@@ -1567,7 +1577,7 @@ export default function PublicCardPage() {
             </div>
             <div style={{ position: 'relative', background: T.card, padding: '10px 16px 10px 90px', minHeight: 80 }}>
               <div style={{ position: 'absolute', top: -28, left: 16, width: 64, height: 80, borderRadius: 8, overflow: 'hidden', border: `2px solid ${T.green}` }}>
-                <PhotoEl height="100%" />
+                <PhotoEl height="100%" objectPosition="top" />
               </div>
               <NameInfo color={T.textPrimary} titleColor={T.greenLight} companyColor={T.textMuted} />
             </div>
@@ -1590,7 +1600,7 @@ export default function PublicCardPage() {
             <div style={{ background: T.bg, paddingBottom: 6, textAlign: 'center' }}>
               <div style={{ marginTop: -52, display: 'flex', justifyContent: 'center', position: 'relative', zIndex: 2 }}>
                 <div style={{ width: 100, height: 100, borderRadius: '50%', overflow: 'hidden', border: '4px solid #fff', boxShadow: '0 4px 20px rgba(0,0,0,0.3)', background: T.card }}>
-                  <PhotoEl height="100%" />
+                  <PhotoEl height="100%" objectPosition="top" />
                 </div>
               </div>
               <div style={{ padding: '12px 20px 0' }}>
@@ -1612,7 +1622,7 @@ export default function PublicCardPage() {
               )}
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
                 <div style={{ width: 110, height: 110, borderRadius: '50%', overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.18)', background: T.card }}>
-                  <PhotoEl height="100%" />
+                  <PhotoEl height="100%" objectPosition="top" />
                 </div>
               </div>
               <NameInfo color={T.textPrimary} titleColor={T.textMuted} companyColor={T.green} />
@@ -1649,7 +1659,7 @@ export default function PublicCardPage() {
               width: '100%', height: 220, position: 'relative',
               clipPath: 'polygon(0 0, 100% 0, 100% 82%, 97% 70%, 93% 84%, 89% 70%, 85% 83%, 81% 68%, 77% 82%, 73% 70%, 69% 84%, 65% 70%, 61% 83%, 57% 69%, 53% 83%, 49% 70%, 45% 83%, 41% 70%, 37% 82%, 33% 68%, 29% 80%, 25% 68%, 21% 80%, 17% 67%, 13% 79%, 9% 67%, 5% 78%, 2% 67%, 0 76%)',
             }}>
-              <PhotoEl height="100%" />
+              <PhotoEl height="100%" objectPosition="center top" />
             </div>
             {hasBrandLogo && content.logoPosition === 'top-left' && (
               <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 10 }}><LogoBadge pos="top-left" /></div>
@@ -1757,12 +1767,7 @@ export default function PublicCardPage() {
                 <path d="M0,16 C70,0 165,30 265,8 C330,0 375,20 400,6 L400,60 L0,60 Z" fill={T.bg} />
               </svg>
             </div>
-            <div style={{ display: 'flex', gap: 14, justifyContent: 'center', padding: '14px 20px 6px', background: T.bg }}>
-              {[<Phone key="p" size={18} />, <Mail key="m" size={18} />, <MessageSquare key="c" size={18} />].map((icon, i) => (
-                <div key={i} style={{ width: 44, height: 44, borderRadius: '50%', background: T.green, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 3px 12px ${T.green}66` }}>{icon}</div>
-              ))}
-            </div>
-            <div style={{ background: T.bg, padding: '6px 20px 8px' }}>
+            <div style={{ background: T.bg, padding: '14px 20px 8px' }}>
               <NameInfo color={T.textPrimary} titleColor={T.greenLight} companyColor={T.textMuted} />
             </div>
             <div style={{ height: 48, background: `linear-gradient(to bottom, ${T.bg} 0%, ${T.bg}99 30%, ${T.bg}44 60%, transparent 100%)`, pointerEvents: 'none' }} />
@@ -1899,6 +1904,9 @@ export default function PublicCardPage() {
 
   return (
     <>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=Poppins:wght@400;500;600;700;800&family=Raleway:wght@400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700;800&family=Fira+Code:wght@400;500;700&display=swap" rel="stylesheet" />
       <style>{`
         *{box-sizing:border-box;margin:0;padding:0;}
         html,body{height:100%;overflow-x:hidden;}
@@ -1946,13 +1954,58 @@ export default function PublicCardPage() {
           {/* Render Profile hero at top only if it is first in order */}
           {profileIsFirst && renderProfileHero()}
 
+          {/* Tagline + quick-contact icons — always directly after the hero */}
+          {profileIsFirst && (
+            <>
+              {fd.tagline && (
+                <div style={{ padding: '10px 20px', textAlign: 'center' }}>
+                  <p style={{ fontSize: T.bodyFontSize, fontStyle: 'italic', lineHeight: 1.5, color: T.textMuted, fontFamily: T.fontFamily, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{fd.tagline}</p>
+                </div>
+              )}
+              {contactItems.length > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'center', gap: 12, padding: '12px', margin: '0 12px 10px', background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: T.cardRadius }}>
+                  {contactItems.slice(0, 4).map(({ href, Icon }, i) => (
+                    <a key={i} href={href} target="_blank" rel="noopener noreferrer"
+                      onClick={() => track(slug, "link_click")}
+                      style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                      <div style={{ width: 44, height: 44, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: `linear-gradient(135deg, ${T.green}, ${T.greenLight})`, boxShadow: `0 3px 10px ${T.green}66` }}>
+                        <Icon size={16} color="#fff" />
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+
           {/* ── Ordered sections – respects unifiedOrder ── */}
           {order.map(id => {
             // Profile is already handled above when it is first; if not first, render it here
             if (id === 'profile') {
               if (!profileIsFirst) {
-                // ✅ FIX: Add a unique key to avoid React warning
-                return <Fragment key={id}>{renderProfileHero()}</Fragment>;
+                return (
+                  <Fragment key={id}>
+                    {renderProfileHero()}
+                    {fd.tagline && (
+                      <div style={{ padding: '10px 20px', textAlign: 'center' }}>
+                        <p style={{ fontSize: T.bodyFontSize, fontStyle: 'italic', lineHeight: 1.5, color: T.textMuted, fontFamily: T.fontFamily, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{fd.tagline}</p>
+                      </div>
+                    )}
+                    {contactItems.length > 0 && (
+                      <div style={{ display: 'flex', justifyContent: 'center', gap: 12, padding: '12px', margin: '0 12px 10px', background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: T.cardRadius }}>
+                        {contactItems.slice(0, 4).map(({ href, Icon }, i) => (
+                          <a key={i} href={href} target="_blank" rel="noopener noreferrer"
+                            onClick={() => track(slug, "link_click")}
+                            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                            <div style={{ width: 44, height: 44, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: `linear-gradient(135deg, ${T.green}, ${T.greenLight})`, boxShadow: `0 3px 10px ${T.green}66` }}>
+                              <Icon size={16} color="#fff" />
+                            </div>
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                  </Fragment>
+                );
               }
               return null;
             }

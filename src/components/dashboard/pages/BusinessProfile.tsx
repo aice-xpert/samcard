@@ -40,6 +40,7 @@ import {
   updateBusinessProfile,
   updateCustomLinks,
   updateSocialLinks,
+  updateCardDesign,
   getCards,
   getCardContent,
   updateCardContent,
@@ -778,6 +779,9 @@ export default function BusinessProfile({
   // Prevents cache loading from overwriting backend-loaded content once
   // API content has already been hydrated.
   const hasLoadedCardContentRef = useRef(false);
+  // Holds the design payload from the last applied template so handleSaveChanges
+  // can persist it to the backend alongside content.
+  const pendingTemplateDesignRef = useRef<Record<string, unknown> | null>(null);
 
   // Ref that stays current with the onContentChange prop so handleDragEnd can
   // call it synchronously without the callback being in its deps (stale closure).
@@ -1310,19 +1314,26 @@ export default function BusinessProfile({
 
       if (cardId) {
         suppressOrderReloadRef.current = true;
-        await updateCardContent(cardId, {
-          profileImage: updatedProfileImage,
-          brandLogo: updatedBrandLogo,
-          logoPosition: contentLogoPosition,
-          formData,
-          socialLinks: normalizedSocialLinks.map(sl => ({ platform: sl.platform, url: sl.url })),
-          connectFields,
-          sections,
-          customLinks,
-          extraSections,
-          sectionOrder,
-          unifiedOrder,
-        });
+        const saveOps: Promise<unknown>[] = [
+          updateCardContent(cardId, {
+            profileImage: updatedProfileImage,
+            brandLogo: updatedBrandLogo,
+            logoPosition: contentLogoPosition,
+            formData,
+            socialLinks: normalizedSocialLinks.map(sl => ({ platform: sl.platform, url: sl.url })),
+            connectFields,
+            sections,
+            customLinks,
+            extraSections,
+            sectionOrder,
+            unifiedOrder,
+          }),
+        ];
+        if (pendingTemplateDesignRef.current) {
+          saveOps.push(updateCardDesign(cardId, pendingTemplateDesignRef.current as any));
+          pendingTemplateDesignRef.current = null;
+        }
+        await Promise.all(saveOps);
       }
 
       setSaveFlash(true);
@@ -1883,6 +1894,8 @@ export default function BusinessProfile({
               // Do NOT auto-save to backend — the user must explicitly click Save.
               saveThemeOverride(designKey, cachePayload as any);
               setThemeOverride(prev => ({ ...prev, ...themeForPreview }));
+              // Track design so handleSaveChanges can push it to the backend.
+              pendingTemplateDesignRef.current = cachePayload;
             } catch (e) {
               console.error('Failed to apply template design', e);
             }

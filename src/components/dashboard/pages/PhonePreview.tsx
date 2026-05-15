@@ -196,7 +196,7 @@ function ProfileSection({ T, profileImage, formData, brandLogo, logoPosition, ha
           <img
             src={profileImage}
             alt={formData.name}
-            className="absolute inset-0 w-full h-full object-contain object-center"
+            className="absolute inset-0 w-full h-full object-cover object-top"
             style={{ backgroundColor: '#000' }}
           />
         ) : (
@@ -534,7 +534,7 @@ function PhonePreviewComponent({
 
   const PPhoto = ({ h, style: s }: { h?: number | string; style?: React.CSSProperties }) =>
     profileImage ? (
-      <img src={profileImage} alt={pName} style={{ width: '100%', height: h ?? '100%', objectFit: 'cover', display: 'block', ...s }} />
+      <img src={profileImage} alt={pName} style={{ width: '100%', height: h ?? '100%', objectFit: 'cover', objectPosition: 'center 20%', display: 'block', ...s }} />
     ) : (
       <div style={{ width: '100%', height: h ?? '100%', background: `linear-gradient(135deg, ${T.green}66 0%, ${T.bg} 50%, ${T.greenLight}44 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', ...s }}>
         <Upload className="w-7 h-7 opacity-30" style={{ color: T.greenLight }} />
@@ -730,7 +730,7 @@ function PhonePreviewComponent({
             </div>
             <div style={{ position: 'relative', background: T.card, padding: '8px 14px 6px 74px', minHeight: 70 }}>
               <div style={{ position: 'absolute', top: -22, left: 12, width: 52, height: 64, borderRadius: 6, overflow: 'hidden', border: `2px solid ${T.green}` }}>
-                <PPhoto h="100%" />
+                <PPhoto h="100%" style={{ objectPosition: 'top' }} />
               </div>
               <PNameInfo color={T.textPrimary} titleColor={T.greenLight} companyColor={T.textMuted} />
             </div>
@@ -753,7 +753,7 @@ function PhonePreviewComponent({
             <div style={{ background: T.bg, paddingBottom: 4, textAlign: 'center' }}>
               <div style={{ marginTop: -42, display: 'flex', justifyContent: 'center', position: 'relative', zIndex: 2 }}>
                 <div style={{ width: 80, height: 80, borderRadius: '50%', overflow: 'hidden', border: '3px solid #fff', boxShadow: '0 4px 16px rgba(0,0,0,0.3)', background: T.card }}>
-                  <PPhoto h="100%" />
+                  <PPhoto h="100%" style={{ objectPosition: 'top' }} />
                 </div>
               </div>
               <div style={{ padding: '8px 16px 0' }}>
@@ -774,7 +774,7 @@ function PhonePreviewComponent({
             )}
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
               <div style={{ width: 86, height: 86, borderRadius: '50%', overflow: 'hidden', boxShadow: '0 4px 18px rgba(0,0,0,0.15)', background: T.card }}>
-                <PPhoto h="100%" />
+                <PPhoto h="100%" style={{ objectPosition: 'top' }} />
               </div>
             </div>
             <PNameInfo color={T.textPrimary} titleColor={T.textMuted} companyColor={T.green} />
@@ -816,7 +816,7 @@ function PhonePreviewComponent({
               width: '100%', height: 170, position: 'relative',
               clipPath: 'polygon(0 0, 100% 0, 100% 80%, 97% 68%, 93% 82%, 89% 68%, 85% 81%, 81% 66%, 77% 80%, 73% 68%, 69% 82%, 65% 68%, 61% 81%, 57% 67%, 53% 81%, 49% 68%, 45% 81%, 41% 68%, 37% 80%, 33% 66%, 29% 78%, 25% 66%, 21% 78%, 17% 65%, 13% 77%, 9% 65%, 5% 76%, 2% 65%, 0 74%)',
             }}>
-              <PPhoto h="100%" />
+              <PPhoto h="100%" style={{ objectPosition: 'center top' }} />
             </div>
             {hasBrandLogo && logoPosition === 'top-left' && (
               <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 10 }}><PLogo pos="top-left" /></div>
@@ -948,12 +948,7 @@ function PhonePreviewComponent({
                 <path d="M0,16 C70,0 165,30 265,8 C330,0 375,20 400,6 L400,60 L0,60 Z" fill={T.bg} />
               </svg>
             </div>
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'center', padding: '10px 14px 4px', background: T.bg }}>
-              {[<Phone key="p" size={14} />, <Mail key="m" size={14} />, <MessageSquare key="c" size={14} />].map((icon, i) => (
-                <div key={i} style={{ width: 32, height: 32, borderRadius: '50%', background: T.green, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 2px 8px ${T.green}66` }}>{icon}</div>
-              ))}
-            </div>
-            <div style={{ background: T.bg, padding: '4px 14px 6px' }}>
+            <div style={{ background: T.bg, padding: '10px 14px 6px' }}>
               <PNameInfo color={T.textPrimary} titleColor={T.greenLight} companyColor={T.textMuted} />
             </div>
             <div style={{ height: 40, background: `linear-gradient(to bottom, ${T.bg} 0%, ${T.bg}99 30%, ${T.bg}44 60%, transparent 100%)`, pointerEvents: 'none' }} />
@@ -1005,7 +1000,7 @@ function PhonePreviewComponent({
           <div style={{ position: 'relative' }}>
             <div style={{ position: 'relative', minHeight: 220, width: '100%', overflow: 'hidden', background: '#000', display: 'flex', flexDirection: 'column', justifyItems: 'flex-end', justifyContent: 'flex-end' }}>
               {profileImage ? (
-                <img src={profileImage} alt={pName} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }} />
+                <img src={profileImage} alt={pName} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 20%', display: 'block' }} />
               ) : (
                 <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, ${T.green}66 0%, ${T.bg} 50%, ${T.greenLight}44 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Upload className="w-7 h-7 opacity-30" style={{ color: T.greenLight }} />
