@@ -1,18 +1,18 @@
+"use client";
 import { MapPin } from "lucide-react";
 
 export function ContactMap() {
   return (
-    <section className="py-16 px-4 sm:px-6 lg:px-8 bg-black border-t border-white/5">
+    <section className="py-16 px-4 sm:px-6 lg:px-8 bg-background border-t border-border">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-white mb-4">Find Us</h2>
-          <p className="text-gray-400 max-w-2xl mx-auto">
+          <h2 className="text-3xl font-bold text-foreground mb-4">Find Us</h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
             Visit our headquarters in the heart of San Francisco
           </p>
         </div>
 
-        <div className="relative h-[400px] bg-white/5 border border-white/10 rounded-xl overflow-hidden group hover:border-theme-kelly-green/30 transition-colors">
-          {/* Subtle green glow overlay */}
+        <div className="relative h-[400px] bg-muted border border-border rounded-xl overflow-hidden group hover:border-theme-kelly-green/30 transition-colors">
           <div className="absolute inset-0 bg-gradient-to-br from-theme-devil-green/5 to-transparent pointer-events-none" />
 
           <div className="absolute inset-0 flex items-center justify-center">
@@ -22,8 +22,8 @@ export function ContactMap() {
                 <MapPin className="relative w-16 h-16 text-accent mx-auto" />
               </div>
               <div>
-                <p className="text-white font-semibold mb-2">SamCard Headquarters</p>
-                <p className="text-gray-400 text-sm">
+                <p className="text-foreground font-semibold mb-2">SamCard Headquarters</p>
+                <p className="text-muted-foreground text-sm">
                   123 Business Street, Suite 100<br />
                   San Francisco, CA 94105<br />
                   United States

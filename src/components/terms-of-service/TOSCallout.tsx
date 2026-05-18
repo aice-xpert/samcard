@@ -13,13 +13,13 @@ export function ToSCallout({ variant = 'info', children }: ToSCalloutProps) {
           border: '1px solid rgba(239, 68, 68, 0.3)',
         }
       : {
-          background: 'bg-theme-devil-green',
-          border: 'bg-theme-kelly-green',
+          background: 'rgba(0, 128, 1, 0.08)',
+          border: '1px solid rgba(0, 128, 1, 0.3)',
         };
 
   return (
     <div className="p-5 rounded-lg" style={style}>
-      <div className="text-gray-300">{children}</div>
+      <div className="text-muted-foreground">{children}</div>
     </div>
   );
 }

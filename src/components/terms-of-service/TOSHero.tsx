@@ -1,10 +1,18 @@
+"use client";
 import { Gavel } from 'lucide-react';
+import { useTheme } from "@/contexts/ThemeContext";
 
 export function ToSHero() {
+  const { isDark } = useTheme();
+
   return (
    <section
       id="hero"
-      className="pt-32 pb-20 bg-gradient-to-b from-theme-devil-green/60 via-theme-devil-green/40 to-black overflow-hidden"
+      className={`pt-32 pb-20 overflow-hidden ${
+        isDark
+          ? "bg-gradient-to-b from-theme-devil-green/60 via-theme-devil-green/40 to-black"
+          : "bg-gradient-to-b from-theme-devil-green/60 via-theme-devil-green/40 to-background"
+      }`}
     >
       <div
         className="absolute inset-0 pointer-events-none"
@@ -22,13 +30,13 @@ export function ToSHero() {
         >
           <Gavel className="w-8 h-8 text-theme-kelly-green" />
         </div>
-        <h1 className="text-4xl sm:text-5xl font-bold mb-6 text-white">
+        <h1 className="text-4xl sm:text-5xl font-bold mb-6 text-foreground">
           Terms of Service
         </h1>
-        <p className="text-xl max-w-2xl mx-auto text-gray-300">
+        <p className="text-xl max-w-2xl mx-auto text-muted-foreground">
           Please read our Terms of Service carefully. By using SamCard, you agree to be bound by these terms.
         </p>
-        <p className="text-sm mt-4 text-gray-500">
+        <p className="text-sm mt-4 text-muted-foreground">
           Last Updated: March 9, 2026
         </p>
       </div>

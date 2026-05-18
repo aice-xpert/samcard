@@ -25,20 +25,20 @@ export function PrivacyNav() {
   };
 
   return (
-   <section className="py-4 bg-neutral-950 border-y border-white/10">
+   <section className="py-4 bg-muted border-y border-border">
       <div className="max-w-4xl mx-auto">
         <nav className="flex flex-wrap justify-center gap-2 sm:gap-4 text-sm">
           {links.map((link, i) => (
             <span key={link.href} className="flex items-center gap-2 sm:gap-4">
               <button
                 onClick={() => scrollToSection(link.href)}
-                className="text-gray-400 hover:text-theme-kelly-green transition-colors duration-200"
+                className="text-muted-foreground hover:text-theme-kelly-green transition-colors duration-200"
               >
                 {link.label}
               </button>
 
               {i < links.length - 1 && (
-                <span className="text-gray-600">•</span>
+                <span className="text-muted-foreground/50">•</span>
               )}
             </span>
           ))}

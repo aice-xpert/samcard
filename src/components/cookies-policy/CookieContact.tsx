@@ -5,7 +5,7 @@ import { bodyTextClass, sectionTitleClass, mutedBodyTextClass } from "./typograp
 
 export function CookieContact() {
   return (
-    <section className="w-full bg-black pt-20">
+    <section className="w-full bg-background pt-20">
       <div className="max-w-4xl mx-auto px-6 space-y-4">
         <div className="flex items-center gap-3">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-accent/10 border border-accent/20">
@@ -23,9 +23,9 @@ export function CookieContact() {
             Cookie Policy, please contact us:
           </p>
 
-          <div className="p-4 bg-white/5 border border-white/10 rounded-xl space-y-2">
+          <div className="p-4 bg-muted border border-border rounded-xl space-y-2">
             <p className={bodyTextClass}>
-              <span className="text-white font-semibold">Email: </span>
+              <span className="text-foreground font-semibold">Email: </span>
               <a
                 href="mailto:support@samcard.com"
                 className="text-theme-kelly-green hover:underline"
@@ -35,7 +35,7 @@ export function CookieContact() {
             </p>
 
             <p className={bodyTextClass}>
-              <span className="text-white font-semibold">
+              <span className="text-foreground font-semibold">
                 Data Protection Officer:{" "}
               </span>
               <a
@@ -47,7 +47,7 @@ export function CookieContact() {
             </p>
 
             <div className={bodyTextClass}>
-              <span className="text-white font-semibold block mb-1">
+              <span className="text-foreground font-semibold block mb-1">
                 Mailing Address:
               </span>
               <div className={mutedBodyTextClass}>

@@ -13,8 +13,8 @@ const cookieSections = [
     desc: `You can change your cookie preferences at any time by clicking the "Cookie Settings" link in our website footer or by visiting your account settings.`,
     button: {
       label: "Manage Cookie Preferences",
-      className:
-        "mt-3 px-6 py-2 bg-theme-kelly-green/80 text-black font-semibold rounded-lg hover:bg-theme-devil-green",
+        className:
+          "mt-3 px-6 py-2 bg-theme-kelly-green/80 text-foreground font-semibold rounded-lg hover:bg-theme-devil-green",
     },
   },
   {
@@ -45,7 +45,7 @@ const cookieSections = [
 
 export default function CookieManagement() {
   return (
-    <section id="manage-cookies" className="w-full bg-black pt-20">
+    <section id="manage-cookies" className="w-full bg-background pt-20">
       <div className="max-w-4xl mx-auto px-6 space-y-10">
         <div className="flex items-center gap-3">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-theme-devil-green/10 border border-theme-devil-green/20">

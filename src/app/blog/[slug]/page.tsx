@@ -87,7 +87,7 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
   return (
     <>
       <BlogPostHero article={article} />
-      <div className="bg-black">
+      <div className="bg-background">
         <BlogPostBody article={article} content={content} timeline={timeline} />
         <RelatedArticles category={article.category} articles={related} />
         <BlogPostNewsletter />

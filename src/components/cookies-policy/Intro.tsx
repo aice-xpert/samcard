@@ -5,7 +5,7 @@ import { bodyTextClass, sectionTitleClass } from "./typography";
 
 export function CookiePolicyIntro() {
   return (
-    <section className="pt-24 pb-12 bg-black">
+    <section className="pt-24 pb-12 bg-background">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
 
         <motion.div
@@ -46,12 +46,12 @@ export function CookiePolicyIntro() {
               </p>
 
               <div className="space-y-2">
-                <p className="font-medium text-white">Duration:</p>
+                <p className="font-medium text-foreground">Duration:</p>
                 <ul className="space-y-2 ml-4">
                   <li className="flex gap-2">
                     <span className="text-accent mt-1">›</span>
                     <span>
-                      <strong className="text-white">Persistent cookies:</strong>{" "}
+                      <strong className="text-foreground">Persistent cookies:</strong>{" "}
                       Remain on your device for a set period or until you delete
                       them
                     </span>
@@ -59,7 +59,7 @@ export function CookiePolicyIntro() {
                   <li className="flex gap-2">
                     <span className="text-accent mt-1">›</span>
                     <span>
-                      <strong className="text-white">Session cookies:</strong>{" "}
+                      <strong className="text-foreground">Session cookies:</strong>{" "}
                       Temporary — deleted when you close your browser
                     </span>
                   </li>
@@ -67,19 +67,19 @@ export function CookiePolicyIntro() {
               </div>
 
               <div className="space-y-2">
-                <p className="font-medium text-white">Origin:</p>
+                <p className="font-medium text-foreground">Origin:</p>
                 <ul className="space-y-2 ml-4">
                   <li className="flex gap-2">
                     <span className="text-accent mt-1">›</span>
                     <span>
-                      <strong className="text-white">First-party cookies:</strong>{" "}
+                      <strong className="text-foreground">First-party cookies:</strong>{" "}
                       Set by the website you&apos;re visiting
                     </span>
                   </li>
                   <li className="flex gap-2">
                     <span className="text-accent mt-1">›</span>
                     <span>
-                      <strong className="text-white">Third-party cookies:</strong>{" "}
+                      <strong className="text-foreground">Third-party cookies:</strong>{" "}
                       Set by a domain other than the one you&apos;re visiting
                     </span>
                   </li>

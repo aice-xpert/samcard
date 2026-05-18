@@ -22,15 +22,15 @@ export default function BlogPage() {
   }, [category]);
 
   return (
-    <div className="bg-black min-h-screen">
+    <div className="bg-background min-h-screen">
       <BlogHero />
-      <section className="pb-16 bg-black">
+      <section className="pb-16 bg-background">
         <div className="max-w-7xl mx-auto px-6">
           <FeaturedArticle article={featuredArticle} />
         </div>
       </section>
       <CategoryFilter categories={categories} selected={category} onSelect={setCategory} />
-      <section className="py-20 bg-black">
+      <section className="py-20 bg-background">
         <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-12 gap-10">
           <div className="lg:col-span-8">
             <ArticleGrid articles={filteredArticles} />
@@ -41,7 +41,7 @@ export default function BlogPage() {
         </div>
       </section>
       <TrendingSection />
-      <section className="py-16 bg-black">
+      <section className="py-16 bg-background">
         <div className="max-w-7xl mx-auto px-6">
           <ProTipsAndCommunity />
         </div>

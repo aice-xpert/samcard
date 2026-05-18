@@ -13,7 +13,7 @@ interface BlogPostBodyProps {
 }
 
 const renderInline = (text: string): string =>
-  text.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-semibold">$1</strong>');
+  text.replace(/\*\*(.*?)\*\*/g, '<strong class="text-foreground font-semibold">$1</strong>');
 
 interface Section {
   title: string;
@@ -70,7 +70,7 @@ function renderParagraph(text: string): JSX.Element {
   return (
     <p
       key={text.slice(0, 20)}
-      className="text-gray-300 leading-relaxed text-lg"
+      className="text-muted-foreground leading-relaxed text-lg"
       dangerouslySetInnerHTML={{ __html: renderInline(text) }}
     />
   );
@@ -92,7 +92,7 @@ export default function BlogPostBody({ article, content, timeline }: BlogPostBod
 
       {sections.map((section, idx) => (
         <div key={idx}>
-          <h2 className="text-2xl font-bold text-white mt-12 mb-4 leading-tight">
+          <h2 className="text-2xl font-bold text-foreground mt-12 mb-4 leading-tight">
             {section.title}
           </h2>
           
@@ -110,13 +110,13 @@ export default function BlogPostBody({ article, content, timeline }: BlogPostBod
 
       <ProcessTimeline points={timeline} />
 
-      <div className="mt-16 border border-white/10 rounded-2xl p-6 bg-white/5 flex items-start gap-4">
+      <div className="mt-16 border border-border rounded-2xl p-6 bg-muted flex items-start gap-4">
         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-accent to-theme-digital-green flex items-center justify-center text-black font-bold text-lg flex-shrink-0">
           {article.author.charAt(0)}
         </div>
         <div>
-          <p className="text-white font-semibold">{article.author}</p>
-          <p className="text-gray-400 text-sm mt-1">
+          <p className="text-foreground font-semibold">{article.author}</p>
+          <p className="text-muted-foreground text-sm mt-1">
             Contributing writer at the Digital Networking Insights blog. Writing about{" "}
             {article.category} and the intersection of technology and professional growth.
           </p>

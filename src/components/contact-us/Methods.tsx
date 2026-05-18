@@ -20,7 +20,7 @@ const methods = [
     title: "Visit Us",
     description: null,
     action: (
-      <p className="text-gray-400 text-sm">
+      <p className="text-muted-foreground text-sm">
         123 Business Street, Suite 100<br />
         San Francisco, CA 94105<br />
         United States
@@ -39,13 +39,13 @@ export function ContactMethods() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: i * 0.1 }}
-          className="p-6 bg-white/5 border border-white/10 rounded-xl hover:border-theme-kelly-green/50 hover:shadow-lg hover:shadow-theme-digital-green/10 transition-all group"
+          className="p-6 bg-muted border border-border rounded-xl hover:border-theme-kelly-green/50 hover:shadow-lg hover:shadow-theme-digital-green/10 transition-all group"
         >
           <div className="w-12 h-12 rounded-xl bg-theme-kelly-green/10 flex items-center justify-center mb-4 group-hover:bg-theme-kelly-green/20 transition-colors ring-1 ring-theme-kelly-green/20">
             <Icon className="w-6 h-6 text-accent" />
           </div>
-          <h3 className="text-lg font-semibold mb-2 text-white">{title}</h3>
-          {description && <p className="text-gray-400 text-sm mb-3">{description}</p>}
+          <h3 className="text-lg font-semibold mb-2 text-foreground">{title}</h3>
+          {description && <p className="text-muted-foreground text-sm mb-3">{description}</p>}
           {action}
         </motion.div>
       ))}

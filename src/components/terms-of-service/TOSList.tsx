@@ -14,10 +14,10 @@ export function ToSList({ items }: ToSListProps) {
             <span
               className="mt-[7px] flex-shrink-0 w-1.5 h-1.5 rounded-full bg-theme-kelly-green"
             />
-            <span className="text-gray-300">
+            <span className="text-muted-foreground">
               {isObj ? (
                 <>
-                  <strong className="text-white">{item.label}:</strong>{' '}
+                  <strong className="text-foreground">{item.label}:</strong>{' '}
                   {item.text}
                 </>
               ) : item}
