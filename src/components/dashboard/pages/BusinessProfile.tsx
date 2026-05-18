@@ -1164,7 +1164,14 @@ export default function BusinessProfile({
     const onStorage = (e: StorageEvent) => {
       if (e.key === activeDesignCacheKey || e.key === null) refresh();
     };
-    const onFocus = () => refresh();
+    const onFocus = () => {
+      const loaded = loadThemeOverride(activeDesignCacheKey);
+      if (pendingTemplateDesignRef.current) {
+        setThemeOverride({ ...loaded, ...(pendingTemplateDesignRef.current as Partial<ThemeOverride>) });
+      } else {
+        setThemeOverride(loaded);
+      }
+    };
     const onDesignSaved = (event: Event) => {
       const designEvent = event as CustomEvent<{ key?: string }>;
       const eventKey = designEvent.detail?.key;
@@ -1312,10 +1319,13 @@ export default function BusinessProfile({
         updateCustomLinks(normalizedCustomLinks),
       ]);
 
+      // Capture before nulling so the value is available for the backend call below.
+      const capturedTemplateDesign = pendingTemplateDesignRef.current;
+
       // Persist template design to localStorage on explicit save (runs regardless of cardId).
-      if (pendingTemplateDesignRef.current) {
+      if (capturedTemplateDesign) {
         const designKey = designCacheKeyForEditor(cardId, resolvedCardId, allowFallbackToFirstCard);
-        saveThemeOverride(designKey, pendingTemplateDesignRef.current as Partial<ThemeOverride>);
+        saveThemeOverride(designKey, capturedTemplateDesign as Partial<ThemeOverride>);
         pendingTemplateDesignRef.current = null;
       }
 
@@ -1336,8 +1346,8 @@ export default function BusinessProfile({
             unifiedOrder,
           }),
         ];
-        if (pendingTemplateDesignRef.current) {
-          saveOps.push(updateCardDesign(cardId, pendingTemplateDesignRef.current as any));
+        if (capturedTemplateDesign) {
+          saveOps.push(updateCardDesign(cardId, capturedTemplateDesign as any));
         }
         await Promise.all(saveOps);
       }
