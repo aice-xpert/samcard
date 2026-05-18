@@ -4,7 +4,7 @@ import { bodyTextClass, sectionTitleClass } from "./typography";
 
 export function AdditionalResources() {
   return (
-    <section className="w-full bg-black pb-16 pt-8">
+    <section className="w-full bg-background pb-16 pt-8">
       <div className="max-w-4xl mx-auto">
         <div className="space-y-3 p-4 bg-theme-devil-green/15 border border-theme-kelly-green rounded-xl">
           <h2 className={sectionTitleClass}>Additional Resources</h2>

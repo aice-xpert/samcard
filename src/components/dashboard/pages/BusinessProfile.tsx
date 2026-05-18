@@ -40,6 +40,7 @@ import {
   updateBusinessProfile,
   updateCustomLinks,
   updateSocialLinks,
+  updateCardDesign,
   getCards,
   getCardContent,
   updateCardContent,
@@ -778,6 +779,9 @@ export default function BusinessProfile({
   // Prevents cache loading from overwriting backend-loaded content once
   // API content has already been hydrated.
   const hasLoadedCardContentRef = useRef(false);
+  // Holds the design payload from the last applied template so handleSaveChanges
+  // can persist it to the backend alongside content.
+  const pendingTemplateDesignRef = useRef<Record<string, unknown> | null>(null);
 
   // Ref that stays current with the onContentChange prop so handleDragEnd can
   // call it synchronously without the callback being in its deps (stale closure).
@@ -1160,7 +1164,14 @@ export default function BusinessProfile({
     const onStorage = (e: StorageEvent) => {
       if (e.key === activeDesignCacheKey || e.key === null) refresh();
     };
-    const onFocus = () => refresh();
+    const onFocus = () => {
+      const loaded = loadThemeOverride(activeDesignCacheKey);
+      if (pendingTemplateDesignRef.current) {
+        setThemeOverride({ ...loaded, ...(pendingTemplateDesignRef.current as Partial<ThemeOverride>) });
+      } else {
+        setThemeOverride(loaded);
+      }
+    };
     const onDesignSaved = (event: Event) => {
       const designEvent = event as CustomEvent<{ key?: string }>;
       const eventKey = designEvent.detail?.key;
@@ -1308,21 +1319,37 @@ export default function BusinessProfile({
         updateCustomLinks(normalizedCustomLinks),
       ]);
 
+      // Capture before nulling so the value is available for the backend call below.
+      const capturedTemplateDesign = pendingTemplateDesignRef.current;
+
+      // Persist template design to localStorage on explicit save (runs regardless of cardId).
+      if (capturedTemplateDesign) {
+        const designKey = designCacheKeyForEditor(cardId, resolvedCardId, allowFallbackToFirstCard);
+        saveThemeOverride(designKey, capturedTemplateDesign as Partial<ThemeOverride>);
+        pendingTemplateDesignRef.current = null;
+      }
+
       if (cardId) {
         suppressOrderReloadRef.current = true;
-        await updateCardContent(cardId, {
-          profileImage: updatedProfileImage,
-          brandLogo: updatedBrandLogo,
-          logoPosition: contentLogoPosition,
-          formData,
-          socialLinks: normalizedSocialLinks.map(sl => ({ platform: sl.platform, url: sl.url })),
-          connectFields,
-          sections,
-          customLinks,
-          extraSections,
-          sectionOrder,
-          unifiedOrder,
-        });
+        const saveOps: Promise<unknown>[] = [
+          updateCardContent(cardId, {
+            profileImage: updatedProfileImage,
+            brandLogo: updatedBrandLogo,
+            logoPosition: contentLogoPosition,
+            formData,
+            socialLinks: normalizedSocialLinks.map(sl => ({ platform: sl.platform, url: sl.url })),
+            connectFields,
+            sections,
+            customLinks,
+            extraSections,
+            sectionOrder,
+            unifiedOrder,
+          }),
+        ];
+        if (capturedTemplateDesign) {
+          saveOps.push(updateCardDesign(cardId, capturedTemplateDesign as any));
+        }
+        await Promise.all(saveOps);
       }
 
       setSaveFlash(true);
@@ -1857,7 +1884,6 @@ export default function BusinessProfile({
                 heroLayout: PALETTE_HERO_MAP[palette] ?? 'default',
               };
 
-              const designKey = designCacheKeyForEditor(cardId, resolvedCardId, allowFallbackToFirstCard);
               const cachePayload = {
                 ...d,
                 ...themeForPreview,
@@ -1879,10 +1905,9 @@ export default function BusinessProfile({
                 boldHeadings,
                 cardRadius,
               };
-              // Persist template design to localStorage so Design editor picks it up.
-              // Do NOT auto-save to backend — the user must explicitly click Save.
-              saveThemeOverride(designKey, cachePayload as any);
               setThemeOverride(prev => ({ ...prev, ...themeForPreview }));
+              // Track design so handleSaveChanges can push it to the backend and localStorage.
+              pendingTemplateDesignRef.current = cachePayload;
             } catch (e) {
               console.error('Failed to apply template design', e);
             }

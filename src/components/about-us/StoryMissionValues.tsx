@@ -40,14 +40,10 @@ import {
 export function StoryMissionValues() {
   return (
     <>
-      {/* Story Section */}
-
-      <section className="py-24 bg-black">
+      <section className="py-24 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
           <div className="grid lg:grid-cols-2 gap-16 items-center">
-
-            {/* Story Text */}
 
             <motion.div
               initial={{ opacity: 0, x: -40 }}
@@ -55,11 +51,11 @@ export function StoryMissionValues() {
               viewport={{ once: true }}
             >
 
-              <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">
+              <h2 className="text-4xl lg:text-5xl font-bold text-foreground mb-6">
                 Our Story
               </h2>
 
-              <div className="space-y-4 text-gray-300 leading-relaxed">
+              <div className="space-y-4 text-muted-foreground leading-relaxed">
 
                 <p>
                   SamCard was created with a simple goal — to eliminate the
@@ -82,30 +78,26 @@ export function StoryMissionValues() {
 
               </div>
 
-              {/* Achievements */}
-
               <div className="mt-8 flex flex-wrap gap-4">
 
-                <div className="flex items-center gap-3 px-4 py-3 bg-white/5 rounded-lg border border-white/10">
+                <div className="flex items-center gap-3 px-4 py-3 bg-muted rounded-lg border border-border">
                   <CheckCircle2 className="text-theme-devil-green" size={20} />
-                  <span className="text-white">Founded in 2024</span>
+                  <span className="text-foreground">Founded in 2024</span>
                 </div>
 
-                <div className="flex items-center gap-3 px-4 py-3 bg-white/5 rounded-lg border border-white/10">
+                <div className="flex items-center gap-3 px-4 py-3 bg-muted rounded-lg border border-border">
                   <CheckCircle2 className="text-theme-devil-green" size={20} />
-                  <span className="text-white">Global Users</span>
+                  <span className="text-foreground">Global Users</span>
                 </div>
 
-                <div className="flex items-center gap-3 px-4 py-3 bg-white/5 rounded-lg border border-white/10">
+                <div className="flex items-center gap-3 px-4 py-3 bg-muted rounded-lg border border-border">
                   <CheckCircle2 className="text-theme-devil-green" size={20} />
-                  <span className="text-white">Growing Team</span>
+                  <span className="text-foreground">Growing Team</span>
                 </div>
 
               </div>
 
             </motion.div>
-
-            {/* Story Image */}
 
             <motion.div
               initial={{ opacity: 0, x: 40 }}
@@ -131,75 +123,54 @@ export function StoryMissionValues() {
         </div>
       </section>
 
-      {/* Mission & Vision */}
-
-      <section className="py-24 bg-black">
-
+      <section className="py-24 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
           <div className="grid md:grid-cols-2 gap-8">
-
-            {/* Mission */}
 
             <motion.div
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="p-10 bg-white/5 rounded-2xl border border-white/10"
+              className="p-10 bg-muted rounded-2xl border border-border"
             >
-
               <div className="w-14 h-14 bg-theme-devil-green/10 rounded-xl flex items-center justify-center mb-6">
                 <Target className="text-theme-devil-green" size={28} />
               </div>
-
-              <h3 className="text-2xl font-bold text-white mb-4">
+              <h3 className="text-2xl font-bold text-foreground mb-4">
                 Our Mission
               </h3>
-
-              <p className="text-gray-300 leading-relaxed">
+              <p className="text-muted-foreground leading-relaxed">
                 Our mission is to simplify professional networking through
                 powerful digital tools that allow people to share their
                 identity instantly and create meaningful connections.
               </p>
-
             </motion.div>
-
-            {/* Vision */}
 
             <motion.div
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
               viewport={{ once: true }}
-              className="p-10 bg-white/5 rounded-2xl border border-white/10"
+              className="p-10 bg-muted rounded-2xl border border-border"
             >
-
               <div className="w-14 h-14 bg-theme-devil-green/10 rounded-xl flex items-center justify-center mb-6">
                 <Globe className="text-theme-devil-green" size={28} />
               </div>
-
-              <h3 className="text-2xl font-bold text-white mb-4">
+              <h3 className="text-2xl font-bold text-foreground mb-4">
                 Our Vision
               </h3>
-
-              <p className="text-gray-300 leading-relaxed">
+              <p className="text-muted-foreground leading-relaxed">
                 We envision a future where professionals can connect globally
                 without barriers using modern digital identity solutions like
                 SamCard.
               </p>
-
             </motion.div>
 
           </div>
-
         </div>
-
       </section>
 
-      {/* Values */}
-
-      <section className="py-24 bg-black">
-
+      <section className="py-24 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
           <motion.div
@@ -208,21 +179,16 @@ export function StoryMissionValues() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-
-            <h2 className="text-4xl lg:text-5xl font-bold text-white mb-4">
+            <h2 className="text-4xl lg:text-5xl font-bold text-foreground mb-4">
               Our Core Values
             </h2>
-
-            <p className="text-gray-400 text-lg">
+            <p className="text-muted-foreground text-lg">
               The principles that guide everything we build
             </p>
-
           </motion.div>
 
           <div className="grid md:grid-cols-2 gap-8">
-
             {values.map((value, index) => {
-
               const Icon = value.icon;
 
               return (
@@ -232,21 +198,17 @@ export function StoryMissionValues() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.1 }}
-                  className="p-10 bg-white/5 rounded-2xl border border-white/10 hover:border-theme-devil-green/40 transition"
+                  className="p-10 bg-muted rounded-2xl border border-border hover:border-theme-devil-green/40 transition"
                 >
-
                   <div className="w-14 h-14 bg-theme-devil-green/10 rounded-xl flex items-center justify-center mb-6">
                     <Icon className="text-theme-devil-green" size={28} />
                   </div>
-
-                  <h3 className="text-2xl font-bold text-white mb-3">
+                  <h3 className="text-2xl font-bold text-foreground mb-3">
                     {value.title}
                   </h3>
-
-                  <p className="text-gray-300 leading-relaxed">
+                  <p className="text-muted-foreground leading-relaxed">
                     {value.description}
                   </p>
-
                 </motion.div>
               );
             })}
@@ -254,7 +216,6 @@ export function StoryMissionValues() {
           </div>
 
         </div>
-
       </section>
     </>
   );

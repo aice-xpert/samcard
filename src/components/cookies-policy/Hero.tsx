@@ -2,11 +2,18 @@
 "use client";
 import { motion } from "motion/react";
 import { Cookie } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
 import { bodyTextClass, metaTextClass } from "./typography";
 
 export function Hero() {
+  const { isDark } = useTheme();
+
     return (
-    <section className="pt-32 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-theme-devil-green via-black to-black overflow-hidden">
+    <section className={`pt-32 pb-16 px-4 sm:px-6 lg:px-8 overflow-hidden ${
+      isDark
+        ? "bg-gradient-to-b from-theme-devil-green via-black to-black"
+        : "bg-gradient-to-b from-theme-devil-green via-background to-background"
+    }`}>
       <div className="max-w-4xl mx-auto text-center">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -17,7 +24,7 @@ export function Hero() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-accent/10 border border-accent/20 mb-2">
             <Cookie className="w-8 h-8 text-accent" />
           </div>
-          <h1 className="text-5xl font-bold text-white">Cookie Policy</h1>
+          <h1 className="text-5xl font-bold text-foreground">Cookie Policy</h1>
           <p className={`${bodyTextClass} max-w-2xl mx-auto`}>
             This policy explains how SamCard uses cookies and similar
             technologies to recognize you when you visit our website and use our

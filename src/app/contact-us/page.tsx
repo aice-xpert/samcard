@@ -6,10 +6,10 @@ import { ContactMap } from "@/components/contact-us/Map";
 
 export default function ContactPage() {
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <ContactHero />
 
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-black">
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-background">
         <div className="max-w-7xl mx-auto">
           <ContactMethods />
 

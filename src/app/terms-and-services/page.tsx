@@ -4,10 +4,10 @@ import ToSContent from '@/components/terms-of-service/TOSContent';
 
 export default function TermsOfServicePage() {
   return (
-    <main className="min-h-screen bg-black text-white">
+    <main className="min-h-screen bg-background text-foreground">
       <ToSHero />
       <div className="grid grid-cols-[30%_1fr] gap-0">
-        <aside className="sticky top-18 h-screen bg-black border-r border-theme-kellygreen p-6 overflow-y-auto">
+        <aside className="sticky top-18 h-screen bg-muted border-r border-theme-kellygreen p-6 overflow-y-auto">
           <nav className="space-y-1">
             <h3 className="text-sm font-semibold text-theme-kelly-green uppercase tracking-wider mb-6">
               Quick Links
@@ -25,9 +25,9 @@ export default function TermsOfServicePage() {
           </nav>
 
           <div 
-            className="mt-8 p-4 rounded-lg text-xs text-gray-400 bg-theme-devil-green/20 border border-theme-kelly-green"
+            className="mt-8 p-4 rounded-lg text-xs text-muted-foreground bg-theme-devil-green/20 border border-theme-kelly-green"
           >
-            <p className="font-semibold text-white mb-2">Last Updated</p>
+            <p className="font-semibold text-foreground mb-2">Last Updated</p>
             <p>March 9, 2026</p>
           </div>
         </aside>
@@ -51,7 +51,7 @@ function SidebarLink({ href, label }: { href: string; label: string }) {
   return (
     <button
       onClick={() => scrollToSection(href)}
-      className="w-full text-left px-3 py-2 rounded-lg text-sm text-gray-400 hover:text-theme-kelly-green hover:bg-theme-kelly-green/10 transition-all duration-200"
+      className="w-full text-left px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-theme-kelly-green hover:bg-theme-kelly-green/10 transition-all duration-200"
     >
       {label}
     </button>
