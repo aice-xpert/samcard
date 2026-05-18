@@ -1312,6 +1312,13 @@ export default function BusinessProfile({
         updateCustomLinks(normalizedCustomLinks),
       ]);
 
+      // Persist template design to localStorage on explicit save (runs regardless of cardId).
+      if (pendingTemplateDesignRef.current) {
+        const designKey = designCacheKeyForEditor(cardId, resolvedCardId, allowFallbackToFirstCard);
+        saveThemeOverride(designKey, pendingTemplateDesignRef.current as Partial<ThemeOverride>);
+        pendingTemplateDesignRef.current = null;
+      }
+
       if (cardId) {
         suppressOrderReloadRef.current = true;
         const saveOps: Promise<unknown>[] = [
@@ -1331,7 +1338,6 @@ export default function BusinessProfile({
         ];
         if (pendingTemplateDesignRef.current) {
           saveOps.push(updateCardDesign(cardId, pendingTemplateDesignRef.current as any));
-          pendingTemplateDesignRef.current = null;
         }
         await Promise.all(saveOps);
       }
@@ -1868,7 +1874,6 @@ export default function BusinessProfile({
                 heroLayout: PALETTE_HERO_MAP[palette] ?? 'default',
               };
 
-              const designKey = designCacheKeyForEditor(cardId, resolvedCardId, allowFallbackToFirstCard);
               const cachePayload = {
                 ...d,
                 ...themeForPreview,
@@ -1890,11 +1895,8 @@ export default function BusinessProfile({
                 boldHeadings,
                 cardRadius,
               };
-              // Persist template design to localStorage so Design editor picks it up.
-              // Do NOT auto-save to backend — the user must explicitly click Save.
-              saveThemeOverride(designKey, cachePayload as any);
               setThemeOverride(prev => ({ ...prev, ...themeForPreview }));
-              // Track design so handleSaveChanges can push it to the backend.
+              // Track design so handleSaveChanges can push it to the backend and localStorage.
               pendingTemplateDesignRef.current = cachePayload;
             } catch (e) {
               console.error('Failed to apply template design', e);
