@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, Calendar, Clock, Tag } from "lucide-react";
 import type { Article } from "@/constant";
+import { useTheme } from "@/contexts/ThemeContext";
 import BlogKeywords from "./BlogKeywords";
 
 interface BlogPostHeroProps {
@@ -12,13 +13,16 @@ interface BlogPostHeroProps {
 }
 
 export default function BlogPostHero({ article }: BlogPostHeroProps) {
+  const { isDark } = useTheme();
 
   const imageSrc = `/blog/${article.slug}.jpg`; 
 
-  console.log(imageSrc)
-
   return (
-    <section className="pt-32 pb-8 bg-gradient-to-b from-theme-devil-green via-black to-black overflow-hidden">
+    <section className={`pt-32 pb-8 overflow-hidden ${
+      isDark
+        ? "bg-gradient-to-b from-theme-devil-green via-black to-black"
+        : "bg-gradient-to-b from-theme-devil-green via-background to-background"
+    }`}>
       <div className="max-w-4xl mx-auto px-6">
         {/* Back navigation */}
         <motion.div
@@ -28,7 +32,7 @@ export default function BlogPostHero({ article }: BlogPostHeroProps) {
         >
           <Link
             href="/blog"
-            className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition text-sm mb-10"
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition text-sm mb-10"
           >
             <ArrowLeft size={16} />
             Back to Blog
@@ -46,19 +50,19 @@ export default function BlogPostHero({ article }: BlogPostHeroProps) {
             {article.category}
           </span>
 
-          <h1 className="text-4xl md:text-5xl font-bold text-white leading-tight tracking-tight">
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground leading-tight tracking-tight">
             {article.title}
           </h1>
 
           <BlogKeywords points={article.keywords} />
 
           {/* Meta row */}
-          <div className="flex flex-wrap items-center gap-5 text-sm text-gray-500 border-t border-white/10 pt-6">
+          <div className="flex flex-wrap items-center gap-5 text-sm text-muted-foreground border-t border-border pt-6">
             <span className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-full bg-gradient-to-br from-accent to-theme-digital-green flex items-center justify-center text-black text-xs font-bold flex-shrink-0">
                 {article.author.charAt(0)}
               </div>
-              <span className="text-gray-300">{article.author}</span>
+              <span className="text-muted-foreground">{article.author}</span>
             </span>
             <span className="flex items-center gap-1.5">
               <Calendar size={14} />
@@ -81,7 +85,11 @@ export default function BlogPostHero({ article }: BlogPostHeroProps) {
         transition={{ duration: 0.6, delay: 0.2 }}
         className="max-w-4xl mx-auto px-6 mt-12"
       >
-        <div className="w-full rounded-2xl bg-gradient-to-br from-accent/20 via-theme-digital-green/10 to-black border border-white/10 overflow-hidden relative">
+        <div className={`w-full rounded-2xl overflow-hidden relative ${
+          isDark
+            ? "bg-gradient-to-br from-accent/20 via-theme-digital-green/10 to-black border border-white/10"
+            : "bg-gradient-to-br from-accent/20 via-theme-digital-green/10 to-background border border-border"
+        }`}>
           <Image
             src={imageSrc}
             alt={article.title}

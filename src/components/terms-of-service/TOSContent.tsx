@@ -8,11 +8,11 @@ import {
 
 export default function TermsOfServicePage() {
   return (
-    <div className="min-h-screen text-white bg-black">
-      <section className="py-16 px-8 lg:px-12 bg-black">
+    <div className="min-h-screen text-foreground bg-background">
+      <section className="py-16 px-8 lg:px-12 bg-background">
         <div className="max-w-3xl mx-auto space-y-12">
 
-          <p className="text-gray-300" style={{ lineHeight: 1.8 }}>
+          <p className="text-muted-foreground" style={{ lineHeight: 1.8 }}>
             These Terms of Service (&quot;Terms&quot;) govern your use of SamCard&apos;s website, mobile applications,
             and services. By accessing or using SamCard, you agree to be bound by these Terms. If you do not
             agree to these Terms, please do not use our services.
@@ -20,7 +20,7 @@ export default function TermsOfServicePage() {
 
           <ToSSection id="definitions" icon={FileText} title="Definitions and Interpretation">
             <div>
-              <h3 className="text-lg font-semibold mb-2 text-white">Key Terms</h3>
+              <h3 className="text-lg font-semibold mb-2 text-foreground">Key Terms</h3>
               <ToSList items={[
                 { label: 'Company/We/Us', text: 'SamCard Inc. and its affiliates' },
                 { label: 'Service', text: 'Our digital business card platform and related services' },
@@ -33,7 +33,7 @@ export default function TermsOfServicePage() {
 
           <ToSSection id="use-license" icon={Zap} title="License and Use Rights">
             <p>We grant you a limited, non-exclusive, non-transferable license to use our Service subject to these Terms.</p>
-            <h3 className="text-lg font-semibold mb-3 mt-4 text-white">You agree NOT to:</h3>
+            <h3 className="text-lg font-semibold mb-3 mt-4 text-foreground">You agree NOT to:</h3>
             <ToSList items={[
               'Violate any laws or regulations in your jurisdiction',
               'Use the Service for any illegal or unauthorized purpose',
@@ -48,7 +48,7 @@ export default function TermsOfServicePage() {
 
           <ToSSection id="user-accounts" icon={Users} title="User Accounts and Responsibilities">
             <p>When you create an account with SamCard, you are responsible for maintaining the confidentiality of your login credentials.</p>
-            <h3 className="text-lg font-semibold mb-3 mt-4 text-white">Your Responsibilities:</h3>
+            <h3 className="text-lg font-semibold mb-3 mt-4 text-foreground">Your Responsibilities:</h3>
             <ToSList items={[
               { label: 'Accurate Information', text: 'You agree to provide accurate, current, and complete information during registration' },
               { label: 'Security', text: 'You are responsible for all activity under your account and must notify us of unauthorized access' },
@@ -65,7 +65,7 @@ export default function TermsOfServicePage() {
               The Service, including all content, features, and functionality, is owned by SamCard, our licensors,
               or other providers of such content and is protected by copyright, trademark, and other intellectual property laws.
             </p>
-            <h3 className="text-lg font-semibold mb-3 mt-4 text-white">Your Content:</h3>
+            <h3 className="text-lg font-semibold mb-3 mt-4 text-foreground">Your Content:</h3>
             <ToSList items={[
               { label: 'Ownership', text: 'You retain all rights to any content you create and upload to your digital business card' },
               { label: 'License', text: 'By uploading content, you grant SamCard a worldwide, royalty-free license to use, reproduce, and display your content for service purposes' },
@@ -76,7 +76,7 @@ export default function TermsOfServicePage() {
 
           <ToSSection id="content-conduct" icon={AlertTriangle} title="User Content and Prohibited Conduct">
             <p>You are solely responsible for any content you create, upload, or distribute through the Service.</p>
-            <h3 className="text-lg font-semibold mb-3 mt-4 text-white">Prohibited Content:</h3>
+            <h3 className="text-lg font-semibold mb-3 mt-4 text-foreground">Prohibited Content:</h3>
             <ToSList items={[
               'Content that is defamatory, obscene, or offensive',
               'Content that violates intellectual property rights',
@@ -90,7 +90,7 @@ export default function TermsOfServicePage() {
 
           <ToSSection id="fees-payment" icon={Zap} title="Fees and Payment Terms">
             <p>Some features of our Service may require payment. All fees are exclusive of applicable taxes.</p>
-            <h3 className="text-lg font-semibold mb-3 mt-4 text-white">Payment Terms:</h3>
+            <h3 className="text-lg font-semibold mb-3 mt-4 text-foreground">Payment Terms:</h3>
             <ToSList items={[
               { label: 'Billing', text: 'Fees will be billed in accordance with the pricing plan you select' },
               { label: 'Recurring Charges', text: 'Subscription plans will automatically renew unless cancelled before the renewal date' },
@@ -108,7 +108,7 @@ export default function TermsOfServicePage() {
               TO THE MAXIMUM EXTENT PERMITTED BY LAW, SAMCARD SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL,
               SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING OUT OF OR IN CONNECTION WITH YOUR USE OF THE SERVICE.
             </p>
-            <h3 className="text-lg font-semibold mb-3 mt-4 text-white">This includes liability for:</h3>
+            <h3 className="text-lg font-semibold mb-3 mt-4 text-foreground">This includes liability for:</h3>
             <ToSList items={[
               'Loss of profits, revenue, or business opportunities',
               'Loss of data or information',
@@ -119,8 +119,8 @@ export default function TermsOfServicePage() {
             <p className="mt-4">Our total liability under these Terms shall not exceed the amount you paid us in the 12 months preceding the claim.</p>
           </ToSSection>
 
-          <div className="space-y-4 text-gray-300">
-            <h2 className="text-2xl font-bold text-white">Disclaimer of Warranties</h2>
+          <div className="space-y-4 text-muted-foreground">
+            <h2 className="text-2xl font-bold text-foreground">Disclaimer of Warranties</h2>
             <p>
               THE SERVICE IS PROVIDED &quot;AS IS&quot; AND &quot;AS AVAILABLE&quot; WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS
               OR IMPLIED, INCLUDING MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT.
@@ -128,8 +128,8 @@ export default function TermsOfServicePage() {
             <p>We do not warrant that the Service will be uninterrupted, error-free, or free of viruses or harmful components.</p>
           </div>
 
-          <div className="space-y-4 text-gray-300">
-            <h2 className="text-2xl font-bold text-white">Indemnification</h2>
+          <div className="space-y-4 text-muted-foreground">
+            <h2 className="text-2xl font-bold text-foreground">Indemnification</h2>
             <p>
               You agree to indemnify and hold harmless SamCard, its officers, directors, employees, and agents from
               any claims, damages, losses, or expenses (including attorney fees) arising from:
@@ -147,7 +147,7 @@ export default function TermsOfServicePage() {
               We may suspend or terminate your account and access to the Service at any time, with or without cause,
               and with or without notice.
             </p>
-            <h3 className="text-lg font-semibold mb-3 mt-4 text-white">Reasons for Termination:</h3>
+            <h3 className="text-lg font-semibold mb-3 mt-4 text-foreground">Reasons for Termination:</h3>
             <ToSList items={[
               'Violation of these Terms',
               'Engaging in illegal activities',
@@ -155,7 +155,7 @@ export default function TermsOfServicePage() {
               'Abusive or harassing behavior',
               'Extended period of inactivity',
             ]} />
-            <h3 className="text-lg font-semibold mb-3 mt-4 text-white">Upon Termination:</h3>
+            <h3 className="text-lg font-semibold mb-3 mt-4 text-foreground">Upon Termination:</h3>
             <ToSList items={[
               'Your account access will be immediately disabled',
               'Content may be deleted after 30 days unless otherwise required',
@@ -164,21 +164,21 @@ export default function TermsOfServicePage() {
             ]} />
           </ToSSection>
 
-          <div className="space-y-4 text-gray-300">
-            <h2 className="text-2xl font-bold text-white">Modifications to Terms</h2>
+          <div className="space-y-4 text-muted-foreground">
+            <h2 className="text-2xl font-bold text-foreground">Modifications to Terms</h2>
             <p>
               We reserve the right to modify these Terms at any time. Material changes will be communicated via email or
               prominent notice on our website. Your continued use of the Service after changes indicates your acceptance.
             </p>
           </div>
 
-          <div id="disputes" className="space-y-4 text-gray-300">
-            <h2 className="text-2xl font-bold text-white">Dispute Resolution</h2>
+          <div id="disputes" className="space-y-4 text-muted-foreground">
+            <h2 className="text-2xl font-bold text-foreground">Dispute Resolution</h2>
             <p>
               Any dispute arising under these Terms shall be governed by the laws of California, United States,
               without regard to conflict of law principles.
             </p>
-            <h3 className="text-lg font-semibold mb-3 mt-4 text-white">Resolution Process:</h3>
+            <h3 className="text-lg font-semibold mb-3 mt-4 text-foreground">Resolution Process:</h3>
             <ToSList items={[
               { label: 'Informal Resolution', text: 'Contact our legal team to attempt good faith negotiation' },
               { label: 'Binding Arbitration', text: 'Disputes shall be resolved through binding arbitration administered by the American Arbitration Association' },
@@ -192,8 +192,8 @@ export default function TermsOfServicePage() {
             </ToSCallout>
           </div>
 
-          <div className="space-y-4 text-gray-300">
-            <h2 className="text-2xl font-bold text-white">Third-Party Services and Links</h2>
+          <div className="space-y-4 text-muted-foreground">
+            <h2 className="text-2xl font-bold text-foreground">Third-Party Services and Links</h2>
             <p>
               Our Service may contain links to third-party websites and services. We are not responsible for the content,
               accuracy, or practices of these third parties. Your use of third-party services is at your own risk and
@@ -223,8 +223,8 @@ export default function TermsOfServicePage() {
           <div
             className="p-6 rounded-lg space-y-4 bg-theme-devil-green/20 border border-theme-kelly-green"
           >
-            <h2 className="text-2xl font-bold text-white">Effective Date</h2>
-            <p className="text-gray-300">
+            <h2 className="text-2xl font-bold text-foreground">Effective Date</h2>
+            <p className="text-muted-foreground">
               These Terms of Service were last updated on <strong>March 9, 2026</strong> and are effective immediately.
               By using SamCard after this date, you are deemed to have accepted these Terms.
             </p>

@@ -24,7 +24,7 @@ const otherTrackingSections = [
 
 export default function OtherTracking() {
   return (
-    <section className="w-full bg-black pt-20">
+    <section className="w-full bg-background pt-20">
       <div className="max-w-4xl mx-auto px-6 space-y-10">
         <div className="flex items-center gap-3">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-accent/10 border border-accent/20">

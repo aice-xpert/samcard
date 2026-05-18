@@ -6,7 +6,7 @@ export default function ProTipsAndCommunity() {
   return (
     <div className="grid md:grid-cols-2 gap-10">
       <div className="border border-accent/30 rounded-2xl p-8 bg-gradient-to-br from-theme-digital-green/10 to-accent/10">
-        <h3 className="text-white font-bold text-2xl flex items-center gap-2">
+        <h3 className="text-foreground font-bold text-2xl flex items-center gap-2">
           <Star size={24} className="text-accent" />
           Pro Writing Tips
         </h3>
@@ -18,7 +18,7 @@ export default function ProTipsAndCommunity() {
             "Add visuals or graphics every 300 words for visual interest",
             "Include a clear call-to-action at the end of articles",
           ].map((tip, idx) => (
-            <li key={idx} className="flex gap-3 text-sm text-gray-300">
+            <li key={idx} className="flex gap-3 text-sm text-muted-foreground">
               <span className="text-accent flex-shrink-0 font-bold">•</span>
               <span>{tip}</span>
             </li>
@@ -26,25 +26,24 @@ export default function ProTipsAndCommunity() {
         </ul>
       </div>
 
-      {/* Community Section */}
       <div className="border border-accent/30 rounded-2xl p-8 bg-gradient-to-br from-accent/10 to-theme-digital-green/10">
-        <h3 className="text-white font-bold text-2xl flex items-center gap-2">
+        <h3 className="text-foreground font-bold text-2xl flex items-center gap-2">
           <MessageCircle size={24} className="text-accent" />
           Join Our Community
         </h3>
-        <p className="text-gray-300 mt-4 text-base">
+        <p className="text-muted-foreground mt-4 text-base">
           Connect with 2,400+ networking professionals, share insights, and grow your network together.
         </p>
         <div className="mt-6 space-y-4">
-          <div className="flex items-center gap-3 text-gray-300">
+          <div className="flex items-center gap-3 text-muted-foreground">
             <Zap size={16} className="text-accent" />
             <span>Daily networking tips & strategies</span>
           </div>
-          <div className="flex items-center gap-3 text-gray-300">
+          <div className="flex items-center gap-3 text-muted-foreground">
             <Users size={16} className="text-accent" />
             <span>Direct access to industry experts</span>
           </div>
-          <div className="flex items-center gap-3 text-gray-300">
+          <div className="flex items-center gap-3 text-muted-foreground">
             <Lightbulb size={16} className="text-accent" />
             <span>Exclusive case studies and resources</span>
           </div>

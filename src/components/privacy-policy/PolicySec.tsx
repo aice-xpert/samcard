@@ -18,10 +18,10 @@ export function PolicySection({ id, icon: Icon, title, children }: PolicySection
           </div>
         )}
         <div className="flex-1">
-          <h2 className="text-2xl font-bold mb-4 text-white">
+          <h2 className="text-2xl font-bold mb-4 text-foreground">
             {title}
           </h2>
-          <div className="space-y-4 text-gray-300">
+          <div className="space-y-4 text-muted-foreground">
             {children}
           </div>
         </div>

@@ -8,13 +8,11 @@ import {
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="min-h-screen text-white bg-black">
-      {/* Main Content */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-black">
+    <div className="min-h-screen text-foreground bg-background">
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-background">
         <div className="max-w-4xl mx-auto space-y-12">
 
-          {/* Introduction */}
-          <p className="text-gray-300" style={{ lineHeight: 1.8 }}>
+          <p className="text-muted-foreground" style={{ lineHeight: 1.8 }}>
             Welcome to SamCard. We respect your privacy and are committed to protecting your
             personal data. This privacy policy will inform you about how we look after your personal
             data when you visit our website or use our services, and tell you about your privacy
@@ -24,7 +22,7 @@ export default function PrivacyPolicyPage() {
           {/* Information We Collect */}
           <PolicySection id="information-collection" icon={Database} title="Information We Collect">
             <div>
-              <h3 className="text-lg font-semibold mb-2 text-white">
+              <h3 className="text-lg font-semibold mb-2 text-foreground">
                 Personal Information You Provide
               </h3>
               <PolicyList items={[
@@ -36,7 +34,7 @@ export default function PrivacyPolicyPage() {
               ]} />
             </div>
             <div>
-              <h3 className="text-lg font-semibold mb-2 text-white">
+              <h3 className="text-lg font-semibold mb-2 text-foreground">
                 Information We Collect Automatically
               </h3>
               <PolicyList items={[
@@ -48,7 +46,7 @@ export default function PrivacyPolicyPage() {
               ]} />
             </div>
             <div>
-              <h3 className="text-lg font-semibold mb-2 text-white">
+              <h3 className="text-lg font-semibold mb-2 text-foreground">
                 Information from Third Parties
               </h3>
               <PolicyList items={[
@@ -152,9 +150,8 @@ export default function PrivacyPolicyPage() {
             <p>When we no longer need your personal information, we will securely delete or anonymize it.</p>
           </PolicySection>
 
-          {/* International Transfers */}
-          <div className="space-y-4 text-gray-300">
-            <h2 className="text-2xl font-bold text-white">
+          <div className="space-y-4 text-muted-foreground">
+            <h2 className="text-2xl font-bold text-foreground">
               International Data Transfers
             </h2>
             <p>
@@ -170,9 +167,8 @@ export default function PrivacyPolicyPage() {
             ]} />
           </div>
 
-          {/* Children */}
-          <div className="space-y-4 text-gray-300">
-            <h2 className="text-2xl font-bold text-white">
+          <div className="space-y-4 text-muted-foreground">
+            <h2 className="text-2xl font-bold text-foreground">
               Children&apos;s Privacy
             </h2>
             <p>
@@ -183,9 +179,8 @@ export default function PrivacyPolicyPage() {
             </p>
           </div>
 
-          {/* Third-Party Links */}
-          <div className="space-y-4 text-gray-300">
-            <h2 className="text-2xl font-bold text-white">
+          <div className="space-y-4 text-muted-foreground">
+            <h2 className="text-2xl font-bold text-foreground">
               Third-Party Links and Services
             </h2>
             <p>
@@ -196,9 +191,8 @@ export default function PrivacyPolicyPage() {
             </p>
           </div>
 
-          {/* Changes */}
-          <div className="space-y-4 text-gray-300">
-            <h2 className="text-2xl font-bold text-white">
+          <div className="space-y-4 text-muted-foreground">
+            <h2 className="text-2xl font-bold text-foreground">
               Changes to This Privacy Policy
             </h2>
             <p>We may update this privacy policy and will notify you of material changes by:</p>
@@ -242,7 +236,6 @@ export default function PrivacyPolicyPage() {
             </PolicyCallout>
           </PolicySection>
 
-          {/* GDPR / CCPA */}
           <div
             className="p-6 rounded-xl space-y-6"
             style={{
@@ -250,11 +243,11 @@ export default function PrivacyPolicyPage() {
               border: '1px solid rgba(0, 180, 0, 0.3)',
             }}
           >
-            <h2 className="text-2xl font-bold text-white">
+            <h2 className="text-2xl font-bold text-foreground">
               Additional Information for EU and California Residents
             </h2>
-            <div className="text-gray-300">
-              <h3 className="text-lg font-semibold mb-2 text-white">
+            <div className="text-muted-foreground">
+              <h3 className="text-lg font-semibold mb-2 text-foreground">
                 EU Residents (GDPR)
               </h3>
               <p>
@@ -263,8 +256,8 @@ export default function PrivacyPolicyPage() {
                 with a supervisory authority.
               </p>
             </div>
-            <div className="text-gray-300">
-              <h3 className="text-lg font-semibold mb-2 text-white">
+            <div className="text-muted-foreground">
+              <h3 className="text-lg font-semibold mb-2 text-foreground">
                 California Residents (CCPA)
               </h3>
               <p>

@@ -14,16 +14,16 @@ export default function FeaturedArticle({ article }: FeaturedArticleProps) {
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className="grid md:grid-cols-3 gap-10 border border-accent/40 rounded-3xl p-10 bg-white/5"
+      className="grid md:grid-cols-3 gap-10 border border-accent/40 rounded-3xl p-10 bg-muted"
     >
       <div className="md:col-span-2 space-y-5">
         <div className="inline-flex items-center gap-2 text-accent">
           <TrendingUp size={16} />
           Featured Article
         </div>
-        <h2 className="text-4xl font-bold text-white">{article.title}</h2>
-        <p className="text-gray-400 text-lg">{article.excerpt}</p>
-        <div className="flex gap-4 text-sm text-gray-400">
+        <h2 className="text-4xl font-bold text-foreground">{article.title}</h2>
+        <p className="text-muted-foreground text-lg">{article.excerpt}</p>
+        <div className="flex gap-4 text-sm text-muted-foreground">
           <span className="flex items-center gap-1">
             <Calendar size={14} />
             {article.date}
@@ -42,7 +42,7 @@ export default function FeaturedArticle({ article }: FeaturedArticleProps) {
         </Link>
       </div>
       <div className="hidden md:flex items-center justify-center bg-gradient-to-br from-accent/20 to-theme-digital-green/20 rounded-2xl">
-        <BookOpen size={60} className="text-white/40" />
+        <BookOpen size={60} className="text-muted-foreground/40" />
       </div>
     </motion.div>
   );

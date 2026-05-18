@@ -1,6 +1,7 @@
 "use client";
 import { Send } from "lucide-react";
 import { useState } from "react";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface FormData {
   name: string;
@@ -21,6 +22,7 @@ const INITIAL_FORM_DATA: FormData = {
 };
 
 export function ContactForm() {
+  const { isDark } = useTheme();
   const [formData, setFormData] = useState<FormData>(INITIAL_FORM_DATA);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
@@ -43,22 +45,26 @@ export function ContactForm() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const inputClass =
-    "w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-600 focus:outline-none focus:border-theme-kelly-green focus:ring-1 focus:ring-theme-kelly-green/30 transition-colors";
+  const inputClass = `w-full px-4 py-3 border rounded-lg transition-colors focus:outline-none focus:border-theme-kelly-green focus:ring-1 focus:ring-theme-kelly-green/30 ${
+    isDark
+      ? "bg-white/5 border-white/10 text-white placeholder-gray-600"
+      : "bg-input-background border-input text-foreground placeholder-muted-foreground"
+  }`;
 
   return (
     <div className="space-y-8 h-full p-6 rounded-xl shadow">
       <div>
-        <h2 className="text-3xl font-bold text-white mb-4">Send Us a Message</h2>
-        <p className="text-gray-400">
+        <h2 className="text-3xl font-bold text-foreground mb-4">Send Us a Message</h2>
+        <p className="text-muted-foreground">
           Fill out the form below and our team will get back to you within 24 hours.
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Name */}
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
+          <label htmlFor="name" className={`block text-sm font-medium mb-2 ${
+            isDark ? "text-gray-300" : "text-foreground"
+          }`}>
             Full Name *
           </label>
           <input
@@ -68,9 +74,10 @@ export function ContactForm() {
           />
         </div>
 
-        {/* Email */}
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+          <label htmlFor="email" className={`block text-sm font-medium mb-2 ${
+            isDark ? "text-gray-300" : "text-foreground"
+          }`}>
             Email Address *
           </label>
           <input
@@ -80,10 +87,11 @@ export function ContactForm() {
           />
         </div>
 
-        {/* Company & Phone */}
         <div className="grid md:grid-cols-2 gap-6">
           <div>
-            <label htmlFor="company" className="block text-sm font-medium text-gray-300 mb-2">
+            <label htmlFor="company" className={`block text-sm font-medium mb-2 ${
+              isDark ? "text-gray-300" : "text-foreground"
+            }`}>
               Company Name
             </label>
             <input
@@ -93,7 +101,9 @@ export function ContactForm() {
             />
           </div>
           <div>
-            <label htmlFor="phone" className="block text-sm font-medium text-gray-300 mb-2">
+            <label htmlFor="phone" className={`block text-sm font-medium mb-2 ${
+              isDark ? "text-gray-300" : "text-foreground"
+            }`}>
               Phone Number
             </label>
             <input
@@ -104,9 +114,10 @@ export function ContactForm() {
           </div>
         </div>
 
-        {/* Subject */}
         <div>
-          <label htmlFor="subject" className="block text-sm font-medium text-gray-300 mb-2">
+          <label htmlFor="subject" className={`block text-sm font-medium mb-2 ${
+            isDark ? "text-gray-300" : "text-foreground"
+          }`}>
             Subject *
           </label>
           <select
@@ -114,19 +125,20 @@ export function ContactForm() {
             value={formData.subject} onChange={handleChange}
             className={inputClass}
           >
-            <option value="general" className="bg-black">General Inquiry</option>
-            <option value="sales" className="bg-black">Sales &amp; Pricing</option>
-            <option value="support" className="bg-black">Technical Support</option>
-            <option value="partnership" className="bg-black">Partnership Opportunities</option>
-            <option value="feedback" className="bg-black">Feedback &amp; Suggestions</option>
-            <option value="press" className="bg-black">Press &amp; Media</option>
-            <option value="other" className="bg-black">Other</option>
+            <option value="general" className={isDark ? "bg-black" : "bg-white"}>General Inquiry</option>
+            <option value="sales" className={isDark ? "bg-black" : "bg-white"}>Sales &amp; Pricing</option>
+            <option value="support" className={isDark ? "bg-black" : "bg-white"}>Technical Support</option>
+            <option value="partnership" className={isDark ? "bg-black" : "bg-white"}>Partnership Opportunities</option>
+            <option value="feedback" className={isDark ? "bg-black" : "bg-white"}>Feedback &amp; Suggestions</option>
+            <option value="press" className={isDark ? "bg-black" : "bg-white"}>Press &amp; Media</option>
+            <option value="other" className={isDark ? "bg-black" : "bg-white"}>Other</option>
           </select>
         </div>
 
-        {/* Message */}
         <div>
-          <label htmlFor="message" className="block text-sm font-medium text-gray-300 mb-2">
+          <label htmlFor="message" className={`block text-sm font-medium mb-2 ${
+            isDark ? "text-gray-300" : "text-foreground"
+          }`}>
             Message *
           </label>
           <textarea
@@ -137,7 +149,6 @@ export function ContactForm() {
           />
         </div>
 
-        {/* Submit */}
         <button
           type="submit"
           disabled={isSubmitting}
@@ -156,7 +167,6 @@ export function ContactForm() {
           )}
         </button>
 
-        {/* Success */}
         {submitStatus === "success" && (
           <div className="p-4 bg-theme-kelly-green/10 border border-theme-kelly-green/30 rounded-lg text-accent">
             ✓ Thank you! Your message has been sent successfully. We&apos;ll get back to you soon.

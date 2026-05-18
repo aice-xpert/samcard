@@ -2,27 +2,30 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import {
-
-  ArrowRight
-
-} from "lucide-react";
-
-
+import { ArrowRight } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export function Hero() {
+  const { isDark } = useTheme();
+
   return (
     <section
       id="hero"
-      className="relative pt-48 pb-0 bg-gradient-to-b from-theme-devil-green via-black to-black overflow-x-hidden"
+      className={`relative pt-48 pb-0 overflow-x-hidden ${
+        isDark
+          ? "bg-gradient-to-b from-theme-devil-green via-black to-black"
+          : "bg-gradient-to-b from-theme-devil-green via-background to-background"
+      }`}
     >
-      {/* Background Glow */}
-      <div className="absolute inset-0 bg-gradient-to-b from-theme-devil-green/10 via-black to-black pointer-events-none" />
+      <div className={`absolute inset-0 pointer-events-none ${
+        isDark
+          ? "bg-gradient-to-b from-theme-devil-green/10 via-black to-black"
+          : "bg-gradient-to-b from-theme-devil-green/10 via-background to-background"
+      }`} />
 
       <div className="absolute top-20 left-10 w-72 h-72 bg-theme-devil-green/20 blur-3xl rounded-full" />
       <div className="absolute bottom-10 right-10 w-72 h-72 bg-theme-devil-green/20 blur-3xl rounded-full" />
 
-      {/* Hero Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
         <motion.div
@@ -32,24 +35,19 @@ export function Hero() {
           className="text-center max-w-4xl mx-auto pb-16"
         >
 
-        
-
-          {/* Heading */}
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-10" >
+          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-foreground mb-10" >
             Connect Smarter with{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-theme-devil-green to-accent">
               SamCard
             </span>
           </h1>
 
-          {/* Description */}
-          <p className="text-xl text-gray-300 leading-relaxed mb-8">
+          <p className="text-xl text-muted-foreground leading-relaxed mb-8">
             Share your digital business card instantly using QR codes,
             NFC, or a simple link. SamCard makes networking smarter,
             faster, and completely paperless.
           </p>
 
-          {/* Buttons */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -71,17 +69,17 @@ export function Hero() {
 
             <Link
               href="/pricing"
-              className="px-10 py-5 bg-white/5 backdrop-blur-sm text-white border border-white/20 rounded-xl
-              hover:bg-white/10 hover:border-[#49B618]/50
-              transition-all text-lg font-semibold"
+              className={`px-10 py-5 backdrop-blur-sm border rounded-xl transition-all text-lg font-semibold ${
+                isDark
+                  ? "bg-white/5 text-white border-white/20 hover:bg-white/10 hover:border-[#49B618]/50"
+                  : "bg-black/5 text-foreground border-gray-300 hover:bg-black/10 hover:border-[#49B618]/50"
+              }`}
             >
               View Pricing
             </Link>
           </motion.div>
         </motion.div>
       </div>
-
-  
 
     </section>
   );
