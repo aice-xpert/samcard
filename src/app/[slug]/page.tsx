@@ -1727,8 +1727,14 @@ export default function PublicCardPage() {
                 style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 34, zIndex: 4 }}>
                 <path d="M0,18 C70,0 170,34 275,8 C342,0 380,22 400,8 L400,60 L0,60 Z" fill={T.bg} />
               </svg>
+              {hasBrandLogo && content.logoPosition === 'top-left' && (
+                <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 6 }}><LogoBadge pos="top-left" /></div>
+              )}
+              {hasBrandLogo && content.logoPosition === 'top-right' && (
+                <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 6 }}><LogoBadge pos="top-right" /></div>
+              )}
               <div style={{ position: 'absolute', bottom: 8, right: 18, zIndex: 5 }}>
-                {hasBrandLogo ? (
+                {hasBrandLogo && !['top-left', 'top-right'].includes(content.logoPosition) ? (
                   <div style={{ width: 42, height: 42, borderRadius: '50%', background: '#fff', border: `2px solid ${T.green}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: '0 2px 10px rgba(0,0,0,0.2)' }}>
                     <img src={content.brandLogo} alt="Brand" style={{ width: 30, height: 30, objectFit: 'contain' }} />
                   </div>

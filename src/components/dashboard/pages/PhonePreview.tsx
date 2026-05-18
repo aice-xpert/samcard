@@ -908,8 +908,14 @@ function PhonePreviewComponent({
                 style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 30, zIndex: 4 }}>
                 <path d="M0,18 C70,0 170,34 275,8 C342,0 380,22 400,8 L400,60 L0,60 Z" fill={T.bg} />
               </svg>
+              {hasBrandLogo && logoPosition === 'top-left' && (
+                <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 6 }}><PLogo pos="top-left" /></div>
+              )}
+              {hasBrandLogo && logoPosition === 'top-right' && (
+                <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 6 }}><PLogo pos="top-right" /></div>
+              )}
               <div style={{ position: 'absolute', bottom: 12, right: 12, zIndex: 5 }}>
-                {hasBrandLogo ? (
+                {hasBrandLogo && !['top-left', 'top-right'].includes(logoPosition) ? (
                   <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#fff', border: `2px solid ${T.green}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
                     <img src={brandLogo} alt="Brand" style={{ width: 22, height: 22, objectFit: 'contain' }} />
                   </div>
