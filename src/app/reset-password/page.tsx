@@ -5,10 +5,12 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Lock, Eye, EyeOff, CheckCircle2, ArrowRight } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
 
 function ResetPasswordForm() {
+  const { isDark } = useTheme();
   const searchParams = useSearchParams();
   const router = useRouter();
   const token = searchParams.get("token");
@@ -55,10 +57,32 @@ function ResetPasswordForm() {
     }
   };
 
+  const pageBg = isDark
+    ? "bg-gradient-to-b from-theme-devil-green via-black to-black"
+    : "bg-gradient-to-b from-theme-devil-green/35 via-theme-kelly-green/10 to-white";
+
+  const cardBg = isDark
+    ? "bg-white/5 backdrop-blur-lg border-white/10 shadow-2xl shadow-theme-digital-green/10"
+    : "bg-white border-gray-200 shadow-2xl shadow-theme-digital-green/10";
+
+  const headingColor = isDark ? "text-white" : "text-gray-900";
+  const subtitleColor = isDark ? "text-gray-400" : "text-gray-500";
+  const labelColor = isDark ? "text-white" : "text-gray-700";
+  const iconColor = isDark ? "text-gray-400" : "text-gray-400";
+
+  const inputClass = isDark
+    ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:ring-accent"
+    : "bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:ring-theme-digital-green";
+
+  const backLinkColor = isDark ? "text-gray-400 hover:text-white" : "text-gray-500 hover:text-gray-800";
+  const footerTextColor = isDark ? "text-gray-400" : "text-gray-500";
+  const successTextColor = isDark ? "text-white" : "text-gray-900";
+  const successSubtext = isDark ? "text-gray-400" : "text-gray-500";
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-theme-devil-green via-black to-black pt-24 pb-5 flex items-center justify-center px-4 overflow-hidden relative">
-      <div className="absolute -top-20 -right-20 w-96 h-96 bg-gradient-to-br from-theme-kelly-green/30 to-theme-digital-green/20 blur-3xl rounded-full -z-10" />
-      <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-gradient-to-br from-theme-devil-green/40 to-theme-digital-green/20 blur-3xl rounded-full -z-10" />
+    <div className={`min-h-screen ${pageBg} pt-24 pb-5 flex items-center justify-center px-4 overflow-hidden relative`}>
+      <div className={`absolute -top-20 -right-20 w-96 h-96 blur-3xl rounded-full -z-10 ${isDark ? "bg-gradient-to-br from-theme-kelly-green/30 to-theme-digital-green/20" : "bg-gradient-to-br from-theme-kelly-green/45 to-theme-digital-green/30"}`} />
+      <div className={`absolute -bottom-20 -left-20 w-80 h-80 blur-3xl rounded-full -z-10 ${isDark ? "bg-gradient-to-br from-theme-devil-green/40 to-theme-digital-green/20" : "bg-gradient-to-br from-theme-devil-green/25 to-theme-digital-green/10"}`} />
 
       <div className="w-full max-w-md">
         <motion.div
@@ -67,23 +91,23 @@ function ResetPasswordForm() {
           transition={{ duration: 0.5 }}
           className="text-center mb-8"
         >
-          <h1 className="text-3xl font-bold text-white mb-2">Set New Password</h1>
-          <p className="text-gray-400">Enter your new password below.</p>
+          <h1 className={`text-3xl font-bold ${headingColor} mb-2`}>Set New Password</h1>
+          <p className={subtitleColor}>Enter your new password below.</p>
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 shadow-2xl shadow-theme-digital-green/10"
+          className={`rounded-2xl p-8 border ${cardBg}`}
         >
           {success ? (
             <div className="text-center space-y-4">
               <div className="flex justify-center mb-2">
                 <CheckCircle2 className="w-12 h-12 text-theme-kelly-green" />
               </div>
-              <div className="text-white font-semibold text-lg">Password updated!</div>
-              <p className="text-gray-400 text-sm">Redirecting you to login...</p>
+              <div className={`font-semibold text-lg ${successTextColor}`}>Password updated!</div>
+              <p className={`${successSubtext} text-sm`}>Redirecting you to login...</p>
               <Link href="/login" className="text-sm text-accent hover:text-theme-digital-green transition-colors">
                 Go to login now
               </Link>
@@ -91,21 +115,21 @@ function ResetPasswordForm() {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-white mb-2">New Password</label>
+                <label className={`block text-sm font-medium ${labelColor} mb-2`}>New Password</label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                  <Lock className={`absolute left-3 top-1/2 -translate-y-1/2 ${iconColor}`} size={20} />
                   <input
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => { setPassword(e.target.value); setError(null); }}
                     placeholder="At least 8 characters"
                     required
-                    className="w-full pl-11 pr-11 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
+                    className={`w-full pl-11 pr-11 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all ${inputClass}`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                    className={`absolute right-3 top-1/2 -translate-y-1/2 ${iconColor} ${isDark ? "hover:text-white" : "hover:text-gray-700"} transition-colors`}
                   >
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
@@ -113,16 +137,16 @@ function ResetPasswordForm() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white mb-2">Confirm Password</label>
+                <label className={`block text-sm font-medium ${labelColor} mb-2`}>Confirm Password</label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                  <Lock className={`absolute left-3 top-1/2 -translate-y-1/2 ${iconColor}`} size={20} />
                   <input
                     type={showPassword ? "text" : "password"}
                     value={confirm}
                     onChange={(e) => { setConfirm(e.target.value); setError(null); }}
                     placeholder="Repeat your password"
                     required
-                    className="w-full pl-11 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
+                    className={`w-full pl-11 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all ${inputClass}`}
                   />
                 </div>
               </div>
@@ -153,7 +177,7 @@ function ResetPasswordForm() {
             </form>
           )}
 
-          <p className="mt-6 text-center text-sm text-gray-400">
+          <p className={`mt-6 text-center text-sm ${footerTextColor}`}>
             <Link href="/forgot-password" className="text-accent hover:text-theme-digital-green transition-colors">
               Request a new reset link
             </Link>
@@ -166,7 +190,7 @@ function ResetPasswordForm() {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="mt-6 text-center"
         >
-          <Link href="/" className="text-sm text-gray-400 hover:text-white transition-colors">
+          <Link href="/" className={`text-sm ${backLinkColor} transition-colors`}>
             ← Back to home
           </Link>
         </motion.div>

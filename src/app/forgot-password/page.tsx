@@ -4,9 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Mail, ArrowRight, CheckCircle2 } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
 
 export default function ForgotPasswordPage() {
+  const { isDark } = useTheme();
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,10 +36,32 @@ export default function ForgotPasswordPage() {
     }
   };
 
+  const pageBg = isDark
+    ? "bg-gradient-to-b from-theme-devil-green via-black to-black"
+    : "bg-gradient-to-b from-theme-devil-green/35 via-theme-kelly-green/10 to-white";
+
+  const cardBg = isDark
+    ? "bg-white/5 backdrop-blur-lg border-white/10 shadow-2xl shadow-theme-digital-green/10"
+    : "bg-white border-gray-200 shadow-2xl shadow-theme-digital-green/10";
+
+  const headingColor = isDark ? "text-white" : "text-gray-900";
+  const subtitleColor = isDark ? "text-gray-400" : "text-gray-500";
+  const labelColor = isDark ? "text-white" : "text-gray-700";
+  const iconColor = isDark ? "text-gray-400" : "text-gray-400";
+
+  const inputClass = isDark
+    ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:ring-accent"
+    : "bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:ring-theme-digital-green";
+
+  const backLinkColor = isDark ? "text-gray-400 hover:text-white" : "text-gray-500 hover:text-gray-800";
+  const footerTextColor = isDark ? "text-gray-400" : "text-gray-500";
+  const successTextColor = isDark ? "text-white" : "text-gray-900";
+  const successSubtext = isDark ? "text-gray-400" : "text-gray-500";
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-theme-devil-green via-black to-black pt-24 pb-5 flex items-center justify-center px-4 overflow-hidden relative">
-      <div className="absolute -top-20 -right-20 w-96 h-96 bg-gradient-to-br from-theme-kelly-green/30 to-theme-digital-green/20 blur-3xl rounded-full -z-10" />
-      <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-gradient-to-br from-theme-devil-green/40 to-theme-digital-green/20 blur-3xl rounded-full -z-10" />
+    <div className={`min-h-screen ${pageBg} pt-24 pb-5 flex items-center justify-center px-4 overflow-hidden relative`}>
+      <div className={`absolute -top-20 -right-20 w-96 h-96 blur-3xl rounded-full -z-10 ${isDark ? "bg-gradient-to-br from-theme-kelly-green/30 to-theme-digital-green/20" : "bg-gradient-to-br from-theme-kelly-green/45 to-theme-digital-green/30"}`} />
+      <div className={`absolute -bottom-20 -left-20 w-80 h-80 blur-3xl rounded-full -z-10 ${isDark ? "bg-gradient-to-br from-theme-devil-green/40 to-theme-digital-green/20" : "bg-gradient-to-br from-theme-devil-green/25 to-theme-digital-green/10"}`} />
 
       <div className="w-full max-w-md">
         <motion.div
@@ -46,10 +70,10 @@ export default function ForgotPasswordPage() {
           transition={{ duration: 0.5 }}
           className="text-center mb-8"
         >
-          <h1 className="text-3xl font-bold text-white mb-2">
+          <h1 className={`text-3xl font-bold ${headingColor} mb-2`}>
             Forgot Your Password?
           </h1>
-          <p className="text-gray-400">
+          <p className={subtitleColor}>
             Enter your email and we will send you a reset link.
           </p>
         </motion.div>
@@ -58,16 +82,16 @@ export default function ForgotPasswordPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 shadow-2xl shadow-theme-digital-green/10"
+          className={`rounded-2xl p-8 border ${cardBg}`}
         >
           {!submitted ? (
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-white mb-2">
+                <label htmlFor="email" className={`block text-sm font-medium ${labelColor} mb-2`}>
                   Email Address
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                  <Mail className={`absolute left-3 top-1/2 -translate-y-1/2 ${iconColor}`} size={20} />
                   <input
                     id="email"
                     type="email"
@@ -75,7 +99,7 @@ export default function ForgotPasswordPage() {
                     onChange={(e) => { setEmail(e.target.value); setError(null); }}
                     placeholder="you@example.com"
                     required
-                    className="w-full pl-11 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
+                    className={`w-full pl-11 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all ${inputClass}`}
                   />
                 </div>
               </div>
@@ -109,9 +133,9 @@ export default function ForgotPasswordPage() {
               <div className="flex justify-center mb-2">
                 <CheckCircle2 className="w-12 h-12 text-theme-kelly-green" />
               </div>
-              <div className="text-white font-semibold text-lg">Check your inbox!</div>
-              <p className="text-gray-400 text-sm leading-relaxed">
-                We sent a password reset link to <span className="text-white font-medium">{email}</span>.<br />
+              <div className={`font-semibold text-lg ${successTextColor}`}>Check your inbox!</div>
+              <p className={`${successSubtext} text-sm leading-relaxed`}>
+                We sent a password reset link to <span className={`font-medium ${successTextColor}`}>{email}</span>.<br />
                 Check your spam folder if you don&apos;t see it.
               </p>
               <button
@@ -123,7 +147,7 @@ export default function ForgotPasswordPage() {
             </div>
           )}
 
-          <p className="mt-6 text-center text-sm text-gray-400">
+          <p className={`mt-6 text-center text-sm ${footerTextColor}`}>
             Remembered your password?{" "}
             <Link
               href="/login"
@@ -142,7 +166,7 @@ export default function ForgotPasswordPage() {
         >
           <Link
             href="/"
-            className="text-sm text-gray-400 hover:text-white transition-colors"
+            className={`text-sm ${backLinkColor} transition-colors`}
           >
             ← Back to home
           </Link>
