@@ -152,7 +152,6 @@ export function Settings() {
     const { profile, setProfile } = useUser();
 
     const [profileName, setProfileName] = useState(profile.name);
-    const [profileEmail, setProfileEmail] = useState(profile.email);
     const [profilePhone, setProfilePhone] = useState(profile.phone);
     const [timezone, setTimezone] = useState(profile.timezone);
     const [language, setLanguage] = useState(profile.language);
@@ -161,7 +160,6 @@ export function Settings() {
 
     useEffect(() => {
         setProfileName(profile.name);
-        setProfileEmail(profile.email);
         setProfilePhone(profile.phone);
         setTimezone(profile.timezone);
         setLanguage(profile.language);
@@ -245,7 +243,7 @@ export function Settings() {
         setProfileSaving(true);
         try {
             await updateUserProfile({ name: profileName, phone: profilePhone, timezone, language, avatar: profileAvatar });
-            setProfile({ name: profileName, email: profileEmail, phone: profilePhone, timezone, language, avatar: profileAvatar });
+            setProfile({ name: profileName, phone: profilePhone, timezone, language, avatar: profileAvatar });
             addToast("Profile updated successfully!");
         } catch (err: any) {
             addToast("Failed to update profile: " + (err.message || "Unknown error"), "error");
@@ -344,7 +342,7 @@ export function Settings() {
 
     const handleExportData = async () => {
         setExportLoading(true); await new Promise((r) => setTimeout(r, 2000));
-        const data = { exportDate: new Date().toISOString(), account: { name: profileName, email: profileEmail, plan: "Pro" }, cards: cards.map((c) => ({ brand: c.brand, last4: c.last4 })) };
+        const data = { exportDate: new Date().toISOString(), account: { name: profileName, email: profile.email, plan: "Pro" }, cards: cards.map((c) => ({ brand: c.brand, last4: c.last4 })) };
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
         const url = URL.createObjectURL(blob); const a = document.createElement("a");
         a.href = url; a.download = `samcard-export-${new Date().toISOString().split("T")[0]}.json`;
@@ -395,7 +393,7 @@ export function Settings() {
                                 </div>
                                 <div>
                                     <p className="text-sm font-semibold text-foreground">{profileName}</p>
-                                    <p className="text-xs text-muted-foreground mt-0.5">{profileEmail}</p>
+                                    <p className="text-xs text-muted-foreground mt-0.5">{profile.email}</p>
                                     <label className="text-[10px] text-accent hover:text-foreground mt-1 transition-colors cursor-pointer">
                                         Change avatar
                                         <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
@@ -406,7 +404,7 @@ export function Settings() {
                                 <div><Label className="text-xs text-muted-foreground mb-1.5">Full Name</Label>
                                     <Input value={profileName} onChange={(e) => setProfileName(e.target.value)} className="bg-input border-border text-foreground h-10 rounded-xl text-sm" /></div>
                                 <div><Label className="text-xs text-muted-foreground mb-1.5">Email</Label>
-                                    <Input value={profileEmail} onChange={(e) => setProfileEmail(e.target.value)} className="bg-input border-border text-foreground h-10 rounded-xl text-sm" /></div>
+                                    <div className="h-10 px-3 rounded-xl bg-input/30 border border-border text-foreground/70 text-sm flex items-center">{profile.email}</div></div>
                                 <div><Label className="text-xs text-muted-foreground mb-1.5">Phone</Label>
                                     <Input value={profilePhone} onChange={(e) => setProfilePhone(e.target.value)} className="bg-input border-border text-foreground h-10 rounded-xl text-sm" /></div>
                                 <div><Label className="text-xs text-muted-foreground mb-1.5">Timezone</Label>
