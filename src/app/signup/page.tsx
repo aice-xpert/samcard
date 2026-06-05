@@ -163,13 +163,11 @@ export default function SignupPage() {
               <span className={`text-sm ${socialTextColor}`}>Google</span>
             </button>
 
-            {/* Facebook auth coming soon */}
             <button
               type="button"
-              onClick={() => {}} // handleSocialSignIn("facebook")
-              disabled={true} // {isLoading}
+              onClick={() => handleSocialSignIn("facebook")}
+              disabled={isLoading}
               className={`py-3 flex items-center justify-center gap-2 border rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed ${socialBtnClass}`}
-              title="Facebook authentication coming soon"
             >
               <FaFacebook size={20} className="text-blue-600" />
               <span className={`text-sm ${socialTextColor}`}>Facebook</span>
