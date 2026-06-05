@@ -4,12 +4,8 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-<<<<<<< HEAD
-import { Lock, Eye, EyeOff, CheckCircle2, ArrowRight } from "lucide-react";
-import { useTheme } from "@/contexts/ThemeContext";
-=======
 import { Lock, Eye, EyeOff, CheckCircle2, ArrowRight, Mail } from "lucide-react";
->>>>>>> origin/main
+import { useTheme } from "@/contexts/ThemeContext";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
 
@@ -154,26 +150,22 @@ function ResetPasswordForm() {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
-<<<<<<< HEAD
-                <label className={`block text-sm font-medium ${labelColor} mb-2`}>New Password</label>
-=======
-                <label className="block text-sm font-medium text-white mb-2">Email Address</label>
+                <label className={`block text-sm font-medium ${labelColor} mb-2`}>Email Address</label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                  <Mail className={`absolute left-3 top-1/2 -translate-y-1/2 ${iconColor}`} size={20} />
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => { setEmail(e.target.value); setError(null); }}
                     placeholder="you@example.com"
                     required
-                    className="w-full pl-11 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
+                    className={`w-full pl-11 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all ${inputClass}`}
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white mb-2">New Password</label>
->>>>>>> origin/main
+                <label className={`block text-sm font-medium ${labelColor} mb-2`}>New Password</label>
                 <div className="relative">
                   <Lock className={`absolute left-3 top-1/2 -translate-y-1/2 ${iconColor}`} size={20} />
                   <input

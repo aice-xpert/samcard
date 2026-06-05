@@ -1,4 +1,4 @@
-{/* theme: converted */}
+{/* theme: converted */ }
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -87,51 +87,51 @@ function ConfirmModal({ open, title, description, confirmLabel, danger, loading,
 /* ═══════════════════════════════════════════════════════════════════════════
    Add Card Modal
    ═══════════════════════════════════════════════════════════════════════════ */
-function AddCardModal({ open, loading, onSave, onClose }: {
-    open: boolean; loading: boolean; onSave: (c: PaymentCard) => void; onClose: () => void;
-}) {
-    const [num, setNum] = useState(""); const [exp, setExp] = useState(""); const [cvc, setCvc] = useState(""); const [name, setName] = useState("");
-    if (!open) return null;
-    const fmt = (v: string) => v.replace(/\D/g, "").slice(0, 16).replace(/(.{4})/g, "$1 ").trim();
-    const fmtExp = (v: string) => { const d = v.replace(/\D/g, "").slice(0, 4); return d.length > 2 ? `${d.slice(0, 2)}/${d.slice(2)}` : d; };
-    const digits = num.replace(/\s/g, "");
-    const canSave = digits.length >= 15 && exp.length >= 5 && cvc.length >= 3 && name.length >= 2;
-    const handleSave = () => {
-        onSave({ id: `card-${Date.now()}`, brand: digits.startsWith("4") ? "Visa" : digits.startsWith("5") ? "Mastercard" : digits.startsWith("3") ? "Amex" : "Card", last4: digits.slice(-4), expiry: exp, isDefault: false });
-        setNum(""); setExp(""); setCvc(""); setName("");
-    };
-    return (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 backdrop-blur-sm p-0 sm:p-4" onClick={onClose}>
-            <div className="bg-popover border-border rounded-t-2xl sm:rounded-2xl p-5 sm:p-6 w-full sm:max-w-md shadow-2xl" onClick={(e) => e.stopPropagation()}>
-                <div className="flex items-center justify-between mb-5">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center"><CreditCard className="w-5 h-5 text-primary-foreground" /></div>
-                        <h3 className="text-foreground font-bold text-lg">Add Payment Method</h3>
-                    </div>
-                    <button onClick={onClose} className="w-8 h-8 rounded-lg bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors"><X className="w-4 h-4" /></button>
-                </div>
-                <div className="space-y-3">
-                    <div><label className="text-xs text-muted-foreground mb-1.5 block">Cardholder Name</label>
-                        <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="John Doe" className="w-full h-10 px-4 rounded-xl bg-input border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors" /></div>
-                    <div><label className="text-xs text-muted-foreground mb-1.5 block">Card Number</label>
-                        <input type="text" value={num} onChange={(e) => setNum(fmt(e.target.value))} placeholder="4242 4242 4242 4242" className="w-full h-10 px-4 rounded-xl bg-input border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors" /></div>
-                    <div className="grid grid-cols-2 gap-3">
-                        <div><label className="text-xs text-muted-foreground mb-1.5 block">Expiry</label>
-                            <input type="text" value={exp} onChange={(e) => setExp(fmtExp(e.target.value))} placeholder="MM/YY" className="w-full h-10 px-4 rounded-xl bg-input border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors" /></div>
-                        <div><label className="text-xs text-muted-foreground mb-1.5 block">CVC</label>
-                            <input type="text" value={cvc} onChange={(e) => setCvc(e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="123" className="w-full h-10 px-4 rounded-xl bg-input border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors" /></div>
-                    </div>
-                </div>
-                <div className="flex gap-3 mt-5">
-                    <Button variant="outline" className="flex-1 text-sm h-10 border-border text-muted-foreground hover:text-foreground hover:bg-accent/20 rounded-xl" onClick={onClose} disabled={loading}>Cancel</Button>
-                    <Button className="flex-1 text-sm h-10 rounded-xl" style={{ background: "linear-gradient(135deg,#008001,#49B618)" }} onClick={handleSave} disabled={!canSave || loading}>
-                        {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}Add Card
-                    </Button>
-                </div>
-            </div>
-        </div>
-    );
-}
+// function AddCardModal({ open, loading, onSave, onClose }: {
+//     open: boolean; loading: boolean; onSave: (c: PaymentCard) => void; onClose: () => void;
+// }) {
+//     const [num, setNum] = useState(""); const [exp, setExp] = useState(""); const [cvc, setCvc] = useState(""); const [name, setName] = useState("");
+//     if (!open) return null;
+//     const fmt = (v: string) => v.replace(/\D/g, "").slice(0, 16).replace(/(.{4})/g, "$1 ").trim();
+//     const fmtExp = (v: string) => { const d = v.replace(/\D/g, "").slice(0, 4); return d.length > 2 ? `${d.slice(0, 2)}/${d.slice(2)}` : d; };
+//     const digits = num.replace(/\s/g, "");
+//     const canSave = digits.length >= 15 && exp.length >= 5 && cvc.length >= 3 && name.length >= 2;
+//     const handleSave = () => {
+//         onSave({ id: `card-${Date.now()}`, brand: digits.startsWith("4") ? "Visa" : digits.startsWith("5") ? "Mastercard" : digits.startsWith("3") ? "Amex" : "Card", last4: digits.slice(-4), expiry: exp, isDefault: false });
+//         setNum(""); setExp(""); setCvc(""); setName("");
+//     };
+//     return (
+//         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 backdrop-blur-sm p-0 sm:p-4" onClick={onClose}>
+//             <div className="bg-popover border-border rounded-t-2xl sm:rounded-2xl p-5 sm:p-6 w-full sm:max-w-md shadow-2xl" onClick={(e) => e.stopPropagation()}>
+//                 <div className="flex items-center justify-between mb-5">
+//                     <div className="flex items-center gap-3">
+//                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center"><CreditCard className="w-5 h-5 text-primary-foreground" /></div>
+//                         <h3 className="text-foreground font-bold text-lg">Add Payment Method</h3>
+//                     </div>
+//                     <button onClick={onClose} className="w-8 h-8 rounded-lg bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors"><X className="w-4 h-4" /></button>
+//                 </div>
+//                 <div className="space-y-3">
+//                     <div><label className="text-xs text-muted-foreground mb-1.5 block">Cardholder Name</label>
+//                         <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="John Doe" className="w-full h-10 px-4 rounded-xl bg-input border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors" /></div>
+//                     <div><label className="text-xs text-muted-foreground mb-1.5 block">Card Number</label>
+//                         <input type="text" value={num} onChange={(e) => setNum(fmt(e.target.value))} placeholder="4242 4242 4242 4242" className="w-full h-10 px-4 rounded-xl bg-input border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors" /></div>
+//                     <div className="grid grid-cols-2 gap-3">
+//                         <div><label className="text-xs text-muted-foreground mb-1.5 block">Expiry</label>
+//                             <input type="text" value={exp} onChange={(e) => setExp(fmtExp(e.target.value))} placeholder="MM/YY" className="w-full h-10 px-4 rounded-xl bg-input border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors" /></div>
+//                         <div><label className="text-xs text-muted-foreground mb-1.5 block">CVC</label>
+//                             <input type="text" value={cvc} onChange={(e) => setCvc(e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="123" className="w-full h-10 px-4 rounded-xl bg-input border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors" /></div>
+//                     </div>
+//                 </div>
+//                 <div className="flex gap-3 mt-5">
+//                     <Button variant="outline" className="flex-1 text-sm h-10 border-border text-muted-foreground hover:text-foreground hover:bg-accent/20 rounded-xl" onClick={onClose} disabled={loading}>Cancel</Button>
+//                     <Button className="flex-1 text-sm h-10 rounded-xl" style={{ background: "linear-gradient(135deg,#008001,#49B618)" }} onClick={handleSave} disabled={!canSave || loading}>
+//                         {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}Add Card
+//                     </Button>
+//                 </div>
+//             </div>
+//         </div>
+//     );
+// }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Section Header
@@ -180,6 +180,12 @@ export function Settings() {
         }
     };
 
+    const handleRemoveAvatar = () => {
+        setProfileAvatar("");
+        setProfile({ avatar: "" });
+        addToast("Avatar removed", "success");
+    };
+
     // Password
     const [currentPw, setCurrentPw] = useState(""); const [newPw, setNewPw] = useState(""); const [confirmPw, setConfirmPw] = useState("");
     const [showCurrentPw, setShowCurrentPw] = useState(false); const [showNewPw, setShowNewPw] = useState(false);
@@ -189,7 +195,7 @@ export function Settings() {
 
     // Payment Cards
     const [cards, setCards] = useState<PaymentCard[]>([]);
-    const [addCardModal, setAddCardModal] = useState(false); const [addCardLoading, setAddCardLoading] = useState(false);
+    // const [addCardModal, setAddCardModal] = useState(false); const [addCardLoading, setAddCardLoading] = useState(false);
     const [deleteCardId, setDeleteCardId] = useState<string | null>(null); const [deleteCardLoading, setDeleteCardLoading] = useState(false);
 
     // Load all payment methods from API on mount
@@ -206,7 +212,7 @@ export function Settings() {
                     })));
                 }
             })
-            .catch(() => {});
+            .catch(() => { });
     }, []);
 
 
@@ -272,25 +278,25 @@ export function Settings() {
 
 
 
-    const handleAddCard = async (card: PaymentCard) => {
-        setAddCardLoading(true);
-        try {
-            const added = await savePaymentMethod({ brand: card.brand, last4: card.last4, expiry: card.expiry });
-            // Refresh list from API to be sure or just update local state
-            setCards((p) => {
-                if (added.isDefault) {
-                    return [...p.map((c) => ({ ...c, isDefault: false })), { ...added, id: added.id!, isDefault: true }];
-                }
-                return [...p, { ...added, id: added.id!, isDefault: false }];
-            });
-            setAddCardModal(false);
-            addToast(`${card.brand} •••• ${card.last4} added`);
-        } catch (err: any) {
-            addToast("Failed to add card: " + (err.message || "Unknown error"), "error");
-        } finally {
-            setAddCardLoading(false);
-        }
-    };
+    // const handleAddCard = async (card: PaymentCard) => {
+    //     setAddCardLoading(true);
+    //     try {
+    //         const added = await savePaymentMethod({ brand: card.brand, last4: card.last4, expiry: card.expiry });
+    //         // Refresh list from API to be sure or just update local state
+    //         setCards((p) => {
+    //             if (added.isDefault) {
+    //                 return [...p.map((c) => ({ ...c, isDefault: false })), { ...added, id: added.id!, isDefault: true }];
+    //             }
+    //             return [...p, { ...added, id: added.id!, isDefault: false }];
+    //         });
+    //         setAddCardModal(false);
+    //         addToast(`${card.brand} •••• ${card.last4} added`);
+    //     } catch (err: any) {
+    //         addToast("Failed to add card: " + (err.message || "Unknown error"), "error");
+    //     } finally {
+    //         setAddCardLoading(false);
+    //     }
+    // };
 
     const handleDeleteCard = async () => {
         if (!deleteCardId) return;
@@ -299,7 +305,7 @@ export function Settings() {
             await deletePaymentMethod(deleteCardId);
             const c = cards.find((x) => x.id === deleteCardId);
             const remaining = cards.filter((x) => x.id !== deleteCardId);
-            
+
             // If we deleted the default one, the backend will assign a new one
             // Let's just refresh the whole list to be safe
             const methods = await getPaymentMethods();
@@ -310,7 +316,7 @@ export function Settings() {
                 expiry: m.expiry,
                 isDefault: m.isDefault!
             })));
-            
+
             addToast(`Removed ${c?.brand} •••• ${c?.last4}`, "info");
         } catch (err: any) {
             addToast("Failed to remove card: " + (err.message || "Unknown error"), "error");
@@ -358,7 +364,7 @@ export function Settings() {
     return (
         <>
             <ToastContainer toasts={toasts} onRemove={removeToast} />
-            <AddCardModal open={addCardModal} loading={addCardLoading} onSave={handleAddCard} onClose={() => setAddCardModal(false)} />
+            {/* <AddCardModal open={addCardModal} loading={addCardLoading} onSave={handleAddCard} onClose={() => setAddCardModal(false)} /> */}
             <ConfirmModal open={!!deleteCardId} title="Remove Payment Method?" description={`Remove ${deleteCard?.brand} ending in ${deleteCard?.last4}? This cannot be undone.`} confirmLabel="Remove Card" danger loading={deleteCardLoading} onConfirm={handleDeleteCard} onClose={() => setDeleteCardId(null)} />
             <ConfirmModal open={deleteModal} title="Delete Your Account?" description="This action is permanent. All cards, contacts, and data will be deleted." confirmLabel="Delete Account" danger loading={deleteLoading} onConfirm={handleDeleteAccount} onClose={() => { setDeleteModal(false); setDeleteConfirmText(""); }}>
                 <div className="mt-3 space-y-3">
@@ -369,7 +375,7 @@ export function Settings() {
             </ConfirmModal>
 
             <div className="space-y-4 sm:space-y-6">
-                {/* ═══ ROW 1: Profile + Payment Methods ═══ */}
+                {/* ═══ ROW 1: Profile + Danger Zone ═══ */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                     {/* ── Profile ──────────────────────────────────────────────── */}
                     <Card className="bg-card border-border relative overflow-hidden" style={fadeIn(0)}>
@@ -394,10 +400,24 @@ export function Settings() {
                                 <div>
                                     <p className="text-sm font-semibold text-foreground">{profileName}</p>
                                     <p className="text-xs text-muted-foreground mt-0.5">{profile.email}</p>
-                                    <label className="text-[10px] text-accent hover:text-foreground mt-1 transition-colors cursor-pointer">
-                                        Change avatar
-                                        <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
-                                    </label>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <label className="text-[10px] text-accent hover:text-foreground transition-colors cursor-pointer">
+                                            Change avatar
+                                            <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+                                        </label>
+                                        {profileAvatar && (
+                                            <>
+                                                <span className="text-[10px] text-muted-foreground">|</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={handleRemoveAvatar}
+                                                    className="text-[10px] text-red-400 hover:text-red-300 transition-colors"
+                                                >
+                                                    Remove
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -424,94 +444,8 @@ export function Settings() {
                         </CardContent>
                     </Card>
 
-                    {/* ── Payment Methods ──────────────────────────────────────── */}
-                    <Card className="bg-card border-border relative overflow-hidden" style={fadeIn(100)}>
-                        <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-accent to-transparent opacity-[0.03] blur-3xl pointer-events-none" />
-                        <CardHeader className="border-b border-border pb-4">
-                            <div className="flex items-center justify-between">
-                                <CardTitle className="text-card-foreground text-base sm:text-lg flex items-center gap-2">
-                                    <SectionIcon icon={CreditCard} /><span>Payment Methods</span>
-                                </CardTitle>
-                                <Button size="sm" className="text-primary-foreground text-xs h-9 rounded-full gap-1.5" style={{ background: "linear-gradient(135deg,#008001,#49B618)" }} onClick={() => setAddCardModal(true)}>
-                                    <Plus className="w-3.5 h-3.5" />Add Card
-                                </Button>
-                            </div>
-                        </CardHeader>
-                        <CardContent className="pt-5 space-y-3">
-                            {cards.length === 0 && <p className="text-sm text-muted-foreground text-center py-8">No payment methods added</p>}
-                            {cards.map((card) => (
-                                <div key={card.id} className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl border border-border bg-muted/30 hover:bg-muted transition-colors group">
-                                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg ${card.isDefault ? "bg-gradient-to-br from-primary to-accent shadow-primary/20" : "bg-muted border border-border"}`}>
-                                        <CreditCard className={`w-5 h-5 ${card.isDefault ? "text-primary-foreground" : "text-muted-foreground"}`} />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2">
-                                            <p className="text-sm font-medium text-foreground">{card.brand} •••• {card.last4}</p>
-                                            {card.isDefault && <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-accent/15 text-accent border border-accent/20"><Star className="w-2.5 h-2.5" />Default</span>}
-                                        </div>
-                                        <p className="text-xs text-muted-foreground mt-0.5">Expires {card.expiry}</p>
-                                    </div>
-                                    <div className="flex items-center gap-1.5 flex-shrink-0">
-                                        {!card.isDefault && (
-                                            <Button variant="outline" size="sm" className="border-border text-muted-foreground hover:text-foreground hover:bg-accent/20 text-[10px] h-7 rounded-lg px-2" onClick={() => handleSetDefault(card.id)}>
-                                                Set Default
-                                            </Button>
-                                        )}
-                                        <button className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors" onClick={() => setDeleteCardId(card.id)}>
-                                            <Trash2 className="w-3.5 h-3.5" />
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
-                            <p className="text-[10px] text-muted-foreground/60 pt-1">Your default payment method is used for subscription billing and orders.</p>
-                        </CardContent>
-                    </Card>
-                </div>
-
-                {/* ═══ ROW 2: Security + Danger Zone ═══ */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                    {/* ── Security ─────────────────────────────────────────────── */}
-                    <Card className="bg-card border-border relative overflow-hidden" style={fadeIn(200)}>
-                        <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-primary to-transparent opacity-[0.04] blur-3xl pointer-events-none" />
-                        <CardHeader className="border-b border-border pb-4">
-                            <CardTitle className="text-card-foreground text-base sm:text-lg flex items-center gap-2"><SectionIcon icon={Shield} />Security</CardTitle>
-                        </CardHeader>
-                        <CardContent className="pt-5 space-y-5">
-                            {/* Password */}
-                            <div>
-                                <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2"><Key className="w-3.5 h-3.5 text-accent" />Change Password</h4>
-                                <div className="space-y-3">
-                                    <div className="relative">
-                                        <Label className="text-xs text-muted-foreground mb-1.5">Current Password</Label>
-                                        <Input type={showCurrentPw ? "text" : "password"} value={currentPw} onChange={(e) => { setCurrentPw(e.target.value); setPwError(""); }} className="bg-input border-border text-foreground pr-10 h-10 rounded-xl text-sm" placeholder="Enter current password" />
-                                        <button type="button" onClick={() => setShowCurrentPw(!showCurrentPw)} className="absolute right-3 bottom-3 text-muted-foreground hover:text-foreground transition-colors">
-                                            {showCurrentPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                        </button>
-                                    </div>
-                                    <div className="relative">
-                                        <Label className="text-xs text-muted-foreground mb-1.5">New Password</Label>
-                                        <Input type={showNewPw ? "text" : "password"} value={newPw} onChange={(e) => { setNewPw(e.target.value); setPwError(""); }} className="bg-input border-border text-foreground pr-10 h-10 rounded-xl text-sm" placeholder="Min. 8 characters" />
-                                        <button type="button" onClick={() => setShowNewPw(!showNewPw)} className="absolute right-3 bottom-3 text-muted-foreground hover:text-foreground transition-colors">
-                                            {showNewPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                        </button>
-                                        {newPw && <div className="mt-2 flex items-center gap-2"><div className="flex gap-1 flex-1">{[1, 2, 3, 4].map((i) => <div key={i} className="h-1 flex-1 rounded-full transition-all duration-300" style={{ background: i <= pwStrength ? pwColors[pwStrength] : "var(--muted)" }} />)}</div><span className="text-[10px] text-muted-foreground">{pwLabel}</span></div>}
-                                    </div>
-                                    <div>
-                                        <Label className="text-xs text-muted-foreground mb-1.5">Confirm Password</Label>
-                                        <Input type="password" value={confirmPw} onChange={(e) => { setConfirmPw(e.target.value); setPwError(""); }} className="bg-input border-border text-foreground h-10 rounded-xl text-sm" placeholder="Re-enter new password" />
-                                        {confirmPw && newPw && confirmPw !== newPw && <p className="text-[10px] text-destructive mt-1">Passwords don&apos;t match</p>}
-                                    </div>
-                                    {pwError && <div className="p-2.5 rounded-lg bg-destructive/10 border border-destructive/20"><p className="text-xs text-destructive">{pwError}</p></div>}
-                                    <Button className="text-primary-foreground text-xs h-9 rounded-full gap-1.5" style={{ background: "linear-gradient(135deg,#008001,#49B618)" }} onClick={handlePasswordChange} disabled={pwLoading || !currentPw || !newPw || !confirmPw}>
-                                        {pwLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}<Key className="w-3.5 h-3.5" />Update Password
-                                    </Button>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-
                     {/* ── Danger Zone ──────────────────────────────────────── */}
-                    <Card className="bg-card border-2 border-destructive/20 relative overflow-hidden" style={fadeIn(350)}>
+                    <Card className="bg-card border-2 border-destructive/20 relative overflow-hidden" style={fadeIn(100)}>
                         <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-destructive to-transparent opacity-[0.03] blur-3xl pointer-events-none" />
                         <CardHeader className="border-b border-destructive/10 pb-4">
                             <CardTitle className="text-destructive text-base sm:text-lg flex items-center gap-2"><SectionIcon icon={Trash2} gradient="bg-destructive/10 border border-destructive/20" />Danger Zone</CardTitle>
@@ -533,6 +467,46 @@ export function Settings() {
                         </CardContent>
                     </Card>
                 </div>
+
+                {/* ═══ ROW 2: Security ═══ */}
+                <Card className="bg-card border-border relative overflow-hidden" style={fadeIn(200)}>
+                    <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-primary to-transparent opacity-[0.04] blur-3xl pointer-events-none" />
+                    <CardHeader className="border-b border-border pb-4">
+                        <CardTitle className="text-card-foreground text-base sm:text-lg flex items-center gap-2"><SectionIcon icon={Shield} />Security</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-5 space-y-5">
+                        {/* Password */}
+                        <div>
+                            <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2"><Key className="w-3.5 h-3.5 text-accent" />Change Password</h4>
+                            <div className="space-y-3">
+                                <div className="relative">
+                                    <Label className="text-xs text-muted-foreground mb-1.5">Current Password</Label>
+                                    <Input type={showCurrentPw ? "text" : "password"} value={currentPw} onChange={(e) => { setCurrentPw(e.target.value); setPwError(""); }} className="bg-input border-border text-foreground pr-10 h-10 rounded-xl text-sm" placeholder="Enter current password" />
+                                    <button type="button" onClick={() => setShowCurrentPw(!showCurrentPw)} className="absolute right-3 bottom-3 text-muted-foreground hover:text-foreground transition-colors">
+                                        {showCurrentPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                    </button>
+                                </div>
+                                <div className="relative">
+                                    <Label className="text-xs text-muted-foreground mb-1.5">New Password</Label>
+                                    <Input type={showNewPw ? "text" : "password"} value={newPw} onChange={(e) => { setNewPw(e.target.value); setPwError(""); }} className="bg-input border-border text-foreground pr-10 h-10 rounded-xl text-sm" placeholder="Min. 8 characters" />
+                                    <button type="button" onClick={() => setShowNewPw(!showNewPw)} className="absolute right-3 bottom-3 text-muted-foreground hover:text-foreground transition-colors">
+                                        {showNewPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                    </button>
+                                    {newPw && <div className="mt-2 flex items-center gap-2"><div className="flex gap-1 flex-1">{[1, 2, 3, 4].map((i) => <div key={i} className="h-1 flex-1 rounded-full transition-all duration-300" style={{ background: i <= pwStrength ? pwColors[pwStrength] : "var(--muted)" }} />)}</div><span className="text-[10px] text-muted-foreground">{pwLabel}</span></div>}
+                                </div>
+                                <div>
+                                    <Label className="text-xs text-muted-foreground mb-1.5">Confirm Password</Label>
+                                    <Input type="password" value={confirmPw} onChange={(e) => { setConfirmPw(e.target.value); setPwError(""); }} className="bg-input border-border text-foreground h-10 rounded-xl text-sm" placeholder="Re-enter new password" />
+                                    {confirmPw && newPw && confirmPw !== newPw && <p className="text-[10px] text-destructive mt-1">Passwords don&apos;t match</p>}
+                                </div>
+                                {pwError && <div className="p-2.5 rounded-lg bg-destructive/10 border border-destructive/20"><p className="text-xs text-destructive">{pwError}</p></div>}
+                                <Button className="text-primary-foreground text-xs h-9 rounded-full gap-1.5" style={{ background: "linear-gradient(135deg,#008001,#49B618)" }} onClick={handlePasswordChange} disabled={pwLoading || !currentPw || !newPw || !confirmPw}>
+                                    {pwLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}<Key className="w-3.5 h-3.5" />Update Password
+                                </Button>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
         </>
     );
