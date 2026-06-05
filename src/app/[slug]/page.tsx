@@ -1167,7 +1167,7 @@ export default function PublicCardPage() {
             },
           });
           setCard(data);
-          track(slug, "view");
+          track(data.slug || slug, "view");
         }
       })
       .catch(() => setNotFound(true))
@@ -1200,13 +1200,19 @@ export default function PublicCardPage() {
   }, [card, slug]);
 
   const cardUrl = `${PUBLIC_BASE}/${slug}`;
+  const apiSlug = card?.slug || slug;
+
+  const trackEvent = useCallback((type: string) => {
+    if (!apiSlug) return;
+    track(apiSlug, type);
+  }, [apiSlug]);
 
   const copyLink = useCallback(async () => {
     await navigator.clipboard.writeText(window.location.href).catch(() => { });
     setCopied(true);
-    track(slug, "share");
+    trackEvent("share");
     setTimeout(() => setCopied(false), 2000);
-  }, [slug]);
+  }, [trackEvent]);
 
   // Download vCard / Add to Contacts
   const saveContact = useCallback(() => {
@@ -1236,11 +1242,11 @@ export default function PublicCardPage() {
     a.click();
     URL.revokeObjectURL(a.href);
     setContactSaved(true);
-    track(slug, "save");
-  }, [card, slug]);
+    trackEvent("save");
+  }, [card, trackEvent]);
 
   const submitLead = useCallback(async () => {
-    if (!slug || leadSubmitting) return;
+    if (!apiSlug || leadSubmitting) return;
 
     const name = leadForm.name.trim();
     const email = leadForm.email.trim();
@@ -1263,7 +1269,7 @@ export default function PublicCardPage() {
           ? new URLSearchParams(window.location.search)
           : null;
       const isPreview = searchParams?.get("preview") === "true";
-      const leadsUrl = `${BACKEND_URL}/api/public/cards/${slug}/leads${isPreview ? "?preview=true" : ""}`;
+      const leadsUrl = `${BACKEND_URL}/api/public/cards/${apiSlug}/leads${isPreview ? "?preview=true" : ""}`;
 
       const response = await fetch(leadsUrl, {
         method: "POST",
@@ -1286,7 +1292,7 @@ export default function PublicCardPage() {
             type: "success",
             message: "This contact was already submitted.",
           });
-          track(slug, "contact_submit");
+          trackEvent("contact_submit");
           return;
         }
         throw new Error(payload?.error || `Failed to submit (${response.status})`);
@@ -1297,7 +1303,7 @@ export default function PublicCardPage() {
         type: "success",
         message: "Successfully submitted!",
       });
-      track(slug, "contact_submit");
+      trackEvent("contact_submit");
     } catch (error) {
       setLeadSubmitFeedback({
         type: "error",
@@ -1309,7 +1315,7 @@ export default function PublicCardPage() {
     } finally {
       setLeadSubmitting(false);
     }
-  }, [leadForm, leadSubmitting, slug]);
+  }, [apiSlug, leadForm, leadSubmitting, trackEvent]);
 
   if (loading) return <LoadingScreen />;
   if (notFound || !card) return <NotFoundScreen />;
@@ -1319,6 +1325,16 @@ export default function PublicCardPage() {
   const S = content.sections;
   // Treat undefined S.profile as true (default visible)
   const profileVisible = (S?.profile as boolean | undefined) !== false;
+
+  const FONT_MAP: Record<string, string> = {
+    inter: 'Inter, sans-serif',
+    sora: 'Sora, sans-serif',
+    'dm-sans': '"DM Sans", sans-serif',
+    poppins: 'Poppins, sans-serif',
+    raleway: 'Raleway, sans-serif',
+    playfair: '"Playfair Display", serif',
+    mono: '"Fira Code", monospace',
+  };
 
   const T = {
     bg: D.bgColor || "#0a0f0a",
@@ -1330,7 +1346,7 @@ export default function PublicCardPage() {
     textPrimary: D.textPrimary || "#f0f0f0",
     textMuted: D.textMuted || "#7a9a7a",
     divider: `${D.accentColor}20`,
-    fontFamily: D.font === "inter" ? "Inter, sans-serif" : D.font || "inherit",
+    fontFamily: FONT_MAP[D.font] ?? 'Inter, sans-serif',
     nameFontSize: D.nameFontSize ?? 22,
     bodyFontSize: D.bodyFontSize ?? 13,
     boldHeadings: D.boldHeadings ?? true,
@@ -1394,7 +1410,7 @@ export default function PublicCardPage() {
   const company = fd.company || businessProfile.company || '';
   const profileImg = content.profileImage || '';
 
-  const PhotoEl = ({ height, objectFit = 'cover', objectPosition = 'center', className = '' }: { height?: number | string; objectFit?: string; objectPosition?: string; className?: string }) =>
+  const PhotoEl = ({ height, objectFit = 'cover', objectPosition = 'center 20%', className = '' }: { height?: number | string; objectFit?: string; objectPosition?: string; className?: string }) =>
     profileImg ? (
       <img src={profileImg} alt={name}
         style={{ width: '100%', height: height ?? '100%', objectFit: objectFit as 'cover', objectPosition, display: 'block' }}
@@ -1567,7 +1583,7 @@ export default function PublicCardPage() {
             </div>
             <div style={{ position: 'relative', background: T.card, padding: '10px 16px 10px 90px', minHeight: 80 }}>
               <div style={{ position: 'absolute', top: -28, left: 16, width: 64, height: 80, borderRadius: 8, overflow: 'hidden', border: `2px solid ${T.green}` }}>
-                <PhotoEl height="100%" />
+                <PhotoEl height="100%" objectPosition="top" />
               </div>
               <NameInfo color={T.textPrimary} titleColor={T.greenLight} companyColor={T.textMuted} />
             </div>
@@ -1590,7 +1606,7 @@ export default function PublicCardPage() {
             <div style={{ background: T.bg, paddingBottom: 6, textAlign: 'center' }}>
               <div style={{ marginTop: -52, display: 'flex', justifyContent: 'center', position: 'relative', zIndex: 2 }}>
                 <div style={{ width: 100, height: 100, borderRadius: '50%', overflow: 'hidden', border: '4px solid #fff', boxShadow: '0 4px 20px rgba(0,0,0,0.3)', background: T.card }}>
-                  <PhotoEl height="100%" />
+                  <PhotoEl height="100%" objectPosition="top" />
                 </div>
               </div>
               <div style={{ padding: '12px 20px 0' }}>
@@ -1612,7 +1628,7 @@ export default function PublicCardPage() {
               )}
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
                 <div style={{ width: 110, height: 110, borderRadius: '50%', overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.18)', background: T.card }}>
-                  <PhotoEl height="100%" />
+                  <PhotoEl height="100%" objectPosition="top" />
                 </div>
               </div>
               <NameInfo color={T.textPrimary} titleColor={T.textMuted} companyColor={T.green} />
@@ -1649,7 +1665,7 @@ export default function PublicCardPage() {
               width: '100%', height: 220, position: 'relative',
               clipPath: 'polygon(0 0, 100% 0, 100% 82%, 97% 70%, 93% 84%, 89% 70%, 85% 83%, 81% 68%, 77% 82%, 73% 70%, 69% 84%, 65% 70%, 61% 83%, 57% 69%, 53% 83%, 49% 70%, 45% 83%, 41% 70%, 37% 82%, 33% 68%, 29% 80%, 25% 68%, 21% 80%, 17% 67%, 13% 79%, 9% 67%, 5% 78%, 2% 67%, 0 76%)',
             }}>
-              <PhotoEl height="100%" />
+              <PhotoEl height="100%" objectPosition="center top" />
             </div>
             {hasBrandLogo && content.logoPosition === 'top-left' && (
               <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 10 }}><LogoBadge pos="top-left" /></div>
@@ -1717,8 +1733,14 @@ export default function PublicCardPage() {
                 style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 34, zIndex: 4 }}>
                 <path d="M0,18 C70,0 170,34 275,8 C342,0 380,22 400,8 L400,60 L0,60 Z" fill={T.bg} />
               </svg>
+              {hasBrandLogo && content.logoPosition === 'top-left' && (
+                <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 6 }}><LogoBadge pos="top-left" /></div>
+              )}
+              {hasBrandLogo && content.logoPosition === 'top-right' && (
+                <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 6 }}><LogoBadge pos="top-right" /></div>
+              )}
               <div style={{ position: 'absolute', bottom: 8, right: 18, zIndex: 5 }}>
-                {hasBrandLogo ? (
+                {hasBrandLogo && !['top-left', 'top-right'].includes(content.logoPosition) ? (
                   <div style={{ width: 42, height: 42, borderRadius: '50%', background: '#fff', border: `2px solid ${T.green}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: '0 2px 10px rgba(0,0,0,0.2)' }}>
                     <img src={content.brandLogo} alt="Brand" style={{ width: 30, height: 30, objectFit: 'contain' }} />
                   </div>
@@ -1757,12 +1779,7 @@ export default function PublicCardPage() {
                 <path d="M0,16 C70,0 165,30 265,8 C330,0 375,20 400,6 L400,60 L0,60 Z" fill={T.bg} />
               </svg>
             </div>
-            <div style={{ display: 'flex', gap: 14, justifyContent: 'center', padding: '14px 20px 6px', background: T.bg }}>
-              {[<Phone key="p" size={18} />, <Mail key="m" size={18} />, <MessageSquare key="c" size={18} />].map((icon, i) => (
-                <div key={i} style={{ width: 44, height: 44, borderRadius: '50%', background: T.green, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 3px 12px ${T.green}66` }}>{icon}</div>
-              ))}
-            </div>
-            <div style={{ background: T.bg, padding: '6px 20px 8px' }}>
+            <div style={{ background: T.bg, padding: '14px 20px 8px' }}>
               <NameInfo color={T.textPrimary} titleColor={T.greenLight} companyColor={T.textMuted} />
             </div>
             <div style={{ height: 48, background: `linear-gradient(to bottom, ${T.bg} 0%, ${T.bg}99 30%, ${T.bg}44 60%, transparent 100%)`, pointerEvents: 'none' }} />
@@ -1899,6 +1916,9 @@ export default function PublicCardPage() {
 
   return (
     <>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=Poppins:wght@400;500;600;700;800&family=Raleway:wght@400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700;800&family=Fira+Code:wght@400;500;700&display=swap" rel="stylesheet" />
       <style>{`
         *{box-sizing:border-box;margin:0;padding:0;}
         html,body{height:100%;overflow-x:hidden;}
@@ -1946,13 +1966,58 @@ export default function PublicCardPage() {
           {/* Render Profile hero at top only if it is first in order */}
           {profileIsFirst && renderProfileHero()}
 
+          {/* Tagline + quick-contact icons — always directly after the hero */}
+          {profileIsFirst && (
+            <>
+              {fd.tagline && (
+                <div style={{ padding: '10px 20px', textAlign: 'center' }}>
+                  <p style={{ fontSize: T.bodyFontSize, fontStyle: 'italic', lineHeight: 1.5, color: T.textMuted, fontFamily: T.fontFamily, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{fd.tagline}</p>
+                </div>
+              )}
+              {contactItems.length > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'center', gap: 12, padding: '12px', margin: '0 12px 10px', background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: T.cardRadius }}>
+                  {contactItems.slice(0, 4).map(({ href, Icon }, i) => (
+                    <a key={i} href={href} target="_blank" rel="noopener noreferrer"
+                      onClick={() => trackEvent("link_click")}
+                      style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                      <div style={{ width: 44, height: 44, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: `linear-gradient(135deg, ${T.green}, ${T.greenLight})`, boxShadow: `0 3px 10px ${T.green}66` }}>
+                        <Icon size={16} color="#fff" />
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+
           {/* ── Ordered sections – respects unifiedOrder ── */}
           {order.map(id => {
             // Profile is already handled above when it is first; if not first, render it here
             if (id === 'profile') {
               if (!profileIsFirst) {
-                // ✅ FIX: Add a unique key to avoid React warning
-                return <Fragment key={id}>{renderProfileHero()}</Fragment>;
+                return (
+                  <Fragment key={id}>
+                    {renderProfileHero()}
+                    {fd.tagline && (
+                      <div style={{ padding: '10px 20px', textAlign: 'center' }}>
+                        <p style={{ fontSize: T.bodyFontSize, fontStyle: 'italic', lineHeight: 1.5, color: T.textMuted, fontFamily: T.fontFamily, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{fd.tagline}</p>
+                      </div>
+                    )}
+                    {contactItems.length > 0 && (
+                      <div style={{ display: 'flex', justifyContent: 'center', gap: 12, padding: '12px', margin: '0 12px 10px', background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: T.cardRadius }}>
+                        {contactItems.slice(0, 4).map(({ href, Icon }, i) => (
+                          <a key={i} href={href} target="_blank" rel="noopener noreferrer"
+                            onClick={() => trackEvent("link_click")}
+                            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                            <div style={{ width: 44, height: 44, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: `linear-gradient(135deg, ${T.green}, ${T.greenLight})`, boxShadow: `0 3px 10px ${T.green}66` }}>
+                              <Icon size={16} color="#fff" />
+                            </div>
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                  </Fragment>
+                );
               }
               return null;
             }
@@ -1966,7 +2031,7 @@ export default function PublicCardPage() {
                   key={section.id}
                   section={section}
                   T={T}
-                  onLinkClick={() => track(slug, "link_click")}
+                  onLinkClick={() => trackEvent("link_click")}
                 />
               );
             }
@@ -2002,7 +2067,7 @@ export default function PublicCardPage() {
                     {contactItems.map(({ label, sub, href, Icon }, i) => (
                       <div key={i}>
                         <a href={href} target="_blank" rel="noopener noreferrer"
-                          onClick={() => track(slug, "link_click")} className="sc-row"
+                          onClick={() => trackEvent("link_click")} className="sc-row"
                           style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", color: "inherit", transition: "background .15s" }}>
                           <div style={{ width: 28, height: 28, borderRadius: 8, flexShrink: 0, background: `${T.green}28`, border: `1px solid ${T.green}44`, display: "flex", alignItems: "center", justifyContent: "center" }}>
                             <Icon size={13} color={T.greenLight} />
@@ -2055,7 +2120,7 @@ export default function PublicCardPage() {
                       const { Icon, color, label } = meta;
                       return (
                         <div key={i}>
-                          <button onClick={() => { track(slug, "link_click"); openLink(sl.url); }} className="sc-row"
+                          <button onClick={() => { trackEvent("link_click"); openLink(sl.url); }} className="sc-row"
                             style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", background: "none", border: "none", cursor: "pointer", textAlign: "left", transition: "background .15s" }}>
                             <div style={{ width: 36, height: 36, borderRadius: 10, background: `${color}22`, border: `1px solid ${color}44`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                               <Icon size={16} color={color} />
@@ -2079,7 +2144,7 @@ export default function PublicCardPage() {
                     <SectionHeader T={T} icon={<Link2 size={14} color="#fff" />} title="Links" />
                     {activeLinks.map((l, i) => (
                       <div key={i}>
-                        <button onClick={() => { track(slug, "link_click"); openLink(l.url); }} className="sc-row"
+                        <button onClick={() => { trackEvent("link_click"); openLink(l.url); }} className="sc-row"
                           style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", background: "none", border: "none", cursor: "pointer", textAlign: "left", transition: "background .15s" }}>
                           <div style={{ width: 32, height: 32, borderRadius: 8, background: `${T.green}22`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                             <Link2 size={14} color={T.greenLight} />
@@ -2107,7 +2172,7 @@ export default function PublicCardPage() {
                     </div>
                     <div style={{ padding: "0 16px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
                       {["Book on Calendly", "Add to Calendar"].map((label) => (
-                        <button key={label} onClick={() => { track(slug, "link_click"); openLink(fd.appointmentUrl!); }}
+                        <button key={label} onClick={() => { trackEvent("link_click"); openLink(fd.appointmentUrl!); }}
                           style={{ width: "100%", padding: "10px", borderRadius: 999, border: `1px solid ${T.green}59`, color: T.greenLight, background: `${T.green}1a`, fontWeight: 600, fontSize: T.bodyFontSize, cursor: "pointer", fontFamily: T.fontFamily }}>
                           {label}
                         </button>

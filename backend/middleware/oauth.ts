@@ -1,12 +1,12 @@
 /**
- * oauth.ts — Passport.js server-side OAuth for Google & GitHub
+ * oauth.ts — Passport.js server-side OAuth for Google & Facebook
  *
  * Mount this router in your main app:
  *   app.use("/api/auth/oauth", oauthRouter);
  *
  * Required env vars:
  *   GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
- *   GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET
+ *   FACEBOOK_CLIENT_ID, FACEBOOK_CLIENT_SECRET
  *   JWT_SECRET
  *   FRONTEND_URL  (e.g. http://localhost:3000)
  *   BACKEND_URL   (e.g. http://localhost:4000)
@@ -15,7 +15,7 @@
 import express from "express";
 import passport from "passport";
 import { Strategy as GoogleStrategy, Profile as GoogleProfile, VerifyCallback } from "passport-google-oauth20";
-import { Strategy as GitHubStrategy, Profile as GitHubProfile } from "passport-github2";
+import { Strategy as FacebookStrategy, Profile as FacebookProfile } from "passport-facebook";
 import jwt from "jsonwebtoken";
 import { supabase } from "../config/supabase";
 
@@ -32,7 +32,7 @@ async function handleOAuthUser(profile: {
   id: string;
   email: string;
   name: string;
-  provider: "google" | "github";
+  provider: "google" | "facebook";
 }): Promise<string> {
   const now = new Date().toISOString();
 
@@ -101,7 +101,7 @@ function sendSessionAndRedirect(
 }
 
 const googleConfigured = !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
-const githubConfigured = !!(process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET);
+const facebookConfigured = !!(process.env.FACEBOOK_CLIENT_ID && process.env.FACEBOOK_CLIENT_SECRET);
 
 // ── Google Strategy ───────────────────────────────────────────────────────────
 if (googleConfigured) {
@@ -129,23 +129,23 @@ if (googleConfigured) {
   console.warn("[oauth] Google OAuth disabled — GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET not set");
 }
 
-// ── GitHub Strategy ───────────────────────────────────────────────────────────
-if (githubConfigured) {
+// ── Facebook Strategy ─────────────────────────────────────────────────────────
+if (facebookConfigured) {
   passport.use(
-    new GitHubStrategy(
+    new FacebookStrategy(
       {
-        clientID: process.env.GITHUB_CLIENT_ID!,
-        clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-        callbackURL: `${BACKEND_URL}/api/auth/oauth/github/callback`,
-        scope: ["user:email"],
+        clientID: process.env.FACEBOOK_CLIENT_ID!,
+        clientSecret: process.env.FACEBOOK_CLIENT_SECRET!,
+        callbackURL: `${BACKEND_URL}/api/auth/oauth/facebook/callback`,
+        profileFields: ["id", "displayName", "emails", "picture"],
       },
-      async (_accessToken: string, _refreshToken: string, profile: GitHubProfile, done: (err: Error | null, user?: unknown) => void) => {
+      async (_accessToken: string, _refreshToken: string, profile: FacebookProfile, done: (err: Error | null, user?: unknown) => void) => {
         try {
           const email =
             (profile.emails as { value: string }[] | undefined)?.[0]?.value ??
-            `${profile.id}@github.noemail`;
-          const name = profile.displayName || profile.username || profile.id;
-          const token = await handleOAuthUser({ id: String(profile.id), email, name, provider: "github" });
+            `${profile.id}@facebook.noemail`;
+          const name = profile.displayName || profile.id;
+          const token = await handleOAuthUser({ id: String(profile.id), email, name, provider: "facebook" });
           done(null, { token } as unknown as Express.User);
         } catch (err) {
           done(err as Error);
@@ -154,7 +154,7 @@ if (githubConfigured) {
     )
   );
 } else {
-  console.warn("[oauth] GitHub OAuth disabled — GITHUB_CLIENT_ID / GITHUB_CLIENT_SECRET not set");
+  console.warn("[oauth] Facebook OAuth disabled — FACEBOOK_CLIENT_ID / FACEBOOK_CLIENT_SECRET not set");
 }
 
 // Passport needs these even if we're not using sessions
@@ -185,25 +185,25 @@ router.get(
     : [oauthNotConfigured("Google")])
 );
 
-// ── GitHub routes ─────────────────────────────────────────────────────────────
+// ── Facebook routes ───────────────────────────────────────────────────────────
 router.get(
-  "/github",
-  githubConfigured
-    ? passport.authenticate("github", { scope: ["user:email"], session: false })
-    : oauthNotConfigured("GitHub")
+  "/facebook",
+  facebookConfigured
+    ? passport.authenticate("facebook", { scope: ["email"], session: false })
+    : oauthNotConfigured("Facebook")
 );
 
 router.get(
-  "/github/callback",
-  ...(githubConfigured
+  "/facebook/callback",
+  ...(facebookConfigured
     ? [
-        passport.authenticate("github", { session: false, failureRedirect: `${FRONTEND_URL}/login?error=oauth_failed` }),
+        passport.authenticate("facebook", { session: false, failureRedirect: `${FRONTEND_URL}/login?error=oauth_failed` }),
         (req: express.Request, res: express.Response) => {
           const { token } = req.user as unknown as { token: string };
           sendSessionAndRedirect(res, token);
         },
       ]
-    : [oauthNotConfigured("GitHub")])
+    : [oauthNotConfigured("Facebook")])
 );
 
 export default router;

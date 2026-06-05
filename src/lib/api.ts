@@ -98,6 +98,13 @@ export async function updateUserProfile(payload: UpdateUserPayload) {
   });
 }
 
+export async function changePassword(currentPassword: string, newPassword: string) {
+  return apiRequest<{ success: boolean; message: string }>("/api/user/change-password", {
+    method: "PUT",
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+}
+
 // ─── Payment Method ─────────────────────────────────────────────────
 export interface ApiPaymentMethod {
   id?: string;

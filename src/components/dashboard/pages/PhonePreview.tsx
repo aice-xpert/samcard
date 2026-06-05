@@ -1,3 +1,4 @@
+{/* theme: converted */}
 "use client";
 
 import { useId, useState, useEffect, useMemo, memo, useCallback } from 'react';
@@ -195,7 +196,7 @@ function ProfileSection({ T, profileImage, formData, brandLogo, logoPosition, ha
           <img
             src={profileImage}
             alt={formData.name}
-            className="absolute inset-0 w-full h-full object-contain object-center"
+            className="absolute inset-0 w-full h-full object-cover object-top"
             style={{ backgroundColor: '#000' }}
           />
         ) : (
@@ -533,7 +534,7 @@ function PhonePreviewComponent({
 
   const PPhoto = ({ h, style: s }: { h?: number | string; style?: React.CSSProperties }) =>
     profileImage ? (
-      <img src={profileImage} alt={pName} style={{ width: '100%', height: h ?? '100%', objectFit: 'cover', display: 'block', ...s }} />
+      <img src={profileImage} alt={pName} style={{ width: '100%', height: h ?? '100%', objectFit: 'cover', objectPosition: 'center 20%', display: 'block', ...s }} />
     ) : (
       <div style={{ width: '100%', height: h ?? '100%', background: `linear-gradient(135deg, ${T.green}66 0%, ${T.bg} 50%, ${T.greenLight}44 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', ...s }}>
         <Upload className="w-7 h-7 opacity-30" style={{ color: T.greenLight }} />
@@ -729,7 +730,7 @@ function PhonePreviewComponent({
             </div>
             <div style={{ position: 'relative', background: T.card, padding: '8px 14px 6px 74px', minHeight: 70 }}>
               <div style={{ position: 'absolute', top: -22, left: 12, width: 52, height: 64, borderRadius: 6, overflow: 'hidden', border: `2px solid ${T.green}` }}>
-                <PPhoto h="100%" />
+                <PPhoto h="100%" style={{ objectPosition: 'top' }} />
               </div>
               <PNameInfo color={T.textPrimary} titleColor={T.greenLight} companyColor={T.textMuted} />
             </div>
@@ -752,7 +753,7 @@ function PhonePreviewComponent({
             <div style={{ background: T.bg, paddingBottom: 4, textAlign: 'center' }}>
               <div style={{ marginTop: -42, display: 'flex', justifyContent: 'center', position: 'relative', zIndex: 2 }}>
                 <div style={{ width: 80, height: 80, borderRadius: '50%', overflow: 'hidden', border: '3px solid #fff', boxShadow: '0 4px 16px rgba(0,0,0,0.3)', background: T.card }}>
-                  <PPhoto h="100%" />
+                  <PPhoto h="100%" style={{ objectPosition: 'top' }} />
                 </div>
               </div>
               <div style={{ padding: '8px 16px 0' }}>
@@ -773,7 +774,7 @@ function PhonePreviewComponent({
             )}
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
               <div style={{ width: 86, height: 86, borderRadius: '50%', overflow: 'hidden', boxShadow: '0 4px 18px rgba(0,0,0,0.15)', background: T.card }}>
-                <PPhoto h="100%" />
+                <PPhoto h="100%" style={{ objectPosition: 'top' }} />
               </div>
             </div>
             <PNameInfo color={T.textPrimary} titleColor={T.textMuted} companyColor={T.green} />
@@ -815,7 +816,7 @@ function PhonePreviewComponent({
               width: '100%', height: 170, position: 'relative',
               clipPath: 'polygon(0 0, 100% 0, 100% 80%, 97% 68%, 93% 82%, 89% 68%, 85% 81%, 81% 66%, 77% 80%, 73% 68%, 69% 82%, 65% 68%, 61% 81%, 57% 67%, 53% 81%, 49% 68%, 45% 81%, 41% 68%, 37% 80%, 33% 66%, 29% 78%, 25% 66%, 21% 78%, 17% 65%, 13% 77%, 9% 65%, 5% 76%, 2% 65%, 0 74%)',
             }}>
-              <PPhoto h="100%" />
+              <PPhoto h="100%" style={{ objectPosition: 'center top' }} />
             </div>
             {hasBrandLogo && logoPosition === 'top-left' && (
               <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 10 }}><PLogo pos="top-left" /></div>
@@ -907,8 +908,14 @@ function PhonePreviewComponent({
                 style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 30, zIndex: 4 }}>
                 <path d="M0,18 C70,0 170,34 275,8 C342,0 380,22 400,8 L400,60 L0,60 Z" fill={T.bg} />
               </svg>
+              {hasBrandLogo && logoPosition === 'top-left' && (
+                <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 6 }}><PLogo pos="top-left" /></div>
+              )}
+              {hasBrandLogo && logoPosition === 'top-right' && (
+                <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 6 }}><PLogo pos="top-right" /></div>
+              )}
               <div style={{ position: 'absolute', bottom: 12, right: 12, zIndex: 5 }}>
-                {hasBrandLogo ? (
+                {hasBrandLogo && !['top-left', 'top-right'].includes(logoPosition) ? (
                   <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#fff', border: `2px solid ${T.green}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
                     <img src={brandLogo} alt="Brand" style={{ width: 22, height: 22, objectFit: 'contain' }} />
                   </div>
@@ -947,12 +954,7 @@ function PhonePreviewComponent({
                 <path d="M0,16 C70,0 165,30 265,8 C330,0 375,20 400,6 L400,60 L0,60 Z" fill={T.bg} />
               </svg>
             </div>
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'center', padding: '10px 14px 4px', background: T.bg }}>
-              {[<Phone key="p" size={14} />, <Mail key="m" size={14} />, <MessageSquare key="c" size={14} />].map((icon, i) => (
-                <div key={i} style={{ width: 32, height: 32, borderRadius: '50%', background: T.green, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 2px 8px ${T.green}66` }}>{icon}</div>
-              ))}
-            </div>
-            <div style={{ background: T.bg, padding: '4px 14px 6px' }}>
+            <div style={{ background: T.bg, padding: '10px 14px 6px' }}>
               <PNameInfo color={T.textPrimary} titleColor={T.greenLight} companyColor={T.textMuted} />
             </div>
             <div style={{ height: 40, background: `linear-gradient(to bottom, ${T.bg} 0%, ${T.bg}99 30%, ${T.bg}44 60%, transparent 100%)`, pointerEvents: 'none' }} />
@@ -1004,7 +1006,7 @@ function PhonePreviewComponent({
           <div style={{ position: 'relative' }}>
             <div style={{ position: 'relative', minHeight: 220, width: '100%', overflow: 'hidden', background: '#000', display: 'flex', flexDirection: 'column', justifyItems: 'flex-end', justifyContent: 'flex-end' }}>
               {profileImage ? (
-                <img src={profileImage} alt={pName} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }} />
+                <img src={profileImage} alt={pName} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 20%', display: 'block' }} />
               ) : (
                 <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, ${T.green}66 0%, ${T.bg} 50%, ${T.greenLight}44 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Upload className="w-7 h-7 opacity-30" style={{ color: T.greenLight }} />
@@ -1066,24 +1068,22 @@ function PhonePreviewComponent({
       <style>{scrollCss}</style>
 
       {/* Panel wrapper */}
-      <div className="rounded-2xl p-4" style={{ background: '#000', border: `1px solid ${T.green}4d` }}>
+      <div className="rounded-2xl p-4 bg-card border-border" style={{ border: `1px solid ${T.green}4d` }}>
 
         {/* Top bar */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: T.greenLight }} />
-            <span className="text-sm font-semibold" style={{ color: T.textPrimary, ...ff }}>Live Preview</span>
+            <span className="text-sm font-semibold text-foreground" style={ff}>Live Preview</span>
           </div>
           <div className="flex gap-1.5">
             <button onClick={onPreviewOpen}
-              className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ background: '#1a1a1a', border: `1px solid ${T.green}33`, color: '#888' }}>
+              className="w-8 h-8 rounded-lg flex items-center justify-center bg-muted border-border text-muted-foreground hover:text-foreground hover:bg-accent/10">
               <Eye className="w-3.5 h-3.5" />
             </button>
             {showCopyButton && (
               <button onClick={onShareLink}
-                className="w-8 h-8 rounded-lg flex items-center justify-center"
-                style={{ background: '#1a1a1a', border: `1px solid ${T.green}33`, color: copied ? T.greenLight : '#888' }}>
+                className="w-8 h-8 rounded-lg flex items-center justify-center bg-muted border-border text-muted-foreground hover:text-foreground hover:bg-accent/10">
                 {copied ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
               </button>
             )}
@@ -1100,17 +1100,13 @@ function PhonePreviewComponent({
             }} />
 
           <div className="relative" style={{ zIndex: 1 }}>
-            <div className="rounded-[2.8rem] p-[3px]"
-              style={{
-                background: 'linear-gradient(160deg,#444,#1c1c1c)',
-                boxShadow: '0 0 0 1px rgba(255,255,255,0.06), 0 28px 70px rgba(0,0,0,0.95)',
-              }}>
+            <div className="rounded-[2.8rem] p-[3px] bg-muted/80 shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_28px_70px_rgba(0,0,0,0.95)]">
               <div className="rounded-[2.6rem] overflow-hidden" style={{ background: T.phoneBgStyle || T.bg, overflowX: 'hidden' }}>
                 {/* Status bar */}
                 <div className="relative flex items-center justify-between px-5 pt-2 pb-1" style={{ background: T.bg }}>
                   <div className="absolute top-0 left-1/2 -translate-x-1/2 flex items-end justify-center pb-[5px]"
                     style={{ width: 88, height: 26, background: T.bg, borderRadius: '0 0 18px 18px', zIndex: 10 }}>
-                    <div style={{ width: 40, height: 4, background: '#222', borderRadius: 999 }} />
+                    <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
                   </div>
                   <span className="text-[11px] font-bold" style={{ color: T.textPrimary, ...ff }}>{liveTime}</span>
                   <div className="flex items-center gap-[5px]">
@@ -1145,7 +1141,6 @@ function PhonePreviewComponent({
                     // Profile is handled here when not first
                     if (id === 'profile') {
                       if (!profileIsFirst) {
-                        // ✅ FIX: Add unique key to avoid React warning
                         return <div key={id}>{renderProfileHero()}</div>;
                       }
                       return null;
@@ -1181,9 +1176,8 @@ function PhonePreviewComponent({
                   <div className="flex items-center gap-2">
                     {showCopyButton && (
                       <button onClick={e => { e.stopPropagation(); onShareLink?.(); }}
-                        className="w-9 h-9 rounded-full flex items-center justify-center"
-                        style={{ background: '#1a1a1a', border: `1px solid ${T.green}4d` }}>
-                        {copied ? <Check className="w-4 h-4" style={{ color: T.greenLight }} /> : <Upload className="w-4 h-4" style={{ color: T.textMuted }} />}
+                        className="w-9 h-9 rounded-full flex items-center justify-center bg-muted border-border text-muted-foreground hover:text-foreground hover:bg-accent/10">
+                        {copied ? <Check className="w-4 h-4" style={{ color: T.greenLight }} /> : <Upload className="w-4 h-4" />}
                       </button>
                     )}
                   </div>
@@ -1220,19 +1214,13 @@ function PhonePreviewComponent({
 
         {/* Share panel */}
         {canShowCopy && (
-          <div className="mt-4 p-3 rounded-xl" style={{ background: `${T.green}0f`, border: `1px solid ${T.green}2e` }}>
+          <div className="mt-4 p-3 rounded-xl bg-muted/30 border-border">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: '#555', ...ff }}>Share Your Card</p>
+              <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground" style={ff}>Share Your Card</p>
               <button
                 type="button"
                 onClick={() => setCopyPublishedEnabled(prev => !prev)}
-                className="inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[10px] font-semibold"
-                style={{
-                  border: `1px solid ${copyPublishedEnabled ? T.greenLight : T.green}55`,
-                  color: copyPublishedEnabled ? T.greenLight : '#888',
-                  background: copyPublishedEnabled ? `${T.greenLight}1a` : 'transparent',
-                  ...ff,
-                }}
+                className="inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[10px] font-semibold border-border text-muted-foreground hover:text-foreground hover:bg-accent/10"
                 aria-pressed={copyPublishedEnabled}
               >
                 Published Link
@@ -1241,13 +1229,8 @@ function PhonePreviewComponent({
             {showCopyButton && (
               <div className="grid grid-cols-1 gap-2">
                 <button onClick={onShareLink}
-                  className="flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-medium"
-                  style={{
-                    border: copied ? `1px solid ${T.greenLight}66` : `1px solid ${T.green}33`,
-                    color: copied ? T.greenLight : '#888',
-                    background: copied ? `${T.greenLight}14` : 'transparent',
-                    ...ff,
-                  }}>
+                  className="flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-medium bg-muted/50 border-border text-muted-foreground hover:text-foreground hover:bg-accent/10"
+                  style={copied ? { borderColor: T.greenLight, color: T.greenLight, background: `${T.greenLight}14` } : {}}>
                   {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                   {copied ? 'Copied!' : 'Copy Link'}
                 </button>

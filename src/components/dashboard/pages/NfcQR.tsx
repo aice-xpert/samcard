@@ -1,3 +1,4 @@
+{/* theme: converted - with inline CSS variables for both light/dark modes */}
 "use client";
 
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
@@ -116,8 +117,8 @@ function LiveQrDisplay({ config, qrMatrix, qrN }: {
           style={{ background: 'radial-gradient(ellipse, #49B618, transparent 70%)' }} />
         <div className="relative rounded-2xl overflow-hidden"
           style={{
-            background: '#0c130c',
-            border: '1.5px solid rgba(0,128,1,0.4)',
+            background: 'var(--qr-bg-dark)',
+            border: '1.5px solid var(--qr-border)',
             boxShadow: '0 0 32px rgba(0,128,1,0.15), inset 0 1px 0 rgba(255,255,255,0.03)',
           }}
         >
@@ -137,8 +138,8 @@ function LiveQrDisplay({ config, qrMatrix, qrN }: {
         style={{ background: 'radial-gradient(ellipse, #49B618, transparent 70%)' }} />
       <div className="relative p-3 rounded-2xl"
         style={{
-          background: '#0c130c',
-          border: '1.5px solid rgba(0,128,1,0.4)',
+          background: 'var(--qr-bg-dark)',
+          border: '1.5px solid var(--qr-border)',
           boxShadow: '0 0 32px rgba(0,128,1,0.15), inset 0 1px 0 rgba(255,255,255,0.03)',
           display: 'inline-block',
         }}
@@ -208,7 +209,7 @@ function ActionBtn({ icon: Icon, label, onClick, variant = 'ghost' }: {
       } : {
         background: 'rgba(0,128,1,0.07)',
         border: '1px solid rgba(0,128,1,0.18)',
-        color: '#a0c8a0',
+        color: 'var(--action-btn-color)',
       }}
     >
       <Icon className="w-3.5 h-3.5 flex-shrink-0" />
@@ -526,6 +527,56 @@ export function NfcQr({
 
   return (
     <>
+      <style>{`
+        /* Light / Dark mode CSS variables */
+        .light {
+          --nfc-card-bg: #f8f9fc;
+          --nfc-card-border: rgba(0,128,1,0.15);
+          --nfc-card-shadow: 0 4px 20px rgba(0,0,0,0.05);
+          --nfc-header-bg: rgba(0,0,0,0.02);
+          --nfc-preview-bg: #ffffff;
+          --nfc-preview-border: rgba(0,128,1,0.15);
+          --nfc-text-primary: #1a2a1a;
+          --nfc-text-secondary: #4a6a4a;
+          --nfc-text-muted: #6b8a6b;
+          --nfc-chip-bg: rgba(0,128,1,0.04);
+          --nfc-chip-border: rgba(0,128,1,0.1);
+          --nfc-chip-text: #2a5a2a;
+          --nfc-url-bg: #f0f2f0;
+          --nfc-url-border: rgba(0,128,1,0.1);
+          --nfc-url-text: #3a5a3a;
+          --nfc-tip-bg: rgba(0,128,1,0.04);
+          --nfc-tip-border: rgba(0,128,1,0.08);
+          --nfc-tip-text: #3a6a3a;
+          --action-btn-color: #2a5a2a;
+          --qr-bg-dark: #ffffff;
+          --qr-border: rgba(0,128,1,0.25);
+        }
+        .dark {
+          --nfc-card-bg: #111a11;
+          --nfc-card-border: rgba(0,128,1,0.22);
+          --nfc-card-shadow: 0 4px 40px rgba(0,0,0,0.4);
+          --nfc-header-bg: rgba(0,0,0,0.15);
+          --nfc-preview-bg: #0c130c;
+          --nfc-preview-border: rgba(0,128,1,0.4);
+          --nfc-text-primary: #e8f0e8;
+          --nfc-text-secondary: #3a6a3a;
+          --nfc-text-muted: #6b8a6b;
+          --nfc-chip-bg: rgba(0,128,1,0.06);
+          --nfc-chip-border: rgba(0,128,1,0.14);
+          --nfc-chip-text: #b0d0b0;
+          --nfc-url-bg: #0c130c;
+          --nfc-url-border: rgba(0,128,1,0.15);
+          --nfc-url-text: #3a6a3a;
+          --nfc-tip-bg: rgba(0,128,1,0.04);
+          --nfc-tip-border: rgba(0,128,1,0.1);
+          --nfc-tip-text: #3a5a3a;
+          --action-btn-color: #a0c8a0;
+          --qr-bg-dark: #0c130c;
+          --qr-border: rgba(0,128,1,0.4);
+        }
+      `}</style>
+
       {/* ── Customizer Modal ── */}
       {customizerOpen && (
         <div onClick={() => setCustomizerOpen(false)}
@@ -559,30 +610,25 @@ export function NfcQr({
           {/* ══ Main workspace card ══ */}
           <div className="rounded-2xl overflow-hidden"
             style={{
-              background: '#111a11',
-              border: '1px solid rgba(0,128,1,0.22)',
-              boxShadow: '0 4px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(0,128,1,0.06)',
+              background: 'var(--nfc-card-bg)',
+              border: '1px solid var(--nfc-card-border)',
+              boxShadow: 'var(--nfc-card-shadow)',
             }}
           >
             {/* Card header */}
             <div className="flex items-center justify-between px-7 py-4"
-              style={{ borderBottom: '1px solid rgba(0,128,1,0.12)', background: 'rgba(0,0,0,0.15)' }}>
+              style={{ borderBottom: '1px solid rgba(0,128,1,0.12)', background: 'var(--nfc-header-bg)' }}>
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center"
                   style={{ background: 'rgba(73,182,24,0.12)', border: '1px solid rgba(73,182,24,0.22)' }}>
                   <QrCode className="w-4 h-4" style={{ color: '#49B618' }} />
                 </div>
                 <div>
-                  <p className="text-sm font-bold leading-tight" style={{ color: '#e8f0e8' }}>QR Code</p>
-                  <p className="text-xs leading-tight" style={{ color: '#3a6a3a' }}>Scan to view your digital card</p>
+                  <p className="text-sm font-bold leading-tight" style={{ color: 'var(--nfc-text-primary)' }}>QR Code</p>
+                  <p className="text-xs leading-tight" style={{ color: 'var(--nfc-text-secondary)' }}>Scan to view your digital card</p>
                 </div>
               </div>
               <div className="flex items-center gap-2.5">
-                {/* <button onClick={() => setCustomizerOpen(true)}
-                  className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg"
-                  style={{ background: 'rgba(0,204,68,0.08)', border: '1px solid rgba(0,204,68,0.25)', color: '#00CC44' }}>
-                  <Palette className="w-3 h-3" />Customize
-                </button> */}
                 <div className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg"
                   style={{ background: 'rgba(0,128,1,0.1)', border: '1px solid rgba(73,182,24,0.25)', color: '#49B618' }}>
                   <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#49B618', boxShadow: '0 0 6px #49B618' }} />
@@ -597,7 +643,7 @@ export function NfcQr({
 
               {/* ── Col 1: QR Preview ── */}
               <div className="flex flex-col gap-5 p-7">
-                <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#2e5a2e' }}>Preview</p>
+                <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'var(--nfc-text-secondary)' }}>Preview</p>
 
                 <div ref={qrRef} className="flex justify-center">
                   <LiveQrDisplay config={qrConfig} qrMatrix={liveQrMatrix} qrN={liveQrN} />
@@ -605,22 +651,22 @@ export function NfcQr({
 
                 {/* Style chip */}
                 <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs"
-                  style={{ background: 'rgba(0,128,1,0.06)', border: '1px solid rgba(0,128,1,0.14)' }}>
+                  style={{ background: 'var(--nfc-chip-bg)', border: '1px solid var(--nfc-chip-border)' }}>
                   {qrConfig ? (
                     <>
                       <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: qrConfig.fg, border: '1px solid rgba(255,255,255,0.15)' }} />
-                      <span className="flex-1 truncate font-medium" style={{ color: '#b0d0b0' }}>
+                      <span className="flex-1 truncate font-medium" style={{ color: 'var(--nfc-chip-text)' }}>
                         {qrConfig.shapeLabel}{qrConfig.designLabel ? ` · ${qrConfig.designLabel}` : ''}{qrConfig.gradEnabled ? ' · gradient' : ''}
                       </span>
                       <button onClick={handleReset}
-                        style={{ color: '#3a5a3a', background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, flexShrink: 0 }}>
+                        style={{ color: 'var(--nfc-text-muted)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, flexShrink: 0 }}>
                         ✕ reset
                       </button>
                     </>
                   ) : (
                     <>
-                      <Palette className="w-3 h-3 flex-shrink-0" style={{ color: '#3a6a3a' }} />
-                      <span style={{ color: '#3a6a3a' }}>Default — click Customize to personalize</span>
+                      <Palette className="w-3 h-3 flex-shrink-0" style={{ color: 'var(--nfc-text-muted)' }} />
+                      <span style={{ color: 'var(--nfc-text-muted)' }}>Default — click Customize to personalize</span>
                     </>
                   )}
                 </div>
@@ -628,16 +674,16 @@ export function NfcQr({
                 {/* URL bar — only shown when we have a real slug */}
                 {cardSlug && (
                   <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl"
-                    style={{ background: '#0c130c', border: '1px solid rgba(0,128,1,0.15)' }}>
-                    <Globe2 className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#2e5a2e' }} />
-                    <span className="text-xs flex-1 truncate" style={{ color: '#3a6a3a' }}>{CARD_URL}</span>
+                    style={{ background: 'var(--nfc-url-bg)', border: '1px solid var(--nfc-url-border)' }}>
+                    <Globe2 className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'var(--nfc-text-secondary)' }} />
+                    <span className="text-xs flex-1 truncate" style={{ color: 'var(--nfc-url-text)' }}>{CARD_URL}</span>
                     <a href={CARD_URL} target="_blank" rel="noopener noreferrer"
                       className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
                       style={{
                         background: 'rgba(0,128,1,0.07)',
                         border: '1px solid rgba(0,128,1,0.18)',
                       }}>
-                      <ExternalLink className="w-3 h-3" style={{ color: '#3a6a3a' }} />
+                      <ExternalLink className="w-3 h-3" style={{ color: 'var(--nfc-text-secondary)' }} />
                     </a>
                     <button onClick={copyLink}
                       className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
@@ -647,7 +693,7 @@ export function NfcQr({
                       }}>
                       {copiedLink
                         ? <Check className="w-3 h-3" style={{ color: '#49B618' }} />
-                        : <Copy className="w-3 h-3" style={{ color: '#3a6a3a' }} />}
+                        : <Copy className="w-3 h-3" style={{ color: 'var(--nfc-text-secondary)' }} />}
                     </button>
                   </div>
                 )}
@@ -655,7 +701,7 @@ export function NfcQr({
 
               {/* ── Col 2: Actions ── */}
               <div className="flex flex-col gap-5 p-7">
-                <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#2e5a2e' }}>Actions</p>
+                <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'var(--nfc-text-secondary)' }}>Actions</p>
 
                 {/* Primary CTA */}
                 <button onClick={() => setCustomizerOpen(true)}
@@ -679,8 +725,8 @@ export function NfcQr({
 
                 {/* Spacer + tip */}
                 <div className="mt-auto pt-2 rounded-xl px-4 py-3"
-                  style={{ background: 'rgba(0,128,1,0.04)', border: '1px solid rgba(0,128,1,0.1)' }}>
-                  <p className="text-xs leading-relaxed" style={{ color: '#3a5a3a' }}>
+                  style={{ background: 'var(--nfc-tip-bg)', border: '1px solid var(--nfc-tip-border)' }}>
+                  <p className="text-xs leading-relaxed" style={{ color: 'var(--nfc-tip-text)' }}>
                     Your QR code stays active as long as your card is published. You can redesign it anytime without changing the link.
                   </p>
                 </div>
@@ -688,29 +734,6 @@ export function NfcQr({
 
             </div>
           </div>
-
-          {/* ── Footer nav ──
-          <div className="flex items-center justify-between pt-1">
-            <button
-              className="flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-xl transition-all"
-              style={{ background: 'rgba(0,128,1,0.07)', border: '1px solid rgba(0,128,1,0.18)', color: '#7a9a7a' }}
-            >
-              <ChevronLeft className="w-4 h-4" />
-              Back
-            </button>
-            <p className="text-xs" style={{ color: '#2e5a2e' }}>Step 3 of 3</p>
-            <button
-              className="flex items-center gap-2 text-sm font-semibold px-5 py-2.5 rounded-xl transition-all active:scale-[0.98]"
-              style={{
-                background: 'linear-gradient(135deg, #006a01, #3a9a10)',
-                boxShadow: '0 2px 16px rgba(0,128,1,0.35)',
-                color: 'white',
-              }}
-            >
-              Save & Finish ✓
-            </button>
-          </div> */}
-
         </div>
       </div>
     </>

@@ -1,3 +1,4 @@
+{/* theme: converted - preserves dark mode original, adds light mode */}
 "use client";
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
@@ -31,7 +32,6 @@ export default function TemplatePicker({ cardId, onApply, onDesignApply, classNa
       localStorage.removeItem(selectedKeyForCard(cardId));
     } catch {}
   }, []);
-
 
   const updateScrollState = useCallback(() => {
     const el = scrollRef.current;
@@ -82,176 +82,204 @@ export default function TemplatePicker({ cardId, onApply, onDesignApply, classNa
   };
 
   return (
-    <div className={className} style={{ position: 'relative' }}>
-      {/* Left fade + arrow */}
-      <div
-        style={{
-          position: 'absolute',
-          left: 0,
-          top: 0,
-          bottom: 12, // match scroll container bottom padding
-          width: 56,
-          zIndex: 10,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'flex-start',
-          paddingLeft: 4,
-          pointerEvents: canScrollLeft ? 'auto' : 'none',
-          // Fade only appears once scrolled; button always visible
-          background: canScrollLeft
-            ? 'linear-gradient(to right, #0D0D0D 40%, transparent)'
-            : 'transparent',
-          transition: 'background 0.25s ease',
-          borderRadius: '14px 0 0 14px',
-        }}
-      >
-        <button
-          type="button"
-          onClick={() => scroll('left')}
-          aria-label="Scroll left"
+    <>
+      <style>{`
+        .template-fade-left {
+          background: linear-gradient(to right, var(--template-fade-bg) 40%, transparent);
+        }
+        .template-fade-right {
+          background: linear-gradient(to left, var(--template-fade-bg) 40%, transparent);
+        }
+        .light {
+          --template-fade-bg: #f8fafc;
+          --template-card-bg: #ffffff;
+          --template-card-border: rgba(0,128,1,0.2);
+          --template-text-primary: #1a2a1a;
+          --template-text-secondary: #4a6a4a;
+          --template-button-bg: rgba(255,255,255,0.85);
+          --template-button-color: #008001;
+          --template-button-border: rgba(0,128,1,0.3);
+          --template-button-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .dark {
+          --template-fade-bg: #0D0D0D;
+          --template-card-bg: #0D0D0D;
+          --template-card-border: rgba(73,182,24,0.2);
+          --template-text-primary: #f0f0f0;
+          --template-text-secondary: #7a9a7a;
+          --template-button-bg: rgba(13,13,13,0.85);
+          --template-button-color: #49B618;
+          --template-button-border: rgba(73,182,24,0.3);
+          --template-button-shadow: 0 2px 8px rgba(0,0,0,0.5);
+        }
+      `}</style>
+
+      <div className={className} style={{ position: 'relative' }}>
+        {/* Left fade + arrow */}
+        <div
           style={{
-            width: 28,
-            height: 28,
-            borderRadius: '50%',
-            border: '1px solid rgba(73,182,24,0.3)',
-            background: 'rgba(13,13,13,0.85)',
-            color: '#49B618',
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            bottom: 12,
+            width: 56,
+            zIndex: 10,
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            cursor: canScrollLeft ? 'pointer' : 'default',
-            opacity: canScrollLeft ? 1 : 0.35,
-            transition: 'opacity 0.2s ease, transform 0.15s ease, box-shadow 0.15s ease',
-            boxShadow: canScrollLeft ? '0 2px 8px rgba(0,0,0,0.5)' : 'none',
-            flexShrink: 0,
+            justifyContent: 'flex-start',
+            paddingLeft: 4,
+            pointerEvents: canScrollLeft ? 'auto' : 'none',
+            transition: 'background 0.25s ease',
+            borderRadius: '14px 0 0 14px',
           }}
-          onMouseEnter={(e) => { if (canScrollLeft) e.currentTarget.style.transform = 'scale(1.1)'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+          className={canScrollLeft ? 'template-fade-left' : ''}
         >
-          <ChevronLeft size={15} strokeWidth={2.5} />
-        </button>
-      </div>
+          <button
+            type="button"
+            onClick={() => scroll('left')}
+            aria-label="Scroll left"
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: '50%',
+              border: '1px solid var(--template-button-border)',
+              background: 'var(--template-button-bg)',
+              color: 'var(--template-button-color)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: canScrollLeft ? 'pointer' : 'default',
+              opacity: canScrollLeft ? 1 : 0.35,
+              transition: 'opacity 0.2s ease, transform 0.15s ease, box-shadow 0.15s ease',
+              boxShadow: canScrollLeft ? 'var(--template-button-shadow)' : 'none',
+              flexShrink: 0,
+            }}
+            onMouseEnter={(e) => { if (canScrollLeft) e.currentTarget.style.transform = 'scale(1.1)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+          >
+            <ChevronLeft size={15} strokeWidth={2.5} />
+          </button>
+        </div>
 
-      {/* Right fade + arrow */}
-      <div
-        style={{
-          position: 'absolute',
-          right: 0,
-          top: 0,
-          bottom: 12,
-          width: 56,
-          zIndex: 10,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'flex-end',
-          paddingRight: 4,
-          pointerEvents: canScrollRight ? 'auto' : 'none',
-          background: canScrollRight
-            ? 'linear-gradient(to left, #0D0D0D 40%, transparent)'
-            : 'transparent',
-          transition: 'background 0.25s ease',
-          borderRadius: '0 14px 14px 0',
-        }}
-      >
-        <button
-          type="button"
-          onClick={() => scroll('right')}
-          aria-label="Scroll right"
+        {/* Right fade + arrow */}
+        <div
           style={{
-            width: 28,
-            height: 28,
-            borderRadius: '50%',
-            border: '1px solid rgba(73,182,24,0.3)',
-            background: 'rgba(13,13,13,0.85)',
-            color: '#49B618',
+            position: 'absolute',
+            right: 0,
+            top: 0,
+            bottom: 12,
+            width: 56,
+            zIndex: 10,
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            cursor: canScrollRight ? 'pointer' : 'default',
-            opacity: canScrollRight ? 1 : 0.35,
-            transition: 'opacity 0.2s ease, transform 0.15s ease, box-shadow 0.15s ease',
-            boxShadow: canScrollRight ? '0 2px 8px rgba(0,0,0,0.5)' : 'none',
-            flexShrink: 0,
+            justifyContent: 'flex-end',
+            paddingRight: 4,
+            pointerEvents: canScrollRight ? 'auto' : 'none',
+            transition: 'background 0.25s ease',
+            borderRadius: '0 14px 14px 0',
           }}
-          onMouseEnter={(e) => { if (canScrollRight) e.currentTarget.style.transform = 'scale(1.1)'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+          className={canScrollRight ? 'template-fade-right' : ''}
         >
-          <ChevronRight size={15} strokeWidth={2.5} />
-        </button>
-      </div>
+          <button
+            type="button"
+            onClick={() => scroll('right')}
+            aria-label="Scroll right"
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: '50%',
+              border: '1px solid var(--template-button-border)',
+              background: 'var(--template-button-bg)',
+              color: 'var(--template-button-color)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: canScrollRight ? 'pointer' : 'default',
+              opacity: canScrollRight ? 1 : 0.35,
+              transition: 'opacity 0.2s ease, transform 0.15s ease, box-shadow 0.15s ease',
+              boxShadow: canScrollRight ? 'var(--template-button-shadow)' : 'none',
+              flexShrink: 0,
+            }}
+            onMouseEnter={(e) => { if (canScrollRight) e.currentTarget.style.transform = 'scale(1.1)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+          >
+            <ChevronRight size={15} strokeWidth={2.5} />
+          </button>
+        </div>
 
-      {/* Scroll container */}
-      <div
-        ref={scrollRef}
-        style={{
-          display: 'flex',
-          overflowX: 'auto',
-          gap: 12,
-          padding: '4px 4px 12px',
-          scrollSnapType: 'x mandatory',
-          WebkitOverflowScrolling: 'touch',
-          msOverflowStyle: 'none',
-          scrollbarWidth: 'none',
-        }}
-      >
-        {cardTemplates.map((t) => {
-          const isSelected = selectedId === t.id;
-          return (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => applyTemplate(t)}
-              aria-pressed={isSelected}
-              aria-label={`Apply ${t.name} template`}
-              style={{
-                position: 'relative',
-                flexShrink: 0,
-                width: 150,
-                scrollSnapAlign: 'start',
-                background: '#0D0D0D',
-                border: isSelected ? '2px solid #49B618' : '1px solid rgba(73,182,24,0.2)',
-                borderRadius: 14,
-                padding: 8,
-                textAlign: 'left',
-                cursor: 'pointer',
-                transition: 'transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease',
-                boxShadow: isSelected ? '0 0 0 3px rgba(73,182,24,0.18)' : 'none',
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; }}
-            >
-              <TemplateThumb template={t} />
-              <div style={{ marginTop: 8, padding: '0 2px' }}>
-                <div style={{ color: '#f0f0f0', fontWeight: 600, fontSize: 13, lineHeight: 1.2 }}>
-                  {t.name}
+        {/* Scroll container */}
+        <div
+          ref={scrollRef}
+          style={{
+            display: 'flex',
+            overflowX: 'auto',
+            gap: 12,
+            padding: '4px 4px 12px',
+            scrollSnapType: 'x mandatory',
+            WebkitOverflowScrolling: 'touch',
+            msOverflowStyle: 'none',
+            scrollbarWidth: 'none',
+          }}
+        >
+          {cardTemplates.map((t) => {
+            const isSelected = selectedId === t.id;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => applyTemplate(t)}
+                aria-pressed={isSelected}
+                aria-label={`Apply ${t.name} template`}
+                style={{
+                  position: 'relative',
+                  flexShrink: 0,
+                  width: 150,
+                  scrollSnapAlign: 'start',
+                  background: 'var(--template-card-bg)',
+                  border: isSelected ? '2px solid #49B618' : '1px solid var(--template-card-border)',
+                  borderRadius: 14,
+                  padding: 8,
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease',
+                  boxShadow: isSelected ? '0 0 0 3px rgba(73,182,24,0.18)' : 'none',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; }}
+              >
+                <TemplateThumb template={t} />
+                <div style={{ marginTop: 8, padding: '0 2px' }}>
+                  <div style={{ color: 'var(--template-text-primary)', fontWeight: 600, fontSize: 13, lineHeight: 1.2 }}>
+                    {t.name}
+                  </div>
+                  <div style={{ color: 'var(--template-text-secondary)', fontSize: 11, marginTop: 2, lineHeight: 1.3, minHeight: 28 }}>
+                    {t.description}
+                  </div>
                 </div>
-                <div style={{ color: '#7a9a7a', fontSize: 11, marginTop: 2, lineHeight: 1.3, minHeight: 28 }}>
-                  {t.description}
-                </div>
-              </div>
-              {isSelected && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: 6,
-                    right: 6,
-                    width: 22,
-                    height: 22,
-                    borderRadius: '50%',
-                    background: 'linear-gradient(135deg,#008001,#49B618)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: '0 2px 8px rgba(73,182,24,0.4)',
-                  }}
-                >
-                  <Check size={13} color="#fff" />
-                </div>
-              )}
-            </button>
-          );
-        })}
+                {isSelected && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 6,
+                      right: 6,
+                      width: 22,
+                      height: 22,
+                      borderRadius: '50%',
+                      background: 'linear-gradient(135deg,#008001,#49B618)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 2px 8px rgba(73,182,24,0.4)',
+                    }}
+                  >
+                    <Check size={13} color="#fff" />
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

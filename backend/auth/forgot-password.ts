@@ -1,7 +1,5 @@
 import express from "express";
-import crypto from "crypto";
 import { supabase } from "../config/supabase";
-import { sendPasswordResetEmail } from "../services/email";
 
 const router = express.Router();
 
@@ -18,43 +16,28 @@ router.post("/", async (req, res) => {
   const emailTrimmed = email.trim().toLowerCase();
 
   try {
-    const { data: user } = await supabase
-      .from("User")
-      .select("id, email, name, passwordHash")
-      .eq("email", emailTrimmed)
-      .maybeSingle();
+    console.log(`[forgot-password] Processing reset request for: ${emailTrimmed}`);
 
-    // No account or OAuth-only account — return success anyway
-    if (!user || !user.passwordHash) {
-      console.log(`[forgot-password] No user or no passwordHash for: ${emailTrimmed}`);
+    // Use Supabase Auth to generate a recovery link
+    // Supabase will automatically send the email with the recovery link
+    const { data, error } = await supabase.auth.admin.generateLink({
+      type: "recovery",
+      email: emailTrimmed,
+      options: {
+        redirectTo: `${process.env.FRONTEND_URL || "http://localhost:3000"}/reset-password`,
+      },
+    });
+
+    console.log(`[forgot-password] Supabase response:`, { data, error });
+
+    if (error) {
+      console.log(`[forgot-password] Generate link error (may be user not found): ${error.message}`);
+      // Return success anyway to prevent user enumeration
       return res.status(200).json({ success: true, message: SUCCESS_MSG });
     }
 
-    console.log(`[forgot-password] Found user: ${user.id}`);
-
-    // Invalidate existing unused reset tokens
-    await supabase
-      .from("EmailToken")
-      .update({ usedAt: new Date().toISOString() })
-      .eq("userId", user.id)
-      .eq("type", "password_reset")
-      .is("usedAt", null);
-
-    const token = crypto.randomBytes(32).toString("hex");
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hour
-
-    const { error: insertError } = await supabase
-      .from("EmailToken")
-      .insert({ userId: user.id, token, type: "password_reset", expiresAt });
-
-    if (insertError) {
-      console.error("[forgot-password] EmailToken insert failed:", insertError);
-      return res.status(200).json({ success: true, message: SUCCESS_MSG });
-    }
-
-    console.log(`[forgot-password] Token inserted, sending email to: ${user.email}`);
-    sendPasswordResetEmail(user.email, user.name ?? "there", token).catch(console.error);
-
+    console.log(`[forgot-password] Recovery link generated for: ${emailTrimmed}`);
+    console.log(`[forgot-password] Full response data:`, data);
     return res.status(200).json({ success: true, message: SUCCESS_MSG });
   } catch (err) {
     console.error("Forgot password error:", err);

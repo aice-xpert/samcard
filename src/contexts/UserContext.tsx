@@ -42,7 +42,7 @@ const defaultProfile: UserProfile = {
 const defaultAccounts: ConnectedAccountData[] = [
     { id: "google", name: "Google", icon: "G", connected: false },
     { id: "linkedin", name: "LinkedIn", icon: "in", connected: false },
-    { id: "github", name: "GitHub", icon: "GH", connected: false },
+    { id: "facebook", name: "Facebook", icon: "F", connected: false },
     { id: "twitter", name: "Twitter", icon: "X", connected: false },
     { id: "instagram", name: "Instagram", icon: "IG", connected: false },
 ];
