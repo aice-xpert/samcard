@@ -1,57 +1,23 @@
 "use client";
-import { useRef } from "react";
-import { motion } from "motion/react";
+import { useRef, useState } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import { X } from "lucide-react";
+import Link from "next/link";
 import "swiper/css";
 import "swiper/css/navigation";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Navigation, Pagination } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
 import { useTheme } from "@/contexts/ThemeContext";
-
-const templates = [
-  {
-    name: "Modern Minimalist",
-    category: "Professional",
-    color: "from-surface to-theme-blackout",
-    accent: "bg-white",
-  },
-  {
-    name: "Creative Bold",
-    category: "Creative",
-    color: "from-theme-digital-green to-theme-devil-green",
-    accent: "bg-theme-blackout",
-  },
-  {
-    name: "Tech Innovator",
-    category: "Technology",
-    color: "from-theme-strong-green to-theme-digital-green",
-    accent: "bg-theme-kelly-green",
-  },
-  {
-    name: "Executive Elite",
-    category: "Corporate",
-    color: "from-slate-800 to-theme-blackout",
-    accent: "bg-theme-digital-green",
-  },
-  {
-    name: "Nature Inspired",
-    category: "Eco-Friendly",
-    color: "from-theme-kelly-green to-theme-strong-green",
-    accent: "bg-white",
-  },
-  {
-    name: "Elegant Classic",
-    category: "Traditional",
-    color: "from-[#6B7280] to-[#1F2937]",
-    accent: "bg-theme-digital-green",
-  },
-];
+import { cardTemplates, type CardTemplate } from "@/data/cardTemplates";
+import TemplateThumb from "@/components/TemplatePicker/TemplateThumb";
 
 const VIEWPORT = { once: true };
 
 export function Templates() {
   const swiperRef = useRef<SwiperType | null>(null);
   const { isDark } = useTheme();
+  const [previewTemplate, setPreviewTemplate] = useState<CardTemplate | null>(null);
 
   return (
     <section
@@ -156,18 +122,18 @@ export function Templates() {
             }}
             className="!pb-10"
           >
-            {templates.map((template, index) => (
-              <SwiperSlide key={template.name}>
+            {cardTemplates.map((template, index) => (
+              <SwiperSlide key={template.id} className="!h-auto">
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={VIEWPORT}
                   transition={{ duration: 0.5, delay: index * 0.08 }}
                   whileHover={{ scale: 1.03 }}
-                  className="group cursor-pointer"
+                  className="group h-full"
                 >
                   <div
-                    className={`backdrop-blur-sm border rounded-2xl
+                    className={`h-full flex flex-col backdrop-blur-sm border rounded-2xl
                                   hover:shadow-2xl hover:shadow-theme-digital-green/10
                                   hover:border-theme-digital-green/50 transition-all overflow-hidden ${
                       isDark
@@ -175,32 +141,28 @@ export function Templates() {
                         : "bg-white border-gray-200 shadow-sm"
                     }`}
                   >
-                    <div
-                      className={`h-64 bg-gradient-to-br ${template.color} p-8 relative`}
+                    {/* Real mini-card preview rendered from the template data */}
+                    <button
+                      type="button"
+                      onClick={() => setPreviewTemplate(template)}
+                      aria-label={`Preview ${template.name} template`}
+                      className="block w-full p-6 pb-0 cursor-pointer"
                     >
-                      <div className="space-y-4">
-                        <div
-                          className={`w-16 h-16 ${template.accent} rounded-xl`}
-                        />
-                        <div className="space-y-2">
-                          <div className="w-32 h-3 bg-white/90 rounded" />
-                          <div className="w-24 h-2 bg-white/70 rounded" />
-                        </div>
-                        <div className="absolute bottom-8 right-8 w-20 h-20 bg-white/20 backdrop-blur-sm rounded-lg" />
+                      <div className="mx-auto max-w-[180px]">
+                        <TemplateThumb template={template} />
                       </div>
-                      <div className="absolute top-4 right-4">
-                        <div className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-full" />
-                      </div>
-                    </div>
+                    </button>
 
-                    <div className="p-6 space-y-2">
+                    <div className="p-6 space-y-2 flex flex-col flex-1">
                       <h3 className="text-xl font-semibold text-foreground group-hover:text-accent transition-colors">
                         {template.name}
                       </h3>
-                      <p className="text-sm text-muted-foreground">
-                        {template.category}
+                      <p className="text-sm text-muted-foreground line-clamp-2 flex-1">
+                        {template.description}
                       </p>
                       <button
+                        type="button"
+                        onClick={() => setPreviewTemplate(template)}
                         className={`mt-4 w-full py-2 rounded-lg transition-all ${
                           isDark
                             ? "bg-white/5 text-white border border-white/10 hover:bg-theme-digital-green hover:border-theme-digital-green"
@@ -223,15 +185,80 @@ export function Templates() {
           viewport={VIEWPORT}
           className="text-center mt-12"
         >
-          <button
-            className="px-8 py-4 bg-gradient-to-r from-theme-digital-green to-theme-devil-green
+          <Link
+            href="/templates"
+            className="inline-block px-8 py-4 bg-gradient-to-r from-theme-digital-green to-theme-devil-green
                              text-white rounded-xl hover:shadow-xl hover:shadow-theme-digital-green/20
                              hover:scale-105 transition-all"
           >
             Browse All Templates
-          </button>
+          </Link>
         </motion.div>
       </div>
+
+      {/* Preview modal */}
+      <AnimatePresence>
+        {previewTemplate && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setPreviewTemplate(null)}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${previewTemplate.name} preview`}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.92, y: 16 }}
+              transition={{ type: "spring", stiffness: 260, damping: 24 }}
+              onClick={(e) => e.stopPropagation()}
+              className={`relative w-full max-w-md rounded-2xl border p-6 ${
+                isDark
+                  ? "bg-[#0a140a] border-white/10"
+                  : "bg-white border-gray-200"
+              }`}
+            >
+              <button
+                type="button"
+                onClick={() => setPreviewTemplate(null)}
+                aria-label="Close preview"
+                className={`absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full transition-colors ${
+                  isDark
+                    ? "bg-white/10 text-white hover:bg-white/20"
+                    : "bg-gray-100 text-foreground hover:bg-gray-200"
+                }`}
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="mx-auto max-w-[220px]">
+                <TemplateThumb template={previewTemplate} />
+              </div>
+
+              <div className="mt-6 text-center space-y-2">
+                <h3 className="text-2xl font-bold text-foreground">
+                  {previewTemplate.name}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {previewTemplate.description}
+                </p>
+              </div>
+
+              <Link
+                href="/signup"
+                className="mt-6 block w-full text-center px-8 py-3 bg-gradient-to-r from-theme-digital-green to-theme-devil-green
+                           text-white font-semibold rounded-xl hover:shadow-xl hover:shadow-theme-digital-green/20
+                           hover:scale-[1.02] transition-all"
+              >
+                Use This Template
+              </Link>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }

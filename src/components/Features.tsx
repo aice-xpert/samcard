@@ -1,5 +1,6 @@
 "use client";
 import { QrCode, Share2, Layout } from "lucide-react";
+import Link from "next/link";
 import { useTheme } from "@/contexts/ThemeContext";
 
 const features = [
@@ -91,13 +92,14 @@ export function Features() {
             Our integrated platform ensures that every feature works in harmony,
             giving you the best digital business card experience possible.
           </p>
-          <button
-            className="px-8 py-4 bg-gradient-to-r from-theme-digital-green to-theme-devil-green
+          <Link
+            href="/features"
+            className="inline-block px-8 py-4 bg-gradient-to-r from-theme-digital-green to-theme-devil-green
                        text-white rounded-xl hover:shadow-xl hover:shadow-theme-digital-green/20
                        hover:scale-105 transition-all"
           >
             Explore All Features
-          </button>
+          </Link>
         </div>
 
       </div>

@@ -1,6 +1,6 @@
 "use client";
 import { Send } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
 
 interface FormData {
@@ -26,6 +26,14 @@ export function ContactForm() {
   const [formData, setFormData] = useState<FormData>(INITIAL_FORM_DATA);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
+
+  // Preselect the subject when arriving via a "Contact Sales/Support" link (?topic=sales|support).
+  useEffect(() => {
+    const topic = new URLSearchParams(window.location.search).get("topic");
+    if (topic === "sales" || topic === "support") {
+      setFormData((prev) => ({ ...prev, subject: topic }));
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

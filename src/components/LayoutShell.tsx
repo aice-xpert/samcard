@@ -14,7 +14,7 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
   // Public card pages: any route that looks like /{slug} (not a known top-level route)
   const knownRoutes = [
     "/", "/login", "/signup", "/dashboard", "/pricing", "/features",
-    "/solutions", "/blog", "/about-us", "/contact-us", "/testimonials",
+    "/templates", "/solutions", "/blog", "/about-us", "/contact-us", "/testimonials",
     "/terms-and-services", "/privacy-policy", "/cookies-policy",
     "/forgot-password", "/check-email",
   ];
