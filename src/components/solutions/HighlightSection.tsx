@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { motion } from "motion/react";
 import { BarChart3, Upload, Zap, Shield } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -109,15 +110,17 @@ export function HighlightSection() {
           transition={{ duration: 0.6, delay: 0.4 }}
           className="text-center mt-16"
         >
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="px-8 py-4 rounded-lg font-semibold text-white
-                       bg-gradient-to-r from-primary to-theme-strong-green
-                       hover:shadow-2xl hover:shadow-theme-digital-green/30 transition-all"
-          >
-            Explore All Features
-          </motion.button>
+          <Link href="/features">
+            <motion.span
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="inline-block px-8 py-4 rounded-lg font-semibold text-white
+                         bg-gradient-to-r from-primary to-theme-strong-green
+                         hover:shadow-2xl hover:shadow-theme-digital-green/30 transition-all"
+            >
+              Explore All Features
+            </motion.span>
+          </Link>
         </motion.div>
       </div>
     </section>

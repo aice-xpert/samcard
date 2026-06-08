@@ -42,12 +42,14 @@ export function SolutionCard({ icon: Icon, title, description }: Props) {
 
         <p className="text-sm text-muted-foreground mb-4 group-hover:text-foreground">{description}</p>
 
-        <motion.div
-          animate={{ x: hovered ? 5 : 0 }}
-          className="flex items-center text-theme-kelly-green text-sm"
-        >
-          Learn More <ArrowRight className="w-4 h-4 ml-1" />
-        </motion.div>
+        <a href="#">
+          <motion.div
+            animate={{ x: hovered ? 5 : 0 }}
+            className="flex items-center text-theme-kelly-green text-sm"
+          >
+            Learn More <ArrowRight className="w-4 h-4 ml-1" />
+          </motion.div>
+        </a>
       </div>
     </motion.div>
   );
