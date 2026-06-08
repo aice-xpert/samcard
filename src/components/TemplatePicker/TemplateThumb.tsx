@@ -24,7 +24,7 @@ const Portrait: React.FC<{ src: string; style?: React.CSSProperties; filter?: st
     alt="Profile"
     style={{
       width: '100%', height: '100%',
-      objectFit: 'cover', objectPosition: 'center top',
+      objectFit: 'cover', objectPosition: 'top center',
       display: 'block',
       ...(filter ? { filter } : {}),
       ...style,
