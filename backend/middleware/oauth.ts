@@ -17,6 +17,7 @@ import passport from "passport";
 import { Strategy as GoogleStrategy, Profile as GoogleProfile, VerifyCallback } from "passport-google-oauth20";
 import { Strategy as FacebookStrategy, Profile as FacebookProfile } from "passport-facebook";
 import jwt from "jsonwebtoken";
+import { v4 as uuidv4 } from "uuid";
 import { supabase } from "../config/supabase";
 
 const router = express.Router();
@@ -61,8 +62,11 @@ async function handleOAuthUser(profile: {
     const { data: inserted, error } = await supabase
       .from("User")
       .insert({
+        id: uuidv4(),
         email: profile.email,
         name: profile.name,
+        emailVerified: true,
+        emailVerifiedAt: now,
         createdAt: now,
         updatedAt: now,
         lastLoginAt: now,
