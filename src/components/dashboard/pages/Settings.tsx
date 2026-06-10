@@ -12,7 +12,7 @@ import {
     Eye, EyeOff, Download, CreditCard, Plus, Star, User,
 } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
-import { uploadFile, updateUserProfile, getPaymentMethods, savePaymentMethod, setDefaultPaymentMethod, deletePaymentMethod, changePassword } from "@/lib/api";
+import { uploadFile, updateUserProfile, getPaymentMethods, savePaymentMethod, setDefaultPaymentMethod, deletePaymentMethod, changePassword, deleteAccount } from "@/lib/api";
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Types
@@ -341,9 +341,20 @@ export function Settings() {
 
 
     const handleDeleteAccount = async () => {
-        setDeleteLoading(true); await new Promise((r) => setTimeout(r, 2000));
-        setDeleteLoading(false); setDeleteModal(false); setDeleteConfirmText("");
-        addToast("Account deletion requested. Check your email.", "info");
+        setDeleteLoading(true);
+        try {
+            await deleteAccount();
+            localStorage.removeItem("sessionToken");
+            document.cookie = "session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
+            document.cookie = "sessionToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
+            window.location.href = "/login";
+        } catch (err: any) {
+            addToast("Failed to delete account: " + (err.message || "Unknown error"), "error");
+        } finally {
+            setDeleteLoading(false);
+            setDeleteModal(false);
+            setDeleteConfirmText("");
+        }
     };
 
     const handleExportData = async () => {
