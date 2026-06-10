@@ -718,4 +718,26 @@ router.put("/plan", verifySession, async (req: AuthRequest, res: Response) => {
   }
 });
 
+// ─── Delete Account ─────────────────────────────────────────────────────
+router.delete("/account", verifySession, async (req: AuthRequest, res: Response) => {
+  const userId = req.user!.uid;
+
+  try {
+    const { error: dbError } = await supabase
+      .from("User")
+      .delete()
+      .eq("id", userId);
+
+    if (dbError) return res.status(500).json({ error: dbError.message });
+
+    const { error: authError } = await supabase.auth.admin.deleteUser(userId);
+
+    if (authError) return res.status(500).json({ error: authError.message });
+
+    return res.json({ success: true });
+  } catch (error: unknown) {
+    return res.status(500).json({ error: getErrorMessage(error) });
+  }
+});
+
 export default router;

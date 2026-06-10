@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { Mail, Lock, User, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
-import { FaFacebook } from "react-icons/fa";
+// import { FaFacebook } from "react-icons/fa";
 import { useTheme } from "@/contexts/ThemeContext";
 
 const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "") ?? "";
@@ -152,7 +152,7 @@ export default function SignupPage() {
           )}
 
           {/* Social buttons at the top for signup — common UX pattern */}
-          <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="grid grid-cols-1 gap-4 mb-6">
             <button
               type="button"
               onClick={() => handleSocialSignIn("google")}
@@ -163,7 +163,7 @@ export default function SignupPage() {
               <span className={`text-sm ${socialTextColor}`}>Google</span>
             </button>
 
-            <button
+            {/* <button
               type="button"
               onClick={() => handleSocialSignIn("facebook")}
               disabled={isLoading}
@@ -171,7 +171,7 @@ export default function SignupPage() {
             >
               <FaFacebook size={20} className="text-blue-600" />
               <span className={`text-sm ${socialTextColor}`}>Facebook</span>
-            </button>
+            </button> */}
           </div>
 
           {/* Divider */}
