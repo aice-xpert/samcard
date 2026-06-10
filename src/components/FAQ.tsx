@@ -1,5 +1,6 @@
 "use client";
 import { FAQ_ITEMS } from "@/constant";
+import Link from "next/link";
 import { AccordionItem } from "../components/FAQAccordion";
 import { useTheme } from "@/contexts/ThemeContext";
 
@@ -49,9 +50,12 @@ export default function FAQ() {
           <p className="text-foreground mb-6">
             Our support team is here to help you get the most out of SamCard.
           </p>
-          <button className="px-8 py-4 bg-gradient-to-r from-[#49B618] to-[#006312] text-white text-lg font-bold rounded-xl hover:shadow-xl hover:shadow-[#009200]/30 hover:scale-105 transition-all">
+          <Link
+            href="/contact-us?topic=support"
+            className="inline-block px-8 py-4 bg-gradient-to-r from-[#49B618] to-[#006312] text-white text-lg font-bold rounded-xl hover:shadow-xl hover:shadow-[#009200]/30 hover:scale-105 transition-all"
+          >
             Contact Support
-          </button>
+          </Link>
         </div>
       </div>
     </section>

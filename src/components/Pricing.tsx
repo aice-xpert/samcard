@@ -1,5 +1,6 @@
 "use client";
 import { Check, Sparkles, Crown, Building2 } from "lucide-react";
+import Link from "next/link";
 import { useTheme } from "@/contexts/ThemeContext";
 
 const pricingPlans = [
@@ -18,6 +19,7 @@ const pricingPlans = [
       "Email Support",
     ],
     buttonText: "Get Started",
+    href: "/signup",
     popular: false,
     gradient: "from-gray-600 to-gray-700",
   },
@@ -40,6 +42,7 @@ const pricingPlans = [
       "Remove SamCard Branding",
     ],
     buttonText: "Start Free Trial",
+    href: "/signup",
     popular: true,
     gradient: "from-theme-digital-green to-theme-devil-green",
   },
@@ -62,6 +65,7 @@ const pricingPlans = [
       "SLA Guarantee",
     ],
     buttonText: "Contact Sales",
+    href: "/contact-us?topic=sales",
     popular: false,
     gradient: "from-surface to-theme-blackout",
   },
@@ -142,8 +146,9 @@ export function Pricing() {
                 </ul>
 
                 {/* CTA Button */}
-                <button
-                  className={`w-full py-4 rounded-xl font-semibold transition-all ${
+                <Link
+                  href={plan.href}
+                  className={`block w-full py-4 rounded-xl font-semibold text-center transition-all ${
                     plan.popular
                       ? "bg-gradient-to-r from-theme-digital-green to-theme-devil-green text-white hover:shadow-xl hover:shadow-theme-digital-green/20 hover:scale-105"
                       : isDark
@@ -152,7 +157,7 @@ export function Pricing() {
                   }`}
                 >
                   {plan.buttonText}
-                </button>
+                </Link>
               </div>
             </div>
           ))}
