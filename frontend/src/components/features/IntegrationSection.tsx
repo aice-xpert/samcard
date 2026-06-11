@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useTheme } from "@/contexts/ThemeContext";
 
 export default function IntegrationSection() {
@@ -16,16 +17,22 @@ export default function IntegrationSection() {
         </p>
 
         <div className="flex justify-center gap-4">
-          <button className="px-8 py-4 bg-theme-devil-green text-white rounded-xl">
+          <a
+            href="#"
+            className="px-8 py-4 bg-theme-devil-green text-white rounded-xl inline-block"
+          >
             Start Free Trial
-          </button>
-          <button className={`px-8 py-4 border rounded-xl ${
-            isDark
-              ? "border-white/20 text-white"
-              : "border-gray-300 text-foreground"
-          }`}>
+          </a>
+          <Link
+            href="/pricing"
+            className={`px-8 py-4 border rounded-xl inline-block ${
+              isDark
+                ? "border-white/20 text-white"
+                : "border-gray-300 text-foreground"
+            }`}
+          >
             View Pricing
-          </button>
+          </Link>
         </div>
       </div>
     </section>

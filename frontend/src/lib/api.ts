@@ -141,6 +141,13 @@ export async function deletePaymentMethod(id: string) {
   });
 }
 
+// ─── Account Deletion ─────────────────────────────────────────────────
+export async function deleteAccount() {
+  return apiRequest<{ success: boolean }>("/api/user/account", {
+    method: "DELETE",
+  });
+}
+
 // ─── Plan ────────────────────────────────────────────────────────────
 export async function updateUserPlan(tier: string) {
   return apiRequest<{ planTier: string }>("/api/user/plan", {
