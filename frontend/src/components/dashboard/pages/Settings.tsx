@@ -12,7 +12,7 @@ import {
     Eye, EyeOff, Download, CreditCard, Plus, Star, User,
 } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
-import { uploadFile, updateUserProfile, getPaymentMethods, savePaymentMethod, setDefaultPaymentMethod, deletePaymentMethod, changePassword, deleteAccount } from "@/lib/api";
+import { uploadFile, updateUserProfile, getPaymentMethods, savePaymentMethod, setDefaultPaymentMethod, deletePaymentMethod, changePassword, deleteAccount, BACKEND_URL } from "@/lib/api";
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Types
@@ -344,8 +344,9 @@ export function Settings() {
         setDeleteLoading(true);
         try {
             await deleteAccount();
+            const logoutUrl = BACKEND_URL ? `${BACKEND_URL}/api/auth/logout` : "/api/auth/logout";
+            await fetch(logoutUrl, { method: "POST", credentials: "include" }).catch(() => {});
             localStorage.removeItem("sessionToken");
-            document.cookie = "session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
             document.cookie = "sessionToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
             window.location.href = "/login";
         } catch (err: any) {

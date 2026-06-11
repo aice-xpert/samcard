@@ -1,4 +1,4 @@
-{/* theme: converted */}
+{/* theme: converted */ }
 "use client";
 
 import Image from 'next/image';
@@ -25,8 +25,10 @@ import {
 } from 'lucide-react';
 import { CardPreviewModal } from '@/components/dashboard/pages/CardPreviewModal';
 import { QrPopup } from '@/components/dashboard/pages/Qrpopup';
-import { PhonePreview, ExtraSection,
-ThemeOverride, SectionKey } from '@/components/dashboard/pages/PhonePreview';
+import {
+  PhonePreview, ExtraSection,
+  ThemeOverride, SectionKey
+} from '@/components/dashboard/pages/PhonePreview';
 import TemplatePicker from '@/components/TemplatePicker/TemplatePicker';
 import ExtraSectionBlockWithDragDrop from '@/components/dashboard/pages/ExtraSectionBlockWithDragDrop';
 import { makeQRMatrix } from '@/components/dashboard/pages/qr-engine';
@@ -407,23 +409,23 @@ function pickNumber(source: Record<string, unknown>, keys: string[], fallback: n
 }
 
 const TEMPLATE_PALETTE_TO_HERO: Record<string, string> = {
-  'medical-teal':    'wave-panel',
+  'medical-teal': 'wave-panel',
   'teamwork-orange': 'side-panel',
-  'heritage-gold':   'wave-panel',
-  'team-pro':        'group-diagonal',
-  'royal-purple':    'circle-overlap',
-  'minimal-mono':    'circle-center',
-  'sunset-banner':   'top-banner',
-  'sky-circle':      'circle-overlap',
-  'onyx-pro':        'default',
-  'mocha-torn':      'torn-edge',
-  'navy-gold':       'wave-logo',
-  'emerald-wave':    'wave-logo',
-  'azure-flow':      'wave-panel',
-  'rose-wave':       'wave-panel',
-  'navy-amber':      'wave-logo',
-  'blush-soft':      'wave-side',
-  'violet-pro':      'wave-icons',
+  'heritage-gold': 'wave-panel',
+  'team-pro': 'group-diagonal',
+  'royal-purple': 'circle-overlap',
+  'minimal-mono': 'circle-center',
+  'sunset-banner': 'top-banner',
+  'sky-circle': 'circle-overlap',
+  'onyx-pro': 'default',
+  'mocha-torn': 'torn-edge',
+  'navy-gold': 'wave-logo',
+  'emerald-wave': 'wave-logo',
+  'azure-flow': 'wave-panel',
+  'rose-wave': 'wave-panel',
+  'navy-amber': 'wave-logo',
+  'blush-soft': 'wave-side',
+  'violet-pro': 'wave-icons',
 };
 
 function buildThemeOverrideFromCardDesign(design: Partial<CardDesignResponse>): Partial<ThemeOverride> {
@@ -453,7 +455,7 @@ function buildThemeOverrideFromCardDesign(design: Partial<CardDesignResponse>): 
         ? `linear-gradient(${bgAngle}deg, ${bgColor1} 0%, ${bgColor2} 100%)`
         : bgColor1)
       : (DESIGN_WALLPAPER_STYLES[preset]
-          ?? `linear-gradient(${bgAngle}deg, ${bgColor1} 0%, ${bgColor2} 100%)`);
+        ?? `linear-gradient(${bgAngle}deg, ${bgColor1} 0%, ${bgColor2} 100%)`);
 
   // Derive heroLayout from palette (template palettes map to specific layouts)
   // Treat empty string the same as null/undefined so we always fall back to 'default'.
@@ -704,9 +706,8 @@ function DraggableSectionBlock({
   return (
     <Card
       id={id}
-      className={`bg-card border-border overflow-hidden scroll-mt-4 transition-all duration-200 ${
-        isDragging ? 'opacity-50 shadow-2xl scale-[1.02]' : ''
-      }`}
+      className={`bg-card border-border overflow-hidden scroll-mt-4 transition-all duration-200 ${isDragging ? 'opacity-50 shadow-2xl scale-[1.02]' : ''
+        }`}
       style={{ cursor: 'default' }}
     >
       <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-border">
@@ -1252,17 +1253,17 @@ export default function BusinessProfile({
     }
 
     saveCacheForKey(
-      { 
-        profileImage: updatedProfileImage, 
-        brandLogo: updatedBrandLogo, 
-        logoPosition, 
-        formData, 
-        socialLinks, 
-        connectFields, 
-        sections, 
-        expanded, 
-        customLinks, 
-        extraSections, 
+      {
+        profileImage: updatedProfileImage,
+        brandLogo: updatedBrandLogo,
+        logoPosition,
+        formData,
+        socialLinks,
+        connectFields,
+        sections,
+        expanded,
+        customLinks,
+        extraSections,
         sectionOrder,
         unifiedOrder,
       },
@@ -1406,13 +1407,13 @@ export default function BusinessProfile({
     if (key.startsWith('extra-')) {
       const comp = ADDABLE_COMPONENTS.find(c => c.key === key);
       const newId = `${key}-${Date.now()}`;
-      const ns: ExtraSection = { 
-        id: newId, 
-        type: key, 
-        label: comp?.label ?? key, 
-        enabled: true, 
-        expanded: true, 
-        data: {} 
+      const ns: ExtraSection = {
+        id: newId,
+        type: key,
+        label: comp?.label ?? key,
+        enabled: true,
+        expanded: true,
+        data: {}
       };
       setExtraSections(prev => [...prev, ns]);
       // Append new extra section id to the end of unifiedOrder
@@ -1421,7 +1422,7 @@ export default function BusinessProfile({
     } else {
       setSections(prev => ({ ...prev, [key as keyof Sections]: true }));
       setExpanded(prev => ({ ...prev, [key as keyof Expanded]: true }));
-      
+
       setUnifiedOrder(prev =>
         prev.includes(key) ? prev : [...prev, key]
       );
@@ -1433,13 +1434,13 @@ export default function BusinessProfile({
   }, []);
 
   const updateExtraData = useCallback((id: string, field: string, value: string) => {
-    setExtraSections(prev => prev.map(s => 
+    setExtraSections(prev => prev.map(s =>
       s.id === id ? { ...s, data: { ...s.data, [field]: value } } : s
     ));
   }, []);
 
   const toggleExtra = useCallback((id: string, field: 'enabled' | 'expanded') => {
-    setExtraSections(prev => prev.map(s => 
+    setExtraSections(prev => prev.map(s =>
       s.id === id ? { ...s, [field]: !s[field] } : s
     ));
   }, []);
@@ -1500,16 +1501,7 @@ export default function BusinessProfile({
       case 'contactUs':
         content = (
           <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl bg-muted/30 border border-border gap-3">
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-muted-foreground mb-1">Floating Button Text</p>
-                <Input defaultValue="Add to Contact" className="bg-input border-border text-foreground h-8 text-sm" />
-              </div>
-              <button type="button" onClick={() => downloadVCard(formData, profileImage)}
-                className="flex-shrink-0 flex items-center gap-2 bg-foreground text-background rounded-full px-4 py-2 text-sm font-semibold hover:bg-foreground/80 transition-colors self-end sm:self-auto">
-                Add to Contact <Plus className="w-4 h-4" />
-              </button>
-            </div>
+
             {[
               { icon: Phone, label: 'Contact Number', field: 'phone' as const, color: '#49B618', placeholder: '+1 (555) 000-0000' },
               { icon: Mail, label: 'Email Address', field: 'email' as const, color: '#008001', placeholder: 'contact@domain.com' },
@@ -1534,7 +1526,7 @@ export default function BusinessProfile({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div><Label className="text-muted-foreground text-xs">Company Name</Label><Input value={formData.company} onChange={e => updateField('company', e.target.value)} className="mt-1 bg-input border-border text-foreground" /></div>
             <div><Label className="text-muted-foreground text-xs">Industry</Label><Select value={formData.industry} onValueChange={v => updateField('industry', v)}><SelectTrigger className="mt-1 bg-input border-border text-foreground"><SelectValue /></SelectTrigger><SelectContent className="bg-popover border-border">{INDUSTRIES.map(({ value, label }) => (<SelectItem key={value} value={value} className="text-foreground focus:bg-accent/20 focus:text-foreground">{label}</SelectItem>))}</SelectContent></Select></div>
-            <div><Label className="text-muted-foreground text-xs">Year Founded</Label><Input type="text" inputMode="numeric" pattern="[0-9]{0,4}" maxLength={4} placeholder="e.g. 2015" value={formData.yearFounded} onChange={e => { const raw = e.target.value.replace(/\D/g, '').slice(0, 4); const year = parseInt(raw, 10); const currentYear = new Date().getFullYear(); if (raw.length <= 3 || (year >= 1000 && year <= currentYear)) updateField('yearFounded', raw); }} className="mt-1 bg-input border-border text-foreground" /></div>
+            <div><Label className="text-muted-foreground text-xs">Year Founded</Label><Input type="text" inputMode="numeric" pattern="[0-9]{0,4}" maxLength={4} placeholder="e.g. 2015" value={formData.yearFounded} onChange={e => { const v = e.target.value.replace(/\D/g, '').slice(0, 4); updateField('yearFounded', v); }} className="mt-1 bg-input border-border text-foreground" /></div>
             <div><Label className="text-muted-foreground text-xs">Location</Label><Input value={formData.location} onChange={e => updateField('location', e.target.value)} className="mt-1 bg-input border-border text-foreground" /></div>
           </div>
         );
@@ -1710,14 +1702,14 @@ export default function BusinessProfile({
     <div className="space-y-4">
 
       {/* Template picker - prefill profile + design */}
-      
+
       {/* Profile header card */}
       <Card className="bg-gradient-to-br from-card to-primary/10 border-border">
         <CardContent className="p-4 sm:p-8">
           <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
             <div className="relative group flex-shrink-0 self-center sm:self-start">
               <div className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-2xl overflow-hidden ring-4 ring-primary/30 bg-muted flex items-center justify-center">
-                {profileImage ? <Image src={profileImage} alt="Profile" fill className="object-cover" style={{ objectPosition: 'top' }} /> : <User className="w-10 h-10 text-muted-foreground" />}
+                {profileImage ? <Image src={profileImage} alt="Profile" fill className="object-cover" /> : <User className="w-10 h-10 text-muted-foreground" />}
               </div>
               <label className="absolute inset-0 bg-black/60 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
                 <Upload className="w-7 h-7 text-white" />
@@ -1751,9 +1743,9 @@ export default function BusinessProfile({
         </CardContent >
       </Card >
 
-<div className="mb-6">
-  <h2 className="text-foreground text-lg font-bold mb-1">Templates</h2>
-  <p className="text-muted-foreground text-xs mb-3">Pick a template — fields and colors will be filled in. Edit anything below.</p>
+      <div className="mb-6">
+        <h2 className="text-foreground text-lg font-bold mb-1">Templates</h2>
+        <p className="text-muted-foreground text-xs mb-3">Pick a template — fields and colors will be filled in. Edit anything below.</p>
         <TemplatePicker
           cardId={resolvedCardId ?? cardId ?? null}
           onApply={(content) => {

@@ -723,19 +723,67 @@ router.delete("/account", verifySession, async (req: AuthRequest, res: Response)
   const userId = req.user!.uid;
 
   try {
-    const { error: dbError } = await supabase
+    // 1. Delete card child records for each card owned by the user
+    const { data: cards } = await supabase
+      .from("Card")
+      .select("id")
+      .eq("userId", userId);
+
+    if (cards && cards.length > 0) {
+      const cardIds = cards.map((c: { id: string }) => c.id);
+      for (const cardId of cardIds) {
+        await supabase.from("CardContent").delete().eq("cardId", cardId);
+        await supabase.from("CardDesign").delete().eq("cardId", cardId);
+        await supabase.from("CardQRConfig").delete().eq("cardId", cardId);
+        await supabase.from("CardInteraction").delete().eq("cardId", cardId);
+        await supabase.from("CardShare").delete().eq("cardId", cardId);
+      }
+    }
+
+    // 2. Delete cards
+    await supabase.from("Card").delete().eq("userId", userId);
+
+    // 3. Delete business-profile child records
+    const { data: bp } = await supabase
+      .from("BusinessProfile")
+      .select("id")
+      .eq("userId", userId)
+      .maybeSingle();
+
+    if (bp) {
+      await supabase.from("SocialLink").delete().eq("businessProfileId", bp.id);
+      await supabase.from("CustomLink").delete().eq("businessProfileId", bp.id);
+    }
+
+    // 4. Delete tables with direct userId
+    await supabase.from("BusinessProfile").delete().eq("userId", userId);
+    await supabase.from("Lead").delete().eq("userId", userId);
+    await supabase.from("Notification").delete().eq("userId", userId);
+    await supabase.from("PaymentMethod").delete().eq("userId", userId);
+    await supabase.from("Order").delete().eq("userId", userId);
+    await supabase.from("Invoice").delete().eq("userId", userId);
+    await supabase.from("QRTemplate").delete().eq("userId", userId);
+    await supabase.from("NfcCard").delete().eq("userId", userId);
+    await supabase.from("EmailToken").delete().eq("userId", userId);
+
+    // 5. Delete the user row
+    const { data: deleted, error: dbError } = await supabase
       .from("User")
       .delete()
-      .eq("id", userId);
+      .eq("id", userId)
+      .select();
 
     if (dbError) return res.status(500).json({ error: dbError.message });
+    if (!deleted || deleted.length === 0) {
+      return res.status(500).json({ error: "User not found or already deleted" });
+    }
 
-    const { error: authError } = await supabase.auth.admin.deleteUser(userId);
-
-    if (authError) return res.status(500).json({ error: authError.message });
+    // 6. Try to delete from Supabase Auth (non-blocking)
+    await supabase.auth.admin.deleteUser(userId).catch(() => {});
 
     return res.json({ success: true });
   } catch (error: unknown) {
+    console.error("Delete account error:", error);
     return res.status(500).json({ error: getErrorMessage(error) });
   }
 });
