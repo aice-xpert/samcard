@@ -1501,16 +1501,7 @@ export default function BusinessProfile({
       case 'contactUs':
         content = (
           <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl bg-muted/30 border border-border gap-3">
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-muted-foreground mb-1">Floating Button Text</p>
-                <Input defaultValue="Add to Contact" className="bg-input border-border text-foreground h-8 text-sm" />
-              </div>
-              <button type="button" onClick={() => downloadVCard(formData, profileImage)}
-                className="flex-shrink-0 flex items-center gap-2 bg-foreground text-background rounded-full px-4 py-2 text-sm font-semibold hover:bg-foreground/80 transition-colors self-end sm:self-auto">
-                Add to Contact <Plus className="w-4 h-4" />
-              </button>
-            </div>
+
             {[
               { icon: Phone, label: 'Contact Number', field: 'phone' as const, color: '#49B618', placeholder: '+1 (555) 000-0000' },
               { icon: Mail, label: 'Email Address', field: 'email' as const, color: '#008001', placeholder: 'contact@domain.com' },
