@@ -214,7 +214,7 @@ router.get("/:slug", async (req, res: Response) => {
         fontFamily, nameFontSize, bodyFontSize, boldHeadings, cardRadius,
         shadowIntensity, glowEffect, showProfile, showHeading, showContact,
         showSocial, showLinks, showAppointment, showBusinessDetails, showExtraSections,
-        businessProfileId
+        businessProfileId, qrConfig
       `;
 
     // Try slug first, then fall back to customSlug — avoids PostgREST OR filter
@@ -253,11 +253,22 @@ router.get("/:slug", async (req, res: Response) => {
       .eq("cardId", card.id)
       .maybeSingle();
 
-    const { data: qrConfig } = await supabase
-      .from("CardQRConfig")
-      .select("*")
-      .eq("cardId", card.id)
-      .maybeSingle();
+    // The authenticated save path (routes/cards.ts PUT /:id/qr) stores QR config
+    // on the Card.qrConfig JSON column, and getCardQRConfig reads from there too.
+    // Prefer that column; fall back to the legacy CardQRConfig table for any rows
+    // created by the (currently shadowed) card-qr.ts route. Reading only the
+    // legacy table here is what made the public page always show the default QR.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let qrConfig: any =
+      (card as { qrConfig?: unknown }).qrConfig ?? null;
+    if (!qrConfig) {
+      const { data: legacyQrConfig } = await supabase
+        .from("CardQRConfig")
+        .select("*")
+        .eq("cardId", card.id)
+        .maybeSingle();
+      qrConfig = legacyQrConfig ?? null;
+    }
 
     const { data: socialLinks } = await supabase
       .from("SocialLink")
@@ -812,11 +823,19 @@ router.get("/:slug/qr", async (req, res: Response) => {
       return res.status(404).json({ error: "Card not found" });
     }
 
-    const { data: qrConfig } = await supabase
-      .from("CardQRConfig")
-      .select("*")
-      .eq("cardId", card.id)
-      .maybeSingle();
+    // Prefer the Card.qrConfig JSON column (where saves land); fall back to the
+    // legacy CardQRConfig table. See the /:slug handler above for details.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let qrConfig: any =
+      (card as { qrConfig?: unknown }).qrConfig ?? null;
+    if (!qrConfig) {
+      const { data: legacyQrConfig } = await supabase
+        .from("CardQRConfig")
+        .select("*")
+        .eq("cardId", card.id)
+        .maybeSingle();
+      qrConfig = legacyQrConfig ?? null;
+    }
 
     const shareUrl = `${process.env.FRONTEND_URL || "https://samcard.app"}${card.shareUrl}`;
 

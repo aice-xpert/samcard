@@ -19,9 +19,15 @@ import {
   updateCard,
   getCardContent,
   getCardQRConfig,
+  updateCardQR,
   ApiCard,
   CardQRConfigPayload,
 } from '@/lib/api';
+import {
+  loadConfig as loadLocalQrConfig,
+  qrStorageKeyForCard,
+  buildQrUpdatePayload,
+} from '@/components/dashboard/pages/NfcQR';
 import { makeQRMatrix } from '@/components/dashboard/pages/qr-engine';
 import {
   buildQrSvgString,
@@ -152,6 +158,25 @@ export function MyCardsNew({ onEditCard, onCreateBusinessCard, onNavigate, onVie
         ]);
 
         return { id, content, qrConfig };
+      }),
+    );
+
+    // Backfill: if a card has no QR config in the DB but this browser holds one
+    // in localStorage (customized before persistence existed / before the card
+    // had an id), push it to the DB. Without this the public card page renders
+    // the default black QR even though the editor/download show the custom one.
+    await Promise.all(
+      settled.map(async (entry) => {
+        if (entry.qrConfig) return;
+        const local = loadLocalQrConfig(qrStorageKeyForCard(entry.id));
+        if (!local) return;
+        try {
+          const payload = buildQrUpdatePayload(local);
+          await updateCardQR(entry.id, payload);
+          entry.qrConfig = payload;
+        } catch {
+          // Keep the local copy for download; will retry on next load.
+        }
       }),
     );
 

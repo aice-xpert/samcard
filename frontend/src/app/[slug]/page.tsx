@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo, useRef, Fragment } from "react";
+import { useEffect, useState, useCallback, useMemo, Fragment } from "react";
 import { useParams } from "next/navigation";
 import {
   Phone,
@@ -29,7 +29,6 @@ import {
 } from "@/components/dashboard/pages/Qrrenderers";
 import { makeQRMatrix } from "@/components/dashboard/pages/qr-engine";
 import { LOGOS } from "@/components/dashboard/pages/constants";
-import { getCardQRConfig } from "@/lib/api";
 
 const BACKEND_URL =
   process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "") || "";
@@ -932,13 +931,11 @@ function ExtraSectionBlock({
 function QRModal({
   onClose,
   qrConfig: initialQrConfig,
-  cardId,
   cardUrl,
   T,
 }: {
   onClose: () => void;
   qrConfig: QRConfig | null | undefined;
-  cardId?: string | null;
   cardUrl: string;
   T: {
     bg: string;
@@ -954,19 +951,12 @@ function QRModal({
     fontFamily: string;
   };
 }) {
-  const [qrConfig, setQrConfig] = useState(initialQrConfig);
-  const fetched = useRef(false);
-
-  useEffect(() => {
-    if (qrConfig || !cardId || fetched.current) return;
-    fetched.current = true;
-
-    getCardQRConfig(cardId)
-      .then((data) => {
-        if (data) setQrConfig(data);
-      })
-      .catch(() => { });
-  }, [cardId]);
+  // The QR config comes straight from the public card payload
+  // (/api/public/cards/:slug). We deliberately do NOT fall back to the
+  // authenticated /api/user/cards/:id/qr endpoint here: that only works for the
+  // logged-in owner and would hide a missing-persistence bug from anonymous
+  // visitors (the QR would render for the owner but no one else).
+  const [qrConfig] = useState(initialQrConfig);
 
   return (
     <div
@@ -1949,7 +1939,6 @@ export default function PublicCardPage() {
           qrConfig={card.qrConfig}
           cardUrl={cardUrl}
           T={T}
-          cardId={card.id}
         />
       )}
 

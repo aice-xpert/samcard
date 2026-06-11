@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import BusinessProfile from "./BusinessProfile";
 import { DesignNew } from "./Design";
-import { NfcQr } from "./NfcQR";
+import { NfcQr, loadConfig, qrStorageKeyForCard, qrStorageKeyForEditor } from "./NfcQR";
 import { createCard, updateCard, updateCardQR, updateCardContent, updateCardDesign, CardContentPayload, getCards, uploadFile, checkSlugAvailable } from "@/lib/api";
 import { makeQRMatrix } from "@/components/dashboard/pages/qr-engine";
 import { rebuildDecoratedComposite } from "@/components/dashboard/pages/qr-download-utils";
@@ -588,13 +588,22 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
                 await updateCardDesign(targetCardId, buildCardDesignPayload(designSettings));
             }
 
-            if (qrConfig && targetCardId) {
+            // Don't depend solely on the transient `qrConfig` React state — if the
+            // user applied a QR in the customizer but the state was reset/remounted,
+            // it still lives in localStorage. Read it back so the config reliably
+            // reaches the DB (otherwise other devices/accounts get the default QR).
+            const effectiveQrConfig =
+                qrConfig ??
+                loadConfig(qrStorageKeyForCard(targetCardId)) ??
+                loadConfig(qrStorageKeyForEditor(undefined, undefined, false, undefined));
+
+            if (effectiveQrConfig && targetCardId) {
                 // Rebuild decorated composite with the real card URL so the QR
                 // matrix encodes the correct slug instead of the placeholder
                 // ("…/…") that was used before the card existed.
-                let finalDecorateUrl = qrConfig.decorateCompositeDataUrl || '';
+                let finalDecorateUrl = effectiveQrConfig.decorateCompositeDataUrl || '';
                 const realSlug = createdSlug ?? (await getCards().then(cs => cs.find(c => c.id === targetCardId)?.slug));
-                if (qrConfig.decorateImageUrl && realSlug) {
+                if (effectiveQrConfig.decorateImageUrl && realSlug) {
                     try {
                         const PUBLIC_BASE =
                             process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') ||
@@ -602,8 +611,8 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
                         const correctUrl = `${PUBLIC_BASE}/${realSlug}`;
                         const { matrix, N } = makeQRMatrix(correctUrl);
                         const blob = await rebuildDecoratedComposite(
-                            qrConfig.decorateImageUrl,
-                            qrConfig,
+                            effectiveQrConfig.decorateImageUrl,
+                            effectiveQrConfig,
                             matrix,
                             N,
                             1200,
@@ -617,26 +626,26 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
                 }
 
                 await updateCardQR(targetCardId, {
-                    shapeId: qrConfig.shapeId,
-                    dotShape: qrConfig.dotShape,
-                    finderStyle: qrConfig.finderStyle,
-                    eyeBall: qrConfig.eyeBall,
-                    bodyScale: qrConfig.bodyScale,
-                    fg: qrConfig.fg,
-                    bg: qrConfig.bg,
-                    accentFg: qrConfig.accentFg || qrConfig.fg,
-                    accentBg: qrConfig.accentBg || qrConfig.bg,
-                    strokeEnabled: qrConfig.strokeEnabled,
-                    strokeColor: qrConfig.strokeColor,
-                    gradEnabled: qrConfig.gradEnabled,
-                    gradStops: qrConfig.gradStops,
-                    gradAngle: qrConfig.gradAngle,
-                    selectedLogo: qrConfig.selectedLogo || '',
-                    customLogoUrl: qrConfig.customLogoUrl || '',
-                    logoBg: qrConfig.logoBg || '#ffffff',
-                    stickerId: qrConfig.selectedSticker?.id ?? null,
-                    designLabel: qrConfig.designLabel,
-                    shapeLabel: qrConfig.shapeLabel,
+                    shapeId: effectiveQrConfig.shapeId,
+                    dotShape: effectiveQrConfig.dotShape,
+                    finderStyle: effectiveQrConfig.finderStyle,
+                    eyeBall: effectiveQrConfig.eyeBall,
+                    bodyScale: effectiveQrConfig.bodyScale,
+                    fg: effectiveQrConfig.fg,
+                    bg: effectiveQrConfig.bg,
+                    accentFg: effectiveQrConfig.accentFg || effectiveQrConfig.fg,
+                    accentBg: effectiveQrConfig.accentBg || effectiveQrConfig.bg,
+                    strokeEnabled: effectiveQrConfig.strokeEnabled,
+                    strokeColor: effectiveQrConfig.strokeColor,
+                    gradEnabled: effectiveQrConfig.gradEnabled,
+                    gradStops: effectiveQrConfig.gradStops,
+                    gradAngle: effectiveQrConfig.gradAngle,
+                    selectedLogo: effectiveQrConfig.selectedLogo || '',
+                    customLogoUrl: effectiveQrConfig.customLogoUrl || '',
+                    logoBg: effectiveQrConfig.logoBg || '#ffffff',
+                    stickerId: effectiveQrConfig.selectedSticker?.id ?? null,
+                    designLabel: effectiveQrConfig.designLabel,
+                    shapeLabel: effectiveQrConfig.shapeLabel,
                     decorateImageUrl: finalDecorateUrl,
                 });
             }

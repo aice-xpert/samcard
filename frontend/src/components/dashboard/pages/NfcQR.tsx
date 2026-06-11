@@ -14,6 +14,7 @@ import { LOGOS } from '@/components/dashboard/pages/constants';
 import { makeQRMatrix } from '@/components/dashboard/pages/qr-engine';
 import { useQrStore } from '@/components/dashboard/stores/Useqrstore';
 import { getCardQRConfig, updateCardQR, getCards, uploadFile, BACKEND_URL } from '@/lib/api';
+import type { CardQRConfigPayload } from '@/lib/api';
 import {
   buildQrSvgString,
   buildCustomizedQrSvgFromConfig,
@@ -26,10 +27,10 @@ import {
 
 const STORAGE_KEY = 'samcard_qr_config_v1';
 
-const qrStorageKeyForCard = (cardId?: string): string =>
+export const qrStorageKeyForCard = (cardId?: string): string =>
   cardId ? `${STORAGE_KEY}:${cardId}` : STORAGE_KEY;
 
-const qrStorageKeyForEditor = (
+export const qrStorageKeyForEditor = (
   explicitCardId?: string,
   resolvedCardId?: string,
   allowFallbackToFirstCard: boolean = true,
@@ -67,7 +68,35 @@ function saveConfig(cfg: QRCustomConfig, storageKey: string = STORAGE_KEY): void
   } catch { /* ignore */ }
 }
 
-function loadConfig(storageKey: string = STORAGE_KEY): QRCustomConfig | null {
+// Single source of truth for the backend QR payload shape. Used by the in-editor
+// apply, the create-flow finalize, and the self-heal flush so they never drift.
+export function buildQrUpdatePayload(cfg: QRCustomConfig): CardQRConfigPayload {
+  return {
+    shapeId: cfg.shapeId,
+    dotShape: cfg.dotShape,
+    finderStyle: cfg.finderStyle,
+    eyeBall: cfg.eyeBall,
+    bodyScale: cfg.bodyScale,
+    fg: cfg.fg,
+    bg: cfg.bg,
+    accentFg: cfg.accentFg || cfg.fg,
+    accentBg: cfg.accentBg || cfg.bg,
+    strokeEnabled: cfg.strokeEnabled,
+    strokeColor: cfg.strokeColor,
+    gradEnabled: cfg.gradEnabled,
+    gradStops: cfg.gradStops,
+    gradAngle: cfg.gradAngle,
+    selectedLogo: cfg.selectedLogo || '',
+    customLogoUrl: cfg.customLogoUrl || '',
+    logoBg: cfg.logoBg || '#ffffff',
+    stickerId: cfg.selectedSticker?.id ?? null,
+    designLabel: cfg.designLabel,
+    shapeLabel: cfg.shapeLabel,
+    decorateImageUrl: cfg.decorateCompositeDataUrl || '',
+  };
+}
+
+export function loadConfig(storageKey: string = STORAGE_KEY): QRCustomConfig | null {
   try {
     const raw = localStorage.getItem(storageKey);
     if (!raw) return null;
@@ -317,7 +346,23 @@ export function NfcQr({
 
     getCardQRConfig(resolvedCardId)
       .then((savedConfig) => {
-        if (!savedConfig) return;
+        if (!savedConfig) {
+          // Self-heal: the card has no QR row in the DB yet, but this browser may
+          // hold a config in localStorage (e.g. customized in the create flow
+          // before the card id existed). Flush it to the backend so every other
+          // device/account renders the same custom QR instead of the default.
+          const localConfig = loadConfig(activeQrStorageKey);
+          if (localConfig) {
+            updateCardQR(resolvedCardId, buildQrUpdatePayload(localConfig))
+              .then(() => {
+                setQrConfig(localConfig);
+                setQr(localConfig, liveQrMatrix, liveQrN);
+                window.dispatchEvent(new Event('cardDataUpdated'));
+              })
+              .catch(() => { /* keep local copy; will retry on next mount */ });
+          }
+          return;
+        }
 
         const logoIdx = savedConfig.selectedLogo?.startsWith('logo-')
           ? parseInt(savedConfig.selectedLogo.replace('logo-', ''), 10)
@@ -474,29 +519,7 @@ export function NfcQr({
     const idToUse = resolvedCardId || cardId;
     if (idToUse) {
       try {
-        await updateCardQR(idToUse, {
-          shapeId: finalCfg.shapeId,
-          dotShape: finalCfg.dotShape,
-          finderStyle: finalCfg.finderStyle,
-          eyeBall: finalCfg.eyeBall,
-          bodyScale: finalCfg.bodyScale,
-          fg: finalCfg.fg,
-          bg: finalCfg.bg,
-          accentFg: finalCfg.accentFg || finalCfg.fg,
-          accentBg: finalCfg.accentBg || finalCfg.bg,
-          strokeEnabled: finalCfg.strokeEnabled,
-          strokeColor: finalCfg.strokeColor,
-          gradEnabled: finalCfg.gradEnabled,
-          gradStops: finalCfg.gradStops,
-          gradAngle: finalCfg.gradAngle,
-          selectedLogo: finalCfg.selectedLogo || '',
-          customLogoUrl: finalCfg.customLogoUrl || '',
-          logoBg: finalCfg.logoBg || '#ffffff',
-          stickerId: finalCfg.selectedSticker?.id ?? null,
-          designLabel: finalCfg.designLabel,
-          shapeLabel: finalCfg.shapeLabel,
-          decorateImageUrl: finalCfg.decorateCompositeDataUrl || '',
-        });
+        await updateCardQR(idToUse, buildQrUpdatePayload(finalCfg));
 
         window.dispatchEvent(new Event('cardDataUpdated'));
       } catch {
