@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo, useRef, Fragment } from "react";
+import { useEffect, useState, useCallback, useMemo, Fragment } from "react";
 import { useParams } from "next/navigation";
 import {
   Phone,
@@ -29,7 +29,6 @@ import {
 } from "@/components/dashboard/pages/Qrrenderers";
 import { makeQRMatrix } from "@/components/dashboard/pages/qr-engine";
 import { LOGOS } from "@/components/dashboard/pages/constants";
-import { getCardQRConfig } from "@/lib/api";
 
 const BACKEND_URL =
   process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "") || "";
@@ -932,13 +931,11 @@ function ExtraSectionBlock({
 function QRModal({
   onClose,
   qrConfig: initialQrConfig,
-  cardId,
   cardUrl,
   T,
 }: {
   onClose: () => void;
   qrConfig: QRConfig | null | undefined;
-  cardId?: string | null;
   cardUrl: string;
   T: {
     bg: string;
@@ -954,19 +951,12 @@ function QRModal({
     fontFamily: string;
   };
 }) {
-  const [qrConfig, setQrConfig] = useState(initialQrConfig);
-  const fetched = useRef(false);
-
-  useEffect(() => {
-    if (qrConfig || !cardId || fetched.current) return;
-    fetched.current = true;
-
-    getCardQRConfig(cardId)
-      .then((data) => {
-        if (data) setQrConfig(data);
-      })
-      .catch(() => { });
-  }, [cardId]);
+  // The QR config comes straight from the public card payload
+  // (/api/public/cards/:slug). We deliberately do NOT fall back to the
+  // authenticated /api/user/cards/:id/qr endpoint here: that only works for the
+  // logged-in owner and would hide a missing-persistence bug from anonymous
+  // visitors (the QR would render for the owner but no one else).
+  const [qrConfig] = useState(initialQrConfig);
 
   return (
     <div
@@ -1422,10 +1412,21 @@ export default function PublicCardPage() {
 
   const PhotoEl = ({ height, objectFit = 'cover', objectPosition = 'center 20%', className = '' }: { height?: number | string; objectFit?: string; objectPosition?: string; className?: string }) =>
     profileImg ? (
-      <img src={profileImg} alt={name}
-        style={{ width: '100%', height: height ?? '100%', objectFit: objectFit as 'cover', objectPosition, display: 'block' }}
-        className={className}
-      />
+      objectFit === 'contain' ? (
+        // Blurred, zoomed copy fills the frame behind the sharp (uncropped)
+        // photo so wave/curve overlays stay visible instead of flat bars.
+        <div style={{ position: 'relative', width: '100%', height: height ?? '100%', overflow: 'hidden' }} className={className}>
+          <img src={profileImg} alt="" aria-hidden="true"
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', filter: 'blur(16px) brightness(0.55)', transform: 'scale(1.15)', display: 'block' }} />
+          <img src={profileImg} alt={name}
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center', display: 'block' }} />
+        </div>
+      ) : (
+        <img src={profileImg} alt={name}
+          style={{ width: '100%', height: height ?? '100%', objectFit: objectFit as 'cover', objectPosition, display: 'block' }}
+          className={className}
+        />
+      )
     ) : (
       <div style={{
         width: '100%', height: height ?? '100%',
@@ -1521,8 +1522,8 @@ export default function PublicCardPage() {
       <>
         {heroLayout === 'wave-panel' && (
           <div style={{ position: 'relative', fontFamily: T.fontFamily }}>
-            <div style={{ width: '100%', height: 240, position: 'relative', overflow: 'hidden' }}>
-              <PhotoEl height="100%" />
+            <div style={{ width: '100%', height: 240, position: 'relative', overflow: 'hidden', background: T.bg }}>
+              <PhotoEl height="100%" objectFit="contain" objectPosition="center" />
               <svg viewBox="0 0 200 36" preserveAspectRatio="none"
                 style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 42, zIndex: 2 }}>
                 <path d="M0,0 Q100,28 200,0 L200,36 L0,36 Z" fill={T.bg} />
@@ -1567,8 +1568,8 @@ export default function PublicCardPage() {
 
         {heroLayout === 'group-diagonal' && (
           <div style={{ fontFamily: T.fontFamily }}>
-            <div style={{ width: '100%', height: 180, position: 'relative', overflow: 'hidden' }}>
-              <PhotoEl height="100%" />
+            <div style={{ width: '100%', height: 180, position: 'relative', overflow: 'hidden', background: T.bg }}>
+              <PhotoEl height="100%" objectFit="contain" objectPosition="center" />
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.5) 100%)' }} />
               {(!hasBrandLogo || content.logoPosition === 'top-right') && (
                 <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 3 }}>
@@ -1603,8 +1604,8 @@ export default function PublicCardPage() {
 
         {heroLayout === 'circle-overlap' && (
           <div style={{ fontFamily: T.fontFamily }}>
-            <div style={{ width: '100%', height: 180, position: 'relative', overflow: 'hidden' }}>
-              <PhotoEl height="100%" />
+            <div style={{ width: '100%', height: 180, position: 'relative', overflow: 'hidden', background: T.bg }}>
+              <PhotoEl height="100%" objectFit="contain" objectPosition="center" />
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.55) 100%)' }} />
               {hasBrandLogo && content.logoPosition === 'top-right' && (
                 <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 5 }}><LogoBadge pos="top-right" /></div>
@@ -1662,8 +1663,8 @@ export default function PublicCardPage() {
             <div style={{ background: T.green, padding: '18px 20px' }}>
               <NameInfo color="#fff" titleColor="rgba(255,255,255,0.9)" companyColor="rgba(255,255,255,0.7)" />
             </div>
-            <div style={{ width: '100%', height: 220, overflow: 'hidden', position: 'relative' }}>
-              <PhotoEl height="100%" />
+            <div style={{ width: '100%', height: 220, overflow: 'hidden', position: 'relative', background: T.bg }}>
+              <PhotoEl height="100%" objectFit="contain" objectPosition="center" />
               <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to bottom, transparent 30%, ${T.bg}88 65%, ${T.bg}cc 80%, ${T.bg} 100%)` }} />
             </div>
           </div>
@@ -1695,8 +1696,8 @@ export default function PublicCardPage() {
 
         {heroLayout === 'wave-logo' && (
           <div style={{ fontFamily: T.fontFamily, position: 'relative' }}>
-            <div style={{ width: '100%', height: 260, position: 'relative', overflow: 'hidden' }}>
-              <PhotoEl height="100%" objectPosition="center top" />
+            <div style={{ width: '100%', height: 260, position: 'relative', overflow: 'hidden', background: T.bg }}>
+              <PhotoEl height="100%" objectFit="contain" objectPosition="center" />
               <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, transparent 35%, ${T.green}55 100%)` }} />
               <svg viewBox="0 0 400 60" preserveAspectRatio="none"
                 style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 48, zIndex: 1 }}>
@@ -1767,8 +1768,8 @@ export default function PublicCardPage() {
 
         {heroLayout === 'wave-icons' && (
           <div style={{ fontFamily: T.fontFamily, position: 'relative' }}>
-            <div style={{ width: '100%', height: 230, position: 'relative', overflow: 'hidden' }}>
-              <PhotoEl height="100%" objectPosition="center top" />
+            <div style={{ width: '100%', height: 230, position: 'relative', overflow: 'hidden', background: T.bg }}>
+              <PhotoEl height="100%" objectFit="contain" objectPosition="center" />
               <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, transparent 30%, ${T.green}88 100%)` }} />
               {hasBrandLogo && content.logoPosition === 'top-right' && (
                 <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 5 }}><LogoBadge pos="top-right" /></div>
@@ -1798,8 +1799,8 @@ export default function PublicCardPage() {
 
         {heroLayout === 'slash-wave' && (
           <div style={{ fontFamily: T.fontFamily, position: 'relative' }}>
-            <div style={{ width: '100%', height: 200, position: 'relative', overflow: 'hidden' }}>
-              <PhotoEl height="100%" objectPosition="center top" />
+            <div style={{ width: '100%', height: 200, position: 'relative', overflow: 'hidden', background: T.bg }}>
+              <PhotoEl height="100%" objectFit="contain" objectPosition="center" />
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.55) 100%)' }} />
               <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} viewBox="0 0 100 200" preserveAspectRatio="none">
                 <line x1="60" y1="0" x2="100" y2="120" stroke={T.green} strokeWidth="9" opacity="0.7" />
@@ -1856,7 +1857,7 @@ export default function PublicCardPage() {
               }}
             >
               <div style={{ position: 'absolute', inset: 0 }}>
-                <PhotoEl height="100%" />
+                <PhotoEl height="100%" objectFit="contain" objectPosition="center" />
               </div>
               <div style={{ position: "absolute", inset: 0, background: `linear-gradient(to bottom, transparent 15%, ${T.bg}66 50%, ${T.bg}cc 75%, ${T.bg} 100%)` }} />
               {hasBrandLogo && content.logoPosition === "top-right" && (
@@ -1948,7 +1949,6 @@ export default function PublicCardPage() {
           qrConfig={card.qrConfig}
           cardUrl={cardUrl}
           T={T}
-          cardId={card.id}
         />
       )}
 

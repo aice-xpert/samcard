@@ -7,6 +7,7 @@ import {
   Video as VideoIcon, ChevronRight, MessageSquare, Briefcase,
 } from 'lucide-react';
 import { Button } from '@/components/dashboard/ui/button';
+import { ProfileHero } from '@/components/dashboard/pages/ProfileHero';
 
 // ── Types ──────────────────────────────────────────────────────────
 export type LogoPosition = 'top-left' | 'top-right' | 'below-photo' | 'below-name';
@@ -52,6 +53,7 @@ export interface ThemeOverride {
   boldHeadings: boolean;
   cardRadius: number;
   phoneBgStyle?: string;
+  heroLayout?: string;
 }
 
 export interface CardPreviewModalProps {
@@ -148,30 +150,6 @@ function str(data: Record<string, string | { label: string; url: string }[]>, ke
   return typeof v === 'string' ? v : '';
 }
 
-// ── Brand Logo Badge ───────────────────────────────────────────────
-function BrandLogoBadge({
-  src, alt = 'Brand', bg = 'rgba(0,0,0,0.55)', blur = true,
-  maxSize = 52, padding = '4px', borderRadius = 10, border,
-}: {
-  src: string; alt?: string; bg?: string; blur?: boolean;
-  maxSize?: number; padding?: string; borderRadius?: number; border?: string;
-}) {
-  return (
-    <div style={{
-      display: 'inline-block', padding, borderRadius, background: bg,
-      lineHeight: 0, flexShrink: 0,
-      ...(blur ? { backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' } : {}),
-      ...(border ? { border } : {}),
-    }}>
-      <img src={src} alt={alt} style={{
-        display: 'block', maxWidth: maxSize, maxHeight: maxSize,
-        width: 'auto', height: 'auto', objectFit: 'contain',
-        borderRadius: Math.max(0, borderRadius - 4),
-      }} />
-    </div>
-  );
-}
-
 // ── Sub-components ─────────────────────────────────────────────────
 function CardBlock({ children, T }: { children: React.ReactNode; T: ThemeOverride }) {
   return (
@@ -202,77 +180,17 @@ function Divider({ T }: { T: ThemeOverride }) {
 
 // ── Section Components ─────────────────────────────────────────────
 
-function ProfileSection({ T, profileImage, formData, brandLogo, logoPosition, hasBrandLogo, hasProfileImage, contactItems }: any) {
+// Profile hero — delegates to the shared ProfileHero component so the modal
+// renders the exact same layout-aware hero as the dashboard PhonePreview.
+function ProfileSection({ T, profileImage, formData, brandLogo, logoPosition }: any) {
   return (
-    <>
-      <div className="relative" style={{ aspectRatio: '4/3', maxHeight: '240px', overflow: 'hidden' }}>
-        {hasProfileImage ? (
-          <img src={profileImage} alt={formData.name} className="w-full h-full object-contain object-center" />
-        ) : (
-          <div className="w-full h-full"
-            style={{ background: `linear-gradient(160deg, ${T.muted} 0%, ${T.card} 100%)` }} />
-        )}
-        <div className="absolute inset-0"
-          style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.75) 100%)' }} />
-        <div className="absolute bottom-0 left-0 right-0 h-[2px]"
-          style={{ background: `linear-gradient(90deg, transparent, ${T.green}, ${T.greenLight}, ${T.green}, transparent)` }} />
-        {hasBrandLogo && logoPosition === 'top-left' && (
-          <div className="absolute top-3 left-3 z-10">
-            <BrandLogoBadge src={brandLogo!} maxSize={48} padding="5px" borderRadius={10} />
-          </div>
-        )}
-        {hasBrandLogo && logoPosition === 'top-right' && (
-          <div className="absolute top-3 right-3 z-10">
-            <BrandLogoBadge src={brandLogo!} maxSize={48} padding="5px" borderRadius={10} />
-          </div>
-        )}
-        <div className="absolute bottom-0 left-0 right-0 px-4 pb-3 z-10">
-          <h1 style={{ fontWeight: T.boldHeadings ? 800 : 600, fontSize: T.nameFontSize, lineHeight: 1.2, color: '#fff', textShadow: '0 1px 8px rgba(0,0,0,0.7)', fontFamily: T.fontFamily, wordBreak: 'break-all', overflowWrap: 'break-word' }}>
-            {formData.name}
-          </h1>
-          {formData.title && <p style={{ fontSize: T.bodyFontSize, marginTop: 2, color: T.greenLight, fontFamily: T.fontFamily, wordBreak: 'break-all', overflowWrap: 'break-word' }}>{formData.title}</p>}
-
-          {hasBrandLogo && logoPosition === 'below-name' && (
-            <div className="flex justify-center mt-1">
-              <BrandLogoBadge src={brandLogo!} bg="rgba(0,0,0,0.45)" blur={false} maxSize={22} padding="2px 4px" borderRadius={5} />
-            </div>
-          )}
-
-          {formData.company && (
-            <div className="flex items-center gap-1.5 mt-0.5 justify-center">
-              <p style={{ fontSize: T.bodyFontSize, color: 'rgba(255,255,255,0.65)', fontFamily: T.fontFamily, wordBreak: 'break-all', overflowWrap: 'break-word' }}>{formData.company}</p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {hasBrandLogo && logoPosition === 'below-photo' && (
-        <div className="flex justify-center py-2.5">
-          <BrandLogoBadge src={brandLogo!} bg={T.card} blur={false} maxSize={80} padding="8px 12px" borderRadius={12} border={`1px solid ${T.cardBorder}`} />
-        </div>
-      )}
-
-      {formData.tagline && (
-        <div className="px-4 py-2.5 text-center">
-          <p style={{ fontSize: T.bodyFontSize, fontStyle: 'italic', lineHeight: 1.5, color: T.textMuted, fontFamily: T.fontFamily, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{formData.tagline}</p>
-        </div>
-      )}
-
-      {contactItems.length > 0 && (
-        <div className="flex justify-center gap-3 py-3 mx-3 mb-2.5"
-          style={{ background: T.card, border: `1px solid ${T.cardBorder}`, borderRadius: T.cardRadius }}>
-          {contactItems.slice(0, 4).map(({ hrefFn, value, icon: Icon }: any, i: number) => (
-            <a key={i} href={hrefFn(value)} target="_blank" rel="noopener noreferrer"
-              onClick={e => e.stopPropagation()} className="flex flex-col items-center gap-1 modal-tap">
-              <div className="w-11 h-11 rounded-full flex items-center justify-center"
-                style={{ background: `linear-gradient(135deg,${T.green},${T.greenLight})`, boxShadow: `0 3px 10px ${T.green}66` }}>
-                <Icon className="w-4 h-4 text-white" />
-              </div>
-            </a>
-          ))}
-        </div>
-      )}
-    </>
+    <ProfileHero
+      T={T}
+      profileImage={profileImage}
+      brandLogo={brandLogo}
+      logoPosition={logoPosition}
+      formData={formData}
+    />
   );
 }
 
