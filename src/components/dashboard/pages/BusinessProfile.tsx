@@ -99,6 +99,46 @@ const SECTION_INFO: Record<SectionKey, { title: string; icon: React.ElementType 
   collectContacts: { title: 'Collect Contacts', icon: Users },
 };
 
+// ── Validation ────────────────────────────────────────────────────────
+type FieldError = string | null;
+type FieldErrors = Partial<Record<keyof FormData, FieldError>> & { location?: string };
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_RE = /^[+\d][\d\s\-().]{4,30}$/;
+const URL_RE = /^https?:\/\/.+\..+/i;
+const WEBSITE_RE = /^https?:\/\/.+\..+/i;
+
+function validatePhone(v: string): FieldError {
+  if (!v.trim()) return null;
+  return PHONE_RE.test(v.trim()) ? null : "Enter a valid phone number (e.g. +1 555 000 0000)";
+}
+
+function validateEmail(v: string): FieldError {
+  if (!v.trim()) return null;
+  return EMAIL_RE.test(v.trim()) ? null : "Enter a valid email address (e.g. name@domain.com)";
+}
+
+function validateWebsite(v: string): FieldError {
+  if (!v.trim()) return null;
+  if (!v.startsWith("http://") && !v.startsWith("https://")) {
+    v = "https://" + v;
+  }
+  return WEBSITE_RE.test(v) ? null : "Enter a valid URL (e.g. https://example.com)";
+}
+
+function validateLocation(v: string): FieldError {
+  if (!v.trim()) return null;
+  return v.trim().length >= 2 ? null : "Enter a valid location (e.g. City, Country)";
+}
+
+function validateSocialUrl(v: string): FieldError {
+  if (!v.trim()) return null;
+  if (!v.startsWith("http://") && !v.startsWith("https://")) {
+    v = "https://" + v;
+  }
+  return URL_RE.test(v) ? null : "Enter a valid URL (e.g. https://linkedin.com/in/username)";
+}
+
 // Default section order
 const DEFAULT_SECTION_ORDER: SectionKey[] = [
   'profile',
@@ -826,6 +866,7 @@ export default function BusinessProfile({
   const [logoPosition, setLogoPosition] = useState<LogoPosition>(initial.logoPosition);
   const [formData, setFormData] = useState<FormData>(initial.formData);
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>(initial.socialLinks);
+  const [socialLinkErrors, setSocialLinkErrors] = useState<(string | null)[]>(() => initial.socialLinks.map(() => null));
   const [connectFields] = useState<ConnectField[]>(initial.connectFields);
   const [sections, setSections] = useState<Sections>(initial.sections);
   const [expanded, setExpanded] = useState<Expanded>(initial.expanded);
@@ -846,6 +887,24 @@ export default function BusinessProfile({
   const [profileShareUrl, setProfileShareUrl] = useState('');
   const hasPublishedUrl = !!profileShareUrl.trim();
   const [reloadTrigger, setReloadTrigger] = useState(0);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+
+  const setFieldError = useCallback((key: keyof FormData | 'location', error: FieldError) => {
+    setFieldErrors(prev => ({ ...prev, [key]: error }));
+  }, []);
+
+  const validateField = useCallback((key: keyof FormData, value: string) => {
+    let error: FieldError = null;
+    switch (key) {
+      case 'phone': error = validatePhone(value); break;
+      case 'email': error = validateEmail(value); break;
+      case 'website': error = validateWebsite(value); break;
+      case 'location': error = validateLocation(value); break;
+      case 'appointmentUrl': error = value.trim() && !value.startsWith('http') ? 'URL must start with http:// or https://' : null; break;
+    }
+    setFieldError(key, error);
+    return error;
+  }, [setFieldError]);
 
   const formDataRef = useRef(formData);
   const profileImageRef = useRef(profileImage);
@@ -1221,6 +1280,36 @@ export default function BusinessProfile({
 
   const handleSaveChanges = useCallback(async () => {
     setSaveError(null);
+
+    // Validate all contact fields before saving
+    const allErrors: FieldErrors = {};
+    const contactFields: (keyof FormData)[] = ['phone', 'email', 'website', 'location'];
+    for (const key of contactFields) {
+      const err = validateField(key, formData[key]);
+      if (err) allErrors[key] = err;
+    }
+    if (allErrors.phone || allErrors.email || allErrors.website || allErrors.location) {
+      setFieldErrors(allErrors);
+      setSaveError('Please fix the highlighted fields before saving.');
+      setIsSaving(false);
+      return;
+    }
+
+    // Validate social links
+    let hasSocialError = false;
+    const newSocialErrors = socialLinks.map((s, i) => {
+      if (!s.value.trim()) return null;
+      const err = validateSocialUrl(s.value);
+      if (err) hasSocialError = true;
+      return err;
+    });
+    setSocialLinkErrors(newSocialErrors);
+    if (hasSocialError) {
+      setSaveError('Please fix invalid social link URLs before saving.');
+      setIsSaving(false);
+      return;
+    }
+
     setIsSaving(true);
 
     let updatedProfileImage = profileImage;
@@ -1367,12 +1456,31 @@ export default function BusinessProfile({
     }
   }, [profileImage, brandLogo, pendingProfileImage, pendingBrandLogo, logoPosition, formData, socialLinks, connectFields, sections, expanded, customLinks, extraSections, sectionOrder, unifiedOrder, cardId, resolvedCardId, allowFallbackToFirstCard, shouldPersistGlobalProfile]);
 
-  const updateField = useCallback(<K extends keyof FormData>(key: K, value: FormData[K]) => setFormData(prev => ({ ...prev, [key]: value })), []);
+  const updateField = useCallback(<K extends keyof FormData>(key: K, value: FormData[K]) => {
+    setFormData(prev => ({ ...prev, [key]: value }));
+    setFieldError(key, null);
+  }, [setFieldError]);
   const toggleSection = useCallback((key: keyof Sections) => setSections(prev => ({ ...prev, [key]: !prev[key] })), []);
   const toggleExpand = useCallback((key: keyof Expanded) => setExpanded(prev => ({ ...prev, [key]: !prev[key] })), []);
-  const addSocial = useCallback(() => setSocialLinks(p => [...p, { platform: 0, value: '' }]), []);
-  const removeSocial = useCallback((i: number) => setSocialLinks(p => p.filter((_, idx) => idx !== i)), []);
-  const updateSocial = useCallback((i: number, field: keyof SocialLink, val: SocialLink[keyof SocialLink]) => setSocialLinks(p => p.map((s, idx) => idx === i ? { ...s, [field]: val } : s)), []);
+  const addSocial = useCallback(() => {
+    setSocialLinks(p => [...p, { platform: 0, value: '' }]);
+    setSocialLinkErrors(p => [...p, null]);
+  }, []);
+  const removeSocial = useCallback((i: number) => {
+    setSocialLinks(p => p.filter((_, idx) => idx !== i));
+    setSocialLinkErrors(p => p.filter((_, idx) => idx !== i));
+  }, []);
+  const updateSocial = useCallback((i: number, field: keyof SocialLink, val: SocialLink[keyof SocialLink]) => {
+    setSocialLinks(p => p.map((s, idx) => idx === i ? { ...s, [field]: val } : s));
+    if (field === 'value') {
+      setSocialLinkErrors(p => p.map((err, idx) => idx === i ? null : err));
+    }
+  }, []);
+
+  const validateSocialLink = useCallback((i: number, value: string) => {
+    const error = validateSocialUrl(value);
+    setSocialLinkErrors(p => p.map((err, idx) => idx === i ? error : err));
+  }, []);
   const addLink = useCallback(() => setCustomLinks(p => [...p, { label: '', url: '' }]), []);
   const removeLink = useCallback((i: number) => setCustomLinks(p => p.filter((_, idx) => idx !== i)), []);
   const updateLink = useCallback((i: number, field: keyof CustomLink, val: string) => setCustomLinks(p => p.map((l, idx) => idx === i ? { ...l, [field]: val } : l)), []);
@@ -1511,22 +1619,26 @@ export default function BusinessProfile({
                 Add to Contact <Plus className="w-4 h-4" />
               </button>
             </div>
-            {[
+            {([
               { icon: Phone, label: 'Contact Number', field: 'phone' as const, color: '#49B618', placeholder: '+1 (555) 000-0000' },
               { icon: Mail, label: 'Email Address', field: 'email' as const, color: '#008001', placeholder: 'contact@domain.com' },
               { icon: MapPin, label: 'Address', field: 'location' as const, color: '#009200', placeholder: 'City, Country' },
               { icon: Globe, label: 'Website', field: 'website' as const, color: '#006312', placeholder: 'https://...' },
-            ].map(({ icon: Icon, label, field, color, placeholder }) => (
+            ] as const).map(({ icon: Icon, label, field, color, placeholder }) => {
+              const err = fieldErrors[field] as FieldError;
+              return (
               <div key={field} className="flex items-center gap-3 p-3 sm:p-4 rounded-xl bg-muted/30 border border-border">
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${color}18` }}>
                   <Icon className="w-4 h-4" style={{ color }} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[10px] text-muted-foreground/80 mb-1 uppercase tracking-wider font-medium">{label}</p>
-                  <Input value={formData[field]} onChange={e => updateField(field, e.target.value)} placeholder={placeholder} className="bg-input border-border text-foreground h-8 text-sm w-full" />
+                  <Input value={formData[field]} onChange={e => updateField(field, e.target.value)} onBlur={() => validateField(field, formData[field])} placeholder={placeholder} className={`bg-input border-border text-foreground h-8 text-sm w-full ${err ? 'border-destructive' : ''}`} />
+                  {err && <p className="text-destructive text-[11px] mt-1">{err}</p>}
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         );
         break;
@@ -1536,7 +1648,7 @@ export default function BusinessProfile({
             <div><Label className="text-muted-foreground text-xs">Company Name</Label><Input value={formData.company} onChange={e => updateField('company', e.target.value)} className="mt-1 bg-input border-border text-foreground" /></div>
             <div><Label className="text-muted-foreground text-xs">Industry</Label><Select value={formData.industry} onValueChange={v => updateField('industry', v)}><SelectTrigger className="mt-1 bg-input border-border text-foreground"><SelectValue /></SelectTrigger><SelectContent className="bg-popover border-border">{INDUSTRIES.map(({ value, label }) => (<SelectItem key={value} value={value} className="text-foreground focus:bg-accent/20 focus:text-foreground">{label}</SelectItem>))}</SelectContent></Select></div>
             <div><Label className="text-muted-foreground text-xs">Year Founded</Label><Input type="text" inputMode="numeric" pattern="[0-9]{0,4}" maxLength={4} placeholder="e.g. 2015" value={formData.yearFounded} onChange={e => { const v = e.target.value.replace(/\D/g, '').slice(0, 4); updateField('yearFounded', v); }} className="mt-1 bg-input border-border text-foreground" /></div>
-            <div><Label className="text-muted-foreground text-xs">Location</Label><Input value={formData.location} onChange={e => updateField('location', e.target.value)} className="mt-1 bg-input border-border text-foreground" /></div>
+            <div><Label className="text-muted-foreground text-xs">Location</Label><Input value={formData.location} onChange={e => updateField('location', e.target.value)} onBlur={() => validateField('location', formData.location)} className={`mt-1 bg-input border-border text-foreground ${fieldErrors.location ? 'border-destructive' : ''}`} />{fieldErrors.location && <p className="text-destructive text-[10px] mt-1">{fieldErrors.location}</p>}</div>
           </div>
         );
         break;
@@ -1557,7 +1669,10 @@ export default function BusinessProfile({
                     </Select>
                   </div>
                   <div className="flex items-center gap-2 flex-1">
-                    <Input value={s.value} onChange={e => updateSocial(i, 'value', e.target.value)} placeholder={opt.placeholder} className="flex-1 bg-input border-border text-foreground h-9 text-sm" />
+                    <div className="flex-1 flex flex-col">
+                      <Input value={s.value} onChange={e => updateSocial(i, 'value', e.target.value)} onBlur={() => validateSocialLink(i, s.value)} placeholder={opt.placeholder} className={`bg-input border-border text-foreground h-9 text-sm ${socialLinkErrors[i] ? 'border-destructive' : ''}`} />
+                      {socialLinkErrors[i] && <p className="text-destructive text-[10px] mt-0.5">{socialLinkErrors[i]}</p>}
+                    </div>
                     <button type="button" onClick={() => removeSocial(i)} className="text-destructive hover:text-destructive/80 p-1 flex-shrink-0"><Trash2 className="w-4 h-4" /></button>
                   </div>
                 </div>
@@ -1589,8 +1704,9 @@ export default function BusinessProfile({
           <div>
             <Label className="text-muted-foreground text-xs">Booking URL (Calendly, Cal.com, etc.)</Label>
             <div className="flex gap-2 mt-1">
-              <Input value={formData.appointmentUrl} onChange={e => updateField('appointmentUrl', e.target.value)} placeholder="https://calendly.com/username" className="flex-1 bg-input border-border text-foreground" />
+              <Input value={formData.appointmentUrl} onChange={e => updateField('appointmentUrl', e.target.value)} onBlur={() => validateField('appointmentUrl', formData.appointmentUrl)} placeholder="https://calendly.com/username" className={`flex-1 bg-input border-border text-foreground ${fieldErrors.appointmentUrl ? 'border-destructive' : ''}`} />
               {formData.appointmentUrl && (<Button type="button" size="sm" variant="outline" className="border-border text-accent hover:bg-accent/20 flex-shrink-0" onClick={() => window.open(formData.appointmentUrl, '_blank', 'noopener,noreferrer')}><Globe className="w-4 h-4" /></Button>)}
+              {fieldErrors.appointmentUrl && <p className="text-destructive text-[10px] mt-1">{fieldErrors.appointmentUrl}</p>}
             </div>
           </div>
         );
@@ -1826,6 +1942,23 @@ export default function BusinessProfile({
             } catch (err) {
               console.error('Failed applying template content', err);
             }
+          }}
+          onClear={() => {
+            setThemeOverride({});
+            setFormData(DEFAULT_STATE.formData);
+            setProfileImage('');
+            setBrandLogo('');
+            setPendingProfileImage(null);
+            setPendingBrandLogo(null);
+            setSocialLinks(DEFAULT_STATE.socialLinks);
+            setCustomLinks([{ label: '', url: '' }]);
+            setSections(DEFAULT_STATE.sections);
+            setFieldErrors({});
+            setSocialLinkErrors(DEFAULT_STATE.socialLinks.map(() => null));
+            pendingTemplateDesignRef.current = null;
+            try {
+              localStorage.removeItem(activeDesignCacheKey);
+            } catch {}
           }}
           onDesignApply={(design) => {
             try {

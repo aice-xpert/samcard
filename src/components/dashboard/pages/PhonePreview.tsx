@@ -433,9 +433,16 @@ function CollectContactsSection({ T }: any) {
     <CardBlock T={T}>
       <SectionHeader T={T} icon={<MessageSquare className="w-3.5 h-3.5 text-white" />} title="Get in Touch" />
       <div className="px-4 py-3 space-y-2">
-        {['Your name', 'Email address', 'Phone number'].map((ph, i) => (
-          <input key={i} placeholder={ph} className="w-full px-3 py-2 rounded-xl outline-none"
-            style={{ background: T.bg, border: `1px solid ${T.green}33`, color: T.textPrimary, fontSize: T.bodyFontSize, fontFamily: T.fontFamily }} />
+        {[
+          { label: 'Your Name', placeholder: 'Full name' },
+          { label: 'Email Address', placeholder: 'email@domain.com' },
+          { label: 'Phone Number', placeholder: '+1 (555) 000-0000' },
+        ].map((f, i) => (
+          <div key={i}>
+            <p style={{ fontSize: T.bodyFontSize - 1, color: T.textMuted, fontWeight: 500, marginBottom: 2 }}>{f.label}</p>
+            <input placeholder={f.placeholder} className="w-full px-3 py-2 rounded-xl outline-none"
+              style={{ background: T.bg, border: `1px solid ${T.green}33`, color: T.textPrimary, fontSize: T.bodyFontSize, fontFamily: T.fontFamily }} />
+          </div>
         ))}
         <button className="w-full py-2.5 rounded-full font-bold text-white"
           style={{ background: `linear-gradient(135deg,${T.green},${T.greenLight})`, fontSize: T.bodyFontSize, fontFamily: T.fontFamily }}>

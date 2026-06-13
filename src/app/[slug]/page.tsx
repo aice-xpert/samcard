@@ -1128,6 +1128,7 @@ export default function PublicCardPage() {
   const [contactSaved, setContactSaved] = useState(false);
   const [qrModalOpen, setQrModalOpen] = useState(false);
   const [leadForm, setLeadForm] = useState({ name: "", email: "", phone: "" });
+  const [leadFormErrors, setLeadFormErrors] = useState<{ name?: string; email?: string; phone?: string }>({});
   const [leadSubmitting, setLeadSubmitting] = useState(false);
   const [leadSubmitFeedback, setLeadSubmitFeedback] = useState<{
     type: "success" | "error" | null;
@@ -1252,13 +1253,22 @@ export default function PublicCardPage() {
     const email = leadForm.email.trim();
     const phone = leadForm.phone.trim();
 
-    if (!name && !email && !phone) {
-      setLeadSubmitFeedback({
-        type: "error",
-        message: "Please provide at least name, email, or phone.",
-      });
-      return;
+    // Field-level validation
+    const errors: { name?: string; email?: string; phone?: string } = {};
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errors.email = "Enter a valid email address";
     }
+    if (phone && !/^[+\d][\d\s\-().]{4,30}$/.test(phone)) {
+      errors.phone = "Enter a valid phone number";
+    }
+    if (name && name.length < 2) {
+      errors.name = "Name must be at least 2 characters";
+    }
+    if (!name && !email && !phone) {
+      errors.name = "Please fill in at least one field";
+    }
+    setLeadFormErrors(errors);
+    if (Object.keys(errors).length > 0) return;
 
     setLeadSubmitting(true);
     setLeadSubmitFeedback({ type: null, message: "" });
@@ -2188,14 +2198,21 @@ export default function PublicCardPage() {
                     <SectionHeader T={T} icon={<MessageSquare size={14} color="#fff" />} title="Get in Touch" />
                     <div style={{ padding: "12px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
                       {[
-                        { key: "name" as const, placeholder: "Your name", type: "text" },
-                        { key: "email" as const, placeholder: "Email address", type: "email" },
-                        { key: "phone" as const, placeholder: "Phone number", type: "tel" },
-                      ].map((field) => (
-                        <input key={field.key} type={field.type} value={leadForm[field.key]} placeholder={field.placeholder}
-                          onChange={(e) => setLeadForm((prev) => ({ ...prev, [field.key]: e.target.value }))}
-                          style={{ width: "100%", padding: "9px 12px", borderRadius: 10, background: T.bg, border: `1px solid ${T.green}33`, color: T.textPrimary, fontSize: T.bodyFontSize, outline: "none", fontFamily: T.fontFamily }} />
-                      ))}
+                        { key: "name" as const, label: "Your Name", placeholder: "Full name", type: "text" },
+                        { key: "email" as const, label: "Email Address", placeholder: "email@domain.com", type: "email" },
+                        { key: "phone" as const, label: "Phone Number", placeholder: "+1 (555) 000-0000", type: "tel" },
+                      ].map((field) => {
+                        const err = leadFormErrors[field.key];
+                        return (
+                        <div key={field.key} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                          <label style={{ fontSize: T.bodyFontSize - 1, color: T.textMuted, fontWeight: 500 }}>{field.label}</label>
+                          <input type={field.type} value={leadForm[field.key]} placeholder={field.placeholder}
+                            onChange={(e) => { setLeadForm((prev) => ({ ...prev, [field.key]: e.target.value })); setLeadFormErrors(prev => ({ ...prev, [field.key]: undefined })); }}
+                            style={{ width: "100%", padding: "9px 12px", borderRadius: 10, background: T.bg, border: `1px solid ${err ? "#ff7a7a" : T.green}33`, color: T.textPrimary, fontSize: T.bodyFontSize, outline: "none", fontFamily: T.fontFamily }} />
+                          {err && <span style={{ fontSize: T.bodyFontSize - 2, color: "#ff7a7a" }}>{err}</span>}
+                        </div>
+                        );
+                      })}
                       <button onClick={submitLead} disabled={leadSubmitting}
                         style={{ width: "100%", padding: "10px", borderRadius: 999, border: "none", background: `linear-gradient(135deg, ${T.green}, ${T.greenLight})`, color: "#fff", fontWeight: 700, fontSize: T.bodyFontSize, cursor: leadSubmitting ? "not-allowed" : "pointer", opacity: leadSubmitting ? 0.8 : 1, fontFamily: T.fontFamily }}>
                         {leadSubmitting ? "Submitting..." : "Submit"}
