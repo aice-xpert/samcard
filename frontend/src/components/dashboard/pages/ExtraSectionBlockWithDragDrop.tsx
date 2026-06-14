@@ -14,7 +14,29 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { uploadFile } from '@/lib/api';
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
+
+// ── Validation helpers ──────────────────────────────────────────────
+const URL_RE = /^https?:\/\/.+\..+/i;
+const TIME_RE = /^[\d\s:AMPamp\-–—,.]{3,}$/;
+
+function validateUrl(v: string): string | null {
+  if (!v.trim()) return null;
+  if (!v.startsWith('http://') && !v.startsWith('https://')) {
+    v = 'https://' + v;
+  }
+  return URL_RE.test(v) ? null : 'Enter a valid URL (e.g. https://example.com)';
+}
+
+function validatePrice(v: string): string | null {
+  if (!v.trim()) return null;
+  return /^[\d.,\s$€£¥₹,]{1,20}$/.test(v.trim()) ? null : 'Enter a valid price (e.g. $99.99)';
+}
+
+function validateHours(v: string): string | null {
+  if (!v.trim()) return null;
+  return v.trim().length >= 2 ? null : 'Enter hours (e.g. 9:00 AM - 5:00 PM or "Closed")';
+}
 
 interface ExtraSectionBlockWithDragDropProps {
   section: ExtraSection;
@@ -64,7 +86,35 @@ export default function ExtraSectionBlockWithDragDrop({
 }: ExtraSectionBlockWithDragDropProps) {
   const comp = ADDABLE_COMPONENTS.find(c => c.key === section.type);
   const Icon = comp?.icon ?? LayoutTemplate;
-  
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string | null>>({});
+
+  const setError = useCallback((field: string, error: string | null) => {
+    setFieldErrors(prev => ({ ...prev, [field]: error }));
+  }, []);
+
+  const validateOnBlur = useCallback((field: string, value: string) => {
+    let error: string | null = null;
+    switch (field) {
+      case 'btnUrl':
+      case 'videoUrl':
+      case 'pdfUrl':
+      case 'buyUrl':
+        error = validateUrl(value); break;
+      case 'price':
+        error = validatePrice(value); break;
+      case 'Monday–Friday':
+      case 'Saturday':
+      case 'Sunday':
+        error = validateHours(value); break;
+    }
+    setError(field, error);
+  }, [setError]);
+
+  const handleChange = useCallback((field: string, value: string) => {
+    onUpdateData(section.id, field, value);
+    setError(field, null);
+  }, [section.id, onUpdateData, setError]);
+
   const handleToggle = () => {
     const turningOn = !section.enabled;
     onToggle(section.id, 'enabled');
@@ -73,6 +123,24 @@ export default function ExtraSectionBlockWithDragDrop({
   };
 
   const renderFields = () => {
+    const field = (name: string, label: string, placeholder: string, opts?: { type?: string }) => {
+      const err = fieldErrors[name];
+      return (
+        <div>
+          <Label className="text-muted-foreground text-xs">{label}</Label>
+          <Input
+            type={opts?.type ?? 'text'}
+            value={(section.data[name] as string) ?? ''}
+            onChange={e => handleChange(name, e.target.value)}
+            onBlur={() => validateOnBlur(name, (section.data[name] as string) ?? '')}
+            placeholder={placeholder}
+            className={`mt-1 bg-input border-border text-foreground ${err ? 'border-destructive' : ''}`}
+          />
+          {err && <p className="text-destructive text-[10px] mt-1">{err}</p>}
+        </div>
+      );
+    };
+
     switch (section.type) {
       case 'extra-button':
         return (
@@ -81,20 +149,12 @@ export default function ExtraSectionBlockWithDragDrop({
               <Label className="text-muted-foreground text-xs">Button Label</Label>
               <Input 
                 value={(section.data.btnLabel as string) ?? ''} 
-                onChange={e => onUpdateData(section.id, 'btnLabel', e.target.value)} 
+                onChange={e => handleChange('btnLabel', e.target.value)} 
                 placeholder="Click here" 
                 className="mt-1 bg-input border-border text-foreground" 
               />
             </div>
-            <div>
-              <Label className="text-muted-foreground text-xs">Button URL</Label>
-              <Input 
-                value={(section.data.btnUrl as string) ?? ''} 
-                onChange={e => onUpdateData(section.id, 'btnUrl', e.target.value)} 
-                placeholder="https://..." 
-                className="mt-1 bg-input border-border text-foreground" 
-              />
-            </div>
+            {field('btnUrl', 'Button URL', 'https://...')}
           </div>
         );
       case 'extra-pdf':
@@ -104,20 +164,12 @@ export default function ExtraSectionBlockWithDragDrop({
               <Label className="text-muted-foreground text-xs">PDF Title</Label>
               <Input 
                 value={(section.data.pdfTitle as string) ?? ''} 
-                onChange={e => onUpdateData(section.id, 'pdfTitle', e.target.value)} 
+                onChange={e => handleChange('pdfTitle', e.target.value)} 
                 placeholder="Our Brochure" 
                 className="mt-1 bg-input border-border text-foreground" 
               />
             </div>
-            <div>
-              <Label className="text-muted-foreground text-xs">PDF URL</Label>
-              <Input 
-                value={(section.data.pdfUrl as string) ?? ''} 
-                onChange={e => onUpdateData(section.id, 'pdfUrl', e.target.value)} 
-                placeholder="https://example.com/brochure.pdf" 
-                className="mt-1 bg-input border-border text-foreground" 
-              />
-            </div>
+            {field('pdfUrl', 'PDF URL', 'https://example.com/brochure.pdf')}
           </div>
         );
       case 'extra-imagetext':
@@ -165,7 +217,7 @@ export default function ExtraSectionBlockWithDragDrop({
               <Label className="text-muted-foreground text-xs">Heading</Label>
               <Input 
                 value={(section.data.heading as string) ?? ''} 
-                onChange={e => onUpdateData(section.id, 'heading', e.target.value)} 
+                onChange={e => handleChange('heading', e.target.value)} 
                 placeholder="Section heading..." 
                 className="mt-1 bg-input border-border text-foreground" 
               />
@@ -174,7 +226,7 @@ export default function ExtraSectionBlockWithDragDrop({
               <Label className="text-muted-foreground text-xs">Body Text</Label>
               <Textarea 
                 value={(section.data.body as string) ?? ''} 
-                onChange={e => onUpdateData(section.id, 'body', e.target.value)} 
+                onChange={e => handleChange('body', e.target.value)} 
                 placeholder="Description..." 
                 className="mt-1 bg-input border-border text-foreground" 
                 rows={3} 
@@ -190,7 +242,7 @@ export default function ExtraSectionBlockWithDragDrop({
               <Label className="text-muted-foreground text-xs">Section Title</Label>
               <Input 
                 value={(section.data.title as string) ?? ''} 
-                onChange={e => onUpdateData(section.id, 'title', e.target.value)} 
+                onChange={e => handleChange('title', e.target.value)} 
                 placeholder={section.type === 'extra-team' ? 'Meet Our Team' : 'Our Customers'} 
                 className="mt-1 bg-input border-border text-foreground" 
               />
@@ -199,7 +251,7 @@ export default function ExtraSectionBlockWithDragDrop({
               <Label className="text-muted-foreground text-xs">Description</Label>
               <Textarea 
                 value={(section.data.desc as string) ?? ''} 
-                onChange={e => onUpdateData(section.id, 'desc', e.target.value)} 
+                onChange={e => handleChange('desc', e.target.value)} 
                 placeholder="Add a description..." 
                 className="mt-1 bg-input border-border text-foreground" 
                 rows={3} 
@@ -214,75 +266,27 @@ export default function ExtraSectionBlockWithDragDrop({
               <Label className="text-muted-foreground text-xs">Product Name</Label>
               <Input 
                 value={(section.data.productName as string) ?? ''} 
-                onChange={e => onUpdateData(section.id, 'productName', e.target.value)} 
+                onChange={e => handleChange('productName', e.target.value)} 
                 placeholder="Product name" 
                 className="mt-1 bg-input border-border text-foreground" 
               />
             </div>
-            <div>
-              <Label className="text-muted-foreground text-xs">Price</Label>
-              <Input 
-                value={(section.data.price as string) ?? ''} 
-                onChange={e => onUpdateData(section.id, 'price', e.target.value)} 
-                placeholder="$99" 
-                className="mt-1 bg-input border-border text-foreground" 
-              />
-            </div>
-            <div>
-              <Label className="text-muted-foreground text-xs">Buy Link</Label>
-              <Input 
-                value={(section.data.buyUrl as string) ?? ''} 
-                onChange={e => onUpdateData(section.id, 'buyUrl', e.target.value)} 
-                placeholder="https://..." 
-                className="mt-1 bg-input border-border text-foreground" 
-              />
-            </div>
+            {field('price', 'Price', '$99')}
+            {field('buyUrl', 'Buy Link', 'https://...')}
           </div>
         );
       case 'extra-hours':
         return (
           <div className="space-y-3">
-            <div>
-              <Label className="text-muted-foreground text-xs">Monday–Friday</Label>
-              <Input 
-                value={(section.data['Monday–Friday'] as string) ?? ''} 
-                onChange={e => onUpdateData(section.id, 'Monday–Friday', e.target.value)} 
-                placeholder="9:00 AM - 5:00 PM" 
-                className="mt-1 bg-input border-border text-foreground" 
-              />
-            </div>
-            <div>
-              <Label className="text-muted-foreground text-xs">Saturday</Label>
-              <Input 
-                value={(section.data.Saturday as string) ?? ''} 
-                onChange={e => onUpdateData(section.id, 'Saturday', e.target.value)} 
-                placeholder="10:00 AM - 2:00 PM" 
-                className="mt-1 bg-input border-border text-foreground" 
-              />
-            </div>
-            <div>
-              <Label className="text-muted-foreground text-xs">Sunday</Label>
-              <Input 
-                value={(section.data.Sunday as string) ?? ''} 
-                onChange={e => onUpdateData(section.id, 'Sunday', e.target.value)} 
-                placeholder="Closed" 
-                className="mt-1 bg-input border-border text-foreground" 
-              />
-            </div>
+            {field('Monday–Friday', 'Monday–Friday', '9:00 AM - 5:00 PM')}
+            {field('Saturday', 'Saturday', '10:00 AM - 2:00 PM')}
+            {field('Sunday', 'Sunday', 'Closed')}
           </div>
         );
       case 'extra-video':
         return (
           <div className="space-y-3">
-            <div>
-              <Label className="text-muted-foreground text-xs">Video URL</Label>
-              <Input 
-                value={(section.data.videoUrl as string) ?? ''} 
-                onChange={e => onUpdateData(section.id, 'videoUrl', e.target.value)} 
-                placeholder="https://youtube.com/watch?v=..." 
-                className="mt-1 bg-input border-border text-foreground" 
-              />
-            </div>
+            {field('videoUrl', 'Video URL', 'https://youtube.com/watch?v=...')}
           </div>
         );
       default:
@@ -292,7 +296,7 @@ export default function ExtraSectionBlockWithDragDrop({
               <Label className="text-muted-foreground text-xs">Title</Label>
               <Input 
                 value={(section.data.title as string) ?? ''} 
-                onChange={e => onUpdateData(section.id, 'title', e.target.value)} 
+                onChange={e => handleChange('title', e.target.value)} 
                 placeholder="Section title" 
                 className="mt-1 bg-input border-border text-foreground" 
               />
@@ -301,7 +305,7 @@ export default function ExtraSectionBlockWithDragDrop({
               <Label className="text-muted-foreground text-xs">Content</Label>
               <Textarea 
                 value={(section.data.content as string) ?? ''} 
-                onChange={e => onUpdateData(section.id, 'content', e.target.value)} 
+                onChange={e => handleChange('content', e.target.value)} 
                 placeholder="Content..." 
                 className="mt-1 bg-input border-border text-foreground" 
                 rows={4} 
