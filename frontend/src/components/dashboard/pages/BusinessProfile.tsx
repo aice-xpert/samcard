@@ -101,7 +101,7 @@ const SECTION_INFO: Record<SectionKey, { title: string; icon: React.ElementType 
 
 // ── Validation ────────────────────────────────────────────────────────
 type FieldError = string | null;
-type FieldErrors = Partial<Record<keyof FormData, FieldError>> & { location?: string };
+type FieldErrors = Partial<Record<keyof FormData, FieldError>>;
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_RE = /^[+\d][\d\s\-().]{4,30}$/;
@@ -120,10 +120,8 @@ function validateEmail(v: string): FieldError {
 
 function validateWebsite(v: string): FieldError {
   if (!v.trim()) return null;
-  if (!v.startsWith("http://") && !v.startsWith("https://")) {
-    v = "https://" + v;
-  }
-  return WEBSITE_RE.test(v) ? null : "Enter a valid URL (e.g. https://example.com)";
+  const testVal = v.startsWith("http://") || v.startsWith("https://") ? v : "https://" + v;
+  return WEBSITE_RE.test(testVal) ? null : "Enter a valid URL (e.g. https://example.com)";
 }
 
 function validateLocation(v: string): FieldError {
@@ -131,14 +129,19 @@ function validateLocation(v: string): FieldError {
   return v.trim().length >= 2 ? null : "Enter a valid location (e.g. City, Country)";
 }
 
-function validateSocialUrl(v: string): FieldError {
+function validateYear(v: string): FieldError {
   if (!v.trim()) return null;
-  if (!v.startsWith("http://") && !v.startsWith("https://")) {
-    v = "https://" + v;
-  }
-  return URL_RE.test(v) ? null : "Enter a valid URL (e.g. https://linkedin.com/in/username)";
+  const n = Number(v);
+  if (!Number.isInteger(n)) return "Enter a 4-digit year";
+  const cur = new Date().getFullYear();
+  return n >= 1800 && n <= cur ? null : `Year must be between 1800 and ${cur}`;
 }
 
+function validateSocialUrl(v: string): FieldError {
+  if (!v.trim()) return null;
+  const testVal = v.startsWith("http://") || v.startsWith("https://") ? v : "https://" + v;
+  return URL_RE.test(testVal) ? null : "Enter a valid URL (e.g. https://linkedin.com/in/username)";
+}
 // Default section order
 const DEFAULT_SECTION_ORDER: SectionKey[] = [
   'profile',
@@ -893,14 +896,20 @@ export default function BusinessProfile({
     setFieldErrors(prev => ({ ...prev, [key]: error }));
   }, []);
 
-  const validateField = useCallback((key: keyof FormData, value: string) => {
+
+  const validateField = useCallback((key: keyof FormData, value: string): FieldError => {
     let error: FieldError = null;
     switch (key) {
       case 'phone': error = validatePhone(value); break;
       case 'email': error = validateEmail(value); break;
       case 'website': error = validateWebsite(value); break;
       case 'location': error = validateLocation(value); break;
-      case 'appointmentUrl': error = value.trim() && !value.startsWith('http') ? 'URL must start with http:// or https://' : null; break;
+      case 'yearFounded': error = validateYear(value); break;
+      case 'appointmentUrl':
+        error = value.trim() && !URL_RE.test(value.startsWith('http') ? value : 'https://' + value)
+          ? 'URL must start with http:// or https://'
+          : null;
+        break;
     }
     setFieldError(key, error);
     return error;
@@ -1456,10 +1465,17 @@ export default function BusinessProfile({
     }
   }, [profileImage, brandLogo, pendingProfileImage, pendingBrandLogo, logoPosition, formData, socialLinks, connectFields, sections, expanded, customLinks, extraSections, sectionOrder, unifiedOrder, cardId, resolvedCardId, allowFallbackToFirstCard, shouldPersistGlobalProfile]);
 
+  const VALIDATED_FIELDS = new Set<keyof FormData>(['phone', 'email', 'website', 'location', 'yearFounded', 'appointmentUrl']);
+
   const updateField = useCallback(<K extends keyof FormData>(key: K, value: FormData[K]) => {
     setFormData(prev => ({ ...prev, [key]: value }));
-    setFieldError(key, null);
-  }, [setFieldError]);
+    if (VALIDATED_FIELDS.has(key)) {
+      validateField(key, value as string);
+    } else {
+      setFieldError(key, null);
+    }
+  }, [setFieldError, validateField]);
+
   const toggleSection = useCallback((key: keyof Sections) => setSections(prev => ({ ...prev, [key]: !prev[key] })), []);
   const toggleExpand = useCallback((key: keyof Expanded) => setExpanded(prev => ({ ...prev, [key]: !prev[key] })), []);
   const addSocial = useCallback(() => {
@@ -1470,17 +1486,15 @@ export default function BusinessProfile({
     setSocialLinks(p => p.filter((_, idx) => idx !== i));
     setSocialLinkErrors(p => p.filter((_, idx) => idx !== i));
   }, []);
+
   const updateSocial = useCallback((i: number, field: keyof SocialLink, val: SocialLink[keyof SocialLink]) => {
     setSocialLinks(p => p.map((s, idx) => idx === i ? { ...s, [field]: val } : s));
     if (field === 'value') {
-      setSocialLinkErrors(p => p.map((err, idx) => idx === i ? null : err));
+      const error = validateSocialUrl(val as string);
+      setSocialLinkErrors(p => p.map((_, idx) => idx === i ? error : _));
     }
   }, []);
 
-  const validateSocialLink = useCallback((i: number, value: string) => {
-    const error = validateSocialUrl(value);
-    setSocialLinkErrors(p => p.map((err, idx) => idx === i ? error : err));
-  }, []);
   const addLink = useCallback(() => setCustomLinks(p => [...p, { label: '', url: '' }]), []);
   const removeLink = useCallback((i: number) => setCustomLinks(p => p.filter((_, idx) => idx !== i)), []);
   const updateLink = useCallback((i: number, field: keyof CustomLink, val: string) => setCustomLinks(p => p.map((l, idx) => idx === i ? { ...l, [field]: val } : l)), []);
@@ -1627,16 +1641,16 @@ export default function BusinessProfile({
             ] as const).map(({ icon: Icon, label, field, color, placeholder }) => {
               const err = fieldErrors[field] as FieldError;
               return (
-              <div key={field} className="flex items-center gap-3 p-3 sm:p-4 rounded-xl bg-muted/30 border border-border">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${color}18` }}>
-                  <Icon className="w-4 h-4" style={{ color }} />
+                <div key={field} className="flex items-center gap-3 p-3 sm:p-4 rounded-xl bg-muted/30 border border-border">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${color}18` }}>
+                    <Icon className="w-4 h-4" style={{ color }} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] text-muted-foreground/80 mb-1 uppercase tracking-wider font-medium">{label}</p>
+                    <Input value={formData[field]} onChange={e => updateField(field, e.target.value)} placeholder={placeholder} className={`bg-input border-border text-foreground h-8 text-sm w-full ${err ? 'border-destructive' : ''}`} />
+                    {err && <p className="text-destructive text-[11px] mt-1">{err}</p>}
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[10px] text-muted-foreground/80 mb-1 uppercase tracking-wider font-medium">{label}</p>
-                  <Input value={formData[field]} onChange={e => updateField(field, e.target.value)} onBlur={() => validateField(field, formData[field])} placeholder={placeholder} className={`bg-input border-border text-foreground h-8 text-sm w-full ${err ? 'border-destructive' : ''}`} />
-                  {err && <p className="text-destructive text-[11px] mt-1">{err}</p>}
-                </div>
-              </div>
               );
             })}
           </div>
@@ -1647,8 +1661,8 @@ export default function BusinessProfile({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div><Label className="text-muted-foreground text-xs">Company Name</Label><Input value={formData.company} onChange={e => updateField('company', e.target.value)} className="mt-1 bg-input border-border text-foreground" /></div>
             <div><Label className="text-muted-foreground text-xs">Industry</Label><Select value={formData.industry} onValueChange={v => updateField('industry', v)}><SelectTrigger className="mt-1 bg-input border-border text-foreground"><SelectValue /></SelectTrigger><SelectContent className="bg-popover border-border">{INDUSTRIES.map(({ value, label }) => (<SelectItem key={value} value={value} className="text-foreground focus:bg-accent/20 focus:text-foreground">{label}</SelectItem>))}</SelectContent></Select></div>
-            <div><Label className="text-muted-foreground text-xs">Year Founded</Label><Input type="text" inputMode="numeric" pattern="[0-9]{0,4}" maxLength={4} placeholder="e.g. 2015" value={formData.yearFounded} onChange={e => { const v = e.target.value.replace(/\D/g, '').slice(0, 4); updateField('yearFounded', v); }} className="mt-1 bg-input border-border text-foreground" /></div>
-            <div><Label className="text-muted-foreground text-xs">Location</Label><Input value={formData.location} onChange={e => updateField('location', e.target.value)} onBlur={() => validateField('location', formData.location)} className={`mt-1 bg-input border-border text-foreground ${fieldErrors.location ? 'border-destructive' : ''}`} />{fieldErrors.location && <p className="text-destructive text-[10px] mt-1">{fieldErrors.location}</p>}</div>
+            <div><Label className="text-muted-foreground text-xs">Year Founded</Label><Input type="text" inputMode="numeric" pattern="[0-9]{0,4}" maxLength={4} placeholder="e.g. 2015" value={formData.yearFounded} onChange={e => { const v = e.target.value.replace(/\D/g, '').slice(0, 4); updateField('yearFounded', v); }} className={`mt-1 bg-input border-border text-foreground ${fieldErrors.yearFounded ? 'border-destructive' : ''}`} />{fieldErrors.yearFounded && <p className="text-destructive text-[10px] mt-1">{fieldErrors.yearFounded}</p>}</div>
+            <div><Label className="text-muted-foreground text-xs">Location</Label><Input value={formData.location} onChange={e => updateField('location', e.target.value)} className={`mt-1 bg-input border-border text-foreground ${fieldErrors.location ? 'border-destructive' : ''}`} />{fieldErrors.location && <p className="text-destructive text-[10px] mt-1">{fieldErrors.location}</p>}</div>
           </div>
         );
         break;
@@ -1670,7 +1684,7 @@ export default function BusinessProfile({
                   </div>
                   <div className="flex items-center gap-2 flex-1">
                     <div className="flex-1 flex flex-col">
-                      <Input value={s.value} onChange={e => updateSocial(i, 'value', e.target.value)} onBlur={() => validateSocialLink(i, s.value)} placeholder={opt.placeholder} className={`bg-input border-border text-foreground h-9 text-sm ${socialLinkErrors[i] ? 'border-destructive' : ''}`} />
+                      <Input value={s.value} onChange={e => updateSocial(i, 'value', e.target.value)} placeholder={opt.placeholder} className={`bg-input border-border text-foreground h-9 text-sm ${socialLinkErrors[i] ? 'border-destructive' : ''}`} />
                       {socialLinkErrors[i] && <p className="text-destructive text-[10px] mt-0.5">{socialLinkErrors[i]}</p>}
                     </div>
                     <button type="button" onClick={() => removeSocial(i)} className="text-destructive hover:text-destructive/80 p-1 flex-shrink-0"><Trash2 className="w-4 h-4" /></button>
@@ -1704,7 +1718,7 @@ export default function BusinessProfile({
           <div>
             <Label className="text-muted-foreground text-xs">Booking URL (Calendly, Cal.com, etc.)</Label>
             <div className="flex gap-2 mt-1">
-              <Input value={formData.appointmentUrl} onChange={e => updateField('appointmentUrl', e.target.value)} onBlur={() => validateField('appointmentUrl', formData.appointmentUrl)} placeholder="https://calendly.com/username" className={`flex-1 bg-input border-border text-foreground ${fieldErrors.appointmentUrl ? 'border-destructive' : ''}`} />
+              <Input value={formData.appointmentUrl} onChange={e => updateField('appointmentUrl', e.target.value)} placeholder="https://calendly.com/username" className={`flex-1 bg-input border-border text-foreground ${fieldErrors.appointmentUrl ? 'border-destructive' : ''}`} />
               {formData.appointmentUrl && (<Button type="button" size="sm" variant="outline" className="border-border text-accent hover:bg-accent/20 flex-shrink-0" onClick={() => window.open(formData.appointmentUrl, '_blank', 'noopener,noreferrer')}><Globe className="w-4 h-4" /></Button>)}
               {fieldErrors.appointmentUrl && <p className="text-destructive text-[10px] mt-1">{fieldErrors.appointmentUrl}</p>}
             </div>
@@ -1958,7 +1972,7 @@ export default function BusinessProfile({
             pendingTemplateDesignRef.current = null;
             try {
               localStorage.removeItem(activeDesignCacheKey);
-            } catch {}
+            } catch { }
           }}
           onDesignApply={(design) => {
             try {
