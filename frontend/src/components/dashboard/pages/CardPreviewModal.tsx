@@ -397,6 +397,24 @@ export function CardPreviewModal({
     businessDetails: true,
   };
 
+  const formatClock = () => {
+    const now = new Date();
+    const meridiem = now.getHours() >= 12 ? 'PM' : 'AM';
+    let h = now.getHours() % 12;
+    if (h === 0) h = 12;
+    return `${h}:${String(now.getMinutes()).padStart(2, '0')} ${meridiem}`;
+  };
+
+  const [clock, setClock] = useState(formatClock);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const update = () => setClock(formatClock());
+    update();
+    const id = setInterval(update, 10_000);
+    return () => clearInterval(id);
+  }, [isOpen]);
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     if (isOpen) document.addEventListener('keydown', handler);
@@ -504,7 +522,7 @@ export function CardPreviewModal({
                       style={{ width: 88, height: 26, background: T.bg, borderRadius: '0 0 18px 18px', zIndex: 10 }}>
                       <div style={{ width: 40, height: 4, background: '#222', borderRadius: 999 }} />
                     </div>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: T.textPrimary, ...ff }}>9:41</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: T.textPrimary, ...ff }}>{clock}</span>
                     <div className="flex items-center gap-[5px]">
                       <svg width="16" height="11" viewBox="0 0 16 11" fill="none">
                         <rect x="0" y="7" width="3" height="4" rx="0.8" fill={T.greenLight} />

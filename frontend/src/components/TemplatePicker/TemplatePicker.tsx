@@ -4,7 +4,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { cardTemplates, type CardTemplate } from '@/data/cardTemplates';
 import TemplateThumb from './TemplateThumb';
-import { Check, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, X } from 'lucide-react';
 
 const SELECTED_TEMPLATE_KEY = 'selectedTemplate';
 
@@ -15,10 +15,11 @@ type Props = {
   cardId?: string | null;
   onApply?: (content: Record<string, unknown>) => void;
   onDesignApply?: (design: Record<string, unknown>) => void;
+  onClear?: () => void;
   className?: string;
 };
 
-export default function TemplatePicker({ cardId, onApply, onDesignApply, className }: Props) {
+export default function TemplatePicker({ cardId, onApply, onDesignApply, onClear, className }: Props) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -62,7 +63,28 @@ export default function TemplatePicker({ cardId, onApply, onDesignApply, classNa
     el.scrollBy({ left: dir === 'left' ? -320 : 320, behavior: 'smooth' });
   };
 
+  const clearSelection = () => {
+    setSelectedId(null);
+    try {
+      localStorage.removeItem(selectedKeyForCard(cardId));
+    } catch {
+      // ignore
+    }
+    if (onClear) onClear();
+    try {
+      window.dispatchEvent(new CustomEvent('template:cleared', { detail: { cardId: cardId ?? null } }));
+    } catch {
+      // ignore non-browser
+    }
+  };
+
   const applyTemplate = (t: CardTemplate) => {
+    // If already selected, deselect (toggle off)
+    if (selectedId === t.id) {
+      clearSelection();
+      return;
+    }
+
     setSelectedId(t.id);
 
     try {
@@ -221,6 +243,49 @@ export default function TemplatePicker({ cardId, onApply, onDesignApply, classNa
             scrollbarWidth: 'none',
           }}
         >
+          {/* "None" option — always visible */}
+          <button
+            type="button"
+            onClick={clearSelection}
+            aria-pressed={selectedId === null}
+            style={{
+              position: 'relative',
+              flexShrink: 0,
+              width: 150,
+              scrollSnapAlign: 'start',
+              background: 'var(--template-card-bg)',
+              border: !selectedId ? '2px solid #49B618' : '1px solid var(--template-card-border)',
+              borderRadius: 14,
+              padding: 8,
+              textAlign: 'center',
+              cursor: 'pointer',
+              transition: 'transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease',
+              boxShadow: !selectedId ? '0 0 0 3px rgba(73,182,24,0.18)' : 'none',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              minHeight: 180,
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; }}
+          >
+            <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--template-card-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
+              <X size={20} style={{ color: 'var(--template-button-color)' }} />
+            </div>
+            <div style={{ color: 'var(--template-text-primary)', fontWeight: 600, fontSize: 13 }}>
+              No Template
+            </div>
+            <div style={{ color: 'var(--template-text-secondary)', fontSize: 11, marginTop: 4, lineHeight: 1.3 }}>
+              Reset to blank
+            </div>
+            {!selectedId && (
+              <div style={{ position: 'absolute', top: 6, right: 6, width: 22, height: 22, borderRadius: '50%', background: 'linear-gradient(135deg,#008001,#49B618)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(73,182,24,0.4)' }}>
+                <Check size={13} color="#fff" />
+              </div>
+            )}
+          </button>
+
           {cardTemplates.map((t) => {
             const isSelected = selectedId === t.id;
             return (
