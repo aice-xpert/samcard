@@ -40,7 +40,6 @@ export function Navigation() {
               width={40}
               height={40}
               sizes="40px"
-              style={{ width: "40px", height: "auto" }}
               className="rounded-lg"
             />
             <span className={`text-xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>SamCard</span>
