@@ -1292,12 +1292,12 @@ export default function BusinessProfile({
 
     // Validate all contact fields before saving
     const allErrors: FieldErrors = {};
-    const contactFields: (keyof FormData)[] = ['phone', 'email', 'website', 'location'];
+    const contactFields: (keyof FormData)[] = ['phone', 'email', 'website', 'location', 'yearFounded'];
     for (const key of contactFields) {
       const err = validateField(key, formData[key]);
       if (err) allErrors[key] = err;
     }
-    if (allErrors.phone || allErrors.email || allErrors.website || allErrors.location) {
+    if (allErrors.phone || allErrors.email || allErrors.website || allErrors.location || allErrors.yearFounded) {
       setFieldErrors(allErrors);
       setSaveError('Please fix the highlighted fields before saving.');
       setIsSaving(false);
@@ -1315,6 +1315,42 @@ export default function BusinessProfile({
     setSocialLinkErrors(newSocialErrors);
     if (hasSocialError) {
       setSaveError('Please fix invalid social link URLs before saving.');
+      setIsSaving(false);
+      return;
+    }
+
+    // Validate extra section fields (Video URL, Buy Link, etc.)
+    let hasExtraSectionError = false;
+    for (const section of extraSections) {
+      const data = section.data as Record<string, string>;
+      if (section.type === 'extra-video' && data.videoUrl) {
+        const testUrl = data.videoUrl.startsWith('http') ? data.videoUrl : 'https://' + data.videoUrl;
+        if (!URL_RE.test(testUrl)) { hasExtraSectionError = true; break; }
+      }
+      if (section.type === 'extra-products') {
+        if (data.buyUrl) {
+          const testUrl = data.buyUrl.startsWith('http') ? data.buyUrl : 'https://' + data.buyUrl;
+          if (!URL_RE.test(testUrl)) { hasExtraSectionError = true; break; }
+        }
+        if (data.price) {
+          const stripped = data.price.trim().replace(/^[^\d]+/, '');
+          if (!/^\d+([.,]\d+)?$/.test(stripped)) {
+            hasExtraSectionError = true; break;
+          }
+        }
+      }
+      if (section.type === 'extra-hours') {
+        const TIME_RE = /^(\d{1,2}:\d{2}\s*(AM|PM|am|pm)?(\s*-\s*\d{1,2}:\d{2}\s*(AM|PM|am|pm)?)?|closed|open 24 hours)$/i;
+        for (const dayKey of ['Monday–Friday', 'Saturday', 'Sunday']) {
+          if (data[dayKey] && !TIME_RE.test(data[dayKey].trim())) {
+            hasExtraSectionError = true; break;
+          }
+        }
+        if (hasExtraSectionError) break;
+      }
+    }
+    if (hasExtraSectionError) {
+      setSaveError('Please fix invalid fields in your extra sections before saving.');
       setIsSaving(false);
       return;
     }

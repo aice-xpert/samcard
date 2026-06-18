@@ -1,4 +1,4 @@
-{/* theme: converted */}
+{/* theme: converted */ }
 "use client";
 
 import { Card, CardContent } from '@/components/dashboard/ui/card';
@@ -7,10 +7,10 @@ import { Input } from '@/components/dashboard/ui/input';
 import { Textarea } from '@/components/dashboard/ui/textarea';
 import { Button } from '@/components/dashboard/ui/button';
 import { ExtraSection } from '@/components/dashboard/pages/PhonePreview';
-import { 
-  GripVertical, Plus, Minus, X, Upload, Trash2, 
-  LayoutTemplate, MousePointerClick, FileText, UserCheck, 
-  Users, ShoppingBag, Megaphone, Calendar, Link2, Share2, Mail 
+import {
+  GripVertical, Plus, Minus, X, Upload, Trash2,
+  LayoutTemplate, MousePointerClick, FileText, UserCheck,
+  Users, ShoppingBag, Megaphone, Calendar, Link2, Share2, Mail
 } from 'lucide-react';
 import Image from 'next/image';
 import { uploadFile } from '@/lib/api';
@@ -18,7 +18,7 @@ import { useState, useRef, useCallback } from 'react';
 
 // ── Validation helpers ──────────────────────────────────────────────
 const URL_RE = /^https?:\/\/.+\..+/i;
-const TIME_RE = /^[\d\s:AMPamp\-–—,.]{3,}$/;
+const TIME_RE = /^(\d{1,2}:\d{2}\s*(AM|PM|am|pm)?(\s*-\s*\d{1,2}:\d{2}\s*(AM|PM|am|pm)?)?|closed|open 24 hours)$/i;
 
 function validateUrl(v: string): string | null {
   if (!v.trim()) return null;
@@ -30,12 +30,15 @@ function validateUrl(v: string): string | null {
 
 function validatePrice(v: string): string | null {
   if (!v.trim()) return null;
-  return /^[\d.,\s$€£¥₹,]{1,20}$/.test(v.trim()) ? null : 'Enter a valid price (e.g. $99.99)';
+  // Strip any leading non-digit characters (currency symbols, spaces, dots)
+  // then check that what remains is a valid number
+  const stripped = v.trim().replace(/^[^\d]+/, '');
+  return /^\d+([.,]\d+)?$/.test(stripped) ? null : 'Enter a valid price (e.g. $99.99, Rs. 46, £10)';
 }
 
 function validateHours(v: string): string | null {
   if (!v.trim()) return null;
-  return v.trim().length >= 2 ? null : 'Enter hours (e.g. 9:00 AM - 5:00 PM or "Closed")';
+  return TIME_RE.test(v.trim()) ? null : 'Enter a valid time (e.g. 9:00 AM - 5:00 PM or Closed)';
 }
 
 interface ExtraSectionBlockWithDragDropProps {
@@ -75,14 +78,14 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
   );
 }
 
-export default function ExtraSectionBlockWithDragDrop({ 
-  section, 
-  index, 
-  onToggle, 
-  onRemove, 
+export default function ExtraSectionBlockWithDragDrop({
+  section,
+  index,
+  onToggle,
+  onRemove,
   onUpdateData,
   dragHandleProps,
-  isDragging 
+  isDragging
 }: ExtraSectionBlockWithDragDropProps) {
   const comp = ADDABLE_COMPONENTS.find(c => c.key === section.type);
   const Icon = comp?.icon ?? LayoutTemplate;
@@ -147,11 +150,11 @@ export default function ExtraSectionBlockWithDragDrop({
           <div className="space-y-3">
             <div>
               <Label className="text-muted-foreground text-xs">Button Label</Label>
-              <Input 
-                value={(section.data.btnLabel as string) ?? ''} 
-                onChange={e => handleChange('btnLabel', e.target.value)} 
-                placeholder="Click here" 
-                className="mt-1 bg-input border-border text-foreground" 
+              <Input
+                value={(section.data.btnLabel as string) ?? ''}
+                onChange={e => handleChange('btnLabel', e.target.value)}
+                placeholder="Click here"
+                className="mt-1 bg-input border-border text-foreground"
               />
             </div>
             {field('btnUrl', 'Button URL', 'https://...')}
@@ -162,11 +165,11 @@ export default function ExtraSectionBlockWithDragDrop({
           <div className="space-y-3">
             <div>
               <Label className="text-muted-foreground text-xs">PDF Title</Label>
-              <Input 
-                value={(section.data.pdfTitle as string) ?? ''} 
-                onChange={e => handleChange('pdfTitle', e.target.value)} 
-                placeholder="Our Brochure" 
-                className="mt-1 bg-input border-border text-foreground" 
+              <Input
+                value={(section.data.pdfTitle as string) ?? ''}
+                onChange={e => handleChange('pdfTitle', e.target.value)}
+                placeholder="Our Brochure"
+                className="mt-1 bg-input border-border text-foreground"
               />
             </div>
             {field('pdfUrl', 'PDF URL', 'https://example.com/brochure.pdf')}
@@ -215,21 +218,21 @@ export default function ExtraSectionBlockWithDragDrop({
             </div>
             <div>
               <Label className="text-muted-foreground text-xs">Heading</Label>
-              <Input 
-                value={(section.data.heading as string) ?? ''} 
-                onChange={e => handleChange('heading', e.target.value)} 
-                placeholder="Section heading..." 
-                className="mt-1 bg-input border-border text-foreground" 
+              <Input
+                value={(section.data.heading as string) ?? ''}
+                onChange={e => handleChange('heading', e.target.value)}
+                placeholder="Section heading..."
+                className="mt-1 bg-input border-border text-foreground"
               />
             </div>
             <div>
               <Label className="text-muted-foreground text-xs">Body Text</Label>
-              <Textarea 
-                value={(section.data.body as string) ?? ''} 
-                onChange={e => handleChange('body', e.target.value)} 
-                placeholder="Description..." 
-                className="mt-1 bg-input border-border text-foreground" 
-                rows={3} 
+              <Textarea
+                value={(section.data.body as string) ?? ''}
+                onChange={e => handleChange('body', e.target.value)}
+                placeholder="Description..."
+                className="mt-1 bg-input border-border text-foreground"
+                rows={3}
               />
             </div>
           </div>
@@ -240,21 +243,21 @@ export default function ExtraSectionBlockWithDragDrop({
           <div className="space-y-3">
             <div>
               <Label className="text-muted-foreground text-xs">Section Title</Label>
-              <Input 
-                value={(section.data.title as string) ?? ''} 
-                onChange={e => handleChange('title', e.target.value)} 
-                placeholder={section.type === 'extra-team' ? 'Meet Our Team' : 'Our Customers'} 
-                className="mt-1 bg-input border-border text-foreground" 
+              <Input
+                value={(section.data.title as string) ?? ''}
+                onChange={e => handleChange('title', e.target.value)}
+                placeholder={section.type === 'extra-team' ? 'Meet Our Team' : 'Our Customers'}
+                className="mt-1 bg-input border-border text-foreground"
               />
             </div>
             <div>
               <Label className="text-muted-foreground text-xs">Description</Label>
-              <Textarea 
-                value={(section.data.desc as string) ?? ''} 
-                onChange={e => handleChange('desc', e.target.value)} 
-                placeholder="Add a description..." 
-                className="mt-1 bg-input border-border text-foreground" 
-                rows={3} 
+              <Textarea
+                value={(section.data.desc as string) ?? ''}
+                onChange={e => handleChange('desc', e.target.value)}
+                placeholder="Add a description..."
+                className="mt-1 bg-input border-border text-foreground"
+                rows={3}
               />
             </div>
           </div>
@@ -264,23 +267,23 @@ export default function ExtraSectionBlockWithDragDrop({
           <div className="space-y-3">
             <div>
               <Label className="text-muted-foreground text-xs">Product Name</Label>
-              <Input 
-                value={(section.data.productName as string) ?? ''} 
-                onChange={e => handleChange('productName', e.target.value)} 
-                placeholder="Product name" 
-                className="mt-1 bg-input border-border text-foreground" 
+              <Input
+                value={(section.data.productName as string) ?? ''}
+                onChange={e => handleChange('productName', e.target.value)}
+                placeholder="Product name"
+                className="mt-1 bg-input border-border text-foreground"
               />
             </div>
-            {field('price', 'Price', '$99')}
+            {field('price', 'Price', 'e.g. $99.99 or Rs. 46')}
             {field('buyUrl', 'Buy Link', 'https://...')}
           </div>
         );
       case 'extra-hours':
         return (
           <div className="space-y-3">
-            {field('Monday–Friday', 'Monday–Friday', '9:00 AM - 5:00 PM')}
-            {field('Saturday', 'Saturday', '10:00 AM - 2:00 PM')}
-            {field('Sunday', 'Sunday', 'Closed')}
+            {field('Monday–Friday', 'Monday–Friday', 'e.g. 9:00 AM - 5:00 PM or Closed')}
+            {field('Saturday', 'Saturday', 'e.g. 10:00 AM - 2:00 PM or Closed')}
+            {field('Sunday', 'Sunday', 'e.g. Closed or 9:00 AM - 5:00 PM')}
           </div>
         );
       case 'extra-video':
@@ -294,21 +297,21 @@ export default function ExtraSectionBlockWithDragDrop({
           <div className="space-y-3">
             <div>
               <Label className="text-muted-foreground text-xs">Title</Label>
-              <Input 
-                value={(section.data.title as string) ?? ''} 
-                onChange={e => handleChange('title', e.target.value)} 
-                placeholder="Section title" 
-                className="mt-1 bg-input border-border text-foreground" 
+              <Input
+                value={(section.data.title as string) ?? ''}
+                onChange={e => handleChange('title', e.target.value)}
+                placeholder="Section title"
+                className="mt-1 bg-input border-border text-foreground"
               />
             </div>
             <div>
               <Label className="text-muted-foreground text-xs">Content</Label>
-              <Textarea 
-                value={(section.data.content as string) ?? ''} 
-                onChange={e => handleChange('content', e.target.value)} 
-                placeholder="Content..." 
-                className="mt-1 bg-input border-border text-foreground" 
-                rows={4} 
+              <Textarea
+                value={(section.data.content as string) ?? ''}
+                onChange={e => handleChange('content', e.target.value)}
+                placeholder="Content..."
+                className="mt-1 bg-input border-border text-foreground"
+                rows={4}
               />
             </div>
           </div>
@@ -317,10 +320,9 @@ export default function ExtraSectionBlockWithDragDrop({
   };
 
   return (
-    <Card 
-      className={`bg-card border-border overflow-hidden scroll-mt-4 transition-all duration-200 ${
-        isDragging ? 'opacity-50 shadow-2xl scale-[1.02]' : ''
-      }`}
+    <Card
+      className={`bg-card border-border overflow-hidden scroll-mt-4 transition-all duration-200 ${isDragging ? 'opacity-50 shadow-2xl scale-[1.02]' : ''
+        }`}
     >
       <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-border">
         <div className="flex items-center gap-2 min-w-0">
@@ -338,16 +340,16 @@ export default function ExtraSectionBlockWithDragDrop({
         </div>
         <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 ml-2">
           <Toggle checked={section.enabled} onChange={handleToggle} />
-          <button 
-            type="button" 
-            onClick={() => onToggle(section.id, 'expanded')} 
+          <button
+            type="button"
+            onClick={() => onToggle(section.id, 'expanded')}
             className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent/20 transition-colors"
           >
             {section.expanded ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
           </button>
-          <button 
-            type="button" 
-            onClick={() => onRemove(section.id)} 
+          <button
+            type="button"
+            onClick={() => onRemove(section.id)}
             className="w-7 h-7 rounded-md flex items-center justify-center text-destructive hover:text-destructive/80 hover:bg-destructive/10 transition-colors"
           >
             <Trash2 className="w-4 h-4" />
