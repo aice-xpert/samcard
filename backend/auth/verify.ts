@@ -1,15 +1,31 @@
 import express, { Response } from "express";
-import { verifySession } from "../middleware/auth";
+import { AuthRequest, verifySession } from "../middleware/auth";
+import { supabase } from "../config/supabase";
 
 const router = express.Router();
 
 /**
  * GET /api/auth/verify
- * Lightweight endpoint used by the Next.js middleware to validate a session
- * cookie without fetching any user data. Returns 200 if valid, 401 if not.
+ * Used by the Next.js middleware to validate a session.
+ * Checks both JWT validity AND that the user still exists in the DB,
+ * so deleted accounts are immediately rejected even with an unexpired token.
  */
-router.get("/", verifySession, (_req, res: Response) => {
-    return res.status(200).json({ ok: true });
+router.get("/", verifySession, async (req: AuthRequest, res: Response) => {
+    try {
+        const { data, error } = await supabase
+            .from("User")
+            .select("id")
+            .eq("id", req.user!.uid)
+            .maybeSingle();
+
+        if (error || !data) {
+            return res.status(401).json({ error: "Session invalid — user no longer exists" });
+        }
+
+        return res.status(200).json({ ok: true });
+    } catch {
+        return res.status(401).json({ error: "Session invalid" });
+    }
 });
 
 export default router;

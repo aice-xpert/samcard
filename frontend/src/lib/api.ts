@@ -40,6 +40,11 @@ async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
   }
 
   if (!response.ok) {
+    if (response.status === 401 && typeof window !== "undefined") {
+      localStorage.removeItem("sessionToken");
+      window.location.href = "/login";
+      // throw anyway so callers awaiting this don't proceed
+    }
     const message = payload?.error || `Request failed (${response.status})`;
     throw new Error(message);
   }
