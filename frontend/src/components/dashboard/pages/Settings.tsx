@@ -347,7 +347,7 @@ export function Settings() {
             const logoutUrl = BACKEND_URL ? `${BACKEND_URL}/api/auth/logout` : "/api/auth/logout";
             await fetch(logoutUrl, { method: "POST", credentials: "include" }).catch(() => {});
             localStorage.removeItem("sessionToken");
-            document.cookie = "sessionToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
+            document.cookie = "session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
             window.location.href = "/login";
         } catch (err: any) {
             addToast("Failed to delete account: " + (err.message || "Unknown error"), "error");
