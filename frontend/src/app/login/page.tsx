@@ -9,13 +9,11 @@ import { FcGoogle } from "react-icons/fc";
 import { useTheme } from "@/contexts/ThemeContext";
 
 const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "") ?? "";
-const COOKIE_MAX_AGE = 60 * 60 * 24 * 5; // 5 days in seconds
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
 function persistSession(token: string) {
   localStorage.setItem("sessionToken", token);
-  document.cookie = `session=${token}; path=/; max-age=${COOKIE_MAX_AGE}; SameSite=Lax`;
 }
 
 /**
