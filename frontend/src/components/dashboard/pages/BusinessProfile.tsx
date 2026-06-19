@@ -1921,9 +1921,28 @@ export default function BusinessProfile({
               // changes — template selection on an existing card should only change
               // the design/theme, not overwrite the user's name, photo, etc.
               const isEditingExisting = !!(resolvedCardId && hasLoadedCardContentRef.current);
-              if (isEditingExisting) return;
 
-              // New card: apply template content fields
+              // Even on a new (uncreated) card, if the user has already entered any
+              // details, a template must not overwrite them — only the design/theme
+              // (applied via the separate onDesignApply callback) should change.
+              const hasUserContent =
+                !!formData.name?.trim() ||
+                !!formData.title?.trim() ||
+                !!formData.company?.trim() ||
+                !!formData.tagline?.trim() ||
+                !!formData.headingText?.trim() ||
+                !!formData.bodyText?.trim() ||
+                !!formData.email?.trim() ||
+                !!formData.phone?.trim() ||
+                !!formData.website?.trim() ||
+                !!profileImage ||
+                !!brandLogo ||
+                socialLinks.some(s => s.value.trim()) ||
+                customLinks.some(l => l.label.trim() || l.url.trim());
+
+              if (isEditingExisting || hasUserContent) return;
+
+              // New, blank card: apply template content fields
               const updates: Partial<FormData> = {};
               if (typeof incoming.name === 'string') updates.name = incoming.name;
               if (typeof incoming.jobTitle === 'string') updates.title = incoming.jobTitle;
