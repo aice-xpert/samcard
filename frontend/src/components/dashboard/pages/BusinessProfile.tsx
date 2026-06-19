@@ -30,6 +30,7 @@ import {
   ThemeOverride, SectionKey
 } from '@/components/dashboard/pages/PhonePreview';
 import TemplatePicker from '@/components/TemplatePicker/TemplatePicker';
+import { getTemplateById } from '@/data/cardTemplates';
 import ExtraSectionBlockWithDragDrop from '@/components/dashboard/pages/ExtraSectionBlockWithDragDrop';
 import { makeQRMatrix } from '@/components/dashboard/pages/qr-engine';
 import { useQrStore } from '@/components/dashboard/stores/Useqrstore';
@@ -826,6 +827,10 @@ export default function BusinessProfile({
   // Holds the design payload from the last applied template so handleSaveChanges
   // can persist it to the backend alongside content.
   const pendingTemplateDesignRef = useRef<Record<string, unknown> | null>(null);
+  // The template a saved card is currently using, derived from its design
+  // `palette` (template id === palette). Feeds TemplatePicker's selected state
+  // so an existing card shows its template highlighted instead of "No Template".
+  const [savedTemplateId, setSavedTemplateId] = useState<string | null>(null);
 
   // Ref that stays current with the onContentChange prop so handleDragEnd can
   // call it synchronously without the callback being in its deps (stale closure).
@@ -1221,6 +1226,9 @@ export default function BusinessProfile({
       const override = buildThemeOverrideFromCardDesign(design);
       setThemeOverride(override);
       saveThemeOverride(activeDesignCacheKey, override);
+      // Reflect the card's template in the picker. The design palette doubles as
+      // the template id; only mark it selected if it resolves to a known template.
+      setSavedTemplateId(getTemplateById(design.palette) ? design.palette : null);
     } catch {
       // ignore load errors
     }
@@ -1659,16 +1667,7 @@ export default function BusinessProfile({
       case 'contactUs':
         content = (
           <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl bg-muted/30 border border-border gap-3">
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-muted-foreground mb-1">Floating Button Text</p>
-                <Input defaultValue="Add to Contact" className="bg-input border-border text-foreground h-8 text-sm" />
-              </div>
-              <button type="button" onClick={() => downloadVCard(formData, profileImage)}
-                className="flex-shrink-0 flex items-center gap-2 bg-foreground text-background rounded-full px-4 py-2 text-sm font-semibold hover:bg-foreground/80 transition-colors self-end sm:self-auto">
-                Add to Contact <Plus className="w-4 h-4" />
-              </button>
-            </div>
+
             {([
               { icon: Phone, label: 'Contact Number', field: 'phone' as const, color: '#49B618', placeholder: '+1 (555) 000-0000' },
               { icon: Mail, label: 'Email Address', field: 'email' as const, color: '#008001', placeholder: 'contact@domain.com' },
@@ -1884,7 +1883,7 @@ export default function BusinessProfile({
           <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
             <div className="relative group flex-shrink-0 self-center sm:self-start">
               <div className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-2xl overflow-hidden ring-4 ring-primary/30 bg-muted flex items-center justify-center">
-                {profileImage ? <Image src={profileImage} alt="Profile" fill className="object-cover" /> : <User className="w-10 h-10 text-muted-foreground" />}
+                {profileImage ? <Image src={profileImage} alt="Profile" fill className="object-cover object-top" /> : <User className="w-10 h-10 text-muted-foreground" />}
               </div>
               <label className="absolute inset-0 bg-black/60 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
                 <Upload className="w-7 h-7 text-white" />
@@ -1923,6 +1922,7 @@ export default function BusinessProfile({
         <p className="text-muted-foreground text-xs mb-3">Pick a template — fields and colors will be filled in. Edit anything below.</p>
         <TemplatePicker
           cardId={resolvedCardId ?? cardId ?? null}
+          initialSelectedId={savedTemplateId}
           onApply={(content) => {
             try {
               const incoming = content as Record<string, unknown>;
@@ -1930,9 +1930,28 @@ export default function BusinessProfile({
               // changes — template selection on an existing card should only change
               // the design/theme, not overwrite the user's name, photo, etc.
               const isEditingExisting = !!(resolvedCardId && hasLoadedCardContentRef.current);
-              if (isEditingExisting) return;
 
-              // New card: apply template content fields
+              // Even on a new (uncreated) card, if the user has already entered any
+              // details, a template must not overwrite them — only the design/theme
+              // (applied via the separate onDesignApply callback) should change.
+              const hasUserContent =
+                !!formData.name?.trim() ||
+                !!formData.title?.trim() ||
+                !!formData.company?.trim() ||
+                !!formData.tagline?.trim() ||
+                !!formData.headingText?.trim() ||
+                !!formData.bodyText?.trim() ||
+                !!formData.email?.trim() ||
+                !!formData.phone?.trim() ||
+                !!formData.website?.trim() ||
+                !!profileImage ||
+                !!brandLogo ||
+                socialLinks.some(s => s.value.trim()) ||
+                customLinks.some(l => l.label.trim() || l.url.trim());
+
+              if (isEditingExisting || hasUserContent) return;
+
+              // New, blank card: apply template content fields
               const updates: Partial<FormData> = {};
               if (typeof incoming.name === 'string') updates.name = incoming.name;
               if (typeof incoming.jobTitle === 'string') updates.title = incoming.jobTitle;
@@ -1994,7 +2013,38 @@ export default function BusinessProfile({
             }
           }}
           onClear={() => {
+            // Always reset the design/theme back to default — that's what
+            // "No Template" means style-wise.
             setThemeOverride({});
+            pendingTemplateDesignRef.current = null;
+            try {
+              localStorage.removeItem(activeDesignCacheKey);
+            } catch { }
+
+            // Only clear content if this is a new, blank card with no
+            // user-entered data — i.e. content that was filled in *by* a
+            // template. Never wipe the user's own data on an existing card
+            // (or one they've already started filling in). Mirrors the guard
+            // in onApply above.
+            const isEditingExisting = !!(resolvedCardId && hasLoadedCardContentRef.current);
+            const hasUserContent =
+              !!formData.name?.trim() ||
+              !!formData.title?.trim() ||
+              !!formData.company?.trim() ||
+              !!formData.tagline?.trim() ||
+              !!formData.headingText?.trim() ||
+              !!formData.bodyText?.trim() ||
+              !!formData.email?.trim() ||
+              !!formData.phone?.trim() ||
+              !!formData.website?.trim() ||
+              !!profileImage ||
+              !!brandLogo ||
+              socialLinks.some(s => s.value.trim()) ||
+              customLinks.some(l => l.label.trim() || l.url.trim());
+
+            if (isEditingExisting || hasUserContent) return;
+
+            // New, blank card: safe to reset the template-provided content.
             setFormData(DEFAULT_STATE.formData);
             setProfileImage('');
             setBrandLogo('');
@@ -2005,10 +2055,6 @@ export default function BusinessProfile({
             setSections(DEFAULT_STATE.sections);
             setFieldErrors({});
             setSocialLinkErrors(DEFAULT_STATE.socialLinks.map(() => null));
-            pendingTemplateDesignRef.current = null;
-            try {
-              localStorage.removeItem(activeDesignCacheKey);
-            } catch { }
           }}
           onDesignApply={(design) => {
             try {

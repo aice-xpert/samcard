@@ -36,7 +36,6 @@ export default function Footer() {
                 width={40}
                 height={40}
                 sizes="40px"
-                style={{ width: "40px", height: "auto" }}
               />
               <h3 className={`text-xl font-bold ${headingColor}`}>SamCard</h3>
             </div>

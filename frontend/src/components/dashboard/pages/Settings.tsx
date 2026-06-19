@@ -153,14 +153,23 @@ export function Settings() {
 
     const [profileName, setProfileName] = useState(profile.name);
     const [profilePhone, setProfilePhone] = useState(profile.phone);
+    const [phoneError, setPhoneError] = useState<string | null>(null);
     const [timezone, setTimezone] = useState(profile.timezone);
     const [language, setLanguage] = useState(profile.language);
     const [profileAvatar, setProfileAvatar] = useState(profile.avatar || "");
     const [profileSaving, setProfileSaving] = useState(false);
 
+    const PHONE_RE = /^[+\d][\d\s\-().]{4,30}$/;
+
+    const validatePhone = useCallback((v: string): string | null => {
+        if (!v.trim()) return null;
+        return PHONE_RE.test(v.trim()) ? null : "Enter a valid phone number (e.g. +1 555 000 0000)";
+    }, []);
+
     useEffect(() => {
         setProfileName(profile.name);
         setProfilePhone(profile.phone);
+        setPhoneError(null);
         setTimezone(profile.timezone);
         setLanguage(profile.language);
         setProfileAvatar(profile.avatar || "");
@@ -246,6 +255,9 @@ export function Settings() {
 
     // ── Handlers ──────────────────────────────────────────────────────────
     const handleSaveProfile = async () => {
+        const err = validatePhone(profilePhone);
+        setPhoneError(err);
+        if (err) return;
         setProfileSaving(true);
         try {
             await updateUserProfile({ name: profileName, phone: profilePhone, timezone, language, avatar: profileAvatar });
@@ -438,7 +450,8 @@ export function Settings() {
                                 <div><Label className="text-xs text-muted-foreground mb-1.5">Email</Label>
                                     <div className="h-10 px-3 rounded-xl bg-input/30 border border-border text-foreground/70 text-sm flex items-center">{profile.email}</div></div>
                                 <div><Label className="text-xs text-muted-foreground mb-1.5">Phone</Label>
-                                    <Input value={profilePhone} onChange={(e) => setProfilePhone(e.target.value)} className="bg-input border-border text-foreground h-10 rounded-xl text-sm" /></div>
+                                    <Input value={profilePhone} onChange={(e) => { setProfilePhone(e.target.value); setPhoneError(null); }} className={`bg-input border-border text-foreground h-10 rounded-xl text-sm ${phoneError ? 'border-destructive' : ''}`} />
+                                    {phoneError && <p className="text-destructive text-[11px] mt-1">{phoneError}</p>}</div>
                                 <div><Label className="text-xs text-muted-foreground mb-1.5">Timezone</Label>
                                     <select value={timezone} onChange={(e) => setTimezone(e.target.value)} className="w-full h-10 px-3 rounded-xl bg-input border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring">
                                         <option value="America/Los_Angeles">Pacific (PT)</option><option value="America/Denver">Mountain (MT)</option>
