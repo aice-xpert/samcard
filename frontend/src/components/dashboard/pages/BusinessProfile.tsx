@@ -2013,7 +2013,38 @@ export default function BusinessProfile({
             }
           }}
           onClear={() => {
+            // Always reset the design/theme back to default — that's what
+            // "No Template" means style-wise.
             setThemeOverride({});
+            pendingTemplateDesignRef.current = null;
+            try {
+              localStorage.removeItem(activeDesignCacheKey);
+            } catch { }
+
+            // Only clear content if this is a new, blank card with no
+            // user-entered data — i.e. content that was filled in *by* a
+            // template. Never wipe the user's own data on an existing card
+            // (or one they've already started filling in). Mirrors the guard
+            // in onApply above.
+            const isEditingExisting = !!(resolvedCardId && hasLoadedCardContentRef.current);
+            const hasUserContent =
+              !!formData.name?.trim() ||
+              !!formData.title?.trim() ||
+              !!formData.company?.trim() ||
+              !!formData.tagline?.trim() ||
+              !!formData.headingText?.trim() ||
+              !!formData.bodyText?.trim() ||
+              !!formData.email?.trim() ||
+              !!formData.phone?.trim() ||
+              !!formData.website?.trim() ||
+              !!profileImage ||
+              !!brandLogo ||
+              socialLinks.some(s => s.value.trim()) ||
+              customLinks.some(l => l.label.trim() || l.url.trim());
+
+            if (isEditingExisting || hasUserContent) return;
+
+            // New, blank card: safe to reset the template-provided content.
             setFormData(DEFAULT_STATE.formData);
             setProfileImage('');
             setBrandLogo('');
@@ -2024,10 +2055,6 @@ export default function BusinessProfile({
             setSections(DEFAULT_STATE.sections);
             setFieldErrors({});
             setSocialLinkErrors(DEFAULT_STATE.socialLinks.map(() => null));
-            pendingTemplateDesignRef.current = null;
-            try {
-              localStorage.removeItem(activeDesignCacheKey);
-            } catch { }
           }}
           onDesignApply={(design) => {
             try {
