@@ -1883,7 +1883,7 @@ export default function BusinessProfile({
           <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
             <div className="relative group flex-shrink-0 self-center sm:self-start">
               <div className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-2xl overflow-hidden ring-4 ring-primary/30 bg-muted flex items-center justify-center">
-                {profileImage ? <Image src={profileImage} alt="Profile" fill className="object-cover" /> : <User className="w-10 h-10 text-muted-foreground" />}
+                {profileImage ? <Image src={profileImage} alt="Profile" fill className="object-cover object-top" /> : <User className="w-10 h-10 text-muted-foreground" />}
               </div>
               <label className="absolute inset-0 bg-black/60 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
                 <Upload className="w-7 h-7 text-white" />
