@@ -30,6 +30,7 @@ import {
   ThemeOverride, SectionKey
 } from '@/components/dashboard/pages/PhonePreview';
 import TemplatePicker from '@/components/TemplatePicker/TemplatePicker';
+import { getTemplateById } from '@/data/cardTemplates';
 import ExtraSectionBlockWithDragDrop from '@/components/dashboard/pages/ExtraSectionBlockWithDragDrop';
 import { makeQRMatrix } from '@/components/dashboard/pages/qr-engine';
 import { useQrStore } from '@/components/dashboard/stores/Useqrstore';
@@ -826,6 +827,10 @@ export default function BusinessProfile({
   // Holds the design payload from the last applied template so handleSaveChanges
   // can persist it to the backend alongside content.
   const pendingTemplateDesignRef = useRef<Record<string, unknown> | null>(null);
+  // The template a saved card is currently using, derived from its design
+  // `palette` (template id === palette). Feeds TemplatePicker's selected state
+  // so an existing card shows its template highlighted instead of "No Template".
+  const [savedTemplateId, setSavedTemplateId] = useState<string | null>(null);
 
   // Ref that stays current with the onContentChange prop so handleDragEnd can
   // call it synchronously without the callback being in its deps (stale closure).
@@ -1221,6 +1226,9 @@ export default function BusinessProfile({
       const override = buildThemeOverrideFromCardDesign(design);
       setThemeOverride(override);
       saveThemeOverride(activeDesignCacheKey, override);
+      // Reflect the card's template in the picker. The design palette doubles as
+      // the template id; only mark it selected if it resolves to a known template.
+      setSavedTemplateId(getTemplateById(design.palette) ? design.palette : null);
     } catch {
       // ignore load errors
     }
@@ -1914,6 +1922,7 @@ export default function BusinessProfile({
         <p className="text-muted-foreground text-xs mb-3">Pick a template — fields and colors will be filled in. Edit anything below.</p>
         <TemplatePicker
           cardId={resolvedCardId ?? cardId ?? null}
+          initialSelectedId={savedTemplateId}
           onApply={(content) => {
             try {
               const incoming = content as Record<string, unknown>;
