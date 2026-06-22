@@ -181,6 +181,8 @@ export interface ApiBusinessProfile {
   city: string | null;
   state: string | null;
   country: string | null;
+  industry: string | null;
+  yearFounded: string | null;
   shareUrl: string | null;
   completionScore?: number;
 }
@@ -201,6 +203,8 @@ export interface UpdateBusinessProfilePayload {
   city?: string;
   state?: string;
   country?: string;
+  industry?: string;
+  yearFounded?: string;
 }
 
 export async function getBusinessProfile(): Promise<ApiBusinessProfile | null> {

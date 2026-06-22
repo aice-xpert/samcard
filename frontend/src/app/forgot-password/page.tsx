@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Mail, ArrowRight, CheckCircle2 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
+
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
 
 export default function ForgotPasswordPage() {
