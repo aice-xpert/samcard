@@ -13,26 +13,32 @@ const selectedKeyForCard = (cardId?: string | null) =>
 
 type Props = {
   cardId?: string | null;
+  /**
+   * Template the card already uses (resolved by the parent from the card's
+   * saved design palette). Shown as selected until the user changes it.
+   */
+  initialSelectedId?: string | null;
   onApply?: (content: Record<string, unknown>) => void;
   onDesignApply?: (design: Record<string, unknown>) => void;
   onClear?: () => void;
   className?: string;
 };
 
-export default function TemplatePicker({ cardId, onApply, onDesignApply, onClear, className }: Props) {
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+export default function TemplatePicker({ cardId, initialSelectedId, onApply, onDesignApply, onClear, className }: Props) {
+  const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId ?? null);
+  // Once the user picks/clears a template in this session, stop overriding their
+  // choice when the resolved initial selection arrives or changes.
+  const userTouchedRef = useRef(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Reset selection when the component mounts; do not auto-select from stored value.
-    setSelectedId(null);
-    // Clear any persisted selection for this card to avoid stale state.
-    try {
-      localStorage.removeItem(selectedKeyForCard(cardId));
-    } catch {}
-  }, []);
+    // Reflect the card's saved template once the parent resolves it (the design
+    // loads asynchronously). Skip if the user has already made a choice here.
+    if (userTouchedRef.current) return;
+    setSelectedId(initialSelectedId ?? null);
+  }, [initialSelectedId]);
 
   const updateScrollState = useCallback(() => {
     const el = scrollRef.current;
@@ -64,6 +70,7 @@ export default function TemplatePicker({ cardId, onApply, onDesignApply, onClear
   };
 
   const clearSelection = () => {
+    userTouchedRef.current = true;
     setSelectedId(null);
     try {
       localStorage.removeItem(selectedKeyForCard(cardId));
@@ -79,6 +86,7 @@ export default function TemplatePicker({ cardId, onApply, onDesignApply, onClear
   };
 
   const applyTemplate = (t: CardTemplate) => {
+    userTouchedRef.current = true;
     // If already selected, deselect (toggle off)
     if (selectedId === t.id) {
       clearSelection();

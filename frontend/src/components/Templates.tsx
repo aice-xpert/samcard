@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X } from "lucide-react";
 import Link from "next/link";
@@ -18,12 +18,19 @@ export function Templates() {
   const swiperRef = useRef<SwiperType | null>(null);
   const { isDark } = useTheme();
   const [previewTemplate, setPreviewTemplate] = useState<CardTemplate | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const themeIsDark = mounted ? isDark : true;
 
   return (
     <section
       id="templates"
       className={`py-24 ${
-        isDark
+        themeIsDark
           ? "bg-gradient-to-b from-[#031203] to-background"
           : "bg-gradient-to-b from-[#e8f3e8] to-background"
       }`}
@@ -51,7 +58,7 @@ export function Templates() {
             className={`absolute left-0 top-1/2 -translate-y-1/2 z-10
                        w-10 h-10 flex items-center justify-center rounded-full
                        border transition-all backdrop-blur-sm ${
-              isDark
+              themeIsDark
                 ? "bg-white/10 border-white/20 text-white hover:bg-theme-digital-green hover:border-theme-digital-green"
                 : "bg-white border-gray-300 text-foreground hover:bg-theme-digital-green hover:border-theme-digital-green hover:text-white"
             }`}
@@ -78,7 +85,7 @@ export function Templates() {
             className={`absolute right-0 top-1/2 -translate-y-1/2 z-10
                        w-10 h-10 flex items-center justify-center rounded-full
                        border transition-all backdrop-blur-sm ${
-              isDark
+              themeIsDark
                 ? "bg-white/10 border-white/20 text-white hover:bg-theme-digital-green hover:border-theme-digital-green"
                 : "bg-white border-gray-300 text-foreground hover:bg-theme-digital-green hover:border-theme-digital-green hover:text-white"
             }`}
@@ -136,7 +143,7 @@ export function Templates() {
                     className={`h-full flex flex-col backdrop-blur-sm border rounded-2xl
                                   hover:shadow-2xl hover:shadow-theme-digital-green/10
                                   hover:border-theme-digital-green/50 transition-all overflow-hidden ${
-                      isDark
+                        themeIsDark
                         ? "bg-white/5 border-white/10"
                         : "bg-white border-gray-200 shadow-sm"
                     }`}
@@ -164,7 +171,7 @@ export function Templates() {
                         type="button"
                         onClick={() => setPreviewTemplate(template)}
                         className={`mt-4 w-full py-2 rounded-lg transition-all ${
-                          isDark
+                          themeIsDark
                             ? "bg-white/5 text-white border border-white/10 hover:bg-theme-digital-green hover:border-theme-digital-green"
                             : "bg-gray-100 text-foreground border border-gray-200 hover:bg-theme-digital-green hover:border-theme-digital-green hover:text-white"
                         }`}
@@ -216,7 +223,7 @@ export function Templates() {
               transition={{ type: "spring", stiffness: 260, damping: 24 }}
               onClick={(e) => e.stopPropagation()}
               className={`relative w-full max-w-md rounded-2xl border p-6 ${
-                isDark
+                themeIsDark
                   ? "bg-[#0a140a] border-white/10"
                   : "bg-white border-gray-200"
               }`}
@@ -226,7 +233,7 @@ export function Templates() {
                 onClick={() => setPreviewTemplate(null)}
                 aria-label="Close preview"
                 className={`absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full transition-colors ${
-                  isDark
+                    themeIsDark
                     ? "bg-white/10 text-white hover:bg-white/20"
                     : "bg-gray-100 text-foreground hover:bg-gray-200"
                 }`}
