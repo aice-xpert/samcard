@@ -13,9 +13,7 @@ function ResetPasswordForm() {
   const { isDark } = useTheme();
   const searchParams = useSearchParams();
   const router = useRouter();
-  // Supabase recovery links use URL hash fragments: #type=recovery&code=XXX
-  // We need to extract from both hash and query params for flexibility
-  const codeFromParams = searchParams.get("code");
+  const tokenFromParams = searchParams.get("token");
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,21 +22,13 @@ function ResetPasswordForm() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [code, setCode] = useState<string | null>(codeFromParams);
+  const [code, setCode] = useState<string | null>(tokenFromParams);
 
   useEffect(() => {
-    // Try to extract code from URL hash if not in query params
-    if (!codeFromParams && typeof window !== "undefined") {
-      const hash = window.location.hash.substring(1);
-      const params = new URLSearchParams(hash);
-      const hashCode = params.get("code");
-      if (hashCode) {
-        setCode(hashCode);
-      } else {
-        setError("Invalid or missing recovery code. Please request a new reset link.");
-      }
+    if (!tokenFromParams && typeof window !== "undefined") {
+      setError("Invalid or missing recovery link. Please request a new one.");
     }
-  }, [codeFromParams]);
+  }, [tokenFromParams]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

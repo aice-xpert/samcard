@@ -52,9 +52,8 @@ export async function sendVerificationEmail(
 export async function sendPasswordResetEmail(
   to: string,
   name: string,
-  token: string
+  resetUrl: string
 ): Promise<void> {
-  const resetUrl = `${FRONTEND_URL}/reset-password?token=${token}`;
   await transporter.sendMail({
     from: FROM,
     to,

@@ -1,7 +1,11 @@
 import express from "express";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 import { supabase } from "../config/supabase";
 
 const router = express.Router();
+const JWT_SECRET = process.env.JWT_SECRET!;
+const SALT_ROUNDS = 12;
 
 router.post("/", async (req, res) => {
   const { code, email, newPassword } = req.body;
@@ -20,42 +24,39 @@ router.post("/", async (req, res) => {
 
   try {
     const emailTrimmed = email.trim().toLowerCase();
-    
+    const passwordTrimmed = newPassword.trim();
+
     console.log(`[reset-password] Processing reset for: ${emailTrimmed}`);
 
-    // Verify the recovery OTP using the code and email
-    const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
-      email: emailTrimmed,
-      token: code,
-      type: "recovery",
-    });
-
-    console.log(`[reset-password] verifyOtp response:`, { verifyData, verifyError });
-    console.log(`[reset-password] verifyData user:`, verifyData?.user);
-
-    if (verifyError || !verifyData.user?.id) {
-      console.error("[reset-password] Token verification error:", verifyError);
+    // Verify the JWT reset token
+    let payload: { uid: string; email: string; purpose: string };
+    try {
+      payload = jwt.verify(code, JWT_SECRET) as typeof payload;
+    } catch {
       return res.status(400).json({ success: false, error: "Invalid or expired recovery link" });
     }
 
-    console.log(`[reset-password] Token verified for user: ${verifyData.user.id}`);
+    if (payload.purpose !== "password-reset" || payload.email !== emailTrimmed) {
+      return res.status(400).json({ success: false, error: "Invalid or expired recovery link" });
+    }
 
-    // Now update the password for this user using the admin API
-    const { data: updateData, error: updateError } = await supabase.auth.admin.updateUserById(
-      verifyData.user.id,
-      { password: newPassword.trim() }
-    );
+    console.log(`[reset-password] Token verified for user: ${payload.uid}`);
 
-    console.log(`[reset-password] updateUserById response:`, { updateData, updateError });
+    // Update the passwordHash in our User table (this is what login checks)
+    const passwordHash = await bcrypt.hash(passwordTrimmed, SALT_ROUNDS);
+    const { error: updateError } = await supabase
+      .from("User")
+      .update({ passwordHash, updatedAt: new Date().toISOString() })
+      .eq("id", payload.uid);
 
     if (updateError) {
-      console.error("[reset-password] Password update error:", updateError);
+      console.error("[reset-password] User table password update error:", updateError);
       return res.status(500).json({ success: false, error: "Failed to update password" });
     }
 
-    console.log(`[reset-password] Password reset successful for user: ${updateData.user?.id}`);
-    return res.status(200).json({ 
-      success: true, 
+    console.log(`[reset-password] Password reset successful for user: ${payload.uid}`);
+    return res.status(200).json({
+      success: true,
       message: "Password reset successfully. You can now log in."
     });
   } catch (err) {
