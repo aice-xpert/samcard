@@ -2122,6 +2122,26 @@ export default function BusinessProfile({
           setUnifiedOrder([...DEFAULT_SECTION_ORDER]);
           const ck = cacheKeyForEditor(cardId, resolvedCardId, allowFallbackToFirstCard);
           try { localStorage.removeItem(ck); } catch { /* quota */ }
+
+          // When editing an existing card, persist the cleared state to the
+          // backend so that reloading / tab-switching doesn't restore old data.
+          const activeCardId = resolvedCardId || cardId;
+          if (activeCardId) {
+            suppressOrderReloadRef.current = true;
+            updateCardContent(activeCardId, {
+              profileImage: '',
+              brandLogo: '',
+              logoPosition: DEFAULT_STATE.logoPosition,
+              formData: DEFAULT_STATE.formData,
+              socialLinks: [],
+              connectFields: DEFAULT_STATE.connectFields,
+              sections: DEFAULT_STATE.sections,
+              customLinks: [{ label: '', url: '' }],
+              extraSections: [],
+              sectionOrder: [...DEFAULT_SECTION_ORDER],
+              unifiedOrder: [...DEFAULT_SECTION_ORDER],
+            }).catch(() => { /* ignore delete-persist errors */ });
+          }
         }}><Trash2 className="w-4 h-4 mr-2" />Delete Profile</Button>
         <div className="flex gap-3">
           <Button onClick={() => { void handleSaveChanges(); }} disabled={isSaving}
