@@ -10,9 +10,10 @@ import { Separator } from "../ui/separator";
 import {
     Shield, Trash2, Key, X, CheckCircle2, Loader2, AlertTriangle,
     Eye, EyeOff, Download, CreditCard, Plus, Star, User,
+    Briefcase, Globe, MapPin, FileText, Calendar,
 } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
-import { uploadFile, updateUserProfile, getPaymentMethods, savePaymentMethod, setDefaultPaymentMethod, deletePaymentMethod, changePassword, deleteAccount, BACKEND_URL } from "@/lib/api";
+import { uploadFile, updateUserProfile, getPaymentMethods, savePaymentMethod, setDefaultPaymentMethod, deletePaymentMethod, changePassword, deleteAccount, BACKEND_URL, updateBusinessProfile, getBusinessProfile } from "@/lib/api";
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Types
@@ -159,12 +160,45 @@ export function Settings() {
     const [profileAvatar, setProfileAvatar] = useState(profile.avatar || "");
     const [profileSaving, setProfileSaving] = useState(false);
 
+    // BusinessProfile fields (for completion score)
+    const [bpTitle, setBpTitle] = useState("");
+    const [bpCompany, setBpCompany] = useState("");
+    const [bpWebsite, setBpWebsite] = useState("");
+    const [bpTagline, setBpTagline] = useState("");
+    const [bpIndustry, setBpIndustry] = useState("");
+    const [bpYearFounded, setBpYearFounded] = useState("");
+    const [bpLocation, setBpLocation] = useState("");
+
+    const [bpWebsiteError, setBpWebsiteError] = useState<string | null>(null);
+    const [bpYearError, setBpYearError] = useState<string | null>(null);
+    const [bpLocationError, setBpLocationError] = useState<string | null>(null);
+
     const PHONE_RE = /^[+\d][\d\s\-().]{4,30}$/;
+    const URL_RE = /^https?:\/\/.+\..+/i;
 
     const validatePhone = useCallback((v: string): string | null => {
         if (!v.trim()) return null;
         return PHONE_RE.test(v.trim()) ? null : "Enter a valid phone number (e.g. +1 555 000 0000)";
     }, []);
+
+    const validateWebsite = (v: string): string | null => {
+        if (!v.trim()) return null;
+        const testVal = v.startsWith("http://") || v.startsWith("https://") ? v : "https://" + v;
+        return URL_RE.test(testVal) ? null : "Enter a valid URL (e.g. https://example.com)";
+    };
+
+    const validateYear = (v: string): string | null => {
+        if (!v.trim()) return null;
+        const n = Number(v);
+        if (!Number.isInteger(n)) return "Enter a 4-digit year";
+        const cur = new Date().getFullYear();
+        return n >= 1800 && n <= cur ? null : `Year must be between 1800 and ${cur}`;
+    };
+
+    const validateLocation = (v: string): string | null => {
+        if (!v.trim()) return null;
+        return v.trim().length >= 2 ? null : "Enter a valid location (e.g. City, Country)";
+    };
 
     useEffect(() => {
         setProfileName(profile.name);
@@ -174,6 +208,23 @@ export function Settings() {
         setLanguage(profile.language);
         setProfileAvatar(profile.avatar || "");
     }, [profile]);
+
+    useEffect(() => {
+        getBusinessProfile().then(bp => {
+            if (!bp) return;
+            setBpTitle(bp.title || "");
+            setBpCompany(bp.company || "");
+            setBpWebsite(bp.website || "");
+            setBpTagline(bp.tagline || "");
+            setBpIndustry(bp.industry || "");
+            setBpYearFounded(bp.yearFounded || "");
+            const parts = [bp.city, bp.state, bp.country].filter(Boolean);
+            setBpLocation(parts.join(", "));
+            setBpWebsiteError(null);
+            setBpYearError(null);
+            setBpLocationError(null);
+        }).catch(() => {});
+    }, []);
 
     const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -258,10 +309,41 @@ export function Settings() {
         const err = validatePhone(profilePhone);
         setPhoneError(err);
         if (err) return;
+
+        const websiteErr = validateWebsite(bpWebsite);
+        const yearErr = validateYear(bpYearFounded);
+        const locationErr = validateLocation(bpLocation);
+        setBpWebsiteError(websiteErr);
+        setBpYearError(yearErr);
+        setBpLocationError(locationErr);
+        if (websiteErr || yearErr || locationErr) {
+            addToast("Please fix the highlighted fields before saving.", "error");
+            setProfileSaving(false);
+            return;
+        }
+
         setProfileSaving(true);
         try {
             await updateUserProfile({ name: profileName, phone: profilePhone, timezone, language, avatar: profileAvatar });
             setProfile({ name: profileName, phone: profilePhone, timezone, language, avatar: profileAvatar });
+            // Sync all fields to BusinessProfile so completion score stays accurate.
+            const locationParts = bpLocation.split(",").map(s => s.trim());
+            await updateBusinessProfile({
+                name: profileName,
+                title: bpTitle || undefined,
+                company: bpCompany || undefined,
+                tagline: bpTagline || undefined,
+                industry: bpIndustry || undefined,
+                yearFounded: bpYearFounded || undefined,
+                website: bpWebsite || undefined,
+                primaryPhone: profilePhone || undefined,
+                profileImageUrl: profileAvatar || undefined,
+                address: bpLocation || undefined,
+                city: locationParts[0] || undefined,
+                state: locationParts[1] || undefined,
+                country: locationParts[2] || undefined,
+            });
+            window.dispatchEvent(new CustomEvent('profileUpdated'));
             addToast("Profile updated successfully!");
         } catch (err: any) {
             addToast("Failed to update profile: " + (err.message || "Unknown error"), "error");
@@ -463,7 +545,41 @@ export function Settings() {
                                 <select value={language} onChange={(e) => setLanguage(e.target.value)} className="w-full h-10 px-3 rounded-xl bg-input border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring">
                                     <option value="en">English</option><option value="es">Español</option><option value="fr">Français</option><option value="de">Deutsch</option><option value="ur">اردو</option>
                                 </select></div>
-                            <Button className="text-primary-foreground text-xs h-9 rounded-full gap-1.5" style={{ background: "linear-gradient(135deg,#008001,#49B618)" }} onClick={handleSaveProfile} disabled={profileSaving}>
+
+                            {/* ── Business Profile (completion score fields) ── */}
+                            <Separator className="bg-border my-2" />
+                            <div className="flex items-center gap-2 mb-1">
+                                <Briefcase className="w-3.5 h-3.5 text-accent" />
+                                <span className="text-xs font-semibold text-foreground">Business Information</span>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div><Label className="text-xs text-muted-foreground mb-1.5">Title</Label>
+                                    <Input value={bpTitle} onChange={(e) => setBpTitle(e.target.value)} className="bg-input border-border text-foreground h-10 rounded-xl text-sm" placeholder="e.g. CEO" /></div>
+                                <div><Label className="text-xs text-muted-foreground mb-1.5">Company</Label>
+                                    <Input value={bpCompany} onChange={(e) => setBpCompany(e.target.value)} className="bg-input border-border text-foreground h-10 rounded-xl text-sm" placeholder="Company name" /></div>
+                                <div><Label className="text-xs text-muted-foreground mb-1.5">Website</Label>
+                                    <Input value={bpWebsite} onChange={(e) => { setBpWebsite(e.target.value); setBpWebsiteError(null); }} className={`bg-input border-border text-foreground h-10 rounded-xl text-sm ${bpWebsiteError ? 'border-destructive' : ''}`} placeholder="https://example.com" />
+                                    {bpWebsiteError && <p className="text-destructive text-[11px] mt-1">{bpWebsiteError}</p>}</div>
+                                <div><Label className="text-xs text-muted-foreground mb-1.5">Tagline</Label>
+                                    <Input value={bpTagline} onChange={(e) => setBpTagline(e.target.value)} className="bg-input border-border text-foreground h-10 rounded-xl text-sm" placeholder="Short tagline" /></div>
+                                <div><Label className="text-xs text-muted-foreground mb-1.5">Industry</Label>
+                                    <select value={bpIndustry} onChange={(e) => setBpIndustry(e.target.value)} className="w-full h-10 px-3 rounded-xl bg-input border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+                                        <option value="">Select industry</option>
+                                        <option value="tech">Technology</option><option value="finance">Finance</option>
+                                        <option value="healthcare">Healthcare</option><option value="consulting">Consulting</option>
+                                        <option value="realestate">Real Estate</option><option value="marketing">Marketing</option>
+                                        <option value="education">Education</option><option value="legal">Legal</option>
+                                        <option value="creative">Creative / Design</option><option value="other">Other</option>
+                                    </select></div>
+                                <div><Label className="text-xs text-muted-foreground mb-1.5">Year Founded</Label>
+                                    <Input value={bpYearFounded} onChange={(e) => { setBpYearFounded(e.target.value); setBpYearError(null); }} className={`bg-input border-border text-foreground h-10 rounded-xl text-sm ${bpYearError ? 'border-destructive' : ''}`} placeholder="e.g. 2020" />
+                                    {bpYearError && <p className="text-destructive text-[11px] mt-1">{bpYearError}</p>}</div>
+                            </div>
+                            <div><Label className="text-xs text-muted-foreground mb-1.5">Location</Label>
+                                <Input value={bpLocation} onChange={(e) => { setBpLocation(e.target.value); setBpLocationError(null); }} className={`bg-input border-border text-foreground h-10 rounded-xl text-sm ${bpLocationError ? 'border-destructive' : ''}`} placeholder="City, State, Country" />
+                                {bpLocationError && <p className="text-destructive text-[11px] mt-1">{bpLocationError}</p>}</div>
+
+                            <Button className="text-primary-foreground text-xs h-9 rounded-full gap-1.5 mt-2" style={{ background: "linear-gradient(135deg,#008001,#49B618)" }} onClick={handleSaveProfile} disabled={profileSaving}>
                                 {profileSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}Save Changes
                             </Button>
                         </CardContent>
