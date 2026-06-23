@@ -1468,7 +1468,7 @@ export default function PublicCardPage() {
       border: `3px solid ${T.green}`, display: 'flex', alignItems: 'center',
       justifyContent: 'center', boxShadow: '0 2px 12px rgba(0,0,0,0.2)',
     }}>
-      {hasBrandLogo ? (
+      {hasBrandLogo && content.logoPosition === 'top-left' ? (
         <img src={content.brandLogo} alt="Brand" style={{ width: sz - 16, height: sz - 16, borderRadius: '50%', objectFit: 'contain' }} />
       ) : (
         <div style={{ width: sz - 14, height: sz - 14, borderRadius: '50%', background: T.green, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: sz * 0.4 }}>
@@ -1678,9 +1678,8 @@ export default function PublicCardPage() {
             }}>
               <PhotoEl height="100%" objectPosition="center top" />
             </div>
-            {hasBrandLogo && content.logoPosition === 'top-left' && (
-              <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 10 }}><LogoBadge pos="top-left" /></div>
-            )}
+            {/* "Top Left" feeds the dedicated circular badge below for this layout; other
+                positions render as normal floating overlays (badge falls back to initials). */}
             {hasBrandLogo && content.logoPosition === 'top-right' && (
               <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }}><LogoBadge pos="top-right" /></div>
             )}
@@ -1707,9 +1706,8 @@ export default function PublicCardPage() {
                 style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 44, zIndex: 2 }}>
                 <path d="M0,36 C100,6 300,54 400,22 L400,60 L0,60 Z" fill={T.bg} />
               </svg>
-              {hasBrandLogo && content.logoPosition === 'top-left' && (
-                <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 10 }}><LogoBadge pos="top-left" /></div>
-              )}
+              {/* "Top Left" feeds the dedicated circular badge below for this layout; other
+                  positions render as normal floating overlays (badge falls back to initials). */}
               {hasBrandLogo && content.logoPosition === 'top-right' && (
                 <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }}><LogoBadge pos="top-right" /></div>
               )}
