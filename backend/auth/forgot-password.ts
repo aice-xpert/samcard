@@ -20,14 +20,22 @@ router.post("/", async (req, res) => {
 
   try {
     console.log(`[forgot-password] Processing reset request for: ${emailTrimmed}`);
+    console.log(`[forgot-password] FRONTEND_URL =`, process.env.FRONTEND_URL);
+    console.log(`[forgot-password] SMTP_HOST =`, process.env.SMTP_HOST);
+    console.log(`[forgot-password] JWT_SECRET set =`, !!process.env.JWT_SECRET);
 
-    const { data: user } = await supabase
+    const { data: user, error: dbError } = await supabase
       .from("User")
       .select("id, name")
       .eq("email", emailTrimmed)
       .maybeSingle();
 
+    if (dbError) {
+      console.error(`[forgot-password] DB error:`, dbError);
+    }
+
     if (user) {
+      console.log(`[forgot-password] User found: ${user.id}`);
       // Generate a short-lived JWT reset token (1 hour)
       const resetToken = jwt.sign(
         { uid: user.id, email: emailTrimmed, purpose: "password-reset" },
@@ -36,9 +44,12 @@ router.post("/", async (req, res) => {
       );
 
       const resetUrl = `${process.env.FRONTEND_URL || "http://localhost:3000"}/reset-password?token=${resetToken}`;
+      console.log(`[forgot-password] Reset URL generated, sending email to: ${emailTrimmed}`);
       sendPasswordResetEmail(emailTrimmed, user.name || "User", resetUrl).catch(err =>
         console.error("[forgot-password] Failed to send email:", err)
       );
+    } else {
+      console.log(`[forgot-password] User not found: ${emailTrimmed}`);
     }
 
     return res.status(200).json({ success: true, message: SUCCESS_MSG });
