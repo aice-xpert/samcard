@@ -211,12 +211,14 @@ export default function LoginPage() {
                 />
                 <span className={`text-sm ${checkboxLabelColor}`}>Remember me</span>
               </label>
-              <Link
-                href="/forgot-password"
-                className="text-sm text-accent hover:text-theme-digital-green transition-colors"
-              >
-                Forgot password?
-              </Link>
+              <span className="relative group cursor-not-allowed">
+                <span className="text-sm text-gray-400 select-none">
+                  Forgot password?
+                </span>
+                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 text-xs text-white bg-gray-800 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-lg">
+                  This will be available in production env
+                </span>
+              </span>
             </div>
 
             {/* Submit */}
