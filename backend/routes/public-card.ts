@@ -93,6 +93,7 @@ interface PublicCardResponse {
   headingBodyText?: string;
   design: {
     palette: string;
+    heroLayout?: string;
     accentColor: string;
     accentLight: string;
     bgColor: string;
@@ -401,6 +402,7 @@ router.get("/:slug", async (req, res: Response) => {
         card.headingBodyText ?? content?.formData?.bodyText ?? "",
       design: {
         palette: design?.palette ?? "",
+        heroLayout: design?.heroLayout ?? "default",
         accentColor: design?.accentColor ?? card.accentColor,
         accentLight: design?.accentLight ?? card.accentLight,
         bgColor: design?.bgColor ?? card.backgroundColor,
