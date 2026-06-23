@@ -294,9 +294,8 @@ export function ProfileHero({
           }}>
             <PPhoto h="100%" style={{ objectPosition: 'center top' }} />
           </div>
-          {hasBrandLogo && logoPosition === 'top-left' && (
-            <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 10 }}><PLogo pos="top-left" /></div>
-          )}
+          {/* "Top Left" feeds the dedicated circular badge below for this layout; other
+              positions render as normal floating overlays (badge falls back to initials). */}
           {hasBrandLogo && logoPosition === 'top-right' && (
             <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 10 }}><PLogo pos="top-right" /></div>
           )}
@@ -307,7 +306,7 @@ export function ProfileHero({
               background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
               overflow: 'hidden',
             }}>
-              {hasBrandLogo ? (
+              {hasBrandLogo && logoPosition === 'top-left' ? (
                 <img src={brandLogo} alt="Brand" style={{ width: 38, height: 38, objectFit: 'contain', borderRadius: '50%' }} />
               ) : (
                 <div style={{ width: 44, height: 44, borderRadius: '50%', background: T.green, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 18 }}>
@@ -334,9 +333,8 @@ export function ProfileHero({
               style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 34, zIndex: 2 }}>
               <path d="M0,36 C100,6 300,54 400,22 L400,60 L0,60 Z" fill={T.bg} />
             </svg>
-            {hasBrandLogo && logoPosition === 'top-left' && (
-              <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 10 }}><PLogo pos="top-left" /></div>
-            )}
+            {/* "Top Left" feeds the dedicated circular badge below for this layout; other
+                positions render as normal floating overlays (badge falls back to initials). */}
             {hasBrandLogo && logoPosition === 'top-right' && (
               <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 10 }}><PLogo pos="top-right" /></div>
             )}
@@ -350,7 +348,7 @@ export function ProfileHero({
               background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
               overflow: 'hidden',
             }}>
-              {hasBrandLogo ? (
+              {hasBrandLogo && logoPosition === 'top-left' ? (
                 <img src={brandLogo} alt="Brand" style={{ width: 40, height: 40, objectFit: 'contain', borderRadius: '50%' }} />
               ) : (
                 <div style={{ width: 50, height: 50, borderRadius: '50%', background: T.green, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 20 }}>
