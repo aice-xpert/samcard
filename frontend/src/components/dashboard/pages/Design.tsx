@@ -13,6 +13,14 @@ import {
 import { PhonePreview, ThemeOverride, ExtraSection, SectionKey } from '@/components/dashboard/pages/PhonePreview';
 import { CardPreviewModal } from '@/components/dashboard/pages/CardPreviewModal';
 import { getBusinessProfile, getCardContent, getCardDesign, updateCardDesign, getSocialLinks, getCustomLinks, getCards } from '@/lib/api';
+import { getTemplateById } from '@/data/cardTemplates';
+
+// When a colour is manually edited the design no longer matches a named preset.
+// If the card was built from a template, keep the template id in `palette` so the
+// card stays linked to its template — the explicit colour fields already capture
+// the customisation. Otherwise mark the palette as 'custom'.
+const paletteAfterColorEdit = (current: string): string =>
+  getTemplateById(current) ? current : 'custom';
 import type { LogoPosition } from '@/components/dashboard/pages/PhonePreview';
 
 // ── Cache keys ────────────────────────────────────────────────────
@@ -943,7 +951,7 @@ export function DesignNew({
   }, []);
 
   const applyAccent = useCallback((color: string) => {
-    setDraft(prev => ({ ...prev, palette: 'custom', accentColor: color, accentLight: lightenHex(color, 35) }));
+    setDraft(prev => ({ ...prev, palette: paletteAfterColorEdit(prev.palette), accentColor: color, accentLight: lightenHex(color, 35) }));
   }, []);
 
   const publicBase =
@@ -1122,12 +1130,12 @@ export function DesignNew({
             }} />
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <ColorRow label="Primary Accent" value={draft.accentColor} onChange={v => { set('accentColor', v); set('palette', 'custom'); }} />
-          <ColorRow label="Light Accent" value={draft.accentLight} onChange={v => { set('accentLight', v); set('palette', 'custom'); }} />
-          <ColorRow label="Card Background" value={draft.cardColor} onChange={v => { set('cardColor', v); set('palette', 'custom'); }} />
-          <ColorRow label="Body Background" value={draft.bgColor} onChange={v => { set('bgColor', v); set('palette', 'custom'); }} />
-          <ColorRow label="Primary Text" value={draft.textPrimary} onChange={v => { set('textPrimary', v); set('palette', 'custom'); }} />
-          <ColorRow label="Muted Text" value={draft.textMuted} onChange={v => { set('textMuted', v); set('palette', 'custom'); }} />
+          <ColorRow label="Primary Accent" value={draft.accentColor} onChange={v => { set('accentColor', v); set('palette', paletteAfterColorEdit(draft.palette)); }} />
+          <ColorRow label="Light Accent" value={draft.accentLight} onChange={v => { set('accentLight', v); set('palette', paletteAfterColorEdit(draft.palette)); }} />
+          <ColorRow label="Card Background" value={draft.cardColor} onChange={v => { set('cardColor', v); set('palette', paletteAfterColorEdit(draft.palette)); }} />
+          <ColorRow label="Body Background" value={draft.bgColor} onChange={v => { set('bgColor', v); set('palette', paletteAfterColorEdit(draft.palette)); }} />
+          <ColorRow label="Primary Text" value={draft.textPrimary} onChange={v => { set('textPrimary', v); set('palette', paletteAfterColorEdit(draft.palette)); }} />
+          <ColorRow label="Muted Text" value={draft.textMuted} onChange={v => { set('textMuted', v); set('palette', paletteAfterColorEdit(draft.palette)); }} />
         </div>
       </PanelSection>
 
@@ -1186,7 +1194,7 @@ export function DesignNew({
       </div>
       <div className="mt-3 grid grid-cols-3 gap-1.5">
         {[
-          { k: 'Palette', v: draft.palette === 'custom' ? 'Custom' : PALETTES[draft.palette]?.name ?? draft.palette },
+          { k: 'Palette', v: draft.palette === 'custom' ? 'Custom' : PALETTES[draft.palette]?.name ?? getTemplateById(draft.palette)?.name ?? draft.palette },
           { k: 'Wallpaper', v: WALLPAPER_PRESETS.find(p => p.id === draft.phoneBgPreset)?.name ?? draft.phoneBgPreset },
           { k: 'Font', v: FONTS[draft.font]?.label ?? draft.font },
           { k: 'Radius', v: `${draft.cardRadius}px` },

@@ -1967,6 +1967,7 @@ export default function BusinessProfile({
 
               if (typeof incoming.profileImage === 'string') setProfileImage(incoming.profileImage);
               if (typeof incoming.brandLogo === 'string') setBrandLogo(incoming.brandLogo);
+              if (typeof incoming.logoPosition === 'string') setLogoPosition(normalizeLogoPositionFromApi(incoming.logoPosition));
 
               if (Array.isArray(incoming.socialLinks)) {
                 const arr = incoming.socialLinks as Array<Record<string, unknown>>;

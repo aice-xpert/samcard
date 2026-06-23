@@ -49,6 +49,9 @@ export interface TemplateContent {
   bio?: string;
   profileImage?: string | null;
   brandLogo?: string | null;
+  /** Brand-logo placement. For the dedicated-badge layouts (torn-edge / wave-logo)
+   *  'top-left' puts the logo in the template's built-in circular badge. */
+  logoPosition?: 'top-left' | 'top-right' | 'below-photo' | 'below-name';
   email?: string;
   phone?: string;
   website?: string;
@@ -623,6 +626,7 @@ export const cardTemplates: CardTemplate[] = [
       bio: 'Editorial styling and brand campaigns across Paris and NYC.',
       profileImage: '/profileImages/alex-morgan.jpg',
       brandLogo: '/brandLogos/ACME.png',
+      logoPosition: 'top-left',
       email: 'hello@ateliercamille.com',
       phone: '+1 (555) 444-9090',
       website: 'https://ateliercamille.com',
@@ -677,6 +681,7 @@ export const cardTemplates: CardTemplate[] = [
       bio: 'Helping families find their perfect home for over 15 years with dedication and expertise.',
       profileImage: '/profileImages/male-5.png',
       brandLogo: '/brandLogos/brand-3.png',
+      logoPosition: 'top-left',
       email: 'alex@heritagehomes.com',
       phone: '+1 (555) 808-2244',
       website: 'https://heritagehomes.com',
@@ -734,6 +739,7 @@ export const cardTemplates: CardTemplate[] = [
       bio: 'Board-certified cardiologist with 12+ years of experience in preventive heart care and wellness.',
       profileImage: '/profileImages/doctor-1.jpeg',
       brandLogo: '/brandLogos/logoipsum-397.png',
+      logoPosition: 'top-left',
       email: 'sarah@trustcare.com',
       phone: '+1 (555) 222-7788',
       website: 'https://trustcare.com',
@@ -903,6 +909,7 @@ export const cardTemplates: CardTemplate[] = [
       bio: 'Transforming businesses with strategic insight and hands-on leadership.',
       profileImage: '/profileImages/male-1.jpg',
       brandLogo: '/brandLogos/logoipsum-339.png',
+      logoPosition: 'top-left',
       email: 'alex@apexadvisory.com',
       phone: '+1 (555) 320-4411',
       website: 'https://apexadvisory.com',
