@@ -416,6 +416,7 @@ export async function updateCardQR(cardId: string, qrConfig: CardQRConfigPayload
 
 export interface CardDesignPayload {
   palette: string;
+  templateId?: string | null;
   heroLayout?: string;
   accentColor: string;
   accentLight: string;

@@ -10,6 +10,7 @@ const getErrorMessage = (error: unknown): string =>
 interface CardDesignData {
   cardId?: string;
   palette: string;
+  templateId?: string | null;
   heroLayout?: string;
   accentColor: string;
   accentLight: string;
@@ -94,6 +95,9 @@ router.put("/", verifySession, async (req: AuthRequest, res: Response) => {
         .from("CardDesign")
         .update({
           palette: designData.palette ?? "green",
+          // Only overwrite templateId when explicitly provided (template apply).
+          // Color/design edits omit it, so the existing template identity survives.
+          ...(designData.templateId !== undefined && { templateId: designData.templateId }),
           heroLayout: designData.heroLayout ?? "default",
           accentColor: designData.accentColor ?? "#008001",
           accentLight: designData.accentLight ?? "#49B618",
@@ -126,6 +130,7 @@ router.put("/", verifySession, async (req: AuthRequest, res: Response) => {
         .insert({
           cardId,
           palette: designData.palette ?? "green",
+          templateId: designData.templateId ?? null,
           heroLayout: designData.heroLayout ?? "default",
           accentColor: designData.accentColor ?? "#008001",
           accentLight: designData.accentLight ?? "#49B618",
