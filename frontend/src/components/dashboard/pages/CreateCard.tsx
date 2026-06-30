@@ -428,6 +428,7 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
                 localStorage.removeItem('businessProfile_v1:draft');
                 localStorage.removeItem('cardDesign_v1:draft');
                 localStorage.removeItem('samcard_qr_config_v1:draft');
+                localStorage.removeItem('selectedTemplate:draft');
             } catch {
                 // ignore storage errors
             }
