@@ -145,6 +145,9 @@ export interface DesignSettings {
   textPrimary: string;
   textMuted: string;
   palette: string;
+  // Template identity, independent of `palette`. Set when a template is applied
+  // and preserved through color edits (which only rewrite `palette`).
+  templateId: string | null;
   heroLayout: string;
   // Phone wallpaper
   phoneBgPreset: string;
@@ -203,6 +206,7 @@ const DEFAULT_DESIGN: DesignSettings = {
   textPrimary: '#f0f0f0',
   textMuted: '#7a9a7a',
   palette: 'green',
+  templateId: null,
   heroLayout: 'default',
   phoneBgPreset: 'custom',
   phoneBgColor1: '#0a0f0a',
@@ -325,10 +329,17 @@ function normalizeDesignSettings(value: Partial<DesignSettings> | null | undefin
       ? shadowRaw
       : DEFAULT_DESIGN.shadowIntensity;
 
+  const templateIdRaw = typeof source.templateId === 'string' ? source.templateId : '';
+
   return {
     ...DEFAULT_DESIGN,
     ...value,
     palette: PALETTES[paletteRaw] ? paletteRaw : (paletteRaw || DEFAULT_DESIGN.palette),
+    // Prefer an explicit templateId; fall back to palette for pre-templateId
+    // cards where palette still held the template id.
+    templateId: getTemplateById(templateIdRaw)
+      ? templateIdRaw
+      : (getTemplateById(paletteRaw) ? paletteRaw : null),
     accentColor: asColor(source.accentColor ?? source.green, DEFAULT_DESIGN.accentColor),
     accentLight: asColor(source.accentLight ?? source.greenLight, DEFAULT_DESIGN.accentLight),
     bgColor: asColor(source.bgColor ?? source.backgroundColor ?? source.bg, DEFAULT_DESIGN.bgColor),

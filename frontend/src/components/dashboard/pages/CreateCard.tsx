@@ -5,6 +5,7 @@ import BusinessProfile from "./BusinessProfile";
 import { DesignNew } from "./Design";
 import { NfcQr, loadConfig, qrStorageKeyForCard, qrStorageKeyForEditor } from "./NfcQR";
 import { createCard, updateCard, updateCardQR, updateCardContent, updateCardDesign, CardContentPayload, getCards, uploadFile, checkSlugAvailable } from "@/lib/api";
+import { getTemplateById } from "@/data/cardTemplates";
 import { makeQRMatrix } from "@/components/dashboard/pages/qr-engine";
 import { rebuildDecoratedComposite } from "@/components/dashboard/pages/qr-download-utils";
 
@@ -427,6 +428,7 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
                 localStorage.removeItem('businessProfile_v1:draft');
                 localStorage.removeItem('cardDesign_v1:draft');
                 localStorage.removeItem('samcard_qr_config_v1:draft');
+                localStorage.removeItem('selectedTemplate:draft');
             } catch {
                 // ignore storage errors
             }
@@ -488,6 +490,14 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
             : (PALETTE_TO_HERO_LAYOUT[palette] ?? "default");
         return ({
         palette,
+        // Persist template identity separately from palette so later color edits
+        // (which rewrite palette to 'custom') don't lose it. Prefer the explicit
+        // templateId carried in the design draft; fall back to palette for cards
+        // built before that field existed.
+        templateId:
+            (typeof settings?.templateId === "string" && getTemplateById(settings.templateId))
+                ? settings.templateId
+                : (getTemplateById(palette) ? palette : null),
         heroLayout,
         accentColor: typeof settings?.accentColor === "string" ? settings.accentColor : "#008001",
         accentLight: typeof settings?.accentLight === "string" ? settings.accentLight : "#49B618",

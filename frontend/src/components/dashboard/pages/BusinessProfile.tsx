@@ -1226,9 +1226,11 @@ export default function BusinessProfile({
       const override = buildThemeOverrideFromCardDesign(design);
       setThemeOverride(override);
       saveThemeOverride(activeDesignCacheKey, override);
-      // Reflect the card's template in the picker. The design palette doubles as
-      // the template id; only mark it selected if it resolves to a known template.
-      setSavedTemplateId(getTemplateById(design.palette) ? design.palette : null);
+      // Reflect the card's template in the picker. templateId is the source of
+      // truth; fall back to palette for cards saved before the templateId column
+      // existed. Only mark selected if it resolves to a known template.
+      const tid = design.templateId ?? design.palette;
+      setSavedTemplateId(getTemplateById(tid) ? tid : null);
     } catch {
       // ignore load errors
     }
@@ -2133,6 +2135,10 @@ export default function BusinessProfile({
                 phoneBgAngle,
                 phoneBgType,
                 palette,
+                // Templates set palette to their id; persist it separately so
+                // later color edits (which rewrite palette) don't lose the
+                // template identity. getTemplateById ignores non-template values.
+                templateId: getTemplateById(palette) ? palette : null,
                 nameFontSize,
                 bodyFontSize,
                 boldHeadings,
