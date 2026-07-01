@@ -422,17 +422,10 @@ export function CreateCard({ cardId, onDone }: { cardId?: string; onDone?: () =>
         setStep(1);
         setActiveCardId(cardId);
         setHasLoadedCardContent(false);
-
-        if (!cardId) {
-            try {
-                localStorage.removeItem('businessProfile_v1:draft');
-                localStorage.removeItem('cardDesign_v1:draft');
-                localStorage.removeItem('samcard_qr_config_v1:draft');
-                localStorage.removeItem('selectedTemplate:draft');
-            } catch {
-                // ignore storage errors
-            }
-        }
+        // NOTE: draft caches are intentionally NOT cleared on mount — that would
+        // wipe an in-progress new card on page reload. The new-card draft is
+        // cleared only when the user explicitly starts a fresh card or discards
+        // unsaved changes (both handled in the dashboard's navigation guard).
     }, [cardId]);
 
 

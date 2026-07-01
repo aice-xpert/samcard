@@ -22,6 +22,7 @@ import { getTemplateById } from '@/data/cardTemplates';
 const paletteAfterColorEdit = (current: string): string =>
   getTemplateById(current) ? current : 'custom';
 import type { LogoPosition } from '@/components/dashboard/pages/PhonePreview';
+import { markNewCardDraftSaved } from '@/lib/newCardDraft';
 
 // ── Cache keys ────────────────────────────────────────────────────
 const PROFILE_KEY = 'businessProfile_v1';
@@ -717,6 +718,15 @@ export function DesignNew({
               const cached = loadProfile(activeProfileCacheKey);
               setProfile(prev => {
                 let next = { ...cached, ...prev };
+                // Global business profile provides defaults; per-card content wins (see BusinessProfile load order).
+                if (profileData) {
+                  next = {
+                    ...next,
+                    profileImage: profileData.profileImageUrl || next.profileImage,
+                    brandLogo: profileData.brandLogoUrl || next.brandLogo,
+                    logoPosition: ((profileData.logoPosition as LogoPosition) || next.logoPosition),
+                  };
+                }
                 if (contentData) {
                   next = {
                     ...next,
@@ -727,14 +737,6 @@ export function DesignNew({
                     sectionOrder: (contentData as any).sectionOrder || next.sectionOrder,
                     unifiedOrder: (contentData as any).unifiedOrder || next.unifiedOrder,
                     extraSections: (contentData as any).extraSections || next.extraSections,
-                  };
-                }
-                if (profileData) {
-                  next = {
-                    ...next,
-                    profileImage: profileData.profileImageUrl || next.profileImage,
-                    brandLogo: profileData.brandLogoUrl || next.brandLogo,
-                    logoPosition: ((profileData.logoPosition as LogoPosition) || next.logoPosition),
                   };
                 }
                 return next;
@@ -837,6 +839,15 @@ export function DesignNew({
           const cached = loadProfile(activeProfileCacheKey);
           setProfile(prev => {
             let next = { ...cached, ...prev };
+            // Global business profile provides defaults; per-card content wins (see BusinessProfile load order).
+            if (profileData) {
+              next = {
+                ...next,
+                profileImage: profileData.profileImageUrl || next.profileImage,
+                brandLogo: profileData.brandLogoUrl || next.brandLogo,
+                logoPosition: ((profileData.logoPosition as LogoPosition) || next.logoPosition),
+              };
+            }
             if (contentData) {
               next = {
                 ...next,
@@ -847,14 +858,6 @@ export function DesignNew({
                 sectionOrder: (contentData as any).sectionOrder || next.sectionOrder,
                 unifiedOrder: (contentData as any).unifiedOrder || next.unifiedOrder,
                 extraSections: (contentData as any).extraSections || next.extraSections,
-              };
-            }
-            if (profileData) {
-              next = {
-                ...next,
-                profileImage: profileData.profileImageUrl || next.profileImage,
-                brandLogo: profileData.brandLogoUrl || next.brandLogo,
-                logoPosition: ((profileData.logoPosition as LogoPosition) || next.logoPosition),
               };
             }
             return next;
@@ -912,10 +915,16 @@ export function DesignNew({
     setIsSaved(true); showToast('Design saved!');
     setTimeout(() => setIsSaved(false), 2000);
 
+    // Mark the in-progress new-card draft as explicitly saved so the dashboard
+    // nav guard lets the user switch tabs without the "unsaved changes" warning.
+    if (!cardId && !resolvedCardId && !allowFallbackToFirstCard) {
+      markNewCardDraftSaved();
+    }
+
     if (resolvedCardId) {
       await updateCardDesign(resolvedCardId, draft);
     }
-  }, [draft, resolvedCardId, activeDesignCacheKey]);
+  }, [draft, cardId, resolvedCardId, activeDesignCacheKey, allowFallbackToFirstCard]);
 
   const handleReset = useCallback(async () => {
     if (isResetting) return;

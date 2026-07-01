@@ -19,6 +19,7 @@ import {
   buildCustomizedQrSvgFromConfig,
   svgTextToJpegBlob,
   triggerBlobDownload,
+  rebuildDecoratedComposite,
 } from "@/components/dashboard/pages/qr-download-utils";
 import type { QRCustomConfig } from "@/components/dashboard/pages/Qrcustomizer";
 
@@ -158,11 +159,22 @@ export function QrPopup({ isOpen, onClose, cardUrl, cardId, allowFallbackToFirst
     const fileName = `${fileBase}-qr.jpg`;
 
     try {
-      if (popupQrConfig?.decorateCompositeDataUrl) {
-        const res = await fetch(popupQrConfig.decorateCompositeDataUrl);
-        const blob = await res.blob();
-        triggerBlobDownload(blob, fileName);
-        return;
+      // When a decorated image exists, rebuild the composite fresh from the
+      // live QR matrix so the downloaded file encodes the correct card URL.
+      if (popupQrConfig?.decorateImageUrl) {
+        try {
+          const blob = await rebuildDecoratedComposite(
+            popupQrConfig.decorateImageUrl,
+            popupQrConfig,
+            activeMatrix,
+            activeN,
+            1200,
+          );
+          triggerBlobDownload(blob, fileName);
+          return;
+        } catch {
+          // Fall through to standard SVG-based export if composite rebuild fails
+        }
       }
 
       const svgText = popupQrConfig

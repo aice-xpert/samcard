@@ -5,6 +5,7 @@ import { Sidebar } from '@/components/dashboard/pages/Sidebar';
 import { EnhancedHeader } from '@/components/dashboard/pages/Header';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import dynamic from "next/dynamic";
+import { clearNewCardDraft, newCardDraftSaved, newCardDraftHasData } from '@/lib/newCardDraft';
 
 function PageSkeleton() {
   return (
@@ -93,6 +94,7 @@ export default function Home() {
   const [analyticsCardTitle, setAnalyticsCardTitle] = useState<string | undefined>(undefined);
   const [dateRange, setDateRange] = useState('30');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [pendingNav, setPendingNav] = useState<string | null>(null);
 
   // Restore page from URL on mount (fixes refresh-to-dashboard bug)
   useEffect(() => {
@@ -154,8 +156,11 @@ export default function Home() {
               syncURL('create-card', { editCardId: cardId });
             }}
             onCreateBusinessCard={() => {
+              // Explicitly creating a new card always starts from an empty state.
+              clearNewCardDraft();
               setEditingCardId(undefined);
               setActivePage('create-card');
+              syncURL('create-card');
             }}
             onNavigate={handleNavigate}
             onViewAnalytics={(cardId, cardTitle) => {
@@ -172,6 +177,8 @@ export default function Home() {
           <CreateCard
             cardId={editingCardId}
             onDone={() => {
+              // Card finalized (Save & Finish) — discard the in-progress draft.
+              clearNewCardDraft();
               setEditingCardId(undefined);
               setActivePage('my-cards');
             }}
@@ -185,12 +192,15 @@ export default function Home() {
   };
 
   /* Navigate and close drawer on mobile */
-  const handleNavigate = (page: string) => {
+  const doNavigate = (page: string) => {
     if (page === 'analytics') {
       setAnalyticsCardId(undefined);
       setAnalyticsCardTitle(undefined);
     }
     if (page === 'create-card') {
+      // Navigating to the card editor via the sidebar resumes a saved draft;
+      // only the "Create New Card" button (onCreateBusinessCard) forces a blank.
+      if (!newCardDraftSaved()) clearNewCardDraft();
       setEditingCardId(undefined);
     }
     if (activePage === 'create-card' && page !== 'create-card') {
@@ -201,9 +211,67 @@ export default function Home() {
     syncURL(page);
   };
 
+  const handleNavigate = (page: string) => {
+    // Guard: leaving an in-progress NEW card with unsaved data warns first via a
+    // themed modal. Saved drafts (content/design Save clicked) leave freely.
+    if (
+      activePage === 'create-card' && page !== 'create-card' && !editingCardId &&
+      !newCardDraftSaved() && newCardDraftHasData()
+    ) {
+      setPendingNav(page);
+      return;
+    }
+    doNavigate(page);
+  };
+
+  const confirmLeave = () => {
+    const target = pendingNav;
+    setPendingNav(null);
+    if (target === null) return;
+    clearNewCardDraft();
+    doNavigate(target);
+  };
+
   return (
     <ThemeProvider>
       <div className="min-h-screen bg-background">
+        {/* ── Unsaved-changes confirm modal ── */}
+        {pendingNav !== null && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <div
+              role="dialog"
+              aria-modal="true"
+              className="bg-popover border border-border rounded-2xl w-full max-w-md p-6 shadow-2xl shadow-primary/10"
+            >
+              <div className="flex flex-col items-center text-center mb-5">
+                <div className="w-14 h-14 rounded-full border-2 border-accent bg-primary/10 flex items-center justify-center mb-4">
+                  <svg className="w-7 h-7 text-accent" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86l-8.48 14.7A1.5 1.5 0 003.11 21h17.78a1.5 1.5 0 001.3-2.44l-8.48-14.7a1.5 1.5 0 00-2.6 0z" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-bold text-foreground">Discard unsaved changes?</h2>
+                <p className="text-sm text-muted-foreground mt-2">
+                  You haven&apos;t saved this card yet. If you leave now, the information you entered will be lost.
+                </p>
+              </div>
+              <div className="flex gap-3 pt-4 border-t border-border">
+                <button
+                  onClick={() => setPendingNav(null)}
+                  className="flex-1 px-5 py-2.5 rounded-xl border border-border text-foreground text-sm font-medium hover:border-primary/60 transition-all"
+                >
+                  Keep editing
+                </button>
+                <button
+                  onClick={confirmLeave}
+                  className="flex-1 px-5 py-2.5 rounded-xl bg-destructive text-destructive-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
+                >
+                  Leave &amp; discard
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ── Mobile overlay backdrop ── */}
         {sidebarOpen && (
           <div

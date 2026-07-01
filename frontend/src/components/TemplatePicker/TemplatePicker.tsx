@@ -11,18 +11,6 @@ const SELECTED_TEMPLATE_KEY = 'selectedTemplate';
 const selectedKeyForCard = (cardId?: string | null) =>
   cardId ? `${SELECTED_TEMPLATE_KEY}:${cardId}` : `${SELECTED_TEMPLATE_KEY}:draft`;
 
-// The card's design isn't persisted to the backend until creation finishes, so
-// during the wizard `initialSelectedId` resolves to null on every remount
-// (e.g. switching tabs). Fall back to the selection we stored locally on apply.
-const readStoredSelection = (cardId?: string | null): string | null => {
-  try {
-    const stored = localStorage.getItem(selectedKeyForCard(cardId));
-    return stored && cardTemplates.some((t) => t.id === stored) ? stored : null;
-  } catch {
-    return null;
-  }
-};
-
 type Props = {
   cardId?: string | null;
   /**
@@ -37,7 +25,11 @@ type Props = {
 };
 
 export default function TemplatePicker({ cardId, initialSelectedId, onApply, onDesignApply, onClear, className }: Props) {
-  const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId ?? readStoredSelection(cardId));
+  // Selection tracks the card's saved design only. An applied-but-unsaved
+  // template lives in React state and is wiped when this component remounts
+  // (e.g. switching wizard tabs), so the highlight must reset with it — never
+  // persist the draft selection separately, or it survives the blank preview.
+  const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId ?? null);
   // Once the user picks/clears a template in this session, stop overriding their
   // choice when the resolved initial selection arrives or changes.
   const userTouchedRef = useRef(false);
@@ -51,7 +43,7 @@ export default function TemplatePicker({ cardId, initialSelectedId, onApply, onD
     // When the parent hasn't resolved one (new card not yet persisted), keep the
     // locally stored selection instead of forcing "No Template".
     if (userTouchedRef.current) return;
-    setSelectedId(initialSelectedId ?? readStoredSelection(cardId));
+    setSelectedId(initialSelectedId ?? null);
   }, [initialSelectedId, cardId]);
 
   const updateScrollState = useCallback(() => {
@@ -108,12 +100,6 @@ export default function TemplatePicker({ cardId, initialSelectedId, onApply, onD
     }
 
     setSelectedId(t.id);
-
-    try {
-      localStorage.setItem(selectedKeyForCard(cardId), t.id);
-    } catch {
-      // ignore
-    }
 
     if (onDesignApply) onDesignApply(t.defaultDesign as unknown as Record<string, unknown>);
     if (onApply) onApply(t.defaultContent as unknown as Record<string, unknown>);

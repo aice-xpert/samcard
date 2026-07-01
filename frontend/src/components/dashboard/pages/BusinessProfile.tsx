@@ -34,6 +34,7 @@ import { getTemplateById } from '@/data/cardTemplates';
 import ExtraSectionBlockWithDragDrop from '@/components/dashboard/pages/ExtraSectionBlockWithDragDrop';
 import { makeQRMatrix } from '@/components/dashboard/pages/qr-engine';
 import { useQrStore } from '@/components/dashboard/stores/Useqrstore';
+import { markNewCardDraftSaved } from '@/lib/newCardDraft';
 import {
   getBusinessProfile,
   getCustomLinks,
@@ -922,6 +923,7 @@ export default function BusinessProfile({
 
   const formDataRef = useRef(formData);
   const profileImageRef = useRef(profileImage);
+  const userEditedRef = useRef(false);
 
   useEffect(() => {
     formDataRef.current = formData;
@@ -1297,6 +1299,21 @@ export default function BusinessProfile({
     onContentChange(payload);
   }, [onContentChange, profileImage, brandLogo, logoPosition, formData, socialLinks, connectFields, sections, customLinks, extraSections, sectionOrder, unifiedOrder]);
 
+  // Persist in-progress edits to the editor cache on every change so switching
+  // wizard tabs or refreshing restores them (mount reads this via loadCache). A
+  // brand-new card clears its :draft cache on mount (see CreateCard), so it
+  // still starts empty; existing cards re-fetch from the API as source of truth.
+  useEffect(() => {
+    saveCacheForKey(
+      {
+        profileImage, brandLogo, logoPosition, formData, socialLinks,
+        connectFields, sections, expanded, customLinks, extraSections,
+        sectionOrder, unifiedOrder,
+      },
+      cacheKeyForEditor(cardId, resolvedCardId, allowFallbackToFirstCard),
+    );
+  }, [profileImage, brandLogo, logoPosition, formData, socialLinks, connectFields, sections, expanded, customLinks, extraSections, sectionOrder, unifiedOrder, cardId, resolvedCardId, allowFallbackToFirstCard]);
+
   const handleSaveChanges = useCallback(async () => {
     setSaveError(null);
 
@@ -1414,6 +1431,12 @@ export default function BusinessProfile({
       cacheKeyForEditor(cardId, resolvedCardId, allowFallbackToFirstCard),
     );
 
+    // Mark the in-progress new-card draft as explicitly saved so the dashboard
+    // nav guard lets the user switch tabs without the "unsaved changes" warning.
+    if (!cardId && !resolvedCardId && !allowFallbackToFirstCard) {
+      markNewCardDraftSaved();
+    }
+
     const normalizedSocialLinks: ApiSocialLinkPayload[] = socialLinks
       .filter(link => Boolean(link.value.trim()))
       .map(link => ({
@@ -1514,6 +1537,7 @@ export default function BusinessProfile({
   const VALIDATED_FIELDS = new Set<keyof FormData>(['phone', 'email', 'website', 'location', 'yearFounded', 'appointmentUrl']);
 
   const updateField = useCallback(<K extends keyof FormData>(key: K, value: FormData[K]) => {
+    userEditedRef.current = true;
     setFormData(prev => ({ ...prev, [key]: value }));
     if (VALIDATED_FIELDS.has(key)) {
       validateField(key, value as string);
@@ -1534,6 +1558,7 @@ export default function BusinessProfile({
   }, []);
 
   const updateSocial = useCallback((i: number, field: keyof SocialLink, val: SocialLink[keyof SocialLink]) => {
+    userEditedRef.current = true;
     setSocialLinks(p => p.map((s, idx) => idx === i ? { ...s, [field]: val } : s));
     if (field === 'value') {
       const error = validateSocialUrl(val as string);
@@ -1543,10 +1568,14 @@ export default function BusinessProfile({
 
   const addLink = useCallback(() => setCustomLinks(p => [...p, { label: '', url: '' }]), []);
   const removeLink = useCallback((i: number) => setCustomLinks(p => p.filter((_, idx) => idx !== i)), []);
-  const updateLink = useCallback((i: number, field: keyof CustomLink, val: string) => setCustomLinks(p => p.map((l, idx) => idx === i ? { ...l, [field]: val } : l)), []);
+  const updateLink = useCallback((i: number, field: keyof CustomLink, val: string) => {
+    userEditedRef.current = true;
+    setCustomLinks(p => p.map((l, idx) => idx === i ? { ...l, [field]: val } : l));
+  }, []);
 
   const handleProfileFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]; if (!file) return;
+    userEditedRef.current = true;
     setPendingProfileImage(file);
     const reader = new FileReader();
     reader.onload = ev => { if (ev.target?.result) setProfileImage(ev.target.result as string); };
@@ -1635,16 +1664,16 @@ export default function BusinessProfile({
         content = (
           <div className="space-y-4 sm:space-y-5">
             <div className="p-3 sm:p-4 rounded-xl bg-muted/30 border border-border space-y-4">
-              <ImageUploader value={profileImage} onChange={setProfileImage} label="Profile Photo" ratio="500×625px" roundedClass="rounded-xl" size="w-16 h-16 sm:w-20 sm:h-20" pendingFile={pendingProfileImage} onFileSelect={setPendingProfileImage} />
+              <ImageUploader value={profileImage} onChange={v => { userEditedRef.current = true; setProfileImage(v); }} label="Profile Photo" ratio="500×625px" roundedClass="rounded-xl" size="w-16 h-16 sm:w-20 sm:h-20" pendingFile={pendingProfileImage} onFileSelect={setPendingProfileImage} />
               <div className="border-t border-border pt-4">
-                <ImageUploader value={brandLogo} onChange={setBrandLogo} label="Brand Logo" ratio="160×80px" roundedClass="rounded-lg" size="w-20 h-12 sm:w-24 sm:h-14" pendingFile={pendingBrandLogo} onFileSelect={setPendingBrandLogo} />
+                <ImageUploader value={brandLogo} onChange={v => { userEditedRef.current = true; setBrandLogo(v); }} label="Brand Logo" ratio="160×80px" roundedClass="rounded-lg" size="w-20 h-12 sm:w-24 sm:h-14" pendingFile={pendingBrandLogo} onFileSelect={setPendingBrandLogo} />
                 {brandLogo && (
                   <div className="mt-3">
                     <div className="flex items-center gap-2 mb-1">
                       <LayoutDashboard className="w-3.5 h-3.5 text-accent" />
                       <Label className="text-accent text-xs font-semibold">Logo Position on Card</Label>
                     </div>
-                    <LogoPositionPicker value={logoPosition} onChange={setLogoPosition} />
+                    <LogoPositionPicker value={logoPosition} onChange={v => { userEditedRef.current = true; setLogoPosition(v); }} />
                   </div>
                 )}
               </div>
@@ -1936,22 +1965,7 @@ export default function BusinessProfile({
               // Even on a new (uncreated) card, if the user has already entered any
               // details, a template must not overwrite them — only the design/theme
               // (applied via the separate onDesignApply callback) should change.
-              const hasUserContent =
-                !!formData.name?.trim() ||
-                !!formData.title?.trim() ||
-                !!formData.company?.trim() ||
-                !!formData.tagline?.trim() ||
-                !!formData.headingText?.trim() ||
-                !!formData.bodyText?.trim() ||
-                !!formData.email?.trim() ||
-                !!formData.phone?.trim() ||
-                !!formData.website?.trim() ||
-                !!profileImage ||
-                !!brandLogo ||
-                socialLinks.some(s => s.value.trim()) ||
-                customLinks.some(l => l.label.trim() || l.url.trim());
-
-              if (isEditingExisting || hasUserContent) return;
+              if (isEditingExisting || userEditedRef.current) return;
 
               // New, blank card: apply template content fields
               const updates: Partial<FormData> = {};
@@ -2030,22 +2044,8 @@ export default function BusinessProfile({
             // (or one they've already started filling in). Mirrors the guard
             // in onApply above.
             const isEditingExisting = !!(resolvedCardId && hasLoadedCardContentRef.current);
-            const hasUserContent =
-              !!formData.name?.trim() ||
-              !!formData.title?.trim() ||
-              !!formData.company?.trim() ||
-              !!formData.tagline?.trim() ||
-              !!formData.headingText?.trim() ||
-              !!formData.bodyText?.trim() ||
-              !!formData.email?.trim() ||
-              !!formData.phone?.trim() ||
-              !!formData.website?.trim() ||
-              !!profileImage ||
-              !!brandLogo ||
-              socialLinks.some(s => s.value.trim()) ||
-              customLinks.some(l => l.label.trim() || l.url.trim());
 
-            if (isEditingExisting || hasUserContent) return;
+            if (isEditingExisting || userEditedRef.current) return;
 
             // New, blank card: safe to reset the template-provided content.
             setFormData(DEFAULT_STATE.formData);
