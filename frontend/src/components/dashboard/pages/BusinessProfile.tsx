@@ -34,6 +34,7 @@ import { getTemplateById } from '@/data/cardTemplates';
 import ExtraSectionBlockWithDragDrop from '@/components/dashboard/pages/ExtraSectionBlockWithDragDrop';
 import { makeQRMatrix } from '@/components/dashboard/pages/qr-engine';
 import { useQrStore } from '@/components/dashboard/stores/Useqrstore';
+import { markNewCardDraftSaved } from '@/lib/newCardDraft';
 import {
   getBusinessProfile,
   getCustomLinks,
@@ -1297,6 +1298,21 @@ export default function BusinessProfile({
     onContentChange(payload);
   }, [onContentChange, profileImage, brandLogo, logoPosition, formData, socialLinks, connectFields, sections, customLinks, extraSections, sectionOrder, unifiedOrder]);
 
+  // Persist in-progress edits to the editor cache on every change so switching
+  // wizard tabs or refreshing restores them (mount reads this via loadCache). A
+  // brand-new card clears its :draft cache on mount (see CreateCard), so it
+  // still starts empty; existing cards re-fetch from the API as source of truth.
+  useEffect(() => {
+    saveCacheForKey(
+      {
+        profileImage, brandLogo, logoPosition, formData, socialLinks,
+        connectFields, sections, expanded, customLinks, extraSections,
+        sectionOrder, unifiedOrder,
+      },
+      cacheKeyForEditor(cardId, resolvedCardId, allowFallbackToFirstCard),
+    );
+  }, [profileImage, brandLogo, logoPosition, formData, socialLinks, connectFields, sections, expanded, customLinks, extraSections, sectionOrder, unifiedOrder, cardId, resolvedCardId, allowFallbackToFirstCard]);
+
   const handleSaveChanges = useCallback(async () => {
     setSaveError(null);
 
@@ -1413,6 +1429,12 @@ export default function BusinessProfile({
       },
       cacheKeyForEditor(cardId, resolvedCardId, allowFallbackToFirstCard),
     );
+
+    // Mark the in-progress new-card draft as explicitly saved so the dashboard
+    // nav guard lets the user switch tabs without the "unsaved changes" warning.
+    if (!cardId && !resolvedCardId && !allowFallbackToFirstCard) {
+      markNewCardDraftSaved();
+    }
 
     const normalizedSocialLinks: ApiSocialLinkPayload[] = socialLinks
       .filter(link => Boolean(link.value.trim()))
