@@ -149,12 +149,14 @@ function LiveQrDisplay({ config, qrMatrix, qrN }: {
             background: 'var(--qr-bg-dark)',
             border: '1.5px solid var(--qr-border)',
             boxShadow: '0 0 32px rgba(0,128,1,0.15), inset 0 1px 0 rgba(255,255,255,0.03)',
+            width: '100%',
+            maxWidth: 280,
           }}
         >
           <img
             src={config.decorateCompositeDataUrl}
             alt="Decorated QR"
-            style={{ display: 'block', maxWidth: 280, height: 'auto' }}
+            style={{ display: 'block', width: '100%', height: 'auto' }}
           />
         </div>
       </div>
@@ -170,10 +172,11 @@ function LiveQrDisplay({ config, qrMatrix, qrN }: {
           background: 'var(--qr-bg-dark)',
           border: '1.5px solid var(--qr-border)',
           boxShadow: '0 0 32px rgba(0,128,1,0.15), inset 0 1px 0 rgba(255,255,255,0.03)',
-          display: 'inline-block',
+          width: '100%',
+          maxWidth: OUTER + 24, // 24 = p-3 padding on both sides
         }}
       >
-        <svg width={OUTER} height={OUTER} viewBox={`0 0 ${OUTER} ${OUTER}`}
+        <svg width="100%" height="100%" viewBox={`0 0 ${OUTER} ${OUTER}`}
           style={{ display: 'block', borderRadius: 12, overflow: 'hidden' }}>
           {config?.gradEnabled && (config?.gradStops?.length ?? 0) >= 2 && (
             <defs>
