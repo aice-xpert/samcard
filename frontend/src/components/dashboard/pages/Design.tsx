@@ -717,6 +717,15 @@ export function DesignNew({
               const cached = loadProfile(activeProfileCacheKey);
               setProfile(prev => {
                 let next = { ...cached, ...prev };
+                // Global business profile provides defaults; per-card content wins (see BusinessProfile load order).
+                if (profileData) {
+                  next = {
+                    ...next,
+                    profileImage: profileData.profileImageUrl || next.profileImage,
+                    brandLogo: profileData.brandLogoUrl || next.brandLogo,
+                    logoPosition: ((profileData.logoPosition as LogoPosition) || next.logoPosition),
+                  };
+                }
                 if (contentData) {
                   next = {
                     ...next,
@@ -727,14 +736,6 @@ export function DesignNew({
                     sectionOrder: (contentData as any).sectionOrder || next.sectionOrder,
                     unifiedOrder: (contentData as any).unifiedOrder || next.unifiedOrder,
                     extraSections: (contentData as any).extraSections || next.extraSections,
-                  };
-                }
-                if (profileData) {
-                  next = {
-                    ...next,
-                    profileImage: profileData.profileImageUrl || next.profileImage,
-                    brandLogo: profileData.brandLogoUrl || next.brandLogo,
-                    logoPosition: ((profileData.logoPosition as LogoPosition) || next.logoPosition),
                   };
                 }
                 return next;
@@ -837,6 +838,15 @@ export function DesignNew({
           const cached = loadProfile(activeProfileCacheKey);
           setProfile(prev => {
             let next = { ...cached, ...prev };
+            // Global business profile provides defaults; per-card content wins (see BusinessProfile load order).
+            if (profileData) {
+              next = {
+                ...next,
+                profileImage: profileData.profileImageUrl || next.profileImage,
+                brandLogo: profileData.brandLogoUrl || next.brandLogo,
+                logoPosition: ((profileData.logoPosition as LogoPosition) || next.logoPosition),
+              };
+            }
             if (contentData) {
               next = {
                 ...next,
@@ -847,14 +857,6 @@ export function DesignNew({
                 sectionOrder: (contentData as any).sectionOrder || next.sectionOrder,
                 unifiedOrder: (contentData as any).unifiedOrder || next.unifiedOrder,
                 extraSections: (contentData as any).extraSections || next.extraSections,
-              };
-            }
-            if (profileData) {
-              next = {
-                ...next,
-                profileImage: profileData.profileImageUrl || next.profileImage,
-                brandLogo: profileData.brandLogoUrl || next.brandLogo,
-                logoPosition: ((profileData.logoPosition as LogoPosition) || next.logoPosition),
               };
             }
             return next;
